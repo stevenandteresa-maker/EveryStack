@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { Webhook } from 'svix';
+import * as Sentry from '@sentry/nextjs';
 import {
   createUserWithTenant,
   updateUserFromClerk,
 } from '@everystack/shared/db';
+import { webLogger } from '@everystack/shared/logging';
+import { verifyClerkWebhook } from '@everystack/shared/webhooks';
 
 interface ClerkEmailAddress {
   email_address: string;
@@ -67,25 +69,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const svixSignature = request.headers.get('svix-signature');
 
   if (!svixId || !svixTimestamp || !svixSignature) {
+    webLogger.warn({ reason: 'missing_headers' }, 'Clerk webhook signature verification failed');
+    Sentry.captureMessage('Clerk webhook: missing signature headers', 'warning');
     return NextResponse.json(
       { error: { code: 'VALIDATION_FAILED', message: 'Missing webhook signature headers' } },
-      { status: 400 },
+      { status: 401 },
     );
   }
 
-  // Verify the webhook signature
-  let event: ClerkWebhookEvent;
-  try {
-    const wh = new Webhook(webhookSecret);
-    event = wh.verify(body, {
+  // Verify the webhook signature using shared utility
+  const event = verifyClerkWebhook<ClerkWebhookEvent>(
+    body,
+    {
       'svix-id': svixId,
       'svix-timestamp': svixTimestamp,
       'svix-signature': svixSignature,
-    }) as ClerkWebhookEvent;
-  } catch {
+    },
+    webhookSecret,
+  );
+
+  if (!event) {
+    webLogger.warn({ reason: 'invalid_signature' }, 'Clerk webhook signature verification failed');
+    Sentry.captureMessage('Clerk webhook: invalid signature', 'warning');
     return NextResponse.json(
       { error: { code: 'VALIDATION_FAILED', message: 'Invalid webhook signature' } },
-      { status: 400 },
+      { status: 401 },
     );
   }
 

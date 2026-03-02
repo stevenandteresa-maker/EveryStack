@@ -31,6 +31,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # TODO: Add `pnpm audit --audit-level=high` as a CI gate once
+      # dependencies stabilize. See compliance.md § Vulnerability Management.
+      # Currently tracked via Dependabot (see .github/dependabot.yml).
+
       - name: ESLint
         run: pnpm turbo lint
 

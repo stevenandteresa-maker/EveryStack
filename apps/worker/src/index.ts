@@ -1,15 +1,17 @@
+import { workerLogger } from '@everystack/shared/logging';
+import { initWorkerTelemetry, shutdownWorkerTelemetry } from './lib/otel-init';
+
+// Initialize OpenTelemetry before any processors are registered
+initWorkerTelemetry();
+
 // TODO [Phase 1G]: Replace with BullMQ worker setup and Redis connection
+workerLogger.info('Starting EveryStack worker...');
 
-// TODO [Phase 1D]: Replace console.log with Pino logger
-// eslint-disable-next-line no-console
-console.log('[worker] Starting EveryStack worker...');
-
-function shutdown(signal: string) {
-  // TODO [Phase 1D]: Replace console.log with Pino logger
-  // eslint-disable-next-line no-console
-  console.log(`[worker] Received ${signal}, shutting down gracefully...`);
+async function shutdown(signal: string) {
+  workerLogger.info({ signal }, 'Received shutdown signal, shutting down gracefully...');
+  await shutdownWorkerTelemetry();
   process.exit(0);
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));

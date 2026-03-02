@@ -7,7 +7,12 @@
     "./db": "./db/index.ts",
     "./sync": "./sync/index.ts",
     "./ai": "./ai/index.ts",
-    "./testing": "./testing/index.ts"
+    "./testing": "./testing/index.ts",
+    "./logging": "./logging/index.ts",
+    "./telemetry": "./telemetry/index.ts",
+    "./errors": "./errors/index.ts",
+    "./webhooks": "./webhooks/index.ts",
+    "./compliance": "./compliance/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -30,8 +35,17 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.70.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.212.0",
+    "@opentelemetry/resources": "^2.5.1",
+    "@opentelemetry/sdk-node": "^0.212.0",
+    "@opentelemetry/sdk-trace-base": "^2.5.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "drizzle-orm": "^0.45.1",
+    "pino": "^10.3.1",
     "postgres": "^3.4.8",
+    "svix": "^1.86.0",
     "uuidv7": "^1.1.0"
   }
 }

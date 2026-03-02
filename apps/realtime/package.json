@@ -9,8 +9,8 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "check:i18n": "echo 'No i18n strings yet' && exit 0",
-    "test": "echo 'No tests yet' && exit 0",
-    "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0"
+    "test": "echo 'No tests yet'",
+    "test:coverage-check": "echo 'No coverage thresholds yet'"
   },
   "dependencies": {
     "@everystack/shared": "workspace:*"

@@ -48,6 +48,15 @@ vi.mock('../../../../packages/shared/db/rls', () => ({
   TENANT_SCOPED_TABLES: [],
 }));
 
+vi.mock('@everystack/shared/logging', () => ({
+  webLogger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
+}));
+
 const MOCK_UUIDS = [
   '01900000-0001-7000-8000-000000000001', // userId
   '01900000-0001-7000-8000-000000000002', // tenantId
@@ -194,7 +203,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
 
     const response = await POST(request);
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
     const json = await response.json();
     expect(json.error.code).toBe('VALIDATION_FAILED');
     expect(json.error.message).toContain('Invalid webhook signature');
