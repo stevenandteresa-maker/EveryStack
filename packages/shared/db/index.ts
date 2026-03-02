@@ -14,6 +14,12 @@ export {
   workspacesRelations,
   workspaceMemberships,
   workspaceMembershipsRelations,
+  baseConnections,
+  baseConnectionsRelations,
+  tables,
+  tablesRelations,
+  fields,
+  fieldsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -23,4 +29,7 @@ export type {
   BoardMembership, NewBoardMembership,
   Workspace, NewWorkspace,
   WorkspaceMembership, NewWorkspaceMembership,
+  BaseConnection, NewBaseConnection,
+  Table, NewTable,
+  Field, NewField,
 } from './schema';

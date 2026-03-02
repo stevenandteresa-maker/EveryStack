@@ -21,3 +21,12 @@ export type { Workspace, NewWorkspace } from './workspaces';
 
 export { workspaceMemberships, workspaceMembershipsRelations } from './workspace-memberships';
 export type { WorkspaceMembership, NewWorkspaceMembership } from './workspace-memberships';
+
+export { baseConnections, baseConnectionsRelations } from './base-connections';
+export type { BaseConnection, NewBaseConnection } from './base-connections';
+
+export { tables, tablesRelations } from './tables';
+export type { Table, NewTable } from './tables';
+
+export { fields, fieldsRelations } from './fields';
+export type { Field, NewField } from './fields';
