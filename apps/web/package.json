@@ -14,6 +14,7 @@
     "test:e2e": "echo 'No E2E tests yet' && exit 0"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.39.0",
     "@everystack/shared": "workspace:*",
     "next": "^15.3.1",
     "react": "^19.1.0",
