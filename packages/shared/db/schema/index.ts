@@ -93,3 +93,15 @@ export type { ThreadMessage, NewThreadMessage } from './thread-messages';
 
 export { userSavedMessages, userSavedMessagesRelations } from './user-saved-messages';
 export type { UserSavedMessage, NewUserSavedMessage } from './user-saved-messages';
+
+export { userTasks, userTasksRelations } from './user-tasks';
+export type { UserTask, NewUserTask } from './user-tasks';
+
+export { userEvents, userEventsRelations } from './user-events';
+export type { UserEvent, NewUserEvent } from './user-events';
+
+export { notifications, notificationsRelations } from './notifications';
+export type { Notification, NewNotification } from './notifications';
+
+export { userNotificationPreferences, userNotificationPreferencesRelations } from './user-notification-preferences';
+export type { UserNotificationPreference, NewUserNotificationPreference } from './user-notification-preferences';
