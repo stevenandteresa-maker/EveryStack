@@ -13,7 +13,8 @@
     "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0"
   },
   "dependencies": {
-    "@everystack/shared": "workspace:*"
+    "@everystack/shared": "workspace:*",
+    "@sentry/node": "^10.41.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

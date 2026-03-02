@@ -6,6 +6,8 @@ import {
   runWithTraceContext,
 } from '@everystack/shared/logging';
 
+import { captureJobError } from './sentry';
+
 /**
  * Minimal BullMQ Job shape required by the wrapper.
  * Using a local interface avoids pulling in BullMQ as a dependency
@@ -90,6 +92,7 @@ export function createJobProcessor<T extends TracedJobData>(
         await processor(job, logger);
         logger.info('Job completed');
       } catch (error) {
+        captureJobError(error, job);
         logger.error(
           { err: error instanceof Error ? error.message : String(error) },
           'Job failed',
