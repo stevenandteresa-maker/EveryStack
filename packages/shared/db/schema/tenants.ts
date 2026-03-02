@@ -3,6 +3,7 @@ import {
   jsonb,
   pgTable,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -13,6 +14,7 @@ export const tenants = pgTable(
   'tenants',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    clerkOrgId: varchar('clerk_org_id', { length: 255 }),
     name: varchar('name', { length: 255 }).notNull(),
     plan: varchar('plan', { length: 50 }).default('freelancer').notNull(),
     defaultLocale: varchar('default_locale', { length: 10 }).default('en').notNull(),
@@ -28,6 +30,7 @@ export const tenants = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
+    uniqueIndex('tenants_clerk_org_id_idx').on(table.clerkOrgId),
     index('tenants_name_idx').on(table.name),
   ],
 );
