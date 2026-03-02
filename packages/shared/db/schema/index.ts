@@ -39,3 +39,18 @@ export type { CrossLink, NewCrossLink } from './cross-links';
 
 export { crossLinkIndex, crossLinkIndexRelations } from './cross-link-index';
 export type { CrossLinkIndex, NewCrossLinkIndex } from './cross-link-index';
+
+export { sections, sectionsRelations } from './sections';
+export type { Section, NewSection } from './sections';
+
+export { views, viewsRelations } from './views';
+export type { View, NewView } from './views';
+
+export { userViewPreferences, userViewPreferencesRelations } from './user-view-preferences';
+export type { UserViewPreference, NewUserViewPreference } from './user-view-preferences';
+
+export { recordViewConfigs, recordViewConfigsRelations } from './record-view-configs';
+export type { RecordViewConfig, NewRecordViewConfig } from './record-view-configs';
+
+export { recordTemplates, recordTemplatesRelations } from './record-templates';
+export type { RecordTemplate, NewRecordTemplate } from './record-templates';
