@@ -1,8 +1,11 @@
 export { db, dbRead, getDbForTenant } from './client';
+export { createUserWithTenant, updateUserFromClerk } from './operations/user-operations';
+export type { CreateUserWithTenantResult } from './operations/user-operations';
 export type { DbIntent, DrizzleClient } from './client';
 export { generateUUIDv7, isValidUUID } from './uuid';
 export { setTenantContext, TENANT_SCOPED_TABLES } from './rls';
 export type { TenantScopedTable } from './rls';
+export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc } from 'drizzle-orm';
 export {
   users,
   tenants,

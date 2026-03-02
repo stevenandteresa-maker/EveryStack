@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./auth": "./auth/index.ts",
     "./db": "./db/index.ts",
     "./sync": "./sync/index.ts",
     "./ai": "./ai/index.ts",
@@ -13,7 +14,7 @@
     "build": "tsc",
     "lint": "eslint . --max-warnings 0",
     "check:i18n": "echo 'No i18n strings yet' && exit 0",
-    "test": "echo 'No tests yet' && exit 0",
+    "test": "vitest run",
     "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0",
     "test:ai-eval": "echo 'No AI eval suite yet' && exit 0",
     "db:migrate": "drizzle-kit migrate --config db/drizzle.config.ts",
@@ -23,8 +24,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.31.9",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
