@@ -14,19 +14,19 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Design Philosophy | 33–46 | Evernote competitor positioning, capture-first approach |
-| 1. My Notes — Personal Notebook System | 47–185 | TipTap-based notes, workspace-scoped personal tables, note types |
-| 2. Quick Capture System | 186–265 | Rapid capture UI, inbox model, triage workflow |
-| 3. Web Clipper | 266–457 | Browser extension, content extraction, page archiving |
-| 4. File-First Notes ("Save Anything") | 458–581 | File capture, drag-and-drop, auto-extraction |
-| 5. Evernote Import (ENEX Parser) | 582–705 | ENEX file parsing, content migration, tag mapping |
-| 6. Note Triage & Organization | 706–758 | Inbox → organized flow, tagging, notebook assignment |
-| 7. Search Across Notes | 759–800 | Full-text + embedding search, filters, saved searches |
-| 8. Cross-Reference Updates Required | 801–821 | Docs that need updating when this ships |
-| 9. Phase Implementation | 822–851 | Delivery timeline and dependencies |
-| 10. Competitive Positioning | 852–875 | Feature comparison vs Evernote, Notion, Apple Notes |
+| Section                                | Lines   | Covers                                                           |
+| -------------------------------------- | ------- | ---------------------------------------------------------------- |
+| Design Philosophy                      | 33–46   | Evernote competitor positioning, capture-first approach          |
+| 1. My Notes — Personal Notebook System | 47–185  | TipTap-based notes, workspace-scoped personal tables, note types |
+| 2. Quick Capture System                | 186–265 | Rapid capture UI, inbox model, triage workflow                   |
+| 3. Web Clipper                         | 266–457 | Browser extension, content extraction, page archiving            |
+| 4. File-First Notes ("Save Anything")  | 458–581 | File capture, drag-and-drop, auto-extraction                     |
+| 5. Evernote Import (ENEX Parser)       | 582–705 | ENEX file parsing, content migration, tag mapping                |
+| 6. Note Triage & Organization          | 706–758 | Inbox → organized flow, tagging, notebook assignment             |
+| 7. Search Across Notes                 | 759–800 | Full-text + embedding search, filters, saved searches            |
+| 8. Cross-Reference Updates Required    | 801–821 | Docs that need updating when this ships                          |
+| 9. Phase Implementation                | 822–851 | Delivery timeline and dependencies                               |
+| 10. Competitive Positioning            | 852–875 | Feature comparison vs Evernote, Notion, Apple Notes              |
 
 ---
 
@@ -69,15 +69,16 @@ CREATE INDEX idx_tables_personal_owner
   WHERE is_personal = true;
 ```
 
-| Column | Purpose |
-|--------|---------|
-| `is_personal` | Flags this table as a personal notebook. Hides from workspace sidebar, workspace search, team views. |
-| `owner_user_id` | The user who owns this notebook. Only this user can see/edit. NULL for team tables. |
+| Column          | Purpose                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `is_personal`   | Flags this table as a personal notebook. Hides from workspace sidebar, workspace search, team views. |
+| `owner_user_id` | The user who owns this notebook. Only this user can see/edit. NULL for team tables.                  |
 
 **Permission model for personal tables:**
+
 - Owner: full Manager-level access (create/edit/delete records, configure fields, manage views)
 - All other workspace members: no access (not even Viewer). Table excluded from workspace navigation, search results, and schema descriptor for other users.
-- Workspace Admins: can see that personal tables *exist* (for storage quota management) but cannot read content. Exception: legal/compliance hold (see `compliance.md` if relevant).
+- Workspace Admins: can see that personal tables _exist_ (for storage quota management) but cannot read content. Exception: legal/compliance hold (see `compliance.md` if relevant).
 
 ### Inbox Notebook
 
@@ -93,15 +94,16 @@ interface InboxNotebookConfig {
   parent_field_id: string;
 
   // Inbox-specific
-  is_inbox: true;                   // Distinguishes from user-created notebooks
-  auto_tag_captures: boolean;       // Default true — auto-tag by capture source
-  default_sort: 'updated_at';      // Inbox always sorts most-recent-first
+  is_inbox: true; // Distinguishes from user-created notebooks
+  auto_tag_captures: boolean; // Default true — auto-tag by capture source
+  default_sort: 'updated_at'; // Inbox always sorts most-recent-first
 }
 ```
 
 The Inbox is the default destination for all quick captures. It functions as a flat list by default (no page nesting required) but supports nesting for users who want to organize within the inbox.
 
 **Inbox-specific behaviors:**
+
 - Default view: flat list sorted by `updated_at` DESC (most recent first), not page tree
 - "Triage" affordance: each note shows a subtle "Move to →" action for sending notes to other notebooks or team wikis
 - Notes older than 30 days without edits get a gentle "Archive?" nudge (soft prompt, not auto-action)
@@ -112,22 +114,23 @@ The Inbox is the default destination for all quick captures. It functions as a f
 Users create additional notebooks for topical organization: "Work Ideas," "Meeting Notes," "Reading Notes," "Personal Journal."
 
 **Creation flow:**
+
 - My Notes sidebar → "+" button → "New Notebook" → name it → done
 - Or: Command Bar → `/notebook [name]` → creates and navigates to it
 - Each notebook is a `table_type = wiki` with `is_personal = true` and `owner_user_id = $me`
 
 **Default fields on a personal notebook (same as wiki preset, plus extras):**
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| Title | `text` (primary) | Note title |
-| Content | `smart_doc` (wiki mode) | Rich text body — full TipTap editor |
-| Parent | `self_referential` | Page nesting (optional) |
-| Tags | `multi_select` | User-defined tags for categorization |
-| Source | `single_select` | Auto-populated: `manual`, `web_clip`, `email`, `voice`, `file`, `import` |
-| Captured At | `datetime` | When the note was created (distinct from record created_at for imports) |
-| Pinned | `checkbox` | Pin to top of notebook |
-| Status | `single_select` | Default options: Active, Archived. (Not Draft/Published — that's for team wikis.) |
+| Field       | Type                    | Purpose                                                                           |
+| ----------- | ----------------------- | --------------------------------------------------------------------------------- |
+| Title       | `text` (primary)        | Note title                                                                        |
+| Content     | `smart_doc` (wiki mode) | Rich text body — full TipTap editor                                               |
+| Parent      | `self_referential`      | Page nesting (optional)                                                           |
+| Tags        | `multi_select`          | User-defined tags for categorization                                              |
+| Source      | `single_select`         | Auto-populated: `manual`, `web_clip`, `email`, `voice`, `file`, `import`          |
+| Captured At | `datetime`              | When the note was created (distinct from record created_at for imports)           |
+| Pinned      | `checkbox`              | Pin to top of notebook                                                            |
+| Status      | `single_select`         | Default options: Active, Archived. (Not Draft/Published — that's for team wikis.) |
 
 **Why Tags as multi_select, not a separate tag entity?** Multi-select fields are already first-class in EveryStack with color coding, autocomplete, and filter support. A global tag taxonomy across notebooks comes from cross-notebook search, not a shared tag table. Keeps it simple. If power users want a tag taxonomy later, they can create a Tags table and cross-link — the building blocks exist.
 
@@ -159,6 +162,7 @@ My Notes surfaces as a **dedicated section in the workspace sidebar**, below the
 ```
 
 **Sidebar behaviors:**
+
 - "My Notes" section is collapsible (default: expanded)
 - Inbox always first, with unread/untriaged count badge
 - Other notebooks in alphabetical order (user can drag to reorder)
@@ -174,6 +178,7 @@ My Notes surfaces as a **dedicated section in the workspace sidebar**, below the
 A new platform widget for the My Office grid:
 
 **"Notes" widget (1×1 default size):**
+
 - Shows 5 most recent notes across all personal notebooks
 - Each item: title (truncated), first line of content preview, notebook name badge, timestamp
 - Quick-create bar at bottom: type a title, press Enter → creates note in Inbox
@@ -189,25 +194,25 @@ Added to the My Office widget catalog under Platform Widgets. Not in the default
 
 Quick Capture is the zero-friction entry point. It creates a note in the user's Inbox with as little interaction as possible. Four capture modes, all producing the same output — a wiki record in the Inbox notebook:
 
-| Mode | Trigger | Input | What's Created |
-|------|---------|-------|----------------|
-| **Keyboard** | `⌘+Shift+N` (global) or `/note [text]` in Command Bar | Text (title + optional body) | Note with title; if body provided, content populated |
-| **Voice** | Long-press microphone icon (mobile) or `/voice-note` | Speech → transcription | Note with AI-transcribed content, title auto-generated from first sentence |
-| **Photo/File** | Drag-and-drop onto capture zone, mobile camera icon, or `/clip-file` | File(s) | Note with file attached, title from filename, extracted text in content |
-| **Web Clip** | Browser extension button or right-click context menu | Page content, selection, or screenshot | Note with clipped content as TipTap JSON, source URL preserved |
+| Mode           | Trigger                                                              | Input                                  | What's Created                                                             |
+| -------------- | -------------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| **Keyboard**   | `⌘+Shift+N` (global) or `/note [text]` in Command Bar                | Text (title + optional body)           | Note with title; if body provided, content populated                       |
+| **Voice**      | Long-press microphone icon (mobile) or `/voice-note`                 | Speech → transcription                 | Note with AI-transcribed content, title auto-generated from first sentence |
+| **Photo/File** | Drag-and-drop onto capture zone, mobile camera icon, or `/clip-file` | File(s)                                | Note with file attached, title from filename, extracted text in content    |
+| **Web Clip**   | Browser extension button or right-click context menu                 | Page content, selection, or screenshot | Note with clipped content as TipTap JSON, source URL preserved             |
 
 ### Command Bar Integration
 
 New slash commands registered in the command registry:
 
-| Command | Syntax | Behavior |
-|---------|--------|----------|
-| `/note` | `/note [title]` | Create note in Inbox. If title provided, create and open. If no title, open blank note in Inbox. |
-| `/note [title] > [notebook]` | `/note Meeting recap > Work Ideas` | Create note in specified notebook. Fuzzy-matches notebook name. |
-| `/voice-note` | `/voice-note` | Activates voice capture → transcription → new note in Inbox. Uses same speech-to-text pipeline as `mobile.md` voice input. AI `standard` tier, 2–3 credits for transcription + title generation. |
-| `/clip-file` | `/clip-file` | Opens file picker → selected file becomes a new note (see File-First Notes). |
-| `/notebook` | `/notebook [name]` | Create a new personal notebook with given name. |
-| `/search-notes` | `/search-notes [query]` | Full-text + semantic search across all personal notebooks. Results in Command Bar modal. |
+| Command                      | Syntax                             | Behavior                                                                                                                                                                                         |
+| ---------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/note`                      | `/note [title]`                    | Create note in Inbox. If title provided, create and open. If no title, open blank note in Inbox.                                                                                                 |
+| `/note [title] > [notebook]` | `/note Meeting recap > Work Ideas` | Create note in specified notebook. Fuzzy-matches notebook name.                                                                                                                                  |
+| `/voice-note`                | `/voice-note`                      | Activates voice capture → transcription → new note in Inbox. Uses same speech-to-text pipeline as `mobile.md` voice input. AI `standard` tier, 2–3 credits for transcription + title generation. |
+| `/clip-file`                 | `/clip-file`                       | Opens file picker → selected file becomes a new note (see File-First Notes).                                                                                                                     |
+| `/notebook`                  | `/notebook [name]`                 | Create a new personal notebook with given name.                                                                                                                                                  |
+| `/search-notes`              | `/search-notes [query]`            | Full-text + semantic search across all personal notebooks. Results in Command Bar modal.                                                                                                         |
 
 **`⌘+Shift+N` — Global Quick Capture Shortcut:**
 
@@ -233,6 +238,7 @@ This is the highest-priority capture path. Pressing the shortcut from anywhere i
 ```
 
 **Capture popover behaviors:**
+
 - Opens instantly (no network request — creates record on save, not on open)
 - Title field auto-focused. Pressing Enter with text in title moves focus to body.
 - Body uses a simplified TipTap editor: bold, italic, bullet list, numbered list, checkbox, link. No slash commands, no headings, no images (those go in the full editor after save). Same restricted extension set as Smart Doc in Forms (`smart-docs.md`).
@@ -275,22 +281,22 @@ The web clipper is Evernote's #1 daily-use hook and acquisition channel. Users i
 
 **Extension components:**
 
-| Component | Purpose |
-|-----------|---------|
-| `popup.html/tsx` | Quick clip UI — appears when clicking the extension icon |
-| `content-script.ts` | Injected into web pages for selection capture and article extraction |
-| `background.ts` (service worker) | Handles auth, API calls to EveryStack backend, offline queue |
-| `options.html/tsx` | Settings: default notebook, auto-tag behavior, clip format preferences |
+| Component                        | Purpose                                                                |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `popup.html/tsx`                 | Quick clip UI — appears when clicking the extension icon               |
+| `content-script.ts`              | Injected into web pages for selection capture and article extraction   |
+| `background.ts` (service worker) | Handles auth, API calls to EveryStack backend, offline queue           |
+| `options.html/tsx`               | Settings: default notebook, auto-tag behavior, clip format preferences |
 
 ### Clip Modes
 
-| Mode | Trigger | What's Captured | TipTap Output |
-|------|---------|-----------------|---------------|
-| **Simplified Article** | Extension icon → "Clip Article" (default) | Article content extracted via Readability.js — title, author, published date, body text, inline images | Clean TipTap JSON: heading (title) + paragraphs + images. Metadata in record fields. |
-| **Full Page** | Extension icon → "Clip Full Page" | Complete page HTML → sanitized and converted to TipTap JSON | Best-effort conversion. Complex layouts simplified to linear blocks. |
-| **Selection** | Select text → right-click → "Clip to EveryStack" (or extension icon auto-detects selection) | Selected HTML fragment | Converted to TipTap JSON preserving formatting (bold, italic, links, lists). Quoted with source URL attribution. |
-| **Screenshot** | Extension icon → "Clip Screenshot" → area selector | Visible viewport or user-selected region as PNG | Note with image attachment. OCR runs via `document-intelligence.md` pipeline for searchable text. |
-| **Bookmark** | Extension icon → "Clip Bookmark" | URL + page title + meta description + OpenGraph image (if available) | Minimal note: title as heading, URL as link, description as paragraph, OG image as attachment. Lightweight — for "save for later" use cases. |
+| Mode                   | Trigger                                                                                     | What's Captured                                                                                        | TipTap Output                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Simplified Article** | Extension icon → "Clip Article" (default)                                                   | Article content extracted via Readability.js — title, author, published date, body text, inline images | Clean TipTap JSON: heading (title) + paragraphs + images. Metadata in record fields.                                                         |
+| **Full Page**          | Extension icon → "Clip Full Page"                                                           | Complete page HTML → sanitized and converted to TipTap JSON                                            | Best-effort conversion. Complex layouts simplified to linear blocks.                                                                         |
+| **Selection**          | Select text → right-click → "Clip to EveryStack" (or extension icon auto-detects selection) | Selected HTML fragment                                                                                 | Converted to TipTap JSON preserving formatting (bold, italic, links, lists). Quoted with source URL attribution.                             |
+| **Screenshot**         | Extension icon → "Clip Screenshot" → area selector                                          | Visible viewport or user-selected region as PNG                                                        | Note with image attachment. OCR runs via `document-intelligence.md` pipeline for searchable text.                                            |
+| **Bookmark**           | Extension icon → "Clip Bookmark"                                                            | URL + page title + meta description + OpenGraph image (if available)                                   | Minimal note: title as heading, URL as link, description as paragraph, OG image as attachment. Lightweight — for "save for later" use cases. |
 
 ### HTML-to-TipTap Conversion Pipeline
 
@@ -307,22 +313,23 @@ Web HTML → Readability.js (article extraction) → Turndown (HTML → Markdown
 
 **`markdownToTipTap()` conversion rules:**
 
-| Markdown Element | TipTap Node |
-|-----------------|-------------|
-| `# Heading` | `{ type: "heading", attrs: { level: 1 }, content: [...] }` |
-| `**bold**` | `{ type: "text", marks: [{ type: "bold" }], text: "..." }` |
-| `*italic*` | `{ type: "text", marks: [{ type: "italic" }], text: "..." }` |
-| `[link](url)` | `{ type: "text", marks: [{ type: "link", attrs: { href: "..." } }], text: "..." }` |
-| `- list item` | `{ type: "bulletList", content: [{ type: "listItem", ... }] }` |
-| `1. list item` | `{ type: "orderedList", content: [{ type: "listItem", ... }] }` |
-| `` `code` `` | `{ type: "text", marks: [{ type: "code" }], text: "..." }` |
-| `> blockquote` | `{ type: "blockquote", content: [...] }` |
-| `---` | `{ type: "horizontalRule" }` |
-| `![alt](src)` | `{ type: "image", attrs: { src: "...", alt: "..." } }` |
-| `- [ ] task` | `{ type: "taskList", content: [{ type: "taskItem", attrs: { checked: false }, ... }] }` |
-| tables | `{ type: "table", content: [{ type: "tableRow", ... }] }` |
+| Markdown Element | TipTap Node                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `# Heading`      | `{ type: "heading", attrs: { level: 1 }, content: [...] }`                              |
+| `**bold**`       | `{ type: "text", marks: [{ type: "bold" }], text: "..." }`                              |
+| `*italic*`       | `{ type: "text", marks: [{ type: "italic" }], text: "..." }`                            |
+| `[link](url)`    | `{ type: "text", marks: [{ type: "link", attrs: { href: "..." } }], text: "..." }`      |
+| `- list item`    | `{ type: "bulletList", content: [{ type: "listItem", ... }] }`                          |
+| `1. list item`   | `{ type: "orderedList", content: [{ type: "listItem", ... }] }`                         |
+| `` `code` ``     | `{ type: "text", marks: [{ type: "code" }], text: "..." }`                              |
+| `> blockquote`   | `{ type: "blockquote", content: [...] }`                                                |
+| `---`            | `{ type: "horizontalRule" }`                                                            |
+| `![alt](src)`    | `{ type: "image", attrs: { src: "...", alt: "..." } }`                                  |
+| `- [ ] task`     | `{ type: "taskList", content: [{ type: "taskItem", attrs: { checked: false }, ... }] }` |
+| tables           | `{ type: "table", content: [{ type: "tableRow", ... }] }`                               |
 
 **Image handling on clip:**
+
 1. Images referenced in the article are downloaded by the extension's service worker
 2. Uploaded to EveryStack's file storage (R2/S3) via the standard upload pipeline
 3. TipTap JSON references the EveryStack-hosted URL, not the original source
@@ -372,6 +379,7 @@ When the user clicks the extension icon:
 ```
 
 **Popup behaviors:**
+
 - Auto-detects page title and reading time
 - If text is selected when popup opens, defaults to "Selection" mode with preview
 - "Save to" dropdown lists user's notebooks (Inbox default, remembers last choice)
@@ -416,6 +424,7 @@ Authorization: session cookie
 ```
 
 **Backend processing:**
+
 1. Validate session, resolve workspace and user
 2. If `content_markdown` provided, run `markdownToTipTap()` server-side (don't trust client-side conversion alone)
 3. If only `content_html` provided, run full pipeline: sanitize → Readability → Turndown → markdownToTipTap
@@ -435,8 +444,8 @@ interface ClipMetadata {
   source_author?: string;
   source_published_at?: string;
   clip_mode: 'article' | 'full_page' | 'selection' | 'screenshot' | 'bookmark';
-  clipped_at: string;            // ISO 8601
-  original_html_hash: string;    // For dedup — warn if user clips same URL twice
+  clipped_at: string; // ISO 8601
+  original_html_hash: string; // For dedup — warn if user clips same URL twice
 }
 ```
 
@@ -537,9 +546,7 @@ When file content extraction completes, the note's Smart Doc content field is up
         },
         {
           "type": "paragraph",
-          "content": [
-            { "type": "text", "text": "[First 2000 chars of extracted text...]" }
-          ]
+          "content": [{ "type": "text", "text": "[First 2000 chars of extracted text...]" }]
         }
       ]
     }
@@ -723,12 +730,12 @@ When viewing the Inbox notebook, each note in the list view has an inline action
 └─────────────────────────────────────────────────────────┘
 ```
 
-| Action | Behavior |
-|--------|----------|
+| Action      | Behavior                                                                                                                                                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Move to** | Dropdown: list of personal notebooks + team wiki tables the user has Manager+ access to. Moving to a team wiki converts the note from `is_personal` scope to team-visible. Confirmation prompt: "This note will become visible to your team. Continue?" |
-| **Link** | Search workspace records → create cross-link. "Link to a client, project, or task." |
-| **Pin** | Pins note to top of Inbox. Useful for notes that need action but don't have a home yet. |
-| **Archive** | Sets status to "Archived." Note remains searchable but drops from default Inbox view. Archived view accessible via filter toggle. |
+| **Link**    | Search workspace records → create cross-link. "Link to a client, project, or task."                                                                                                                                                                     |
+| **Pin**     | Pins note to top of Inbox. Useful for notes that need action but don't have a home yet.                                                                                                                                                                 |
+| **Archive** | Sets status to "Archived." Note remains searchable but drops from default Inbox view. Archived view accessible via filter toggle.                                                                                                                       |
 
 **Bulk triage:** Select multiple notes (checkbox per row) → bulk actions bar: Move all, Tag all, Archive all, Delete all.
 
@@ -736,11 +743,11 @@ When viewing the Inbox notebook, each note in the list view has an inline action
 
 Notes can move between personal and team contexts:
 
-| Direction | Action | What Happens |
-|-----------|--------|-------------|
-| **Personal → Personal** | Move from Inbox to another personal notebook | Record moved between personal wiki tables. Simple re-parenting. |
+| Direction                | Action                                         | What Happens                                                                                                                                                                                                                                  |
+| ------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Personal → Personal**  | Move from Inbox to another personal notebook   | Record moved between personal wiki tables. Simple re-parenting.                                                                                                                                                                               |
 | **Personal → Team Wiki** | Move from personal notebook to team wiki table | Record moved to team table. `is_personal` flag on source table unchanged (it's still a personal table). The record itself transfers tables. Permission model shifts from personal-only to team-visible. Tags, content, attachments preserved. |
-| **Team Wiki → Personal** | "Save to My Notes" on any team wiki page | **Copy, not move.** Creates a personal note with a link back to the team page. The team page is unaffected. Reason: moving team content into a personal space would break links and hide content from the team. |
+| **Team Wiki → Personal** | "Save to My Notes" on any team wiki page       | **Copy, not move.** Creates a personal note with a link back to the team page. The team page is unaffected. Reason: moving team content into a personal space would break links and hide content from the team.                               |
 
 **Technical note on cross-table moves:** Moving a record between tables requires field compatibility. Personal notebooks and team wikis both use the wiki preset, so the core fields (Title, Content, Parent, Tags, Status) are compatible. Custom fields on the destination table that don't exist on the source are left empty. Custom fields on the source that don't exist on the destination are stored in `canonical_data` under a `_migrated_fields` key so data isn't lost.
 
@@ -775,6 +782,7 @@ Two additions for a notes-specific search experience:
 This gives users a "search my notes" experience that doesn't mix personal captures with team data. Useful when you know the answer is "somewhere in my notes" but don't want to wade through workspace records.
 
 **Search results include:**
+
 - Note title (highlighted matches)
 - Content snippet (with match highlighting)
 - Notebook name
@@ -788,6 +796,7 @@ This gives users a "search my notes" experience that doesn't mix personal captur
 The existing `record_embeddings` only captures the first 500 tokens of display fields. For personal notes, where the full content IS the value, we extend embedding coverage using the same chunking strategy from `gaps/knowledge-base-live-chat-ai.md`:
 
 **When a personal note is saved:**
+
 1. If content ≤ 500 tokens: standard `record_embeddings` suffices
 2. If content > 500 tokens: additionally generate chunked embeddings in `knowledge_embeddings` (yes, the same table — personal notes are wiki records, the infrastructure is shared)
 3. Scoping: personal note chunks are only searchable by the owning user (filtered by `table_id` which is a personal table with `owner_user_id`)
@@ -800,33 +809,33 @@ This means a user can search for a phrase they remember writing in a long person
 
 ## 8. Cross-Reference Updates Required
 
-| Doc | Section | Change |
-|-----|---------|--------|
-| `data-model.md` | `tables` schema | Add `is_personal` (BOOLEAN, default false) and `owner_user_id` (UUID, nullable) columns. Add index. |
-| `smart-docs.md` | Wiki Architecture | Add note: "Wiki tables can be personal notebooks (`is_personal = true`) scoped to a single user. See `personal-notes-capture.md`." |
-| `my-office.md` | Widget Catalog | Add "Notes" platform widget to catalog list. |
-| `command-bar.md` | Slash Commands table | Add `/note`, `/voice-note`, `/clip-file`, `/notebook`, `/search-notes` commands. |
-| `command-bar.md` | Keyboard Shortcuts | Add `⌘+Shift+N` — Quick Capture popover. |
-| `mobile.md` | Quick Actions | Replace `/quick/new-record` PWA shortcut with `/quick/note`. Add Quick Capture FAB overlay spec. |
-| `mobile.md` | Share Sheet | Add Web Share Target API registration for PWA. Note Capacitor share sheet integration for native wrapper. |
-| `tables-and-views.md` | Table Types | Note that `wiki` table_type can be `is_personal` — hidden from workspace navigation, single-user access. |
-| `permissions.md` | Personal Scope | Document personal table access model: owner = full access, all others = no access, admins = existence only. |
-| `vector-embeddings.md` | What Gets Embedded | Note that personal notes > 500 tokens use chunked embeddings via `knowledge_embeddings` table. |
-| `gaps/knowledge-base-live-chat-ai.md` | knowledge_embeddings | Note that the table is shared with personal note chunked embeddings, scoped by `table_id`. |
-| `files.md` | Context Types | Add `note_file_capture` as a context_type for files created via Quick Capture file drop. |
-| `document-intelligence.md` | File Content Extraction | Note that file-first notes trigger extraction pipeline automatically on creation. |
-| `CLAUDE.md` | Navigation | Add My Notes sidebar section. |
+| Doc                                   | Section                 | Change                                                                                                                             |
+| ------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `data-model.md`                       | `tables` schema         | Add `is_personal` (BOOLEAN, default false) and `owner_user_id` (UUID, nullable) columns. Add index.                                |
+| `smart-docs.md`                       | Wiki Architecture       | Add note: "Wiki tables can be personal notebooks (`is_personal = true`) scoped to a single user. See `personal-notes-capture.md`." |
+| `my-office.md`                        | Widget Catalog          | Add "Notes" platform widget to catalog list.                                                                                       |
+| `command-bar.md`                      | Slash Commands table    | Add `/note`, `/voice-note`, `/clip-file`, `/notebook`, `/search-notes` commands.                                                   |
+| `command-bar.md`                      | Keyboard Shortcuts      | Add `⌘+Shift+N` — Quick Capture popover.                                                                                           |
+| `mobile.md`                           | Quick Actions           | Replace `/quick/new-record` PWA shortcut with `/quick/note`. Add Quick Capture FAB overlay spec.                                   |
+| `mobile.md`                           | Share Sheet             | Add Web Share Target API registration for PWA. Note Capacitor share sheet integration for native wrapper.                          |
+| `tables-and-views.md`                 | Table Types             | Note that `wiki` table_type can be `is_personal` — hidden from workspace navigation, single-user access.                           |
+| `permissions.md`                      | Personal Scope          | Document personal table access model: owner = full access, all others = no access, admins = existence only.                        |
+| `vector-embeddings.md`                | What Gets Embedded      | Note that personal notes > 500 tokens use chunked embeddings via `knowledge_embeddings` table.                                     |
+| `gaps/knowledge-base-live-chat-ai.md` | knowledge_embeddings    | Note that the table is shared with personal note chunked embeddings, scoped by `table_id`.                                         |
+| `files.md`                            | Context Types           | Add `note_file_capture` as a context_type for files created via Quick Capture file drop.                                           |
+| `document-intelligence.md`            | File Content Extraction | Note that file-first notes trigger extraction pipeline automatically on creation.                                                  |
+| `CLAUDE.md`                           | Navigation              | Add My Notes sidebar section.                                                                                                      |
 
 ---
 
 ## 9. Phase Implementation
 
-| Phase | Personal Notes & Capture Work |
-|-------|------------------------------|
-| **MVP — Core UX** | `is_personal` and `owner_user_id` columns added to `tables` schema. My Notes sidebar section renders (empty state with "Create your first notebook" prompt). Inbox notebook lazy-creation on first use. Quick Capture popover (`⌘+Shift+N`) with simplified TipTap editor — creates notes in Inbox. `/note` and `/notebook` slash commands. Personal notebook CRUD (create, rename, delete, reorder). |
-| **Post-MVP — Documents** | File-first notes: drop file → create note with attachment + extracted text. Image notes with inline rendering. Web Clipper browser extension (Chrome — article, selection, bookmark modes). Full-page and screenshot clip modes. Duplicate detection. Clip metadata storage. `markdownToTipTap()` converter in `packages/shared`. My Notes widget for My Office grid. Note triage bar (move, link, pin, archive). Bulk triage. |
-| **Post-MVP — Comms & Polish** | Voice notes: `/voice-note` + mobile voice capture → transcription → note. Mobile Quick Capture FAB overlay. Share sheet integration (PWA Web Share Target). Audio note playback. Evernote ENEX import pipeline. Import progress UI. Markdown file import. Cross-scope move (personal → team wiki with permission shift). Smart triage suggestions (AI background job). `/search-notes` dedicated personal search. Chunked embeddings for long personal notes. |
-| **Post-MVP — Verticals & Advanced+ (post-MVP)** | Google Keep import. Notion import. Safari/Firefox extension ports. Offline web clipper queue. AI auto-organization (periodic review of Inbox, suggest notebook assignments). Note templates (meeting notes, daily journal, reading notes — presets with field configurations). Shared notebooks (personal table with invited collaborators — middle ground between personal and team). |
+| Phase                                           | Personal Notes & Capture Work                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Core UX**                               | `is_personal` and `owner_user_id` columns added to `tables` schema. My Notes sidebar section renders (empty state with "Create your first notebook" prompt). Inbox notebook lazy-creation on first use. Quick Capture popover (`⌘+Shift+N`) with simplified TipTap editor — creates notes in Inbox. `/note` and `/notebook` slash commands. Personal notebook CRUD (create, rename, delete, reorder).                                                         |
+| **Post-MVP — Documents**                        | File-first notes: drop file → create note with attachment + extracted text. Image notes with inline rendering. Web Clipper browser extension (Chrome — article, selection, bookmark modes). Full-page and screenshot clip modes. Duplicate detection. Clip metadata storage. `markdownToTipTap()` converter in `packages/shared`. My Notes widget for My Office grid. Note triage bar (move, link, pin, archive). Bulk triage.                                |
+| **Post-MVP — Comms & Polish**                   | Voice notes: `/voice-note` + mobile voice capture → transcription → note. Mobile Quick Capture FAB overlay. Share sheet integration (PWA Web Share Target). Audio note playback. Evernote ENEX import pipeline. Import progress UI. Markdown file import. Cross-scope move (personal → team wiki with permission shift). Smart triage suggestions (AI background job). `/search-notes` dedicated personal search. Chunked embeddings for long personal notes. |
+| **Post-MVP — Verticals & Advanced+ (post-MVP)** | Google Keep import. Notion import. Safari/Firefox extension ports. Offline web clipper queue. AI auto-organization (periodic review of Inbox, suggest notebook assignments). Note templates (meeting notes, daily journal, reading notes — presets with field configurations). Shared notebooks (personal table with invited collaborators — middle ground between personal and team).                                                                        |
 
 ### Claude Code Prompt Roadmap
 
@@ -853,18 +862,18 @@ This means a user can search for a phrase they remember writing in a long person
 
 ### What EveryStack Notes Does That Evernote Can't
 
-| Capability | Evernote | EveryStack Notes |
-|-----------|----------|-----------------|
-| Notes are records with typed fields | ❌ Notes are text blobs | ✅ Every note has title, tags, source, date — plus custom fields |
-| Cross-link notes to business data | ❌ Internal note links only | ✅ Link a note to a client, project, task, invoice — any record |
-| Automations on notes | ❌ None | ✅ "When a note is tagged 'action-item', create a task in Projects table" |
-| Generate documents from notes | ❌ Export only | ✅ Meeting notes → proposal draft via Smart Doc templates |
-| Publish notes as help center | ❌ Not possible | ✅ Move personal note → team wiki → portal article in 2 clicks |
-| AI-powered search | ❌ Basic keyword | ✅ Semantic search finds notes by meaning, not just words |
-| AI document extraction | ❌ Basic OCR | ✅ Drop an invoice → fields auto-extracted into structured data |
-| Real-time collaboration | ❌ Conflict-based sync | ✅ Yjs/Hocuspocus live collaboration on shared notes |
-| Team + personal in one platform | ❌ Separate products (Personal vs Teams) | ✅ Personal notebooks + team wikis in the same workspace, connected |
-| Views beyond list | ❌ List only | ✅ Notes in Grid, Kanban, Gallery, Calendar Table Views (they're records) |
+| Capability                          | Evernote                                 | EveryStack Notes                                                          |
+| ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
+| Notes are records with typed fields | ❌ Notes are text blobs                  | ✅ Every note has title, tags, source, date — plus custom fields          |
+| Cross-link notes to business data   | ❌ Internal note links only              | ✅ Link a note to a client, project, task, invoice — any record           |
+| Automations on notes                | ❌ None                                  | ✅ "When a note is tagged 'action-item', create a task in Projects table" |
+| Generate documents from notes       | ❌ Export only                           | ✅ Meeting notes → proposal draft via Smart Doc templates                 |
+| Publish notes as help center        | ❌ Not possible                          | ✅ Move personal note → team wiki → portal article in 2 clicks            |
+| AI-powered search                   | ❌ Basic keyword                         | ✅ Semantic search finds notes by meaning, not just words                 |
+| AI document extraction              | ❌ Basic OCR                             | ✅ Drop an invoice → fields auto-extracted into structured data           |
+| Real-time collaboration             | ❌ Conflict-based sync                   | ✅ Yjs/Hocuspocus live collaboration on shared notes                      |
+| Team + personal in one platform     | ❌ Separate products (Personal vs Teams) | ✅ Personal notebooks + team wikis in the same workspace, connected       |
+| Views beyond list                   | ❌ List only                             | ✅ Notes in Grid, Kanban, Gallery, Calendar Table Views (they're records) |
 
 ### The Pitch
 

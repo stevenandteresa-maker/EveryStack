@@ -9,15 +9,15 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| My Office | 24–80 | Personal hub, widget grid, widget chrome, grid system, cross-workspace scope |
-| Quick Panels | 81–159 | Sidebar icon rail, push-style panels, workspace vs My Office context, content mapping |
-| Tasks Widget / Quick Panel | 160–193 | Assigned tasks tab, My To-Dos tab, data model for personal tasks |
-| Calendar Widget / Quick Panel | 194–266 | Aggregated calendar sources, view modes, event management, personal events schema, feed API |
-| Chat Widget / Quick Panel | 267–278 | DM-only panel, quick-access to recent conversations |
-| Mobile My Office | 279–327 | Workspace tiles, bottom tab bar, contextual tab swap, default panel, header, hamburger drawer |
-| Responsive Summary | 328–360 | Desktop/tablet/phone layout specs, breakpoint behavior table |
+| Section                       | Lines   | Covers                                                                                        |
+| ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| My Office                     | 24–80   | Personal hub, widget grid, widget chrome, grid system, cross-workspace scope                  |
+| Quick Panels                  | 81–159  | Sidebar icon rail, push-style panels, workspace vs My Office context, content mapping         |
+| Tasks Widget / Quick Panel    | 160–193 | Assigned tasks tab, My To-Dos tab, data model for personal tasks                              |
+| Calendar Widget / Quick Panel | 194–266 | Aggregated calendar sources, view modes, event management, personal events schema, feed API   |
+| Chat Widget / Quick Panel     | 267–278 | DM-only panel, quick-access to recent conversations                                           |
+| Mobile My Office              | 279–327 | Workspace tiles, bottom tab bar, contextual tab swap, default panel, header, hamburger drawer |
+| Responsive Summary            | 328–360 | Desktop/tablet/phone layout specs, breakpoint behavior table                                  |
 
 ---
 
@@ -29,18 +29,19 @@ Top-level personal hub. Unified view across all workspaces the user belongs to. 
 
 My Office and workspace views are fundamentally different contexts:
 
-| | My Office | Workspace |
-|---|---|---|
-| **Scope** | Cross-workspace, personal | Single workspace, team |
-| **Main content** | Widget grid | Table Views, Record Views |
-| **Quick Panels** | Expand to 2/3 width | Slide out at 25% width |
-| **Record Thread** | N/A | Opens alongside Record View |
+|                   | My Office                 | Workspace                   |
+| ----------------- | ------------------------- | --------------------------- |
+| **Scope**         | Cross-workspace, personal | Single workspace, team      |
+| **Main content**  | Widget grid               | Table Views, Record Views   |
+| **Quick Panels**  | Expand to 2/3 width       | Slide out at 25% width      |
+| **Record Thread** | N/A                       | Opens alongside Record View |
 
 ### Widget Grid
 
 My Office displays a **3-column widget grid** on desktop. Each widget is a purpose-built platform component with its own internal UX.
 
 **Default widgets (always present):**
+
 - **Tasks** (1×1) — Personal task aggregation
 - **Calendar** (1×1) — Personal calendar aggregation
 - **Chat** (1×1) — DMs and @mentions feed
@@ -48,9 +49,11 @@ My Office displays a **3-column widget grid** on desktop. Each widget is a purpo
 Three equal-width columns in a single row. Clean space below.
 
 **Conditional widgets:**
+
 - **Workspaces** — Displays boards as labeled collapsible container tiles with workspace tiles grouped inside. Ungrouped workspaces appear in an "Ungrouped" section. Auto-appears if user belongs to 3+ workspaces.
 
 **Additional widgets available via catalog:**
+
 - **Saved** — Bookmarked messages from any thread
 - **Recent** — Recently accessed records/views
 - **Notes** — Post-MVP. Ships with the full personal-notes-capture feature set. See `personal-notes-capture.md`.
@@ -62,17 +65,18 @@ Three equal-width columns in a single row. Clean space below.
 ### Widget Chrome (Standard Container)
 
 Every widget has a standard wrapper:
+
 - **Title bar** — Widget name. Drag handle in customize mode.
 - **Settings gear** (⚙) — Widget-level config (e.g., Tasks: "show only overdue"; Calendar: default view day/week).
 - **Expand button** (↗) — Opens widget as Quick Panel (fills 2/3 of screen).
 
 ### Grid System
 
-| Property | Specification |
-|---|---|
-| Desktop (1440+) | 3 columns (equal width) |
-| Tablet (768+) | 2 columns |
-| Mobile (<768) | No grid — tab-switched full panels (see Mobile My Office) |
+| Property        | Specification                                             |
+| --------------- | --------------------------------------------------------- |
+| Desktop (1440+) | 3 columns (equal width)                                   |
+| Tablet (768+)   | 2 columns                                                 |
+| Mobile (<768)   | No grid — tab-switched full panels (see Mobile My Office) |
 
 MVP — Core UX ships with fixed default layout. Drag/resize/add-remove customization enabled when ready.
 
@@ -88,14 +92,14 @@ The sidebar is **collapsed by default (48px icon rail)** and **expandable to ~28
 
 **Collapsed state (48px):** Icons only.
 
-| Icon | Action | Badge |
-|---|---|---|
-| 🏠 | My Office — On My Office page: expands sidebar. On other pages: navigates to My Office. | — |
-| ☑ | Tasks Quick Panel (context-dependent — see below) | Count (new assignments + overdue) |
-| 💬 | Chat / DMs Quick Panel (context-dependent) | Count (unread messages) |
-| 📅 | Calendar Quick Panel (context-dependent) | Dot (upcoming events) |
-| ⟷ | Expand/collapse toggle | — |
-| 👤 | Avatar / settings | — |
+| Icon | Action                                                                                  | Badge                             |
+| ---- | --------------------------------------------------------------------------------------- | --------------------------------- |
+| 🏠   | My Office — On My Office page: expands sidebar. On other pages: navigates to My Office. | —                                 |
+| ☑    | Tasks Quick Panel (context-dependent — see below)                                       | Count (new assignments + overdue) |
+| 💬   | Chat / DMs Quick Panel (context-dependent)                                              | Count (unread messages)           |
+| 📅   | Calendar Quick Panel (context-dependent)                                                | Dot (upcoming events)             |
+| ⟷    | Expand/collapse toggle                                                                  | —                                 |
+| 👤   | Avatar / settings                                                                       | —                                 |
 
 **Expanded state (~280px):** Icon rail + content zone. Shows Quick Panel labels and the Workspace tree (Boards → Workspaces). Same content as mobile hamburger drawer.
 
@@ -166,6 +170,7 @@ Two sub-tabs:
 Aggregated from any table across all workspaces where user is in an assignee/people field.
 
 Each task row shows:
+
 - Checkbox (toggles status field on source record)
 - Title (primary field of source record)
 - Due date pill (color-coded: red = today/overdue, orange = tomorrow, blue = future)
@@ -179,6 +184,7 @@ Click navigates to source record. User can add private subtasks to break down as
 Private personal task list. Not visible to other workspace members. **One level of subtasks only** — personal tasks are lightweight; deeper nesting belongs in projects tables.
 
 Created via:
+
 - Task widget "+" button
 - `/todo` command in Command Bar
 - Can be linked to a record/workspace or standalone
@@ -197,11 +203,11 @@ Aggregated personal calendar across all workspaces. Shows time-based data filter
 
 ### What My Calendar Aggregates (MVP)
 
-| Source | Records Shown | Visual Style | Editable |
-|---|---|---|---|
-| Calendar-type table records | Where user is attendee/assignee | Solid colored blocks, workspace badge | ✅ (opens record) |
-| Projects-type table tasks | Where user is assignee, has date fields | Hatched/striped blocks, task icon | ✅ (opens record) |
-| Personal events | All `user_events` for this user | Neutral/slate color, personal icon | ✅ (inline edit) |
+| Source                      | Records Shown                           | Visual Style                          | Editable          |
+| --------------------------- | --------------------------------------- | ------------------------------------- | ----------------- |
+| Calendar-type table records | Where user is attendee/assignee         | Solid colored blocks, workspace badge | ✅ (opens record) |
+| Projects-type table tasks   | Where user is assignee, has date fields | Hatched/striped blocks, task icon     | ✅ (opens record) |
+| Personal events             | All `user_events` for this user         | Neutral/slate color, personal icon    | ✅ (inline edit)  |
 
 **Post-MVP sources:** Booking records (where user is assigned team member), synced external calendar events (Google/Outlook — Post-MVP — Comms & Polish, requires OAuth).
 
@@ -227,16 +233,19 @@ Belongs to the user, not any workspace. For items that don't belong in any works
 Schema: see `data-model.md` > `user_events` table.
 
 Key fields:
+
 - `show_as`: `busy` (default) | `free` — controls availability blocking
 - `recurrence_rule`: JSONB, RFC 5545 RRULE strings internally
 
 **Recurrence support (MVP):**
+
 - **Presets:** Daily, Weekly (pick days), Bi-weekly, Monthly, Quarterly, Yearly
 - **Storage:** RRULE strings (`FREQ=WEEKLY;BYDAY=MO,WE,FR`)
 - **End conditions:** Never, After N occurrences, Until date
 - **Exception handling:** Single-occurrence edits create EXDATE + override. 3-option: "Edit this event" / "Edit all future" / "Edit all events"
 
 **Availability blocking:**
+
 - Personal events block availability by default (`show_as: 'busy'`)
 - User can toggle to "Show as Free" for reminder-only events
 - All workspace events (meetings, deadlines) always block — no toggle
@@ -250,6 +259,7 @@ Backend endpoint powering all calendar surfaces:
 Parameters: `user_id`, `start_date`, `end_date`, `workspace_ids[]` (optional), `source_types[]` (optional: calendar_record | task | personal), `timezone`
 
 Returns unified list of time blocks:
+
 - `id`, `title`, `start`, `end`, `all_day`
 - `source_type` (calendar_record | task | personal)
 - `source_workspace_id` (nullable — null for personal)
@@ -288,22 +298,22 @@ Mobile home screen shows workspace tiles — cards for each workspace the user b
 
 Fixed 56px bottom navigation:
 
-| Tab | Icon | Badge | Content |
-|---|---|---|---|
-| Home | 🏠 | — | Workspace tiles |
-| Tasks | ☑ | Count (new + overdue) | Full-screen Tasks panel |
-| Chat | 💬 | Count (unread) | Full-screen Chat panel |
-| Calendar | 📅 | Dot (upcoming) | Full-screen Calendar panel |
+| Tab      | Icon | Badge                 | Content                    |
+| -------- | ---- | --------------------- | -------------------------- |
+| Home     | 🏠   | —                     | Workspace tiles            |
+| Tasks    | ☑    | Count (new + overdue) | Full-screen Tasks panel    |
+| Chat     | 💬   | Count (unread)        | Full-screen Chat panel     |
+| Calendar | 📅   | Dot (upcoming)        | Full-screen Calendar panel |
 
 ### Contextual Tab Swap
 
 When a user opens a record (full-screen Record View sheet), the bottom tabs contextually swap from Quick Panel tabs to **Record Thread tabs**:
 
-| Tab | Content |
-|---|---|
-| Fields | Record View field canvas |
-| Thread | Record Thread messages |
-| Activity | Activity log (post-MVP) |
+| Tab      | Content                  |
+| -------- | ------------------------ |
+| Fields   | Record View field canvas |
+| Thread   | Record Thread messages   |
+| Activity | Activity log (post-MVP)  |
 
 Back navigation returns to the previous bottom tab configuration.
 
@@ -327,11 +337,11 @@ Same structure as expanded desktop sidebar (~280px): Quick Panel labels (Tasks, 
 
 ## Responsive Summary
 
-| Breakpoint | My Office | Quick Panels | Sidebar |
-|---|---|---|---|
+| Breakpoint      | My Office            | Quick Panels                       | Sidebar                      |
+| --------------- | -------------------- | ---------------------------------- | ---------------------------- |
 | Desktop (1440+) | 3-column widget grid | 25% in workspace, 2/3 in My Office | ~48px icon rail (expandable) |
-| Tablet (768+) | 2-column widget grid | 25% in workspace, 2/3 in My Office | ~48px icon rail |
-| Mobile (<768) | Workspace tiles home | Full-screen via bottom tabs | Hidden, hamburger drawer |
+| Tablet (768+)   | 2-column widget grid | 25% in workspace, 2/3 in My Office | ~48px icon rail              |
+| Mobile (<768)   | Workspace tiles home | Full-screen via bottom tabs        | Hidden, hamburger drawer     |
 
 ### Desktop Layout (Default)
 
@@ -350,11 +360,13 @@ Same structure as expanded desktop sidebar (~280px): Quick Panel labels (Tasks, 
 ```
 
 **Header:**
+
 ```
 My Office  ──────────  🔍 Search...  🔔  ──────────  EveryStack ◈
 ```
 
 When Quick Panel expanded (e.g., Tasks):
+
 ```
 My Office › Tasks  ──  🔍 Search...  🔔  ──────────  EveryStack ◈
 ```

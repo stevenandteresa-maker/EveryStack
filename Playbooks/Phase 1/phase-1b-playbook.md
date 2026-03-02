@@ -5,6 +5,7 @@
 ### What Has Been Built
 
 **Phase 1A (Monorepo, CI Pipeline, Dev Environment)** is complete and merged to `main`:
+
 - Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` scaffolds
 - Docker Compose with PostgreSQL 16, PgBouncer, Redis
 - GitHub Actions CI (lint → typecheck → test)
@@ -13,6 +14,7 @@
 - `.env.example`
 
 Key files that exist:
+
 - `turbo.json`, `pnpm-workspace.yaml`
 - `docker-compose.yml` (PostgreSQL on 5432, PgBouncer on 6432, Redis on 6379)
 - `docker-compose.test.yml`
@@ -59,25 +61,25 @@ Phase division files are not needed during build execution — their content has
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | Drizzle config, UUIDv7 utility, `getDbForTenant()` client, PgBouncer transaction-mode config | None | ~180 |
-| 2 | Tier 0 schema — `users`, `tenants` | 1 | ~120 |
-| 3 | Tier 1 schema — `tenant_memberships`, `boards`, `board_memberships`, `workspaces`, `workspace_memberships` | 2 | ~180 |
-| 4 | Tier 2 schema — `base_connections`, `tables`, `fields` | 3 | ~200 |
-| 5 | Tier 3 schema — `records` (hash-partitioned), `cross_links`, `cross_link_index` | 4 | ~200 |
-| CP-1 | Integration Checkpoint 1 | 1–5 | — |
-| 6 | Tier 4 schema — `views`, `user_view_preferences`, `record_view_configs`, `record_templates`, `sections` | 5 | ~200 |
-| 7 | Tier 5A schema — `portals`, `portal_access`, `portal_sessions`, `forms`, `form_submissions` | 5 | ~160 |
-| 8 | Tier 5B schema — sync tables (`synced_field_mappings`, `sync_conflicts`, `sync_failures`, `sync_schema_changes`) | 4 | ~160 |
-| 9 | Tier 6A schema — `threads`, `thread_participants`, `thread_messages`, `user_saved_messages` | 3 | ~160 |
-| CP-2 | Integration Checkpoint 2 | 6–9 | — |
-| 10 | Tier 6B schema — `user_tasks`, `user_events`, `notifications`, `user_notification_preferences` | 3 | ~140 |
-| 11 | Tier 6C schema — `document_templates`, `generated_documents`, `automations`, `automation_runs`, `webhook_endpoints`, `webhook_delivery_log` | 4, 5 | ~200 |
-| 12 | Tier 7 schema — `ai_usage_log`, `ai_credit_ledger`, `audit_log`, `api_keys`, `api_request_log`, `user_recent_items`, `command_bar_sessions`, `feature_suggestions`, `feature_votes` | 3 | ~220 |
-| CP-3 | Integration Checkpoint 3 | 10–12 | — |
-| 13 | RLS policies on all tenant-scoped tables + initial migration generation + schema barrel export | 1–12 | ~250 |
-| CP-4 | Final Integration Checkpoint + PR | 13 | — |
+| Prompt | Deliverable                                                                                                                                                                         | Depends On | Lines (est.) |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| 1      | Drizzle config, UUIDv7 utility, `getDbForTenant()` client, PgBouncer transaction-mode config                                                                                        | None       | ~180         |
+| 2      | Tier 0 schema — `users`, `tenants`                                                                                                                                                  | 1          | ~120         |
+| 3      | Tier 1 schema — `tenant_memberships`, `boards`, `board_memberships`, `workspaces`, `workspace_memberships`                                                                          | 2          | ~180         |
+| 4      | Tier 2 schema — `base_connections`, `tables`, `fields`                                                                                                                              | 3          | ~200         |
+| 5      | Tier 3 schema — `records` (hash-partitioned), `cross_links`, `cross_link_index`                                                                                                     | 4          | ~200         |
+| CP-1   | Integration Checkpoint 1                                                                                                                                                            | 1–5        | —            |
+| 6      | Tier 4 schema — `views`, `user_view_preferences`, `record_view_configs`, `record_templates`, `sections`                                                                             | 5          | ~200         |
+| 7      | Tier 5A schema — `portals`, `portal_access`, `portal_sessions`, `forms`, `form_submissions`                                                                                         | 5          | ~160         |
+| 8      | Tier 5B schema — sync tables (`synced_field_mappings`, `sync_conflicts`, `sync_failures`, `sync_schema_changes`)                                                                    | 4          | ~160         |
+| 9      | Tier 6A schema — `threads`, `thread_participants`, `thread_messages`, `user_saved_messages`                                                                                         | 3          | ~160         |
+| CP-2   | Integration Checkpoint 2                                                                                                                                                            | 6–9        | —            |
+| 10     | Tier 6B schema — `user_tasks`, `user_events`, `notifications`, `user_notification_preferences`                                                                                      | 3          | ~140         |
+| 11     | Tier 6C schema — `document_templates`, `generated_documents`, `automations`, `automation_runs`, `webhook_endpoints`, `webhook_delivery_log`                                         | 4, 5       | ~200         |
+| 12     | Tier 7 schema — `ai_usage_log`, `ai_credit_ledger`, `audit_log`, `api_keys`, `api_request_log`, `user_recent_items`, `command_bar_sessions`, `feature_suggestions`, `feature_votes` | 3          | ~220         |
+| CP-3   | Integration Checkpoint 3                                                                                                                                                            | 10–12      | —            |
+| 13     | RLS policies on all tenant-scoped tables + initial migration generation + schema barrel export                                                                                      | 1–12       | ~250         |
+| CP-4   | Final Integration Checkpoint + PR                                                                                                                                                   | 13         | —            |
 
 ---
 
@@ -98,24 +100,28 @@ N/A — no tables created in this prompt.
 Set up the Drizzle ORM infrastructure and tenant-aware database client.
 
 **1. Install dependencies:**
+
 ```bash
 pnpm add drizzle-orm postgres --filter @everystack/shared
 pnpm add -D drizzle-kit --filter @everystack/shared
 ```
 
 **2. Create `packages/shared/db/drizzle.config.ts`:**
+
 - Configure Drizzle Kit for PostgreSQL with `driver: 'pg'`.
 - Schema path: `packages/shared/db/schema/`.
 - Migration output: `packages/shared/db/migrations/`.
 - Connection string from `DATABASE_URL_DIRECT` (bypasses PgBouncer for migrations — session mode required for DDL).
 
 **3. Create `packages/shared/db/uuid.ts`:**
+
 - Export a `generateUUIDv7()` function that produces UUIDv7 (time-ordered UUIDs).
 - Use a library like `uuidv7` or implement per RFC 9562. The key requirement: IDs sort chronologically by creation time, which improves index locality.
 - Export a `isValidUUID(value: string): boolean` helper for validation.
 - **No `serial` or `BIGSERIAL` anywhere in the project.** This is a CockroachDB readiness safeguard.
 
 **4. Create `packages/shared/db/client.ts`:**
+
 - Create two Drizzle client instances: `db` (write primary via `DATABASE_URL`) and `dbRead` (read replica via `DATABASE_READ_URL`).
 - MVP: `DATABASE_READ_URL` = `DATABASE_URL` (same instance). Adding a read replica later = changing one env var.
 - Export `getDbForTenant(tenantId: string, intent: 'read' | 'write' = 'write')`:
@@ -126,12 +132,14 @@ pnpm add -D drizzle-kit --filter @everystack/shared
 - Export the `DrizzleClient` type for use in data layer functions.
 
 **5. Verify PgBouncer transaction mode in `docker-compose.yml`:**
+
 - Confirm the PgBouncer service is configured with `pool_mode = transaction`.
 - Confirm `DATABASE_URL` in `.env.example` uses port 6432 (PgBouncer).
 - Add `DATABASE_URL_DIRECT` pointing to port 5432 (PostgreSQL, for migrations).
 - Add `DATABASE_READ_URL` pointing to port 6432 (same as `DATABASE_URL` for MVP).
 
 **6. Create an empty barrel file `packages/shared/db/schema/index.ts`:**
+
 - This will re-export all schema tables as they're created in subsequent prompts.
 - For now, export nothing — just create the file with a comment explaining its purpose.
 
@@ -176,6 +184,7 @@ tenants: id (UUIDv7 PK), name (VARCHAR NOT NULL), plan (VARCHAR DEFAULT 'freelan
 Create the Drizzle schema definitions for the two identity-layer tables that have no `tenant_id` (they ARE the identity layer).
 
 **1. `packages/shared/db/schema/users.ts`:**
+
 - Define the `users` table with all columns from the schema snapshot.
 - `id` is UUIDv7 primary key with `defaultRandom()`.
 - `clerk_id` is unique — this is the join key to Clerk's user system.
@@ -186,6 +195,7 @@ Create the Drizzle schema definitions for the two identity-layer tables that hav
 - **Note: `users` has NO `tenant_id`.** It is the only table (along with `tenants`) that is not tenant-scoped. A user can belong to multiple tenants via `tenant_memberships`.
 
 **2. `packages/shared/db/schema/tenants.ts`:**
+
 - Define the `tenants` table with all columns from the schema snapshot.
 - `plan` is VARCHAR with values: `freelancer`, `starter`, `professional`, `business`, `enterprise`.
 - `settings` JSONB defaults to `{}`.
@@ -370,6 +380,7 @@ cross_link_index: tenant_id (FK → tenants.id), cross_link_id (FK → cross_lin
 Create the core data storage tables. The `records` table is the most critical table in the system — it stores ALL record data across ALL platforms via the canonical JSONB pattern.
 
 **1. `records` table with hash partitioning:**
+
 - Composite primary key: `(tenant_id, id)`. This is NOT the standard single-column PK pattern — the partition key must be part of the PK for hash partitioning.
 - `PARTITION BY HASH (tenant_id)` with 16 partitions named `records_p0` through `records_p15`.
 - `canonical_data` JSONB stores all field values keyed by `fields.id` (UUID keys, not field names).
@@ -417,6 +428,7 @@ Create the core data storage tables. The `records` table is the most critical ta
 **Task:** Verify all database infrastructure and core schema tables (Tiers 0–3) integrate correctly.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
 3. `pnpm turbo test` — all pass (if any tests exist from Phase 1A)
@@ -677,6 +689,7 @@ Create the communications tables. These power Record Threads (record-scoped comm
 **Task:** Verify Tier 4–6A schema tables integrate correctly with the core schema.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
 3. `pnpm turbo test` — all pass
@@ -909,6 +922,7 @@ Create the infrastructure and utility tables: AI metering, audit trail, API keys
 **Task:** Verify all remaining schema tables (Tiers 6B–7) integrate correctly.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
 3. `pnpm turbo test` — all pass
@@ -940,6 +954,7 @@ N/A — no new tables. This prompt applies policies to existing tables.
 Enable Row-Level Security on all tenant-scoped tables as defense-in-depth. Application-level `tenant_id` filtering is primary enforcement; RLS catches bugs.
 
 **1. Create `packages/shared/db/rls.ts`:**
+
 - Export a `setTenantContext(tenantId: string)` helper that executes `SET LOCAL app.current_tenant_id = '{tenantId}'` within the current transaction.
 - This must be called at the start of every database transaction. Integrate with `getDbForTenant()` — when using the write client, the tenant context should be set automatically.
 - Export the list of tenant-scoped tables as a constant for reference.
@@ -963,11 +978,13 @@ CREATE POLICY tenant_isolation ON {table_name}
 Note: Tables that lack a direct `tenant_id` but reference a parent that has one (e.g., `thread_participants` → `threads.tenant_id`, `automation_runs` → `automations.tenant_id`) do NOT get direct RLS — they are protected by application-level joins that always go through tenant-scoped parent queries.
 
 **3. Finalize `packages/shared/db/schema/index.ts`:**
+
 - Ensure ALL 50 MVP tables are re-exported from the barrel file.
 - Organize exports by tier with section comments.
 - Export all inferred types (select and insert models).
 
 **4. Run full migration sequence validation:**
+
 - Drop and recreate the database.
 - Run all migrations (0001 through 0012) from scratch.
 - Verify zero errors, all tables exist, all RLS policies are active.
@@ -999,6 +1016,7 @@ Note: Tables that lack a direct `tenant_id` but reference a parent that has one 
 **Task:** Final verification that the complete Phase 1B database layer is correct and production-ready.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
 3. `pnpm turbo test` — all pass
@@ -1015,6 +1033,7 @@ Run:
 **Git:** Commit with message `chore(verify): final integration checkpoint — Phase 1B complete [Phase 1B, CP-4]`, push branch to origin, then open PR to main with title `Phase 1B — Database Schema, Connection Pooling, Tenant Routing`.
 
 **PR Description:**
+
 ```
 ## Phase 1B — Database Schema, Connection Pooling, Tenant Routing
 

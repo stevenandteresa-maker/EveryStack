@@ -263,6 +263,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 ### 2026-02-10 — Sections UI Primitive, Platform Gap Analysis, Five-Role Permission Model, Table View / App Scope Tiers [post-MVP for base/workspace scope]
 
 **Five-Role Permission Model (replaces Owner/Builder/Member):**
+
 - **Owner**: Billing, workspace settings, can restrict Admins, all access. Multiple non-billing Owners allowed.
 - **Admin**: Full technical access without billing. Access to all bases. Can create/delete bases. Can manage workspace settings (non-billing). Can set permissions for Manager and below. Cannot create/delete Admins.
 - **Manager**: Power user who constructs the experience. Access to permitted bases. Can create bases (not delete). Can create/delete tables (confirmation required). Can create fields, Table Views (table-level MVP) / Apps (base + workspace-level, post-MVP), automations, doc templates, portals. Can invite with role cap (up to Manager). Can set permissions for Team Member and below.
@@ -270,18 +271,21 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - **Viewer**: Read-only by default. Managers can grant edit access to specific fields/tables.
 
 **Role-Based Navigation Bifurcation:**
+
 - Owner/Admin/Manager see structural sidebar: Boards → Bases → tables, plus Cross-Links, Portals, Documents, Automations, Communications, Settings.
 - Team Member/Viewer see curated sidebar: flat list of permitted Table Views / Apps organized with Sections, plus Communications. No Boards, Bases, or raw tables visible.
 - Table Views / Apps ARE the Team Member's workspace experience. Sections provide organizational grouping that may mirror Board names but are independent.
 - Empty state: "Your workspace is being set up" when no Table Views / Apps assigned.
 
 **Three Table View / App Scope Tiers [post-MVP for base/workspace scope]:**
+
 - **Table-level** (Manager+): One table + cross-linked records. Lives in table view switcher. Current spec preserved.
 - **Base-level** (Manager+): Any table within one base as equals. No single parent table. Each tab has its own `source_table_id`. Primary use case: mini-apps for business domains (Client Management, Project Tracker).
 - **Workspace-level** (Owner/Admin only): Any table in any base. Purpose: aggregation dashboards, executive reporting. Addresses the reporting gap — workspace-level Apps [post-MVP] with chart/summary tabs replace need for separate report builder.
 - Data model: `interface_views` gains `scope` enum (table|base|workspace), `table_id` and `base_id` both nullable, `primary_tab_id` for master-detail, `section_id` for Team Member sidebar organization.
 
 **Sections — Platform-Wide List Organizer:**
+
 - Identified list clutter as an unaddressed problem across multiple surfaces (view switcher, automations, cross-links, documents, sidebar, etc.).
 - Designed Sections as a universal UI primitive: named, collapsible group headers that items can be dragged into. Purely organizational — no permissions, no filtering, no new entity type.
 - Two tiers: personal sections (any user, private) and Manager-created sections (default grouping visible to all workspace members). Team Members see Manager sections as starting layout, can add personal sections on top.
@@ -289,6 +293,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Data model: `sections` table with context discriminator, nullable user_id (null = shared), sort_order, collapse state. Items reference section via nullable `section_id` FK.
 
 **Platform Gap Analysis (5 Holes Identified):**
+
 1. **Email as communication channel** — no spec for connected mailbox, email threading per record, composing/sending from Record Thread / Chat [post-MVP for full hub], inbound email matching. Automation "Send Email" exists but is fire-and-forget with no response loop.
 2. **Sections / list clutter** — resolved (see above).
 3. **File storage unification** — files live in 5 places (record fields, documents table, chat attachments, Smart Doc embeds, generated docs) with no workspace-level aggregation, no storage quotas, no lifecycle management.
@@ -300,6 +305,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 **74 design decisions** covering the complete Table View (grid) specification. Comprehensive grid spec from scratch — structure, interaction, cell types, permissions, performance.
 
 **Grid Structure:**
+
 - Column order: drag handle (hover) → checkbox → row # → primary field (frozen) → fields → "+" column
 - Three density modes: compact (32px), medium (44px default), tall (64px)
 - Alternating row stripes always on
@@ -307,6 +313,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Sticky header + sticky summary footer
 
 **Interaction Model:**
+
 - Full spreadsheet keyboard nav (arrows, Tab, Enter, Escape)
 - Multi-cell range selection + copy/paste (supports external spreadsheets)
 - Drag-to-fill (Excel-style fill handle)
@@ -315,6 +322,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Bulk actions toolbar on multi-select: delete, edit in bulk, duplicate, copy
 
 **Cell Type Rendering:**
+
 - Single/multi-select: builder-configurable display (colored block, colored pill, grey pill + dot, plain text)
 - People: builder-configurable (grey pill + avatar, colored pill + name, avatar only)
 - Smart Doc: badge/icon, opens in side panel
@@ -327,6 +335,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Date: click opens date picker popover
 
 **Record View overlay — Three-Zone Layout:**
+
 - Grid | Record View Card | Chat/Calendar — all visible simultaneously
 - Record panel mirrors Record View card (vertical fields, inline editable)
 - Right panel auto-switches to record's chat thread, collapsible to icon strip
@@ -334,11 +343,13 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Replaces full-screen overlay for grid context
 
 **Column Features:**
+
 - Structural column coloring (pastel tints for visual field grouping, predefined palette, per view)
 - User-freezable columns beyond primary field ("Freeze up to here")
 - Drag-to-resize, drag-to-reorder headers
 
 **Data Operations:**
+
 - Multi-level sort with priority ordering
 - Multi-level grouping (max 3 deep) with collapsible headers, record counts, aggregation rows, drag between groups
 - Quick filters (per column) + full filter builder (AND/OR logic, nested groups)
@@ -346,18 +357,21 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Import: CSV, Excel, paste, merge/update. Export: CSV, Excel (filtered rows only). Print + PDF.
 
 **Collaboration:**
+
 - Real-time WebSocket updates
 - Row-level presence (colored border + avatar)
 - Last-write-wins conflict resolution
 - Optimistic updates with rollback on error
 
 **Permissions & Views:**
+
 - Field-level permissions: hidden, read-only, or full access per role (Manager-configured)
 - My Views + Shared Views, tabs in view switcher
 - Manager-assigned default view per table
 - No hard row/field caps — graceful degradation with suggestion banners
 
 **Key Design Decisions:**
+
 - No in-grid search (rely on Command Bar + column filters)
 - No row hover preview (rely on expand icon)
 - Read-only cells show lock icon, paste silently skips them
@@ -368,6 +382,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Responsive: same grid on all breakpoints (never replaced by card layout)
 
 **Command Bar Prompt & Command Ecosystem:**
+
 - Slash command UX: Slack-familiar (type `/`, contextual suggestions at top, alphabetical with fuzzy search)
 - 26 system commands across 9 categories: Navigation, Record Creation, Data Operations, Communication, Document Generation, Automation, Settings, Utility, AI Actions
 - Prompt templates vs automations: clear distinction (user-initiated one-off vs system-triggered background)
@@ -377,6 +392,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - AI slash commands are shortcut entry points, not the only path
 
 **Documents Produced:**
+
 - claude.md updated with Table (Grid) View Architecture section, System Slash Command Catalog, AI Prompt Template Model
 - table-decisions.md — full 74+ decision running document (grid + command ecosystem)
 
@@ -389,6 +405,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 **Field Definitions → Separate Table:** Moved from JSONB in `tables` to first-class `fields` relational table. Enables real foreign keys from config tables, individual field queries, field-level metadata. Record values still in `records.canonical_data` JSONB keyed by field ID.
 
 **Field Type Taxonomy (40 types, 8 categories):**
+
 - Text: text, text_area, smart_doc
 - Number: number, currency, percent, rating, duration, progress, auto_number
 - Selection: single_select, multiple_select, status, tag
@@ -400,6 +417,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Deferred: vote (post-MVP)
 
 **Key field decisions:**
+
 - Status: separate field type (semantic categories: not_started/in_progress/done/closed)
 - Tag: separate from Multiple Select (fluid, users add freely)
 - Due Date: separate from Date (countdown, overdue coloring, urgency)
@@ -412,6 +430,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 - Social: keep for MVP
 
 **Display styles:**
+
 - Selection (Status/Single/Multiple Select/Tag): full_bar, colored_pill, dot_text, plain, priority (Single Select only)
 - People: avatar_name, avatar_only, colored_pill, grey_avatar_pill, name_only
 - Phone: call/SMS/WhatsApp/copy action buttons, device-adaptive, optional Record Thread / Chat [post-MVP for full hub] routing
@@ -438,6 +457,7 @@ Files updated: `email.md` (new, 267 lines), `claude.md` (tech stack, pricing, ph
 Defined My Calendar as a virtual aggregation layer (not a table type) that pulls time-based data from across all workspaces, filtered to current user. Aggregates: calendar-type table events, projects-type tasks with dates, booking records, personal events (`user_events`), and synced external calendar events (Google/Outlook).
 
 **Three Access Points (Progressive Detail):**
+
 1. **Header widget** (persistent): shows single next item, hover reveals mini agenda (next 2–3 items), click opens right panel calendar tab
 2. **Right panel Calendar tab** (360px): coexists with Chat via tab switcher (`Chat | Calendar`). Day view, inline quick-create, source filter toggles. `⌘+Shift+C` shortcut.
 3. **My Office Calendar section**: full day/week/month views, complete event management
@@ -451,6 +471,7 @@ Defined My Calendar as a virtual aggregation layer (not a table type) that pulls
 **Right Panel Tab Architecture:** Right panel now supports tabs (`Chat | Calendar`). Chat remains default. Calendar tab opens via header widget click or keyboard shortcut. Non-sticky — reverts to Chat on navigation. Architecture extensible for future tabs (Activity, Time Log, etc.).
 
 **Key Decisions:**
+
 - My Calendar is a platform surface, not a table type — it doesn't own records, it aggregates
 - Personal events live outside tenant scope (like user_tasks) in `user_events` table
 - Right panel uses tabs for Chat/Calendar coexistence (not split, not context-dependent)
@@ -466,6 +487,7 @@ Defined My Calendar as a virtual aggregation layer (not a table type) that pulls
 
 **Two TipTap Environments (paid license tier optimization):**
 Defined two distinct TipTap editor configurations to stay within the 2-environment paid tier:
+
 - **Environment 1: Chat Editor** — lightweight, command-prompt-style input for all messaging/conversation contexts. Single-line default, expandable to paragraph mode with Shift+Enter. Floating bubble toolbar on text selection. Cancel/OK buttons in paragraph mode (OK = Cmd+Enter). Extensions: bold, italic, underline, bullet/ordered lists, links, @mentions, placeholder, history. No headings, images, tables, slash commands, or collaboration.
 - **Environment 2: Smart Doc Editor** — full-featured document/content editor with three modes (Wiki, Doc, Template). Full toolbar, slash commands, floating bubble menu, block handles. Collaboration via Yjs. Mode-specific extensions: Wiki adds backlinks/TOC/nested pages, Template adds placeholder toolbar/field picker/preview toggle.
 
@@ -479,6 +501,7 @@ Introduced `smart_doc` as a field type in the EveryStack field system. Any recor
 **Doc Gen Bridge:** Smart Doc template mode is the visual authoring counterpart to the Template Mapper. Two paths converge: uploaded DOCX → Docxtemplater (complex layouts) and Smart Doc template → HTML module → Docxtemplater (flowing content). Both output DOCX/PDF to S3/R2.
 
 **Key Decisions:**
+
 - TipTap JSON (not HTML) as source of truth for Smart Doc content — lossless round-trip, preserves editor state, collaboration-friendly.
 - Chat Editor publishes with Enter (single-line) or Cmd+Enter (paragraph mode). Shift+Enter expands to paragraph.
 - Smart Doc field has two sub-types: wiki (editable) and template_output (read-only, live computed from Smart Doc view templates).
@@ -489,10 +512,12 @@ Introduced `smart_doc` as a field type in the EveryStack field system. Any recor
 - Three preview modes in template editor: Edit (pills), Preview (sample data), Raw (syntax).
 
 **Documents Produced:**
+
 - claude.md updated with TipTap Editor Architecture section, Smart Doc field type, database schema additions, cross-references throughout.
 - claude.md updated with full Chat Editor specification: input states/transitions, progressive disclosure levels, keyboard shortcuts, mention system, markdown shortcuts, message editing/deletion, reactions design.
 
 **Chat Editor Decisions (Progressive Disclosure applied):**
+
 - Bubble toolbar shows only B/I/U/Link/Bullets/Numbers (6 items). Strikethrough, inline code, and blockquote exist via markdown shortcuts only (Level 3) — no toolbar buttons.
 - @mentions dropdown: people first, then @here/@channel under "Notify Group" divider (Level 2), then @record/@page under "Link to..." divider (Level 2). @channel restricted to Manager+/Owners.
 - Message editing: unlimited time window (not a compliance product). ⋯ menu edit (Level 1) + ↑ arrow last message (Level 2). Small gray "(edited)" label.
@@ -502,6 +527,7 @@ Introduced `smart_doc` as a field type in the EveryStack field system. Any recor
 - thread_messages schema expanded: +parent_message_id, +attachments, +reactions, +link_previews, +pinned_at, +pinned_by, +channel_type, +edited_at, +deleted_at columns.
 
 **Record Thread / Chat Architecture (Slack gap analysis → full spec):**
+
 - Performed feature-by-feature comparison against Slack. Identified three critical gaps (DMs, threaded replies, link unfurls) and several high-value gaps (pins, bookmarks, presence, emoji picker).
 - Conversations section replaced with full Record Thread / Chat Architecture section.
 
@@ -532,6 +558,7 @@ Introduced `smart_doc` as a field type in the EveryStack field system. Any recor
 **Development phases updated:** Post-MVP — Comms & Polish expanded with full comms feature list. Post-MVP — Custom Apps & Live Chat (Omnichannel) added.
 
 **Table View / App Architecture (new section):**
+
 - Table Views (MVP) / Apps (post-MVP) are Manager-designed, permission-scoped view containers in the table view switcher (visually distinguished with 🔷 icon).
 - Access types: everyone, role_minimum, user_list (the "Driver #1" pattern for personalized workspaces).
 - `$me` token in filters: resolves to current user at query time. One definition serves entire team.
@@ -541,18 +568,21 @@ Introduced `smart_doc` as a field type in the EveryStack field system. Any recor
 - New tables: `interface_views`, `interface_tabs`, `user_interface_customizations`.
 
 **Record View (new view type):**
+
 - Card-based view of filtered records, available on any table. Default first tab in new Table Views / Apps.
 - Card layouts: single column, grid (2-3 cols), compact list. Manager sets default, user overrides if customizable.
 - Inline editable fields on cards (click to edit, blur to save).
 - Right sidebar (360px) shows chat thread for selected record. Includes hierarchical chat navigation.
 
 **Record View overlay (full-screen detail):**
+
 - Universal record detail: expand icon (⤢) available from every view (Table, Board, Gantt, Record View, List).
 - Layout: record card (main panel, editable) + chat (right sidebar 360px). Bottom tabs (future): Activity, Time, Linked Records, History.
 - Primary field always frozen in table view — expand icon always accessible regardless of horizontal scroll.
 - Responsive: desktop side-by-side, tablet overlay chat, mobile full-width with chat via bottom tab.
 
 **Smart Doc Architecture Revision:**
+
 - **Smart Doc field (record level) simplified to two sub-types:**
   - Wiki: user-authored, fully editable, collaboration + version history. Unlimited per record.
   - Template Output: generated from Smart Doc view template, **read-only, live computed** (auto-syncs when record fields change via debounced BullMQ job). One per Smart Doc view template on the table.
@@ -589,6 +619,7 @@ These four features are noted for inclusion in the platform roadmap. They follow
 **Context:** Analyzed marketing agency requirements against EveryStack architecture. Identified three feature gaps for agency vertical: time tracking, media/asset management, and ad platform integrations.
 
 **Time Tracking [post-MVP] (Section 26):**
+
 - Capability layer on projects-type tables via `time_tracking_config` (same pattern as pm_table_config).
 - Core data model: `time_entries` (logged hours), `billing_rates` (hierarchical rate resolution), `time_tracking_config` (per-table settings).
 - Timer widget in header (persistent, Redis-backed across devices). Manual entry on record Time panel.
@@ -598,6 +629,7 @@ These four features are noted for inclusion in the platform roadmap. They follow
 - Portal integration: Time Summary block, retainer dashboard KPI.
 
 **Media & Asset Library [post-MVP] (Section 27):**
+
 - Extends documents table type — assets are records, folders are records with flag, nesting via parent field.
 - `documents_table_config` maps fields to asset roles. `asset_versions` tracks version history.
 - Thumbnail pipeline via BullMQ (Sharp for images, pdftoppm for PDFs, ffmpeg for video).
@@ -606,6 +638,7 @@ These four features are noted for inclusion in the platform roadmap. They follow
 - Content extraction (PDF/doc text) for full-text search indexing.
 
 **Ad Platform & External Data Integrations [post-MVP] (Section 28):**
+
 - Two sync patterns: Pattern A (entity sync — campaigns as records) and Pattern B (time-series metric storage via `metric_snapshots` table).
 - Supported platforms: Google Ads, Meta Ads, Google Analytics 4, LinkedIn Ads (TikTok future).
 - OAuth connection flow mirroring Airtable/SmartSuite pattern. Read-only sync (no outbound push).
@@ -616,12 +649,14 @@ These four features are noted for inclusion in the platform roadmap. They follow
 - Post-MVP — Verticals & Advanced in roadmap (post-MVP), sub-phased: 8a Google Ads, 8b Meta/GA4/charts, 8c LinkedIn/templates.
 
 **Key Design Decisions:**
+
 - Time tracking is a capability layer, not a table type — can be enabled on any projects table.
 - Assets are records (not a separate system) — inherits all EveryStack capabilities for free.
 - Ad platform sync is read-only and uses a new metric_snapshots table for time-series data.
 - All three features follow existing architectural patterns (config tables, BullMQ jobs, portal blocks).
 
 **Documents Produced:**
+
 - Architecture spec updated to v1.2 (Sections 26–28 added)
 - claude.md updated with condensed feature specs
 
@@ -631,10 +666,12 @@ These four features are noted for inclusion in the platform roadmap. They follow
 Evaluated rich text editor options for template-based document generation. Explored Tiptap (placeholder nodes + DOCX export), CKEditor 5 (pagination + restricted editing), and OnlyOffice (full Office clone via Docker). Identified core limitation: Tiptap's linear block model can't handle fixed-layout documents (invoices, contracts with side-by-side elements). OnlyOffice is overkill ($6K/yr, separate server). CKEditor is a middle ground but still limited for precise layout.
 
 **Two-Pronged Architecture Decision:**
+
 1. **Tiptap** — keeps its existing role for record-level rich text, wiki pages, comments, @mentions, and collaboration. Not used for template-driven document generation.
 2. **Docxtemplater** — handles all template-based document output. Users design templates in Word/Google Docs (familiar tools, full layout control), upload to EveryStack, map fields via Template Mapper UI, generate populated documents on demand.
 
 **Docxtemplater Evaluation:**
+
 - Open-source core: `{placeholder}` replacement, loops, conditionals — free
 - PRO ($1,500 one-time, 4 modules): HTML injection (bridges Tiptap content into templates), image module, table module, XLSX generation
 - Enterprise (all 19 modules): subtemplates, charts, slides, paragraph replacement
@@ -644,6 +681,7 @@ Evaluated rich text editor options for template-based document generation. Explo
 Built interactive React prototype (docx-template-mapper.jsx) demonstrating the complete field-mapping workflow: upload DOCX → visual preview → select text → map to database fields → preview with sample data → export as template. Design follows Obsidian Teal system (DM Sans, teal primary, dark sidebar, 8px radius, two-panel layout matching App Designer [post-MVP] and automation builder patterns).
 
 **Key Technical Decisions:**
+
 - **docx-preview** (not mammoth.js) for browser-side DOCX rendering — preserves fonts, tables, colors, spacing faithfully
 - **JSZip** for DOCX XML manipulation — unzip, walk `<w:t>` runs, replace text with `{placeholder}`, rezip
 - **Run-merging logic** needed because Word splits single words across multiple XML runs
@@ -655,6 +693,7 @@ Built interactive React prototype (docx-template-mapper.jsx) demonstrating the c
 The prototype covers UX flow (~30%). Production requires: DOCX XML manipulation engine, storage/versioning, dynamic field registry (pulling from workspace schema), Docxtemplater backend service (BullMQ job), PDF conversion pipeline, and docx-preview integration for real uploads.
 
 **Documents Produced:**
+
 - claude.md updated with Document Generation Architecture section, tech stack updates, Post-MVP — Documents rewrite
 - Architecture spec Section 13 to be updated (pending)
 - docx-template-mapper.jsx (interactive React prototype)
@@ -662,11 +701,13 @@ The prototype covers UX flow (~30%). Production requires: DOCX XML manipulation 
 ### 2026-02-08 — App Designer [post-MVP], Automation Builder, Design Philosophy
 
 **App Designer [post-MVP] Architecture (from earlier session):**
+
 - Full App Designer [post-MVP] specification added to architecture doc (Section 12): creation flow, designer layout (4-zone: sidebar + canvas + property panel + toolbar), sidebar modes (Pages/Blocks/Layers), block model (44 block types across 7 categories), container rules and nesting, canvas behavior, property panel (Content/Style/Logic tabs), data binding modes (Context/Query/Static/Client), theme system (20 curated themes + custom), preview/publish flow, Smart Setup auto-generation.
 - Seven Figma addendums (#12–#18) created covering portal dashboard, designer shell, canvas, property panel, theme system, preview/publish, client management.
 - Interactive React mockup created for App Designer [post-MVP] matching Obsidian Teal aesthetic.
 
 **Automation Builder Architecture:**
+
 - Chose flow visualization paradigm (not linear step list, not sprawling node canvas). Top-to-bottom vertical flow with branching columns for conditions. Document-like reading for simple flows; visual columns when branching.
 - Builder interface: three-zone layout with three-tab sidebar (Automations with activity summaries, Integrations, History scoped to current automation). History tab replaces Builder/History toolbar toggle — both visible simultaneously.
 - Interactive React mockup created for automation builder.
@@ -677,12 +718,14 @@ The prototype covers UX flow (~30%). Production requires: DOCX XML manipulation 
 - Reports are portal pages rendered to PDF (Option B) — no separate report designer needed.
 
 **Design Philosophy — Progressive Disclosure:**
+
 - Platform-wide principle: "Always accessible/intuitive for normal users; extremely functional when needed for power users."
 - Three levels: Default View (80% use case, recipes/templates, common actions), Expanded View (full options, advanced accordions), Power View (code, expressions, cron).
 - Implementation patterns: smart defaults + customize escape hatches, advanced accordions, action/block/field tiering (Common vs All), contextual revelation, recipes as entry points, workspace complexity setting (future).
 - Applies to automation builder, App Designer [post-MVP], table builder, cross-links, command prompt.
 
 **Command Bar (formerly "Unified Command Prompt"):**
+
 - Single persistent input in toolbar. Four intent paths: Action (execute with confirmation), Guide (AI walkthrough), Communication (@mentions, messages), Search (records/files/messages).
 - Same Cmd+K shortcut. Always visible on every page.
 - Permission-Scoped AI: AI calls same API endpoints as frontend (goes through RBAC). Context provider pre-filtered by user permissions. AI can't see what user can't see. Audit trail shows user as actor.
@@ -691,18 +734,21 @@ The prototype covers UX flow (~30%). Production requires: DOCX XML manipulation 
 - Contextual suggestions: passive hints based on usage patterns. One per session max. Dismissable. Powered by Haiku.
 
 **Key Design Decisions:**
+
 - Reports = portal pages rendered to PDF. No separate report designer.
 - AI Tutor, Command Bar, and contextual suggestions consolidated into the Command Bar.
 - AI is permission-scoped at every level. AI never acts without user confirmation. AI is the user's tool, not an autonomous agent.
 - Automation sidebar uses combined automation list + activity monitoring (Tab 1), not separate views.
 
 **Documents Produced:**
+
 - Architecture spec updated (Section 9.8–9.9 Command Bar + Guide Mode, Section 14 full rewrite)
 - automation-builder-mockup.jsx (interactive React prototype)
 - portal-designer-mockup.jsx (interactive React prototype)
 - claude-code-context.md (design system reference for Claude Code)
 
 ### 2026-02-07 — Initial Setup & My Office Architecture
+
 - Imported v1.0 of Platform Architecture & Development Specification. Created claude.md. Created Figma Design System & Shell Template Setup Guide.
 - My Office as top-level hub. Multi-workspace model. Three-level conversations. Private personal tasks. Command Bar. Extensible command registry. Responsive shell. Table Type System (table/projects/calendar/documents/wiki). Project Management Architecture (pm_table_config, dependencies, calendars, baselines, resources, critical path, auto-scheduling, 5 views). Wiki Architecture. Figma Addendums #3–#11.
 
@@ -712,25 +758,25 @@ The prototype covers UX flow (~30%). Production requires: DOCX XML manipulation 
 
 ## Document Inventory
 
-| Document | Location | Description |
-|----------|----------|-------------|
-| Architecture Spec (latest) | /mnt/user-data/outputs/Architecture_updated_feb_8.docx | Full platform specification (28 sections, v1.2). Updated Feb 8 with time tracking, asset library, ad platform integrations. Section 13 pending update for two-pronged doc gen strategy. |
-| claude.md | /mnt/user-data/outputs/claude.md | Running project reference (condensed). Updated Feb 9 with Field System Architecture, Boards, Bidirectional Sync, Cross-Linking, Formula System, My Calendar Architecture, Calendar Table Type, TipTap Editor Architecture, Smart Doc field/view types, Table View / App Architecture, Record View (overlay), Record Thread / Chat, Table Grid View Architecture. |
-| Table Grid View Decisions | /mnt/user-data/outputs/table-decisions.md | Full 74-decision running document covering grid structure, cell types, interaction model, permissions, performance, collaboration. |
-| Command Bar & Prompt Ecosystem | /mnt/user-data/outputs/command-bar-prompt-decisions.md | Complete spec: Command Bar, 26 system slash commands, AI interaction model, prompt template system, Guide Mode, data model. |
-| Template Mapper Prototype | /mnt/user-data/outputs/docx-template-mapper.jsx | Interactive React prototype — DOCX upload, visual preview, text selection, field mapping, preview modes, Obsidian Teal design |
-| Automation Builder Mockup | /mnt/user-data/outputs/automation-builder-mockup.jsx | Interactive React prototype — flow canvas, branching, config panel, run history |
-| App Designer [post-MVP] Mockup | /mnt/user-data/outputs/portal-designer-mockup.jsx | Interactive React prototype — canvas, sidebar modes, property panel, themes, preview |
-| Claude Code Context | /mnt/user-data/outputs/claude-code-context.md | Design system reference for Claude Code (colors, spacing, component patterns, architecture) |
-| Figma Addendum #1 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-1.docx | Design System & Shell Template |
-| Figma Addendum #2 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-2.docx | Command Bar & Notifications |
-| Figma Addendum #3 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-3.docx | Base Tab Bar & Type Picker |
-| Figma Addendum #4 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-4.docx | Project List & Detail Shell |
-| Figma Addendum #5 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-5.docx | Task List View (Asana-style) |
-| Figma Addendum #6 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-6.docx | MVP Gantt & Timeline |
-| Figma Addendum #7 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-7.docx | Board / Kanban View |
-| Figma Addendum #8 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-8.docx | Full Gantt Overlays (MVP — Sync) |
-| Figma Addendum #9 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-9.docx | Workload, Portfolio & Dashboard Views (MVP — Core UX) |
-| Figma Addendum #10 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-10.docx | Wiki View |
-| Figma Addendum #11 | /mnt/user-data/outputs/EveryStack-Figma-Addendum-11.docx | PM Config Wizard |
-| Figma Addendums #12–#18 | /mnt/user-data/outputs/ | App Designer [post-MVP] series: Dashboard, Designer Shell, Canvas, Property Panel, Theme System, Preview/Publish, Client Management |
+| Document                       | Location                                                 | Description                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecture Spec (latest)     | /mnt/user-data/outputs/Architecture_updated_feb_8.docx   | Full platform specification (28 sections, v1.2). Updated Feb 8 with time tracking, asset library, ad platform integrations. Section 13 pending update for two-pronged doc gen strategy.                                                                                                                                                                          |
+| claude.md                      | /mnt/user-data/outputs/claude.md                         | Running project reference (condensed). Updated Feb 9 with Field System Architecture, Boards, Bidirectional Sync, Cross-Linking, Formula System, My Calendar Architecture, Calendar Table Type, TipTap Editor Architecture, Smart Doc field/view types, Table View / App Architecture, Record View (overlay), Record Thread / Chat, Table Grid View Architecture. |
+| Table Grid View Decisions      | /mnt/user-data/outputs/table-decisions.md                | Full 74-decision running document covering grid structure, cell types, interaction model, permissions, performance, collaboration.                                                                                                                                                                                                                               |
+| Command Bar & Prompt Ecosystem | /mnt/user-data/outputs/command-bar-prompt-decisions.md   | Complete spec: Command Bar, 26 system slash commands, AI interaction model, prompt template system, Guide Mode, data model.                                                                                                                                                                                                                                      |
+| Template Mapper Prototype      | /mnt/user-data/outputs/docx-template-mapper.jsx          | Interactive React prototype — DOCX upload, visual preview, text selection, field mapping, preview modes, Obsidian Teal design                                                                                                                                                                                                                                    |
+| Automation Builder Mockup      | /mnt/user-data/outputs/automation-builder-mockup.jsx     | Interactive React prototype — flow canvas, branching, config panel, run history                                                                                                                                                                                                                                                                                  |
+| App Designer [post-MVP] Mockup | /mnt/user-data/outputs/portal-designer-mockup.jsx        | Interactive React prototype — canvas, sidebar modes, property panel, themes, preview                                                                                                                                                                                                                                                                             |
+| Claude Code Context            | /mnt/user-data/outputs/claude-code-context.md            | Design system reference for Claude Code (colors, spacing, component patterns, architecture)                                                                                                                                                                                                                                                                      |
+| Figma Addendum #1              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-1.docx  | Design System & Shell Template                                                                                                                                                                                                                                                                                                                                   |
+| Figma Addendum #2              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-2.docx  | Command Bar & Notifications                                                                                                                                                                                                                                                                                                                                      |
+| Figma Addendum #3              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-3.docx  | Base Tab Bar & Type Picker                                                                                                                                                                                                                                                                                                                                       |
+| Figma Addendum #4              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-4.docx  | Project List & Detail Shell                                                                                                                                                                                                                                                                                                                                      |
+| Figma Addendum #5              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-5.docx  | Task List View (Asana-style)                                                                                                                                                                                                                                                                                                                                     |
+| Figma Addendum #6              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-6.docx  | MVP Gantt & Timeline                                                                                                                                                                                                                                                                                                                                             |
+| Figma Addendum #7              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-7.docx  | Board / Kanban View                                                                                                                                                                                                                                                                                                                                              |
+| Figma Addendum #8              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-8.docx  | Full Gantt Overlays (MVP — Sync)                                                                                                                                                                                                                                                                                                                                 |
+| Figma Addendum #9              | /mnt/user-data/outputs/EveryStack-Figma-Addendum-9.docx  | Workload, Portfolio & Dashboard Views (MVP — Core UX)                                                                                                                                                                                                                                                                                                            |
+| Figma Addendum #10             | /mnt/user-data/outputs/EveryStack-Figma-Addendum-10.docx | Wiki View                                                                                                                                                                                                                                                                                                                                                        |
+| Figma Addendum #11             | /mnt/user-data/outputs/EveryStack-Figma-Addendum-11.docx | PM Config Wizard                                                                                                                                                                                                                                                                                                                                                 |
+| Figma Addendums #12–#18        | /mnt/user-data/outputs/                                  | App Designer [post-MVP] series: Dashboard, Designer Shell, Canvas, Property Panel, Theme System, Preview/Publish, Client Management                                                                                                                                                                                                                              |

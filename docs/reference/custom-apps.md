@@ -16,25 +16,25 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Rationale | 41–68 | Internal apps on App Designer engine, POS hero use case |
-| Architecture: Post-MVP App Types | 69–92 | 7 app types, type-specific capabilities |
-| Data Model Additions | 93–176 | apps, app_pages, app_blocks tables, cart_sessions |
-| Route Architecture | 177–210 | App routes, nested page routing, URL structure |
-| Cart / Transaction Block | 211–363 | Session-scoped Zustand state, 9-step atomic completion |
-| Stripe Terminal Integration | 364–530 | 3 paths (external reader, Tap to Pay, Smart Reader) |
-| Kiosk Mode | 531–578 | Full-screen locked mode, session auto-reset, inactivity timeout |
-| App Creation Flow | 579–605 | Wizard, starter templates, type selection |
-| App Navigation in Workspace | 606–615 | Sidebar placement, app switching |
-| App-Specific Block Enhancements | 616–653 | Blocks added for internal app use cases |
-| Audit Trail for App Actions | 654–681 | App-specific audit events, actor_type tracking |
-| Caching & Performance | 682–702 | App page caching, block-level updates |
-| Redis Key Patterns (New) | 703–712 | Redis keys for cart sessions, app state |
-| Plan Limits | 713–728 | App count and page limits per plan tier |
-| MVP Feature Split (All Post-MVP per GLOSSARY.md) | 729–764 | Scope boundaries |
-| Phase Implementation Summary (All Post-MVP) | 765–776 | Post-MVP — Custom Apps+ delivery scope |
-| Starter Templates | 777–821 | POS Terminal, Front Desk Kiosk, Warehouse Station templates |
+| Section                                          | Lines   | Covers                                                          |
+| ------------------------------------------------ | ------- | --------------------------------------------------------------- |
+| Strategic Rationale                              | 41–68   | Internal apps on App Designer engine, POS hero use case         |
+| Architecture: Post-MVP App Types                 | 69–92   | 7 app types, type-specific capabilities                         |
+| Data Model Additions                             | 93–176  | apps, app_pages, app_blocks tables, cart_sessions               |
+| Route Architecture                               | 177–210 | App routes, nested page routing, URL structure                  |
+| Cart / Transaction Block                         | 211–363 | Session-scoped Zustand state, 9-step atomic completion          |
+| Stripe Terminal Integration                      | 364–530 | 3 paths (external reader, Tap to Pay, Smart Reader)             |
+| Kiosk Mode                                       | 531–578 | Full-screen locked mode, session auto-reset, inactivity timeout |
+| App Creation Flow                                | 579–605 | Wizard, starter templates, type selection                       |
+| App Navigation in Workspace                      | 606–615 | Sidebar placement, app switching                                |
+| App-Specific Block Enhancements                  | 616–653 | Blocks added for internal app use cases                         |
+| Audit Trail for App Actions                      | 654–681 | App-specific audit events, actor_type tracking                  |
+| Caching & Performance                            | 682–702 | App page caching, block-level updates                           |
+| Redis Key Patterns (New)                         | 703–712 | Redis keys for cart sessions, app state                         |
+| Plan Limits                                      | 713–728 | App count and page limits per plan tier                         |
+| MVP Feature Split (All Post-MVP per GLOSSARY.md) | 729–764 | Scope boundaries                                                |
+| Phase Implementation Summary (All Post-MVP)      | 765–776 | Post-MVP — Custom Apps+ delivery scope                          |
+| Starter Templates                                | 777–821 | POS Terminal, Front Desk Kiosk, Warehouse Station templates     |
 
 ---
 
@@ -52,15 +52,15 @@ Custom apps position EveryStack against Claris/FileMaker, Glide, Softr, Stacker,
 
 ### Use Cases (Non-Exhaustive)
 
-| App Type | Primary Audience | Key Blocks |
-|----------|-----------------|------------|
-| **Point of Sale** | Retail, food service, salons | Product Table/List, Cart, Payment (Stripe Terminal), Receipt Button |
-| **Front Desk / Check-In Kiosk** | Gyms, clinics, coworking | Search/Lookup, Form Input, Appointment List, Check-In Button |
-| **Warehouse Terminal** | Receiving, picking, packing | Barcode Scanner (Quick Entry), Cart/Batch, Quantity Input, Confirm Button |
-| **Dispatch Board** | Field service, delivery, HVAC | Map block, Job List, Status Updater, Assignment Controls |
-| **Time Clock / Attendance** | Any team-based business | Employee Lookup, Clock In/Out Button, Shift Summary, Timer Widget |
-| **Order Intake** | Restaurants, print shops, bakeries | Menu/Catalog List, Cart, Special Instructions Form, Submit Button |
-| **Inspection Station** | Manufacturing QC, property mgmt | Checklist Form, Photo Upload, Pass/Fail Buttons, Defect Log |
+| App Type                        | Primary Audience                   | Key Blocks                                                                |
+| ------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| **Point of Sale**               | Retail, food service, salons       | Product Table/List, Cart, Payment (Stripe Terminal), Receipt Button       |
+| **Front Desk / Check-In Kiosk** | Gyms, clinics, coworking           | Search/Lookup, Form Input, Appointment List, Check-In Button              |
+| **Warehouse Terminal**          | Receiving, picking, packing        | Barcode Scanner (Quick Entry), Cart/Batch, Quantity Input, Confirm Button |
+| **Dispatch Board**              | Field service, delivery, HVAC      | Map block, Job List, Status Updater, Assignment Controls                  |
+| **Time Clock / Attendance**     | Any team-based business            | Employee Lookup, Clock In/Out Button, Shift Summary, Timer Widget         |
+| **Order Intake**                | Restaurants, print shops, bakeries | Menu/Catalog List, Cart, Special Instructions Form, Submit Button         |
+| **Inspection Station**          | Manufacturing QC, property mgmt    | Checklist Form, Photo Upload, Pass/Fail Buttons, Defect Log               |
 
 POS is the **hero use case** — it exercises the most primitives (product lookup, barcode scanning, cart state management, payment processing, receipt generation, inventory adjustment) and has the broadest market appeal.
 
@@ -72,15 +72,15 @@ POS is the **hero use case** — it exercises the most primitives (product looku
 
 The App Designer produces multiple app types across two categories. All share the same designer engine, block model, and themes. Differences are auth context, data scoping, and rendering target. This section focuses on the **Internal App** type; see `app-designer.md` for the complete taxonomy.
 
-| | **Custom Portal** | **Internal App** | **Widget** | **App Form** | **Website** |
-|---|---|---|---|---|---|
-| **Category** | External | Internal | Internal | External | External |
-| **Auth** | Portal client | Workspace (Clerk) | Workspace (Clerk) | None | None |
-| **Data Scoping** | Identity-based | Permission + `$me` | Permission + `$me` | Write-only | Static/optional |
-| **Designer** | App Designer | App Designer | App Designer | App Designer | App Designer |
-| **Layout** | Spatial (4-zone) | Spatial (4-zone) | Responsive to container | Form-specific | Spatial (4-zone) |
-| **Rendering** | `/portal/{slug}/*` | `/app/{slug}/*` | My Office grid cell | Embed / standalone URL | Public URL |
-| **DB Table** | `apps` (type=portal) | `apps` (type=app) | `apps` (type=widget) | `apps` (type=form) | `apps` (type=website) |
+|                  | **Custom Portal**    | **Internal App**   | **Widget**              | **App Form**           | **Website**           |
+| ---------------- | -------------------- | ------------------ | ----------------------- | ---------------------- | --------------------- |
+| **Category**     | External             | Internal           | Internal                | External               | External              |
+| **Auth**         | Portal client        | Workspace (Clerk)  | Workspace (Clerk)       | None                   | None                  |
+| **Data Scoping** | Identity-based       | Permission + `$me` | Permission + `$me`      | Write-only             | Static/optional       |
+| **Designer**     | App Designer         | App Designer       | App Designer            | App Designer           | App Designer          |
+| **Layout**       | Spatial (4-zone)     | Spatial (4-zone)   | Responsive to container | Form-specific          | Spatial (4-zone)      |
+| **Rendering**    | `/portal/{slug}/*`   | `/app/{slug}/*`    | My Office grid cell     | Embed / standalone URL | Public URL            |
+| **DB Table**     | `apps` (type=portal) | `apps` (type=app)  | `apps` (type=widget)    | `apps` (type=form)     | `apps` (type=website) |
 
 > **DB table note (GLOSSARY.md):** Per the glossary, post-MVP App Designer outputs use the `apps` table (not `portals`). The glossary states: "The old docs used the `portals` table to store all App Designer outputs... The `portals` DB table from old docs should be split: `portals` for simple record-sharing, `forms` for record-creation forms, and (post-MVP) `apps` for App Designer outputs."
 
@@ -96,15 +96,15 @@ The App Designer produces multiple app types across two categories. All share th
 
 ### `apps` Table — Key Columns for Internal Apps
 
-| Column | Type | Change | Purpose |
-|--------|------|--------|---------|
-| `id` | UUID | **Existing** | Primary key (per GLOSSARY.md `apps` table) |
-| `tenant_id` | UUID | **Existing** | Workspace that owns this app |
-| `type` | VARCHAR | **Existing** | `'portal'`, `'app'`, `'form'`, `'website'`, or `'widget'`. The app types share the same `apps` table and App Designer engine. |
-| `name` | VARCHAR | **Existing** | Display name |
-| `theme` | JSONB | **Existing** | Theme configuration |
-| `status` | VARCHAR | **Existing** | Draft / Published / Unpublished |
-| `app_config` | JSONB (nullable) | **New** | App-specific configuration. NULL for portals. See App Config below |
+| Column       | Type             | Change       | Purpose                                                                                                                       |
+| ------------ | ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | UUID             | **Existing** | Primary key (per GLOSSARY.md `apps` table)                                                                                    |
+| `tenant_id`  | UUID             | **Existing** | Workspace that owns this app                                                                                                  |
+| `type`       | VARCHAR          | **Existing** | `'portal'`, `'app'`, `'form'`, `'website'`, or `'widget'`. The app types share the same `apps` table and App Designer engine. |
+| `name`       | VARCHAR          | **Existing** | Display name                                                                                                                  |
+| `theme`      | JSONB            | **Existing** | Theme configuration                                                                                                           |
+| `status`     | VARCHAR          | **Existing** | Draft / Published / Unpublished                                                                                               |
+| `app_config` | JSONB (nullable) | **New**      | App-specific configuration. NULL for portals. See App Config below                                                            |
 
 All existing App Designer columns remain unchanged. Internal Apps use the same `theme`, `navigation`, `app_pages`, and `app_blocks` infrastructure.
 
@@ -116,36 +116,37 @@ All existing App Designer columns remain unchanged. Internal Apps use the same `
 interface AppConfig {
   // Auth & access
   accessMode: 'role_minimum' | 'user_list';
-  roleMinimum?: WorkspaceRole;        // e.g., 'team_member' — all roles at or above
-  allowedUserIds?: string[];           // Explicit user list (alternative to role_minimum)
-  
+  roleMinimum?: WorkspaceRole; // e.g., 'team_member' — all roles at or above
+  allowedUserIds?: string[]; // Explicit user list (alternative to role_minimum)
+
   // Kiosk mode
-  kioskMode: boolean;                  // Fullscreen, no workspace chrome
-  kioskAutoLock?: {                    // Optional inactivity lock
-    timeoutSeconds: number;            // e.g., 300 (5 minutes)
-    requirePin: boolean;               // PIN to unlock (not full re-auth)
-    pinHash?: string;                  // bcrypt hash of 4-6 digit PIN
+  kioskMode: boolean; // Fullscreen, no workspace chrome
+  kioskAutoLock?: {
+    // Optional inactivity lock
+    timeoutSeconds: number; // e.g., 300 (5 minutes)
+    requirePin: boolean; // PIN to unlock (not full re-auth)
+    pinHash?: string; // bcrypt hash of 4-6 digit PIN
   };
-  
+
   // Stripe Terminal (in-person payments)
   stripeTerminal?: {
     enabled: boolean;
-    locationId: string;                // Stripe Terminal Location ID
+    locationId: string; // Stripe Terminal Location ID
     readerType: 'external' | 'tap_to_pay' | 'both';
     tipConfig?: {
       enabled: boolean;
-      presets: number[];               // e.g., [15, 18, 20, 25] (percentages)
+      presets: number[]; // e.g., [15, 18, 20, 25] (percentages)
       customAllowed: boolean;
     };
   };
-  
+
   // Transaction defaults
   transactionConfig?: {
-    targetTableId: string;             // Where completed transactions create records (e.g., Orders)
-    lineItemTableId?: string;          // Where line items create records (e.g., Order Items)
-    lineItemLinkFieldId?: string;      // Cross-link field on line items pointing to parent order
-    autoNumberFieldId?: string;        // Auto-number field for transaction/receipt numbers
-    quantityAdjustFieldId?: string;    // Field on product table for atomic inventory decrement
+    targetTableId: string; // Where completed transactions create records (e.g., Orders)
+    lineItemTableId?: string; // Where line items create records (e.g., Order Items)
+    lineItemLinkFieldId?: string; // Cross-link field on line items pointing to parent order
+    autoNumberFieldId?: string; // Auto-number field for transaction/receipt numbers
+    quantityAdjustFieldId?: string; // Field on product table for atomic inventory decrement
   };
 }
 ```
@@ -162,13 +163,14 @@ Apps do not use portal-style scoping. Instead, data visibility in apps is govern
 
 ```typescript
 interface AppPageScopingConfig {
-  baseFilters?: FilterRule[];          // Page-level filters, support $me variable
+  baseFilters?: FilterRule[]; // Page-level filters, support $me variable
   // $me resolves to the authenticated workspace user's ID
   // $currentLocation resolves to device geolocation (if permission granted)
 }
 ```
 
 Stored in `app_pages.layout_config.app_scoping` (JSONB, nullable). NULL for portal-type pages. The data resolver checks `apps.type` and branches:
+
 - `type = 'portal'` → identity-based scoping via `scoping_config` + `linked_record_id`
 - `type = 'app'` → permission-based scoping via workspace roles + page/block filters
 
@@ -193,12 +195,12 @@ apps/web/src/app/(platform)/app/[appSlug]/
 interface PageBuilderContext {
   type: 'portal' | 'app';
   tenantId: string;
-  
+
   // Portal context
   portalClientId?: string;
   linkedRecordId?: string;
   scopingConfig?: PortalScopingConfig;
-  
+
   // App context
   workspaceUserId?: string;
   workspaceRole?: WorkspaceRole;
@@ -225,6 +227,7 @@ The Cart block is a **session-scoped state container**. It accumulates line item
 ### Cart State (Client-Side)
 
 Cart state lives entirely in client memory (React state via Zustand store) during the session. It is NOT persisted to the server until "Complete Transaction" is triggered. This is intentional:
+
 - **Speed:** Adding items is instantaneous (no network round-trip)
 - **Offline:** Cart works without connectivity until payment/completion
 - **Atomicity:** The entire transaction commits as one batch, not item-by-item
@@ -233,9 +236,9 @@ Cart state lives entirely in client memory (React state via Zustand store) durin
 ```typescript
 interface CartState {
   items: CartItem[];
-  metadata: Record<string, unknown>;   // Custom fields (e.g., customer name, table number)
-  createdAt: string;                    // Session start
-  
+  metadata: Record<string, unknown>; // Custom fields (e.g., customer name, table number)
+  createdAt: string; // Session start
+
   // Computed (derived, not stored)
   subtotal: number;
   taxAmount: number;
@@ -245,20 +248,20 @@ interface CartState {
 }
 
 interface CartItem {
-  id: string;                          // Client-generated UUID (for reorder/remove)
-  sourceRecordId: string;              // Record ID from the product/service table
-  name: string;                        // Display name (from primary field)
-  unitPrice: number;                   // Price at time of add (snapshotted)
-  quantity: number;                    // Default 1, adjustable
-  modifiers?: CartItemModifier[];      // Optional (e.g., size, extras, customizations)
-  notes?: string;                      // Free-text per-item notes
-  discountPercent?: number;            // Per-item discount
-  taxRate?: number;                    // Per-item tax rate (inherited from product or cart default)
+  id: string; // Client-generated UUID (for reorder/remove)
+  sourceRecordId: string; // Record ID from the product/service table
+  name: string; // Display name (from primary field)
+  unitPrice: number; // Price at time of add (snapshotted)
+  quantity: number; // Default 1, adjustable
+  modifiers?: CartItemModifier[]; // Optional (e.g., size, extras, customizations)
+  notes?: string; // Free-text per-item notes
+  discountPercent?: number; // Per-item discount
+  taxRate?: number; // Per-item tax rate (inherited from product or cart default)
 }
 
 interface CartItemModifier {
   name: string;
-  priceAdjustment: number;             // Can be positive (add-on) or negative (discount)
+  priceAdjustment: number; // Can be positive (add-on) or negative (discount)
 }
 ```
 
@@ -269,31 +272,36 @@ Configured in the Content tab of the property panel when a Cart block is selecte
 ```typescript
 interface CartBlockConfig {
   // Data binding — which table are items sourced from?
-  sourceTableId: string;                // Product/service catalog table
-  priceFieldId: string;                 // Currency field for unit price
-  nameFieldId?: string;                 // Defaults to primary field
-  imageFieldId?: string;                // Attachment field for product thumbnail
-  taxRateFieldId?: string;              // Number/percent field for per-item tax
-  
+  sourceTableId: string; // Product/service catalog table
+  priceFieldId: string; // Currency field for unit price
+  nameFieldId?: string; // Defaults to primary field
+  imageFieldId?: string; // Attachment field for product thumbnail
+  taxRateFieldId?: string; // Number/percent field for per-item tax
+
   // Cart behavior
-  allowQuantityEdit: boolean;           // +/- buttons on each line item (default: true)
-  allowItemRemove: boolean;             // Swipe-to-remove or X button (default: true)
-  allowItemNotes: boolean;              // Per-item notes field (default: false)
-  allowDiscounts: boolean;              // Per-item or cart-level discount (default: false)
-  defaultTaxRate?: number;              // Applied when item has no tax rate field (e.g., 0.08 for 8%)
-  
+  allowQuantityEdit: boolean; // +/- buttons on each line item (default: true)
+  allowItemRemove: boolean; // Swipe-to-remove or X button (default: true)
+  allowItemNotes: boolean; // Per-item notes field (default: false)
+  allowDiscounts: boolean; // Per-item or cart-level discount (default: false)
+  defaultTaxRate?: number; // Applied when item has no tax rate field (e.g., 0.08 for 8%)
+
   // Display
-  showItemImages: boolean;              // Thumbnail next to each line item (default: true)
-  showRunningTotal: boolean;            // Sticky total bar at bottom (default: true)
-  compactMode: boolean;                 // Reduced line height for small screens (default: false)
-  
+  showItemImages: boolean; // Thumbnail next to each line item (default: true)
+  showRunningTotal: boolean; // Sticky total bar at bottom (default: true)
+  compactMode: boolean; // Reduced line height for small screens (default: false)
+
   // Completion
   completionActions: CartCompletionAction[];
 }
 
 interface CartCompletionAction {
-  type: 'create_order' | 'adjust_inventory' | 'run_automation' | 'generate_document' | 'process_payment';
-  config: Record<string, unknown>;      // Per-action config (see Completion Flow)
+  type:
+    | 'create_order'
+    | 'adjust_inventory'
+    | 'run_automation'
+    | 'generate_document'
+    | 'process_payment';
+  config: Record<string, unknown>; // Per-action config (see Completion Flow)
 }
 ```
 
@@ -303,13 +311,13 @@ Items enter the cart via interaction with other blocks on the same page. The Car
 
 **Trigger patterns:**
 
-| Source Block | Interaction | Result |
-|---|---|---|
-| Table/List block | Row click or "Add" button on row | Adds product record to cart (quantity 1) |
-| Table/List block | "Add" button with quantity input | Adds product record with specified quantity |
-| Barcode scan (Quick Entry) | Scan barcode → record lookup | Adds matched product to cart (quantity 1), or increments if already in cart |
-| Button block | Configured with `addToCart` action | Adds a specific record or prompts selection |
-| Search/Lookup input | Type product name → select from dropdown | Adds selected product to cart |
+| Source Block               | Interaction                              | Result                                                                      |
+| -------------------------- | ---------------------------------------- | --------------------------------------------------------------------------- |
+| Table/List block           | Row click or "Add" button on row         | Adds product record to cart (quantity 1)                                    |
+| Table/List block           | "Add" button with quantity input         | Adds product record with specified quantity                                 |
+| Barcode scan (Quick Entry) | Scan barcode → record lookup             | Adds matched product to cart (quantity 1), or increments if already in cart |
+| Button block               | Configured with `addToCart` action       | Adds a specific record or prompts selection                                 |
+| Search/Lookup input        | Type product name → select from dropdown | Adds selected product to cart                                               |
 
 **Duplicate handling:** If a product already in the cart is added again, the existing line item's quantity increments by 1 (or by the specified quantity). This is the expected POS behavior — scanning the same barcode twice means "2 of this item," not two separate line items.
 
@@ -348,12 +356,14 @@ When the user triggers "Complete Transaction" (via a Button block configured wit
 When the device is offline, the cart continues to function for item accumulation (client-side state). Completion behavior depends on whether payment is required:
 
 **No payment required (e.g., warehouse batch, internal order):**
+
 - Completion queues the entire transaction in IndexedDB
 - Sync indicator shows amber: "1 pending transaction"
 - On reconnection: queue replays, records created, inventory adjusted
 - Conflict detection: if a product's quantity went negative during offline, flag for Manager review
 
 **Payment required (POS):**
+
 - Payment cannot be processed offline (Stripe Terminal requires connectivity)
 - Cart state preserved in IndexedDB to survive app restarts
 - "Process when online" option: queue the transaction, process payment on reconnection
@@ -370,6 +380,7 @@ Three integration paths, layered by capability and implementation effort. All th
 The Stripe Terminal JavaScript SDK communicates with external readers over the internet. The reader connects to Stripe's cloud, and the JS SDK orchestrates the payment flow.
 
 **Supported readers:**
+
 - Stripe Reader M2 ($59, Bluetooth, pocket-sized)
 - BBPOS WisePOS E ($249, countertop, touchscreen)
 - Stripe Reader S700 ($349, Android-based smart terminal)
@@ -378,20 +389,22 @@ The Stripe Terminal JavaScript SDK communicates with external readers over the i
 
 ```typescript
 interface PaymentBlockConfig {
-  mode: 'online' | 'terminal' | 'both';  // 'both' shows reader first, falls back to manual
-  
+  mode: 'online' | 'terminal' | 'both'; // 'both' shows reader first, falls back to manual
+
   // Online mode (existing Stripe Elements config)
-  stripeElements?: { /* ... existing config ... */ };
-  
+  stripeElements?: {
+    /* ... existing config ... */
+  };
+
   // Terminal mode (new)
   stripeTerminal?: {
-    locationId: string;                    // Stripe Terminal Location
+    locationId: string; // Stripe Terminal Location
     readerDiscovery: 'internet' | 'bluetooth' | 'tap_to_pay';
     tipConfig?: TipConfig;
     receiptConfig?: {
-      printReceipt: boolean;               // For readers with printers (S700)
-      emailReceipt: boolean;               // Send via Resend
-      showOnScreen: boolean;               // Display receipt summary in-app
+      printReceipt: boolean; // For readers with printers (S700)
+      emailReceipt: boolean; // Send via Resend
+      showOnScreen: boolean; // Display receipt summary in-app
     };
   };
 }
@@ -447,18 +460,19 @@ Stripe Terminal's Tap to Pay feature turns the user's phone into a contactless c
 // Capacitor plugin interface (web-side)
 interface StripeTerminalPlugin {
   initialize(config: { locationId: string }): Promise<void>;
-  
+
   collectPayment(params: {
-    amount: number;           // In smallest currency unit (cents)
-    currency: string;         // e.g., 'usd'
+    amount: number; // In smallest currency unit (cents)
+    currency: string; // e.g., 'usd'
     paymentIntentClientSecret: string;
   }): Promise<{ status: 'succeeded' | 'failed'; error?: string }>;
-  
+
   cancelPayment(): Promise<void>;
 }
 ```
 
 **Apple Tap to Pay entitlement process:**
+
 1. Request development entitlement from Apple Developer account
 2. Integrate Stripe Terminal iOS SDK with `SCPDiscoveryMethodTapToPay`
 3. Test internally with development entitlement
@@ -466,6 +480,7 @@ interface StripeTerminalPlugin {
 5. Submit app to App Store with Tap to Pay capability
 
 **Device requirements:**
+
 - **iOS:** iPhone XS or later, iOS 16.4+ (for PIN entry support), Apple Developer account
 - **Android:** NFC-equipped device, Google-certified for Tap to Pay, Android 9+
 
@@ -568,6 +583,7 @@ When `app_config.kioskMode = true`:
 ### Kiosk Auto-Lock
 
 When configured, the app locks after N seconds of inactivity (no taps, no scans, no keyboard input). The lock screen shows:
+
 - App name and logo
 - PIN input (numeric keypad, 4–6 digits)
 - "Sign In As Different User" link (full Clerk re-auth)
@@ -620,6 +636,7 @@ Beyond the Cart block (detailed above), several existing portal blocks gain app-
 ### Payment Block — Terminal Mode
 
 The existing Payment block (Post-MVP — Portals & Apps (Fast-Follow), Stripe Elements) gains Terminal support when used in an app context. Content tab shows "Payment Method" selector:
+
 - **Online Card Entry** — existing Stripe Elements behavior
 - **In-Person Reader** — Stripe Terminal external reader
 - **Tap to Pay** — Stripe Terminal Tap to Pay (requires Capacitor)
@@ -632,6 +649,7 @@ The Quick Entry mode (designed in `tables-and-views.md`, referenced in `inventor
 Block type identifier: `quick_entry`
 
 Config mirrors the existing Quick Entry configuration:
+
 - `lookup_field_id`: barcode or text field for search/scan
 - `target_table_id`: table for new record creation
 - `default_values`: pre-filled fields per entry
@@ -689,24 +707,24 @@ TTLs match portal data-bound content: 60s for data blocks, 300s for static block
 
 **Performance targets for POS interactions:**
 
-| Interaction | Target | Measurement |
-|---|---|---|
-| Add item to cart (scan/tap) | < 100ms perceived | Client-side state update, no network |
-| Cart total recalculation | < 50ms | Client-side computation |
-| Product search (type-ahead) | < 200ms | Redis-cached product list + client-side filter |
-| Complete transaction (no payment) | < 500ms | Server batch: create records + inventory adjust |
-| Complete transaction (with payment) | < 3s + tap time | PaymentIntent creation + reader interaction |
-| Kiosk unlock (PIN) | < 200ms | Client-side bcrypt verify |
+| Interaction                         | Target            | Measurement                                     |
+| ----------------------------------- | ----------------- | ----------------------------------------------- |
+| Add item to cart (scan/tap)         | < 100ms perceived | Client-side state update, no network            |
+| Cart total recalculation            | < 50ms            | Client-side computation                         |
+| Product search (type-ahead)         | < 200ms           | Redis-cached product list + client-side filter  |
+| Complete transaction (no payment)   | < 500ms           | Server batch: create records + inventory adjust |
+| Complete transaction (with payment) | < 3s + tap time   | PaymentIntent creation + reader interaction     |
+| Kiosk unlock (PIN)                  | < 200ms           | Client-side bcrypt verify                       |
 
 ---
 
 ## Redis Key Patterns (New)
 
-| Prefix Pattern | Usage | Has TTL? | Eviction Behavior |
-|---|---|---|---|
-| `cache:app:{appId}:{pageId}:{userId}` | App page data cache | **Yes** (60s) | LRU evictable |
-| `app:kiosk:{appId}:lock` | Kiosk lock state | **Yes** (matches timeout) | Self-expiring |
-| `app:terminal:{appId}:connection` | Stripe Terminal reader connection status | **Yes** (300s) | Self-expiring |
+| Prefix Pattern                        | Usage                                    | Has TTL?                  | Eviction Behavior |
+| ------------------------------------- | ---------------------------------------- | ------------------------- | ----------------- |
+| `cache:app:{appId}:{pageId}:{userId}` | App page data cache                      | **Yes** (60s)             | LRU evictable     |
+| `app:kiosk:{appId}:lock`              | Kiosk lock state                         | **Yes** (matches timeout) | Self-expiring     |
+| `app:terminal:{appId}:connection`     | Stripe Terminal reader connection status | **Yes** (300s)            | Self-expiring     |
 
 ---
 
@@ -714,13 +732,13 @@ TTLs match portal data-bound content: 60s for data blocks, 300s for static block
 
 Apps count against the existing app limit on each plan. The `apps` table `type` column distinguishes app types — a workspace with a Starter plan ($79) has 5 total apps (portals + internal apps + websites + forms + widgets).
 
-| Plan | Max Apps | Notes |
-|---|---|---|
-| Freelancer | 1 | 1 of any type |
-| Starter | 5 | Any mix |
-| Professional | 15 | Any mix |
-| Business | Unlimited | — |
-| Enterprise | Unlimited | — |
+| Plan         | Max Apps  | Notes         |
+| ------------ | --------- | ------------- |
+| Freelancer   | 1         | 1 of any type |
+| Starter      | 5         | Any mix       |
+| Professional | 15        | Any mix       |
+| Business     | Unlimited | —             |
+| Enterprise   | Unlimited | —             |
 
 Page view tracking applies equally to app page loads. Apps in kiosk mode may generate high page view counts from a single device — plan limits should account for this. Consider: kiosk mode page views count at 10% weight (1 kiosk view = 0.1 page views toward the limit) since they represent a single device, not distribution reach.
 
@@ -731,6 +749,7 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 > **⚠️ POST-MVP.** All phases below are post-MVP per GLOSSARY.md. The "MVP" label in Post-MVP — Custom Apps refers to the MVP of custom apps specifically, not the platform MVP.
 
 **Post-MVP — Custom Apps (Custom Apps MVP — post-platform-MVP):**
+
 - `apps.type` column (extends to `'app'`), `apps.app_config` JSONB
 - App route group (`/app/{appSlug}/*`) with Clerk middleware
 - `PageBuilderRenderer` context branching (portal vs app scoping)
@@ -744,6 +763,7 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 - POS Starter Template (Products table + Orders + Order Items + Cart + Payment + Receipt automation)
 
 **Post-MVP — Native App & Tap to Pay / Post-MVP — Self-Hosted AI (Tap to Pay):**
+
 - Capacitor native shell (if not already triggered by mobile.md decision framework)
 - Capacitor plugin: Stripe Terminal native SDK bridge
 - Tap to Pay integration (iOS + Android)
@@ -752,6 +772,7 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 - Kiosk-specific Capacitor features (prevent app switching, guided access mode hints)
 
 **Deferred (demand-driven):**
+
 - Stripe Smart Reader (S700) deployment
 - Receipt printer integration (ESC/POS protocol via Capacitor plugin or Web Serial API)
 - Cash drawer integration
@@ -764,13 +785,13 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 
 ## Phase Implementation Summary (All Post-MVP)
 
-| Phase | Custom Apps Work |
-|---|---|
-| **Post-MVP (Post-MVP — Portals & Apps (Initial))** | App Designer ships (post-MVP per GLOSSARY.md). Block model, canvas, themes, container rules — all reusable for apps. No app-specific work yet. |
-| **Post-MVP (Post-MVP — Portals & Apps (Fast-Follow))** | Stripe Elements payment block. Stripe Terminal JS SDK support added here as a stretch goal (external reader only). |
-| **Post-MVP (Post-MVP — Inventory Advanced)** | Quick Entry mode and Inventory Starter Template ship. Barcode scanning compatible with App Designer. Atomic quantity operations proven. These are direct app prerequisites. |
-| **Post-MVP (Post-MVP — Custom Apps)** | **Custom Apps MVP.** `apps.type` column for Internal Apps. App routes. Permission-based scoping. Cart/Transaction block. Kiosk mode. External reader POS. POS Starter Template. |
-| **Post-MVP (Post-MVP — Native App & Tap to Pay/10)** | **Tap to Pay.** Capacitor shell. Stripe Terminal native SDK plugin. Apple/Google entitlement. App store submission. |
+| Phase                                                  | Custom Apps Work                                                                                                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Post-MVP (Post-MVP — Portals & Apps (Initial))**     | App Designer ships (post-MVP per GLOSSARY.md). Block model, canvas, themes, container rules — all reusable for apps. No app-specific work yet.                                  |
+| **Post-MVP (Post-MVP — Portals & Apps (Fast-Follow))** | Stripe Elements payment block. Stripe Terminal JS SDK support added here as a stretch goal (external reader only).                                                              |
+| **Post-MVP (Post-MVP — Inventory Advanced)**           | Quick Entry mode and Inventory Starter Template ship. Barcode scanning compatible with App Designer. Atomic quantity operations proven. These are direct app prerequisites.     |
+| **Post-MVP (Post-MVP — Custom Apps)**                  | **Custom Apps MVP.** `apps.type` column for Internal Apps. App routes. Permission-based scoping. Cart/Transaction block. Kiosk mode. External reader POS. POS Starter Template. |
+| **Post-MVP (Post-MVP — Native App & Tap to Pay/10)**   | **Tap to Pay.** Capacitor shell. Stripe Terminal native SDK plugin. Apple/Google entitlement. App store submission.                                                             |
 
 ---
 
@@ -781,6 +802,7 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 Pre-built app with two pages:
 
 **Page 1: Register (default)**
+
 ```
 ┌─────────────────────────────────┬──────────────────────┐
 │  [🔍 Search / Scan]             │  Cart                │
@@ -806,6 +828,7 @@ Layout: Row block → two Columns (8+4 grid split). Left column: Quick Entry blo
 Table/List block showing completed orders. Filters: today's orders by default, `$me` as cashier. Columns: order number, time, item count, total, payment method.
 
 **Template creates:**
+
 - Products table (name, price, category, barcode, image, quantity_on_hand)
 - Orders table (order_number auto-number, total, tax, payment_status, payment_method, cashier cross-link to Users, stripe_payment_intent_id, receipt_url, timestamp)
 - Order Items table (order cross-link, product cross-link, quantity, unit_price, line_total)

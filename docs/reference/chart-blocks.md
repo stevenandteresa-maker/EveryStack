@@ -6,10 +6,10 @@
 
 > **⚠️ MOSTLY POST-MVP.** Per GLOSSARY.md: Kanban view is post-MVP, App Designer is post-MVP, DuckDB analytical layer is post-MVP, the `summary` Table View type is not in MVP scope. ProgressChart (MVP — Core UX) is nearest-to-MVP. NumberCard ships Post-MVP — Portals & Apps alongside Kanban view. Chart blocks in Apps require App Designer (post-MVP). MVP Quick Portals (Record View shares) do NOT support chart blocks.
 
-> **Reference doc (Tier 3).** Shared chart rendering component system for aggregate data visualization across Table Views, Apps *(post-MVP)*, and Smart Docs. Defines chart type system, data binding modes (table aggregate + DuckDB analytical), the `summary` Table View type *(post-MVP)*, and the chart component library.
-> Cross-references: `tables-and-views.md` (Table View architecture, `views.view_type` enum expansion, summary footer row aggregation pattern, Kanban view pipeline rollups *(post-MVP)*), `app-designer.md` (Chart block and Metric/KPI Card block in block library *(post-MVP)*, App theming, data binding modes), `smart-docs.md` (live data embeds in documents), `duckdb-context-layer-ref.md` (DuckDB `ContextResult` as chart data source *(post-MVP)*, `QueryPlan` for cross-base analytics), `schema-descriptor-service.md` (SDS field metadata for axis label resolution, option ID→label), `data-model.md` (field types, aggregation-compatible types), `design-system.md` (design system color palette, data palette, typography), `agency-features.md` (App chart block enhancements *(post-MVP)* for `metric_snapshots` time-series, ad platform reporting), `accounting-integration.md` (Financial Command Center — 4-tab workspace-level Table View set with summary cards, trend charts, profitability tables), `project-management.md` (PM dashboards — burndown, utilization, budget vs actuals), `formula-engine.md` (ROLLUP aggregation pattern — charts share the aggregation vocabulary but operate at the view level, not the cell level), `ai-metering.md` (Admin AI Dashboard — usage charts), `mobile.md` (responsive chart rendering, touch interactions), `custom-apps.md` (dashboard summary blocks embedded in custom App pages *(post-MVP)*), `booking-scheduling.md` (scheduling analytics dashboard via `summary` Table View type *(post-MVP)* — NumberCard metrics for bookings, conversion rates, no-show rates)
+> **Reference doc (Tier 3).** Shared chart rendering component system for aggregate data visualization across Table Views, Apps _(post-MVP)_, and Smart Docs. Defines chart type system, data binding modes (table aggregate + DuckDB analytical), the `summary` Table View type _(post-MVP)_, and the chart component library.
+> Cross-references: `tables-and-views.md` (Table View architecture, `views.view_type` enum expansion, summary footer row aggregation pattern, Kanban view pipeline rollups _(post-MVP)_), `app-designer.md` (Chart block and Metric/KPI Card block in block library _(post-MVP)_, App theming, data binding modes), `smart-docs.md` (live data embeds in documents), `duckdb-context-layer-ref.md` (DuckDB `ContextResult` as chart data source _(post-MVP)_, `QueryPlan` for cross-base analytics), `schema-descriptor-service.md` (SDS field metadata for axis label resolution, option ID→label), `data-model.md` (field types, aggregation-compatible types), `design-system.md` (design system color palette, data palette, typography), `agency-features.md` (App chart block enhancements _(post-MVP)_ for `metric_snapshots` time-series, ad platform reporting), `accounting-integration.md` (Financial Command Center — 4-tab workspace-level Table View set with summary cards, trend charts, profitability tables), `project-management.md` (PM dashboards — burndown, utilization, budget vs actuals), `formula-engine.md` (ROLLUP aggregation pattern — charts share the aggregation vocabulary but operate at the view level, not the cell level), `ai-metering.md` (Admin AI Dashboard — usage charts), `mobile.md` (responsive chart rendering, touch interactions), `custom-apps.md` (dashboard summary blocks embedded in custom App pages _(post-MVP)_), `booking-scheduling.md` (scheduling analytics dashboard via `summary` Table View type _(post-MVP)_ — NumberCard metrics for bookings, conversion rates, no-show rates)
 > Implements: `apps/web/src/components/CLAUDE.md` (component patterns), `packages/shared/db/CLAUDE.md` (query patterns)
-> Source decisions: This document codifies the gap identified in the existing spec — chart rendering was referenced in app-designer.md (Chart block, Metric/KPI Card), agency-features.md (App chart block enhancements *(post-MVP)*), accounting-integration.md (Financial Command Center trend charts and summary cards), and project-management.md (PM dashboards) without being specified. This document provides the specification.
+> Source decisions: This document codifies the gap identified in the existing spec — chart rendering was referenced in app-designer.md (Chart block, Metric/KPI Card), agency-features.md (App chart block enhancements _(post-MVP)_), accounting-integration.md (Financial Command Center trend charts and summary cards), and project-management.md (PM dashboards) without being specified. This document provides the specification.
 > Cross-references (cont.): `workspace-map.md` (chart data binding to tables produces `chart_aggregates` edges in topology graph — Mode A table aggregate and Mode B DuckDB analytical sources both represented)
 > Last updated: 2026-02-27 — Glossary reconciliation pass 2 (see note above). Prior: 2026-02-27 pass 1 — initial glossary alignment. Prior: 2026-02-21 — Added `workspace-map.md` cross-reference. Prior: booking-scheduling.md backlink.
 
@@ -19,34 +19,34 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Purpose — Why Charts Are a Shared Primitive | 43–58 | Charts as reusable blocks across views, apps, docs |
-| Progressive Disclosure Mapping | 59–68 | 3-level progressive disclosure for chart creation |
-| Chart Type System | 69–352 | 8 chart types (NumberCard, ProgressChart, Bar, Line, Pie, Scatter, Area, Combo) |
-| Data Binding — Two Modes | 353–465 | Mode A: Table Aggregate (MVP-adjacent), Mode B: DuckDB Analytical (post-MVP) |
-| The `summary` Table View Type (Post-MVP) | 466–573 | Dashboard-style view composed of chart blocks |
-| Chart Rendering in Apps *(Post-MVP — App Designer Required)* | 574–622 | Chart blocks in App Designer pages |
-| Chart Rendering in Smart Docs | 623–642 | Embedded charts in documents, snapshot rendering |
-| Chart Component Library — Implementation | 643–758 | Recharts components, config-to-props mapping, responsive rendering |
-| Data Model Additions | 759–818 | chart_configs, metric_snapshots tables |
-| Aggregate Query Engine | 819–898 | SQL aggregation builder, grouping, time bucketing, cross-link aggregation |
-| Kanban View Pipeline Rollup Integration | 899–915 | NumberCard/ProgressChart in Kanban column headers |
-| Permissions | 916–938 | Chart data access respects Table View permissions |
-| Phase Integration | 939–976 | MVP — Core UX (NumberCard + ProgressChart) through Post-MVP — Verticals & Advanced (full system) |
-| Claude Code Prompt Roadmap | 977–1367 | 10-prompt implementation roadmap |
-| Appendix: Existing Specs That Reference Charts (Reconciliation) | 1368–1430 | Cross-reference audit for chart mentions across all docs |
-| Appendix: Future Extensions (Do Not Build Yet) | 1431–1445 | Deferred chart features |
+| Section                                                         | Lines     | Covers                                                                                           |
+| --------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| Purpose — Why Charts Are a Shared Primitive                     | 43–58     | Charts as reusable blocks across views, apps, docs                                               |
+| Progressive Disclosure Mapping                                  | 59–68     | 3-level progressive disclosure for chart creation                                                |
+| Chart Type System                                               | 69–352    | 8 chart types (NumberCard, ProgressChart, Bar, Line, Pie, Scatter, Area, Combo)                  |
+| Data Binding — Two Modes                                        | 353–465   | Mode A: Table Aggregate (MVP-adjacent), Mode B: DuckDB Analytical (post-MVP)                     |
+| The `summary` Table View Type (Post-MVP)                        | 466–573   | Dashboard-style view composed of chart blocks                                                    |
+| Chart Rendering in Apps _(Post-MVP — App Designer Required)_    | 574–622   | Chart blocks in App Designer pages                                                               |
+| Chart Rendering in Smart Docs                                   | 623–642   | Embedded charts in documents, snapshot rendering                                                 |
+| Chart Component Library — Implementation                        | 643–758   | Recharts components, config-to-props mapping, responsive rendering                               |
+| Data Model Additions                                            | 759–818   | chart_configs, metric_snapshots tables                                                           |
+| Aggregate Query Engine                                          | 819–898   | SQL aggregation builder, grouping, time bucketing, cross-link aggregation                        |
+| Kanban View Pipeline Rollup Integration                         | 899–915   | NumberCard/ProgressChart in Kanban column headers                                                |
+| Permissions                                                     | 916–938   | Chart data access respects Table View permissions                                                |
+| Phase Integration                                               | 939–976   | MVP — Core UX (NumberCard + ProgressChart) through Post-MVP — Verticals & Advanced (full system) |
+| Claude Code Prompt Roadmap                                      | 977–1367  | 10-prompt implementation roadmap                                                                 |
+| Appendix: Existing Specs That Reference Charts (Reconciliation) | 1368–1430 | Cross-reference audit for chart mentions across all docs                                         |
+| Appendix: Future Extensions (Do Not Build Yet)                  | 1431–1445 | Deferred chart features                                                                          |
 
 ---
 
 ## Purpose — Why Charts Are a Shared Primitive
 
-EveryStack already has strong aggregate data capabilities at the cell and row level — summary footer rows, grouped aggregation headers, Kanban view pipeline rollups *(post-MVP)*, ROLLUP formula fields, and the DuckDB Context Layer for AI-powered cross-base analytics. What's missing is the **visual rendering layer** that turns aggregate data into charts, KPI cards, sparklines, and trend visualizations.
+EveryStack already has strong aggregate data capabilities at the cell and row level — summary footer rows, grouped aggregation headers, Kanban view pipeline rollups _(post-MVP)_, ROLLUP formula fields, and the DuckDB Context Layer for AI-powered cross-base analytics. What's missing is the **visual rendering layer** that turns aggregate data into charts, KPI cards, sparklines, and trend visualizations.
 
 Charts are referenced across the platform but never specified:
 
-- **Apps** (`app-designer.md`) *(post-MVP)*: Block library lists "Chart" and "Metric/KPI Card" as data block types — unspecced.
+- **Apps** (`app-designer.md`) _(post-MVP)_: Block library lists "Chart" and "Metric/KPI Card" as data block types — unspecced.
 - **Financial Command Center** (`accounting-integration.md`): Describes "four summary cards," "revenue breakdown," "trend charts" — no rendering spec.
 - **PM Dashboards** (`project-management.md`): References "task completion pie, burndown, milestones, budget vs actuals" — no component definition.
 - **Ad Platform Reporting** (`agency-features.md`): Describes "line charts (metric over time), bar charts (comparisons), KPI cards (with period deltas)" — no implementation detail.
@@ -58,11 +58,11 @@ This document defines **one chart component system** used everywhere — the sam
 
 ## Progressive Disclosure Mapping
 
-| Level | User Experience | What's Visible |
-|---|---|---|
-| **L1 (80%)** | Add a chart block to a Table View (summary type) or App page *(post-MVP)*. Pick a table, pick a field to aggregate, pick a chart type from the 8-type visual picker. Chart renders with sensible defaults (auto-detected axis labels, theme colors, responsive sizing). NumberCard and Progress bar are the most common starting points. | Chart type visual picker, table selector, field selector, auto-configured chart with theme defaults. Summary Table View type *(post-MVP)*. |
-| **L2 (15%)** | Customize chart: group-by field, time granularity (day/week/month/quarter/year), comparison period, color overrides, label formatting, filter conditions, multiple value series on one chart. Embed charts in Smart Docs via merge field syntax. | Full chart configuration panel (group-by, time grain, comparison, filters, series), Smart Doc chart embed blocks, sparkline in summary cards. |
-| **L3 (5%)** | Mode B — DuckDB analytical queries for cross-base chart data sources. Custom `QueryPlan` definitions, multi-table joins, window functions for running totals, portfolio-level aggregation across workspaces. | DuckDB query builder (Mode B data binding), cross-base analytics, advanced aggregation functions, analytical chart rendering. |
+| Level        | User Experience                                                                                                                                                                                                                                                                                                                          | What's Visible                                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L1 (80%)** | Add a chart block to a Table View (summary type) or App page _(post-MVP)_. Pick a table, pick a field to aggregate, pick a chart type from the 8-type visual picker. Chart renders with sensible defaults (auto-detected axis labels, theme colors, responsive sizing). NumberCard and Progress bar are the most common starting points. | Chart type visual picker, table selector, field selector, auto-configured chart with theme defaults. Summary Table View type _(post-MVP)_.    |
+| **L2 (15%)** | Customize chart: group-by field, time granularity (day/week/month/quarter/year), comparison period, color overrides, label formatting, filter conditions, multiple value series on one chart. Embed charts in Smart Docs via merge field syntax.                                                                                         | Full chart configuration panel (group-by, time grain, comparison, filters, series), Smart Doc chart embed blocks, sparkline in summary cards. |
+| **L3 (5%)**  | Mode B — DuckDB analytical queries for cross-base chart data sources. Custom `QueryPlan` definitions, multi-table joins, window functions for running totals, portfolio-level aggregation across workspaces.                                                                                                                             | DuckDB query builder (Mode B data binding), cross-base analytics, advanced aggregation functions, analytical chart rendering.                 |
 
 ---
 
@@ -72,16 +72,16 @@ Eight chart types cover every visualization referenced in existing EveryStack sp
 
 ### Type Overview
 
-| Chart Type | Icon | Data Shape | Primary Use Cases |
-|---|---|---|---|
-| `number_card` | `#` | Single aggregate value + optional comparison | KPI cards, Financial Command Center summary cards, Kanban pipeline totals |
-| `bar` | Bar chart | Categories × values | Revenue by client, expenses by category, deals by stage |
-| `stacked_bar` | Stacked bar | Categories × value series | Revenue breakdown by source per month, expense composition |
-| `line` | Line chart | Time series × value series | Monthly revenue trend, cash position over time, metric history |
-| `area` | Area chart | Time series × value series (stackable) | Cumulative cash flow projection, pipeline value over time |
-| `donut` | Donut/ring | Categories × values (proportional) | Expense breakdown, pipeline by stage, task status distribution |
-| `progress` | Progress bar | Current value + target | Budget burn, utilization %, retainer usage, project completion |
-| `sparkline` | Mini line | Compact time series (no axes) | Inline trend indicator in table cells, summary cards, Kanban column headers |
+| Chart Type    | Icon         | Data Shape                                   | Primary Use Cases                                                           |
+| ------------- | ------------ | -------------------------------------------- | --------------------------------------------------------------------------- |
+| `number_card` | `#`          | Single aggregate value + optional comparison | KPI cards, Financial Command Center summary cards, Kanban pipeline totals   |
+| `bar`         | Bar chart    | Categories × values                          | Revenue by client, expenses by category, deals by stage                     |
+| `stacked_bar` | Stacked bar  | Categories × value series                    | Revenue breakdown by source per month, expense composition                  |
+| `line`        | Line chart   | Time series × value series                   | Monthly revenue trend, cash position over time, metric history              |
+| `area`        | Area chart   | Time series × value series (stackable)       | Cumulative cash flow projection, pipeline value over time                   |
+| `donut`       | Donut/ring   | Categories × values (proportional)           | Expense breakdown, pipeline by stage, task status distribution              |
+| `progress`    | Progress bar | Current value + target                       | Budget burn, utilization %, retainer usage, project completion              |
+| `sparkline`   | Mini line    | Compact time series (no axes)                | Inline trend indicator in table cells, summary cards, Kanban column headers |
 
 ### Chart Type Specifications
 
@@ -103,26 +103,28 @@ The most common chart type. Displays a single aggregate value prominently with o
 ```typescript
 interface NumberCardConfig {
   chart_type: 'number_card';
-  label: string;                          // Display label ("Revenue", "Open Deals", "Utilization")
+  label: string; // Display label ("Revenue", "Open Deals", "Utilization")
   format: 'number' | 'currency' | 'percent' | 'duration';
-  currency_code?: string;                 // ISO 4217, when format = 'currency'
-  precision?: number;                     // Decimal places (default: 0 for number, 2 for currency)
-  abbreviate?: boolean;                   // true → "$142.5K" instead of "$142,500" (default: true for values > 9,999)
+  currency_code?: string; // ISO 4217, when format = 'currency'
+  precision?: number; // Decimal places (default: 0 for number, 2 for currency)
+  abbreviate?: boolean; // true → "$142.5K" instead of "$142,500" (default: true for values > 9,999)
   comparison?: {
     type: 'prior_period' | 'fixed_value' | 'field_aggregate';
-    period_offset?: number;               // -1 = prior period (default), -4 = same period last year, etc.
-    fixed_value?: number;                 // When type = 'fixed_value'
-    field_id?: string;                    // When type = 'field_aggregate' (e.g., compare actual vs budget)
-    aggregation?: AggregationFunction;    // For field_aggregate comparison
-    label?: string;                       // "vs last month", "of $200K target", etc.
+    period_offset?: number; // -1 = prior period (default), -4 = same period last year, etc.
+    fixed_value?: number; // When type = 'fixed_value'
+    field_id?: string; // When type = 'field_aggregate' (e.g., compare actual vs budget)
+    aggregation?: AggregationFunction; // For field_aggregate comparison
+    label?: string; // "vs last month", "of $200K target", etc.
   };
-  trend?: {                               // Optional sparkline at bottom of card
+  trend?: {
+    // Optional sparkline at bottom of card
     enabled: boolean;
-    periods: number;                      // How many periods to show (default: 6)
+    periods: number; // How many periods to show (default: 6)
   };
-  color_rule?: {                          // Conditional card accent color
-    positive: 'green' | 'red';           // Is positive delta good (revenue) or bad (expenses)?
-    thresholds?: { warn: number; danger: number };  // For progress-style coloring
+  color_rule?: {
+    // Conditional card accent color
+    positive: 'green' | 'red'; // Is positive delta good (revenue) or bad (expenses)?
+    thresholds?: { warn: number; danger: number }; // For progress-style coloring
   };
 }
 ```
@@ -136,16 +138,16 @@ Vertical or horizontal bar chart. Categories on one axis, aggregate values on th
 ```typescript
 interface BarChartConfig {
   chart_type: 'bar';
-  orientation: 'vertical' | 'horizontal';       // Default: 'vertical'
+  orientation: 'vertical' | 'horizontal'; // Default: 'vertical'
   category_axis: {
-    field_id: string;                            // The field to group by (select, status, people, linked record, date)
-    label?: string;                              // Axis label override
-    sort: 'value_desc' | 'value_asc' | 'label_asc' | 'label_desc' | 'natural';  // Default: 'value_desc'
-    max_categories?: number;                     // Top N categories, remainder grouped as "Other" (default: 12)
+    field_id: string; // The field to group by (select, status, people, linked record, date)
+    label?: string; // Axis label override
+    sort: 'value_desc' | 'value_asc' | 'label_asc' | 'label_desc' | 'natural'; // Default: 'value_desc'
+    max_categories?: number; // Top N categories, remainder grouped as "Other" (default: 12)
   };
-  value_series: ValueSeries[];                   // 1–4 value series (multiple = grouped bars)
-  show_values?: boolean;                         // Show value labels on bars (default: true when ≤ 8 categories)
-  show_legend?: boolean;                         // Show legend (default: true when > 1 series)
+  value_series: ValueSeries[]; // 1–4 value series (multiple = grouped bars)
+  show_values?: boolean; // Show value labels on bars (default: true when ≤ 8 categories)
+  show_legend?: boolean; // Show legend (default: true when > 1 series)
 }
 ```
 
@@ -159,13 +161,13 @@ Same as bar but values stack within each category. Supports absolute and percent
 interface StackedBarChartConfig {
   chart_type: 'stacked_bar';
   orientation: 'vertical' | 'horizontal';
-  category_axis: CategoryAxis;                   // Same as bar
-  stack_field_id: string;                        // Field that defines the segments within each bar
-  value_series: ValueSeries;                     // Single value field to aggregate (stacking creates the series)
-  stack_mode: 'absolute' | 'percent';            // 'percent' normalizes each bar to 100%
-  max_segments?: number;                         // Top N segments, rest grouped as "Other" (default: 6)
+  category_axis: CategoryAxis; // Same as bar
+  stack_field_id: string; // Field that defines the segments within each bar
+  value_series: ValueSeries; // Single value field to aggregate (stacking creates the series)
+  stack_mode: 'absolute' | 'percent'; // 'percent' normalizes each bar to 100%
+  max_segments?: number; // Top N segments, rest grouped as "Other" (default: 6)
   show_values?: boolean;
-  show_legend?: boolean;                         // Default: true
+  show_legend?: boolean; // Default: true
 }
 ```
 
@@ -179,22 +181,23 @@ Time-series line chart. X-axis is always a date/time field. Supports multiple va
 interface LineChartConfig {
   chart_type: 'line';
   time_axis: {
-    field_id: string;                            // Date or datetime field
+    field_id: string; // Date or datetime field
     granularity: 'day' | 'week' | 'month' | 'quarter' | 'year';
-    range?: {                                    // Default: auto-fit to data
+    range?: {
+      // Default: auto-fit to data
       type: 'relative' | 'absolute';
-      relative_periods?: number;                 // e.g., 6 = last 6 periods at the given granularity
-      start?: string;                            // ISO date, for absolute range
+      relative_periods?: number; // e.g., 6 = last 6 periods at the given granularity
+      start?: string; // ISO date, for absolute range
       end?: string;
     };
     label?: string;
   };
-  value_series: ValueSeries[];                   // 1–4 lines
+  value_series: ValueSeries[]; // 1–4 lines
   interpolation: 'linear' | 'monotone' | 'step'; // Default: 'monotone' (smooth curves)
-  show_points?: boolean;                         // Show data points on line (default: true when ≤ 12 points)
-  show_area?: boolean;                           // Fill area under line (default: false — use 'area' type for filled)
+  show_points?: boolean; // Show data points on line (default: true when ≤ 12 points)
+  show_area?: boolean; // Fill area under line (default: false — use 'area' type for filled)
   show_legend?: boolean;
-  annotations?: ChartAnnotation[];               // Horizontal reference lines, vertical event markers
+  annotations?: ChartAnnotation[]; // Horizontal reference lines, vertical event markers
 }
 ```
 
@@ -207,11 +210,11 @@ Filled area chart. Same configuration as `line` with additional stacking support
 ```typescript
 interface AreaChartConfig {
   chart_type: 'area';
-  time_axis: TimeAxis;                           // Same as line
+  time_axis: TimeAxis; // Same as line
   value_series: ValueSeries[];
   stack_mode?: 'none' | 'absolute' | 'percent'; // Default: 'none' (overlapping areas)
   interpolation: 'linear' | 'monotone' | 'step';
-  opacity?: number;                              // Fill opacity 0–1 (default: 0.3)
+  opacity?: number; // Fill opacity 0–1 (default: 0.3)
   show_legend?: boolean;
   annotations?: ChartAnnotation[];
 }
@@ -226,14 +229,14 @@ Proportional ring chart. Shows category distribution as segments of a circle. Ce
 ```typescript
 interface DonutChartConfig {
   chart_type: 'donut';
-  category_field_id: string;                     // Field to segment by
-  value_series: ValueSeries;                     // Single value to aggregate per segment
-  max_segments?: number;                         // Top N, rest as "Other" (default: 8)
-  center_label?: 'total' | 'count' | 'custom';  // What to show in the donut hole
-  center_custom_text?: string;                   // When center_label = 'custom'
-  show_legend?: boolean;                         // Default: true
-  show_values?: boolean;                         // Show value labels on segments (default: false — too cluttered)
-  show_percent?: boolean;                        // Show percentage labels (default: true)
+  category_field_id: string; // Field to segment by
+  value_series: ValueSeries; // Single value to aggregate per segment
+  max_segments?: number; // Top N, rest as "Other" (default: 8)
+  center_label?: 'total' | 'count' | 'custom'; // What to show in the donut hole
+  center_custom_text?: string; // When center_label = 'custom'
+  show_legend?: boolean; // Default: true
+  show_values?: boolean; // Show value labels on segments (default: false — too cluttered)
+  show_percent?: boolean; // Show percentage labels (default: true)
 }
 ```
 
@@ -247,22 +250,22 @@ Single-value progress indicator with a target. Used for budget burn, utilization
 interface ProgressChartConfig {
   chart_type: 'progress';
   label: string;
-  current_value: ValueSeries;                    // Single aggregate producing the "current" number
+  current_value: ValueSeries; // Single aggregate producing the "current" number
   target: {
     type: 'fixed' | 'field_aggregate';
-    fixed_value?: number;                        // e.g., 100 for percentage, $50,000 for budget
-    field_id?: string;                           // e.g., budget field
+    fixed_value?: number; // e.g., 100 for percentage, $50,000 for budget
+    field_id?: string; // e.g., budget field
     aggregation?: AggregationFunction;
   };
   format: 'percent' | 'currency' | 'number' | 'duration';
   currency_code?: string;
-  display_style: 'bar' | 'radial' | 'number';   // Default: 'bar'
+  display_style: 'bar' | 'radial' | 'number'; // Default: 'bar'
   thresholds?: {
-    healthy: number;                             // Green below this (or above, depending on direction)
-    warning: number;                             // Amber
-    danger: number;                              // Red
+    healthy: number; // Green below this (or above, depending on direction)
+    warning: number; // Amber
+    danger: number; // Red
   };
-  invert_color?: boolean;                        // true = lower is better (expense burn), false = higher is better (utilization)
+  invert_color?: boolean; // true = lower is better (expense burn), false = higher is better (utilization)
 }
 ```
 
@@ -278,13 +281,13 @@ interface SparklineConfig {
   time_axis: {
     field_id: string;
     granularity: 'day' | 'week' | 'month';
-    periods: number;                             // How many data points (default: 6)
+    periods: number; // How many data points (default: 6)
   };
-  value_series: ValueSeries;                     // Single value
-  height_px?: number;                            // Default: 32
-  width_px?: number;                             // Default: 120
-  show_endpoint_dots?: boolean;                  // Show dots on first and last point (default: true)
-  color?: string;                                // Override theme color
+  value_series: ValueSeries; // Single value
+  height_px?: number; // Default: 32
+  width_px?: number; // Default: 120
+  show_endpoint_dots?: boolean; // Show dots on first and last point (default: true)
+  color?: string; // Override theme color
 }
 ```
 
@@ -292,10 +295,10 @@ interface SparklineConfig {
 
 ```typescript
 interface ValueSeries {
-  field_id: string;                              // Field to aggregate
+  field_id: string; // Field to aggregate
   aggregation: AggregationFunction;
-  label?: string;                                // Series label for legend (defaults to "{aggregation} of {field_name}")
-  color?: string;                                // Override auto-assigned color from palette
+  label?: string; // Series label for legend (defaults to "{aggregation} of {field_name}")
+  color?: string; // Override auto-assigned color from palette
 }
 
 type AggregationFunction = 'count' | 'count_distinct' | 'sum' | 'avg' | 'min' | 'max' | 'median';
@@ -321,10 +324,10 @@ interface TimeAxis {
 
 interface ChartAnnotation {
   type: 'horizontal_line' | 'vertical_line';
-  value: number | string;                        // Number for horizontal (y-value), ISO date string for vertical (x-position)
-  label?: string;                                // "Target: $100K", "Launch Date"
+  value: number | string; // Number for horizontal (y-value), ISO date string for vertical (x-position)
+  label?: string; // "Target: $100K", "Launch Date"
   color?: string;
-  style: 'solid' | 'dashed';                    // Default: 'dashed'
+  style: 'solid' | 'dashed'; // Default: 'dashed'
 }
 ```
 
@@ -332,19 +335,19 @@ interface ChartAnnotation {
 
 Not every field type can serve as a chart axis or value. This matrix defines compatibility — enforced in the chart configuration UI.
 
-| Field Type | As Value (aggregate) | As Category (group by) | As Time Axis |
-|---|---|---|---|
-| number, currency, percent, duration, rating | ✅ All aggregations | ❌ | ❌ |
-| progress | ✅ (avg, min, max) | ❌ | ❌ |
-| single_select, status | ✅ (count only) | ✅ | ❌ |
-| multi_select | ✅ (count only) | ✅ (each tag = separate category) | ❌ |
-| people, created_by, updated_by | ✅ (count only) | ✅ | ❌ |
-| linked_record | ✅ (count only) | ✅ (by display field) | ❌ |
-| checkbox | ✅ (count where true, count where false) | ✅ (true/false as categories) | ❌ |
-| date, created_time, last_modified_time | ❌ | ✅ (bucketed by granularity) | ✅ |
-| text, text_area, email, url, phone | ❌ | ✅ (unique values, limited utility) | ❌ |
-| formula, rollup, lookup | Depends on output type — map to the above | Depends on output type | Depends on output type |
-| attachment, smart_doc, barcode | ❌ | ❌ | ❌ |
+| Field Type                                  | As Value (aggregate)                      | As Category (group by)              | As Time Axis           |
+| ------------------------------------------- | ----------------------------------------- | ----------------------------------- | ---------------------- |
+| number, currency, percent, duration, rating | ✅ All aggregations                       | ❌                                  | ❌                     |
+| progress                                    | ✅ (avg, min, max)                        | ❌                                  | ❌                     |
+| single_select, status                       | ✅ (count only)                           | ✅                                  | ❌                     |
+| multi_select                                | ✅ (count only)                           | ✅ (each tag = separate category)   | ❌                     |
+| people, created_by, updated_by              | ✅ (count only)                           | ✅                                  | ❌                     |
+| linked_record                               | ✅ (count only)                           | ✅ (by display field)               | ❌                     |
+| checkbox                                    | ✅ (count where true, count where false)  | ✅ (true/false as categories)       | ❌                     |
+| date, created_time, last_modified_time      | ❌                                        | ✅ (bucketed by granularity)        | ✅                     |
+| text, text_area, email, url, phone          | ❌                                        | ✅ (unique values, limited utility) | ❌                     |
+| formula, rollup, lookup                     | Depends on output type — map to the above | Depends on output type              | Depends on output type |
+| attachment, smart_doc, barcode              | ❌                                        | ❌                                  | ❌                     |
 
 The chart configuration UI shows only compatible fields in each picker based on this matrix. No error state needed — incompatible options are never offered.
 
@@ -364,7 +367,7 @@ The chart points at one table, picks a value field and aggregation function, and
 interface TableAggregateBinding {
   mode: 'table_aggregate';
   source_table_id: string;
-  filters?: FilterRule[];                        // Same filter grammar as view filters, supports $me
+  filters?: FilterRule[]; // Same filter grammar as view filters, supports $me
   // The chart type config (above) defines which fields and aggregations to compute.
   // This binding provides the table context and pre-filters.
 }
@@ -400,12 +403,13 @@ For charts that need cross-base JOINs, multi-table aggregations, or complex comp
 ```typescript
 interface DuckDBAnalyticalBinding {
   mode: 'duckdb_analytical';
-  query_plan: QueryPlan;                         // Full DuckDB QueryPlan (see duckdb-context-layer-ref.md)
-  column_mapping: {                              // Map ContextResult columns to chart axes
-    category_column?: string;                    // Column alias for category axis
-    time_column?: string;                        // Column alias for time axis
-    value_columns: string[];                     // Column alias(es) for value series
-    series_column?: string;                      // Column alias for multi-series (creates one line/bar per unique value)
+  query_plan: QueryPlan; // Full DuckDB QueryPlan (see duckdb-context-layer-ref.md)
+  column_mapping: {
+    // Map ContextResult columns to chart axes
+    category_column?: string; // Column alias for category axis
+    time_column?: string; // Column alias for time axis
+    value_columns: string[]; // Column alias(es) for value series
+    series_column?: string; // Column alias for multi-series (creates one line/bar per unique value)
   };
 }
 ```
@@ -444,10 +448,10 @@ A specialized variant of Mode A for `metric_snapshots` data (ad platform metrics
 interface MetricSnapshotBinding {
   mode: 'metric_snapshot';
   snapshot_table: 'metric_snapshots' | 'financial_snapshots';
-  record_id?: string;                            // For metric_snapshots: which campaign/ad record
-  record_ids?: string[];                         // Multi-record comparison mode
-  metric_field_id?: string;                      // For metric_snapshots: which metric
-  report_type?: string;                          // For financial_snapshots: profit_loss | balance_sheet | etc.
+  record_id?: string; // For metric_snapshots: which campaign/ad record
+  record_ids?: string[]; // Multi-record comparison mode
+  metric_field_id?: string; // For metric_snapshots: which metric
+  report_type?: string; // For financial_snapshots: profit_loss | balance_sheet | etc.
   date_range: {
     type: 'relative' | 'absolute';
     relative_periods?: number;
@@ -455,7 +459,7 @@ interface MetricSnapshotBinding {
     start?: string;
     end?: string;
   };
-  aggregation?: 'sum' | 'avg' | 'last';         // How to aggregate within each period bucket (default: 'sum' for metrics, 'last' for snapshots)
+  aggregation?: 'sum' | 'avg' | 'last'; // How to aggregate within each period bucket (default: 'sum' for metrics, 'last' for snapshots)
 }
 ```
 
@@ -488,23 +492,23 @@ interface SummaryViewConfig {
 }
 
 interface SummaryLayout {
-  columns: number;                               // Grid columns: 1, 2, 3, or 4 (default: 2)
-  gap_px: number;                                // Gap between blocks (default: 16)
+  columns: number; // Grid columns: 1, 2, 3, or 4 (default: 2)
+  gap_px: number; // Gap between blocks (default: 16)
 }
 
 interface SummaryBlock {
-  id: string;                                    // Unique within this tab (UUID)
+  id: string; // Unique within this tab (UUID)
   position: {
-    column: number;                              // 0-indexed column position
-    row: number;                                 // 0-indexed row position
-    column_span?: number;                        // How many columns to span (default: 1)
-    row_span?: number;                           // How many rows to span (default: 1)
+    column: number; // 0-indexed column position
+    row: number; // 0-indexed row position
+    column_span?: number; // How many columns to span (default: 1)
+    row_span?: number; // How many rows to span (default: 1)
   };
   block_type: 'chart' | 'divider' | 'heading';
-  chart_config?: ChartTypeConfig;                // Union of all chart type configs (NumberCardConfig | BarChartConfig | ...)
-  data_binding?: DataBinding;                    // Union: TableAggregateBinding | DuckDBAnalyticalBinding | MetricSnapshotBinding
-  heading_text?: string;                         // When block_type = 'heading'
-  min_height_px?: number;                        // Minimum block height (default: varies by chart type)
+  chart_config?: ChartTypeConfig; // Union of all chart type configs (NumberCardConfig | BarChartConfig | ...)
+  data_binding?: DataBinding; // Union: TableAggregateBinding | DuckDBAnalyticalBinding | MetricSnapshotBinding
+  heading_text?: string; // When block_type = 'heading'
+  min_height_px?: number; // Minimum block height (default: varies by chart type)
 }
 ```
 
@@ -514,16 +518,17 @@ The summary tab layout uses CSS Grid. The Manager configures the grid column cou
 
 **Default layouts by chart type** (when the Manager adds a chart block without specifying position):
 
-| Chart Type | Default Span | Default Min Height |
-|---|---|---|
-| `number_card` | 1 column, 1 row | 120px |
-| `bar`, `stacked_bar` | 2 columns, 2 rows | 300px |
-| `line`, `area` | 2 columns, 2 rows | 300px |
-| `donut` | 1 column, 2 rows | 280px |
-| `progress` | 1 column, 1 row | 100px |
-| `sparkline` | 1 column, 1 row | 80px |
+| Chart Type           | Default Span      | Default Min Height |
+| -------------------- | ----------------- | ------------------ |
+| `number_card`        | 1 column, 1 row   | 120px              |
+| `bar`, `stacked_bar` | 2 columns, 2 rows | 300px              |
+| `line`, `area`       | 2 columns, 2 rows | 300px              |
+| `donut`              | 1 column, 2 rows  | 280px              |
+| `progress`           | 1 column, 1 row   | 100px              |
+| `sparkline`          | 1 column, 1 row   | 80px               |
 
 **Responsive behavior:**
+
 - **Desktop (≥1024px):** Full grid layout as configured.
 - **Tablet (768–1023px):** Collapse to max 2 columns. Blocks that spanned 3–4 columns become 2.
 - **Mobile (<768px):** Single column stack. All blocks become full-width. Charts maintain minimum height. Number cards stack in a 2×N grid (two per row) for density.
@@ -571,13 +576,13 @@ Table View set: "Project Health" (scope: base)
 
 ---
 
-## Chart Rendering in Apps *(Post-MVP — App Designer Required)*
+## Chart Rendering in Apps _(Post-MVP — App Designer Required)_
 
 App chart blocks (`app-designer.md` > Block Library > Data category: "Chart" and "Metric/KPI Card") are rendered using the same chart component library. The App context adds theming and scoping.
 
 > **⚠️ MVP Quick Portals** (externally-shared Record View of a single record) **do NOT support chart blocks.** Chart blocks require the App Designer (post-MVP). This entire section describes post-MVP App-type portals.
 
-### App Chart Block Configuration *(Post-MVP)*
+### App Chart Block Configuration _(Post-MVP)_
 
 In the App Designer, when a Manager adds a Chart block, the property panel Content Tab shows:
 
@@ -585,7 +590,7 @@ In the App Designer, when a Manager adds a Chart block, the property panel Conte
 2. **Data binding:** Table picker → field pickers for value/category/time (same as Table View charts). Filters include the App's `record_scope` (client identity filter) automatically.
 3. **Chart options:** Type-specific configuration (axis labels, legend position, annotation lines, etc.).
 
-### App Metric/KPI Card Block *(Post-MVP)*
+### App Metric/KPI Card Block _(Post-MVP)_
 
 The "Metric/KPI Card" block in the App block library is specifically the `number_card` chart type. Same component, App-themed. The App Designer offers this as a separate block type for discoverability — "I want to show a big number" is a different mental model than "I want a chart."
 
@@ -595,20 +600,20 @@ Chart components accept a `theme` prop that overrides default colors:
 
 ```typescript
 interface ChartTheme {
-  palette: string[];                             // Category colors (bars, donut segments, line series)
-  background: string;                            // Chart area background
-  text_primary: string;                          // Axis labels, value labels
-  text_secondary: string;                        // Axis ticks, legends
-  grid_color: string;                            // Grid lines
-  positive_color: string;                        // Green equivalent for positive deltas
-  negative_color: string;                        // Red equivalent for negative deltas
-  font_family: string;                           // Inherits from App theme
+  palette: string[]; // Category colors (bars, donut segments, line series)
+  background: string; // Chart area background
+  text_primary: string; // Axis labels, value labels
+  text_secondary: string; // Axis ticks, legends
+  grid_color: string; // Grid lines
+  positive_color: string; // Green equivalent for positive deltas
+  negative_color: string; // Red equivalent for negative deltas
+  font_family: string; // Inherits from App theme
 }
 ```
 
-In workspace Table Views, the theme resolves from the design system (`design-system.md`). In Apps *(post-MVP)*, the theme resolves from the App's `theme` configuration. The chart component is agnostic — it renders whatever theme it receives.
+In workspace Table Views, the theme resolves from the design system (`design-system.md`). In Apps _(post-MVP)_, the theme resolves from the App's `theme` configuration. The chart component is agnostic — it renders whatever theme it receives.
 
-### App Chart Block Data Scoping *(Post-MVP)*
+### App Chart Block Data Scoping _(Post-MVP)_
 
 App charts apply three filter layers (same as all App data blocks, per `app-designer.md` > Record Scope Architecture):
 
@@ -647,6 +652,7 @@ Smart Doc chart embed details are specified in `smart-docs.md` when that documen
 **Decision: Use Recharts as the charting library.**
 
 Rationale:
+
 - **React-native:** Declarative component API that fits EveryStack's React/Next.js stack. No imperative D3 wrangling.
 - **Composable:** Each chart is assembled from primitives (XAxis, YAxis, Bar, Line, Tooltip, Legend, etc.). EveryStack chart type configs map cleanly to Recharts component props.
 - **Responsive:** Built-in `ResponsiveContainer` that handles resize. Works with EveryStack's responsive breakpoints.
@@ -656,6 +662,7 @@ Rationale:
 - **SSR-compatible:** Works with Next.js server rendering for App pages.
 
 Alternatives considered:
+
 - **Tremor:** Beautiful pre-styled components, but adds an opinionated design layer that may conflict with App theming. Better suited when you want Tremor's look; we need full theme control.
 - **Chart.js:** Canvas-based. Not React-native (react-chartjs-2 wrapper is thin). Harder to theme dynamically. Better for very large datasets due to canvas performance.
 - **Nivo:** D3-based, richer animation, heavier. Good for one-off visualizations; overkill for a component system.
@@ -698,37 +705,38 @@ src/components/charts/
 
 ```typescript
 interface ChartRendererProps {
-  config: ChartTypeConfig;                       // Union of all chart type configs
-  binding: DataBinding;                          // Union of all data binding modes
-  theme?: ChartTheme;                            // Override (Apps, post-MVP). Defaults to design system theme.
-  height?: number;                               // Explicit height override
-  width?: number;                                // Explicit width override (usually auto from container)
-  interactive?: boolean;                         // Enable tooltips, click handlers (default: true)
-  onCategoryClick?: (category: string) => void;  // Drill-down handler (click bar → filter table to that category)
+  config: ChartTypeConfig; // Union of all chart type configs
+  binding: DataBinding; // Union of all data binding modes
+  theme?: ChartTheme; // Override (Apps, post-MVP). Defaults to design system theme.
+  height?: number; // Explicit height override
+  width?: number; // Explicit width override (usually auto from container)
+  interactive?: boolean; // Enable tooltips, click handlers (default: true)
+  onCategoryClick?: (category: string) => void; // Drill-down handler (click bar → filter table to that category)
   className?: string;
 }
 ```
 
-`ChartRenderer` is the only component imported by consumers (Table View summary tabs, App blocks *(post-MVP)*, Smart Docs). It internally delegates to the correct renderer based on `config.chart_type`.
+`ChartRenderer` is the only component imported by consumers (Table View summary tabs, App blocks _(post-MVP)_, Smart Docs). It internally delegates to the correct renderer based on `config.chart_type`.
 
 ### Color Palette
 
 Default 8-color palette for chart series and categories. Derived from the first 8 saturated tones of the design system's 13-color data palette:
 
-| Index | Name | Hex | Usage |
-|---|---|---|---|
-| 0 | Red | `#DC2626` | First series / primary category |
-| 1 | Orange | `#EA580C` | Second series |
-| 2 | Amber | `#D97706` | Third series |
-| 3 | Yellow | `#CA8A04` | Fourth series |
-| 4 | Lime | `#65A30D` | Fifth series |
-| 5 | Green | `#16A34A` | Sixth series |
-| 6 | Teal | `#0D9488` | Seventh series |
-| 7 | Blue | `#2563EB` | Eighth series |
+| Index | Name   | Hex       | Usage                           |
+| ----- | ------ | --------- | ------------------------------- |
+| 0     | Red    | `#DC2626` | First series / primary category |
+| 1     | Orange | `#EA580C` | Second series                   |
+| 2     | Amber  | `#D97706` | Third series                    |
+| 3     | Yellow | `#CA8A04` | Fourth series                   |
+| 4     | Lime   | `#65A30D` | Fifth series                    |
+| 5     | Green  | `#16A34A` | Sixth series                    |
+| 6     | Teal   | `#0D9488` | Seventh series                  |
+| 7     | Blue   | `#2563EB` | Eighth series                   |
 
 Categories beyond 8 cycle through the palette with reduced opacity (80%, then 60%). The "Other" catch-all category always renders in `textSecondary` gray.
 
 Semantic colors (not from palette):
+
 - **Positive delta:** `#16A34A` (Green)
 - **Negative delta:** `#DC2626` (Red)
 - **Neutral delta:** `textSecondary`
@@ -737,14 +745,14 @@ These match the design system's existing status colors used in conditional row c
 
 ### Interaction Behaviors
 
-| Interaction | Behavior | All Chart Types? |
-|---|---|---|
-| **Hover tooltip** | Shows value(s) for the hovered point/bar/segment. Formatted per field type (currency with symbol, percent with %, etc.). | All except sparkline |
-| **Click category** | Fires `onCategoryClick` callback. In Table Views, this applies a filter to other tabs showing that category's records (master-detail pattern). In Apps *(post-MVP)*, navigates to a filtered list page. | bar, stacked_bar, donut |
-| **Click time point** | Fires callback with date range for that period. In Table Views, filters other tabs to records in that time window. | line, area |
-| **Legend toggle** | Click legend item to show/hide that series. State is local (not persisted). | bar, stacked_bar, line, area |
-| **Responsive resize** | Charts re-render on container resize. Recharts `ResponsiveContainer` handles this. | All |
-| **Number card tap** | On mobile, tap expands to show sparkline and comparison detail. | number_card |
+| Interaction           | Behavior                                                                                                                                                                                                | All Chart Types?             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **Hover tooltip**     | Shows value(s) for the hovered point/bar/segment. Formatted per field type (currency with symbol, percent with %, etc.).                                                                                | All except sparkline         |
+| **Click category**    | Fires `onCategoryClick` callback. In Table Views, this applies a filter to other tabs showing that category's records (master-detail pattern). In Apps _(post-MVP)_, navigates to a filtered list page. | bar, stacked_bar, donut      |
+| **Click time point**  | Fires callback with date range for that period. In Table Views, filters other tabs to records in that time window.                                                                                      | line, area                   |
+| **Legend toggle**     | Click legend item to show/hide that series. State is local (not persisted).                                                                                                                             | bar, stacked_bar, line, area |
+| **Responsive resize** | Charts re-render on container resize. Recharts `ResponsiveContainer` handles this.                                                                                                                      | All                          |
+| **Number card tap**   | On mobile, tap expands to show sparkline and comparison detail.                                                                                                                                         | number_card                  |
 
 ### Loading, Empty, and Error States
 
@@ -767,7 +775,7 @@ ALTER TYPE view_type_enum ADD VALUE 'summary';
 
 No new table needed. The `summary` view type stores its layout and chart blocks in the existing `view_config` JSONB column on `views`. The `SummaryViewConfig` shape (defined above) is the schema for `view_config` when `view_type = 'summary'`.
 
-### App `app_blocks` — Chart Block Types *(Post-MVP)*
+### App `app_blocks` — Chart Block Types _(Post-MVP)_
 
 App chart blocks use the `app_blocks` table (per glossary Database Entity Quick Reference: `App Block (post-MVP) | app_blocks | id, page_id, block_type, config (JSONB)`). The block_type values for charts:
 
@@ -779,12 +787,12 @@ The `config` JSONB column on `app_blocks` stores the chart type configuration an
 
 ```typescript
 interface ChartBlockConfig {
-  chart_config: ChartTypeConfig;                 // Which chart type and its options
-  data_binding: DataBinding;                     // How data is fetched
+  chart_config: ChartTypeConfig; // Which chart type and its options
+  data_binding: DataBinding; // How data is fetched
   // App-specific overrides (post-MVP):
-  show_title?: boolean;                          // Show chart title above the chart (default: true)
-  title_text?: string;                           // Override auto-generated title
-  card_style?: boolean;                          // Wrap in a Card Container automatically (default: true)
+  show_title?: boolean; // Show chart title above the chart (default: true)
+  title_text?: string; // Override auto-generated title
+  card_style?: boolean; // Wrap in a Card Container automatically (default: true)
 }
 ```
 
@@ -807,6 +815,7 @@ CREATE INDEX idx_chart_cache_ttl ON chart_cache (expires_at);
 ```
 
 **Cache invalidation:** Two mechanisms:
+
 1. **TTL-based:** 30-second expiry. A nightly cleanup job deletes expired rows.
 2. **Event-driven:** When a record mutation event fires on a table, all chart_cache entries referencing that table are invalidated. The existing real-time WebSocket pub/sub channel (`realtime.md`) carries these events.
 
@@ -826,7 +835,7 @@ The chart data binding layer needs a query execution module that generates and r
 interface AggregateQuery {
   table_id: string;
   tenant_id: string;
-  user_id: string;                               // For permission filtering
+  user_id: string; // For permission filtering
   value_fields: Array<{
     field_id: string;
     aggregation: AggregationFunction;
@@ -834,18 +843,18 @@ interface AggregateQuery {
   }>;
   group_by?: {
     field_id: string;
-    field_type: string;                          // Needed for option ID→label resolution
+    field_type: string; // Needed for option ID→label resolution
     alias: string;
-    max_groups?: number;                         // Top N + "Other"
+    max_groups?: number; // Top N + "Other"
   };
   time_bucket?: {
     field_id: string;
     granularity: 'day' | 'week' | 'month' | 'quarter' | 'year';
     alias: string;
   };
-  filters?: FilterRule[];                        // View-level filters + chart-level filters + permission filters
+  filters?: FilterRule[]; // View-level filters + chart-level filters + permission filters
   comparison?: {
-    period_offset: number;                       // -1 = prior period
+    period_offset: number; // -1 = prior period
     granularity: 'day' | 'week' | 'month' | 'quarter' | 'year';
   };
 }
@@ -868,28 +877,28 @@ interface AggregateQuery {
 interface ChartDataResult {
   // For category charts (bar, donut):
   categories?: Array<{
-    label: string;                               // Resolved: option label, user name, display field value
-    raw_value: string;                           // Original value (option ID, user ID, etc.) for drill-down
-    values: Record<string, number>;              // { series_alias: aggregate_value }
+    label: string; // Resolved: option label, user name, display field value
+    raw_value: string; // Original value (option ID, user ID, etc.) for drill-down
+    values: Record<string, number>; // { series_alias: aggregate_value }
   }>;
 
   // For time-series charts (line, area):
   time_points?: Array<{
-    period: string;                              // ISO date string (start of period)
-    label: string;                               // Formatted: "Jan 2026", "Week 7", "Q1 2026"
+    period: string; // ISO date string (start of period)
+    label: string; // Formatted: "Jan 2026", "Week 7", "Q1 2026"
     values: Record<string, number>;
   }>;
 
   // For single-value charts (number_card, progress):
   current_value?: number;
-  comparison_value?: number;                     // From comparison query
-  delta?: number;                                // current - comparison
-  delta_percent?: number;                        // (current - comparison) / comparison × 100
+  comparison_value?: number; // From comparison query
+  delta?: number; // current - comparison
+  delta_percent?: number; // (current - comparison) / comparison × 100
 
   // Metadata
-  total_records: number;                         // Records included in aggregation
-  truncated: boolean;                            // True if max_categories/groups was applied
-  truncated_label?: string;                      // "and 15 more" or "+$45,200 in Other"
+  total_records: number; // Records included in aggregation
+  truncated: boolean; // True if max_categories/groups was applied
+  truncated_label?: string; // "and 15 more" or "+$45,200 in Other"
   query_time_ms: number;
 }
 ```
@@ -917,34 +926,34 @@ These are `number_card` chart instances embedded in Kanban view chrome — not s
 
 ### Chart Configuration Permissions
 
-| Action | Required Role | Notes |
-|---|---|---|
-| Create summary tab in Table View | Manager+ | Same as creating any Table View tab |
-| Configure chart blocks in summary tab | Manager+ | Same as configuring Table View tab view_config |
-| Add Chart block in App Designer | Manager+ (App owner) | Same as adding any App block *(post-MVP)* |
-| View chart data | Viewer+ (with table read access) | Charts respect all existing permission layers |
-| Interact with chart (tooltips, legend toggle) | Viewer+ | Read-only interaction, no data mutation |
-| Click-to-drill-down (filter other tabs) | Team Member+ | Requires ability to apply filters |
+| Action                                        | Required Role                    | Notes                                          |
+| --------------------------------------------- | -------------------------------- | ---------------------------------------------- |
+| Create summary tab in Table View              | Manager+                         | Same as creating any Table View tab            |
+| Configure chart blocks in summary tab         | Manager+                         | Same as configuring Table View tab view_config |
+| Add Chart block in App Designer               | Manager+ (App owner)             | Same as adding any App block _(post-MVP)_      |
+| View chart data                               | Viewer+ (with table read access) | Charts respect all existing permission layers  |
+| Interact with chart (tooltips, legend toggle) | Viewer+                          | Read-only interaction, no data mutation        |
+| Click-to-drill-down (filter other tabs)       | Team Member+                     | Requires ability to apply filters              |
 
 ### Data Access Permissions in Charts
 
 Charts inherit the same permission model as the view they're in:
 
 - **Table View summary tab:** View `base_filters` + `$me` token + tab `filters` + field-level visibility. If the chart references a field the user can't see, that value series is omitted (not an error — silently excluded, same as hidden columns in grid view).
-- **App chart block *(post-MVP)*:** App record_scope + block filters + block visibility rules.
+- **App chart block _(post-MVP)_:** App record_scope + block filters + block visibility rules.
 - **Chart referencing cross-table data (Mode B):** DuckDB Context Layer permission enforcement applies — see `duckdb-context-layer-ref.md` > Security Considerations > Permission Enforcement.
 
 ---
 
 ## Phase Integration
 
-| Phase | Chart Deliverables | Depends On |
-|---|---|---|
-| **MVP — Core UX** | `ProgressChart.tsx` component (used for percent/progress field cells — already specced in `tables-and-views.md`). Chart color palette definition. `ChartRenderer.tsx` shell (renders progress only). | Design system |
-| **Post-MVP — Portals & Apps (Kanban + Charts)** | `NumberCard.tsx` component (Kanban view pipeline rollup display). Full chart component library (all 8 types). App Chart block and Metric/KPI Card block. App chart theming. Mode A data binding (table aggregate). `useTableAggregate` hook. Redis chart cache. Aggregate query builder. Chart configuration UI in App Designer. | Kanban view, App Designer, App data binding |
-| **Post-MVP — Portals & Apps → Table View backfill** | `summary` Table View type. Summary tab layout system. Chart blocks in Table View summary tabs. Mode A data binding for Table Views. Master-detail drill-down (chart click → filter other tabs). | Table View architecture (MVP — Core UX), chart components (Post-MVP — Portals & Apps) |
-| **Post-MVP — Comms & Polish (Comms)** | Smart Doc chart embeds (merge field syntax + PDF static rendering). | Smart Docs (Post-MVP — Documents), chart components (Post-MVP — Portals & Apps) |
-| **Post-MVP — Verticals & Advanced (Post-MVP)** | Mode B (DuckDB analytical binding). Mode C (metric snapshot binding). Financial Command Center summary tabs. PM dashboard summary tabs. Ad platform metric charts. `financial_summary` and `metric_snapshots` chart integration. | DuckDB Context Layer, accounting integration, ad platform connectors |
+| Phase                                               | Chart Deliverables                                                                                                                                                                                                                                                                                                               | Depends On                                                                            |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **MVP — Core UX**                                   | `ProgressChart.tsx` component (used for percent/progress field cells — already specced in `tables-and-views.md`). Chart color palette definition. `ChartRenderer.tsx` shell (renders progress only).                                                                                                                             | Design system                                                                         |
+| **Post-MVP — Portals & Apps (Kanban + Charts)**     | `NumberCard.tsx` component (Kanban view pipeline rollup display). Full chart component library (all 8 types). App Chart block and Metric/KPI Card block. App chart theming. Mode A data binding (table aggregate). `useTableAggregate` hook. Redis chart cache. Aggregate query builder. Chart configuration UI in App Designer. | Kanban view, App Designer, App data binding                                           |
+| **Post-MVP — Portals & Apps → Table View backfill** | `summary` Table View type. Summary tab layout system. Chart blocks in Table View summary tabs. Mode A data binding for Table Views. Master-detail drill-down (chart click → filter other tabs).                                                                                                                                  | Table View architecture (MVP — Core UX), chart components (Post-MVP — Portals & Apps) |
+| **Post-MVP — Comms & Polish (Comms)**               | Smart Doc chart embeds (merge field syntax + PDF static rendering).                                                                                                                                                                                                                                                              | Smart Docs (Post-MVP — Documents), chart components (Post-MVP — Portals & Apps)       |
+| **Post-MVP — Verticals & Advanced (Post-MVP)**      | Mode B (DuckDB analytical binding). Mode C (metric snapshot binding). Financial Command Center summary tabs. PM dashboard summary tabs. Ad platform metric charts. `financial_summary` and `metric_snapshots` chart integration.                                                                                                 | DuckDB Context Layer, accounting integration, ad platform connectors                  |
 
 ### MVP — Core UX Scope (Minimal — ProgressChart Only)
 
@@ -956,24 +965,23 @@ Only one component ships in MVP — Core UX:
 
 ### Post-MVP — Portals & Apps Scope (Full Chart System)
 
-This is the main chart delivery phase. Everything needed for App Chart blocks *(post-MVP)* and the `summary` Table View type ships here:
+This is the main chart delivery phase. Everything needed for App Chart blocks _(post-MVP)_ and the `summary` Table View type ships here:
 
 - All 8 chart type renderers
 - `ChartRenderer.tsx` universal entry point
 - Mode A data binding (`useTableAggregate` hook + aggregate query builder)
 - Redis chart cache
 - Chart configuration UI (type picker, field pickers, aggregation selector)
-- App Chart block and Metric/KPI Card block integration *(post-MVP)*
+- App Chart block and Metric/KPI Card block integration _(post-MVP)_
 - `summary` view type for Table View tabs
 - Summary tab layout system
-- Chart theming (design system + App themes *(post-MVP)*)
+- Chart theming (design system + App themes _(post-MVP)_)
 - Loading, empty, and error states
 - Interaction behaviors (tooltip, legend toggle, click-to-drill)
 
 ---
 
 ## Claude Code Prompt Roadmap
-
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
@@ -1372,59 +1380,59 @@ This section documents how existing specs map to the chart system defined here, 
 
 ### `app-designer.md` > Block Library
 
-| Spec Reference | Resolution |
-|---|---|
-| "Chart" data block | → `ChartBlock.tsx` App block *(post-MVP)*, renders any of the 8 chart types |
-| "Metric/KPI Card" data block | → `MetricCardBlock.tsx` App block *(post-MVP)*, renders `number_card` chart type |
+| Spec Reference                                     | Resolution                                                                                                                                          |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Chart" data block                                 | → `ChartBlock.tsx` App block _(post-MVP)_, renders any of the 8 chart types                                                                         |
+| "Metric/KPI Card" data block                       | → `MetricCardBlock.tsx` App block _(post-MVP)_, renders `number_card` chart type                                                                    |
 | "Data-bound blocks (lists, charts): 60s" cache TTL | → Redis chart cache with 30s TTL (more aggressive than App spec — chart data changes more frequently than list layout). App list blocks retain 60s. |
 
-### `agency-features.md` > App Chart Block Enhancements *(Post-MVP)*
+### `agency-features.md` > App Chart Block Enhancements _(Post-MVP)_
 
-| Spec Reference | Resolution |
-|---|---|
-| "Line charts (metric over time)" | → `line` chart type with Mode C (metric_snapshot binding) |
-| "Bar charts (comparisons)" | → `bar` chart type with Mode A (table_aggregate binding) |
-| "KPI cards (with period deltas)" | → `number_card` chart type with comparison config |
-| "Data tables" | → Standard App Table/List block *(post-MVP)* (not a chart type) |
-| "New data source: Metric History" | → Mode C `MetricSnapshotBinding` with `snapshot_table: 'metric_snapshots'` |
-| "Comparison mode: two metrics on same chart" | → `line` chart type with 2 value series |
-| "Multi-record mode: compare campaigns on one chart" | → Mode C with `record_ids[]` array |
+| Spec Reference                                      | Resolution                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------- |
+| "Line charts (metric over time)"                    | → `line` chart type with Mode C (metric_snapshot binding)                  |
+| "Bar charts (comparisons)"                          | → `bar` chart type with Mode A (table_aggregate binding)                   |
+| "KPI cards (with period deltas)"                    | → `number_card` chart type with comparison config                          |
+| "Data tables"                                       | → Standard App Table/List block _(post-MVP)_ (not a chart type)            |
+| "New data source: Metric History"                   | → Mode C `MetricSnapshotBinding` with `snapshot_table: 'metric_snapshots'` |
+| "Comparison mode: two metrics on same chart"        | → `line` chart type with 2 value series                                    |
+| "Multi-record mode: compare campaigns on one chart" | → Mode C with `record_ids[]` array                                         |
 
 ### `accounting-integration.md` > Financial Command Center
 
-| Spec Reference | Resolution |
-|---|---|
-| "Four summary cards (Revenue, Expenses, Net Income, Cash Position)" | → 4× `number_card` in summary tab, Mode A against `financial_summary` |
-| "Revenue Breakdown" (invoices by client) | → `bar` chart, Mode A against Invoices table with GROUP BY client |
-| "Expense Breakdown" (P&L categories) | → `stacked_bar` chart, Mode B against `financial_snapshots` |
-| "Cash Flow Calendar" (timeline of inflows/outflows) | → Table View tab with `view_type: 'timeline'` (not a chart — uses existing timeline view) |
-| "Revenue trend chart: Monthly revenue over 6-12 months" | → `line` chart, Mode A against `financial_summary` |
-| "Expense trend chart" | → `line` chart, Mode A against `financial_summary` |
-| "Profit trend chart" | → `line` chart, Mode A against `financial_summary` |
+| Spec Reference                                                      | Resolution                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| "Four summary cards (Revenue, Expenses, Net Income, Cash Position)" | → 4× `number_card` in summary tab, Mode A against `financial_summary`                     |
+| "Revenue Breakdown" (invoices by client)                            | → `bar` chart, Mode A against Invoices table with GROUP BY client                         |
+| "Expense Breakdown" (P&L categories)                                | → `stacked_bar` chart, Mode B against `financial_snapshots`                               |
+| "Cash Flow Calendar" (timeline of inflows/outflows)                 | → Table View tab with `view_type: 'timeline'` (not a chart — uses existing timeline view) |
+| "Revenue trend chart: Monthly revenue over 6-12 months"             | → `line` chart, Mode A against `financial_summary`                                        |
+| "Expense trend chart"                                               | → `line` chart, Mode A against `financial_summary`                                        |
+| "Profit trend chart"                                                | → `line` chart, Mode A against `financial_summary`                                        |
 
 ### `project-management.md` > PM Dashboards
 
-| Spec Reference | Resolution |
-|---|---|
-| "Task completion pie" | → `donut` chart type, Mode A against tasks table grouped by status |
-| "Burndown" | → `area` chart type, Mode A with time_bucket against tasks (completed_at date field) |
-| "Milestones" | → Not a chart — rendered as timeline view tab or table view with milestone filter |
-| "Overdue list" | → Not a chart — rendered as table view tab with overdue filter |
-| "Budget vs actuals" | → `bar` chart with 2 value series (budget field, actual spend rollup) or `progress` chart per project |
-| "Workload view: per-person allocation chart vs capacity" | → `bar` (horizontal) with `progress`-style threshold coloring, Mode A grouped by assignee |
+| Spec Reference                                           | Resolution                                                                                            |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| "Task completion pie"                                    | → `donut` chart type, Mode A against tasks table grouped by status                                    |
+| "Burndown"                                               | → `area` chart type, Mode A with time_bucket against tasks (completed_at date field)                  |
+| "Milestones"                                             | → Not a chart — rendered as timeline view tab or table view with milestone filter                     |
+| "Overdue list"                                           | → Not a chart — rendered as table view tab with overdue filter                                        |
+| "Budget vs actuals"                                      | → `bar` chart with 2 value series (budget field, actual spend rollup) or `progress` chart per project |
+| "Workload view: per-person allocation chart vs capacity" | → `bar` (horizontal) with `progress`-style threshold coloring, Mode A grouped by assignee             |
 
 ### `tables-and-views.md` > Kanban View Pipeline Rollups
 
-| Spec Reference | Resolution |
-|---|---|
-| "Per-column summary: record count + sum" | → Compact `number_card` below each column header |
-| "Weighted pipeline: sum × probability" | → Kanban view computes weighted value, passes to `number_card` |
-| "Summary bar at top: total records, total value, weighted total" | → Row of `number_card` components in Kanban toolbar |
+| Spec Reference                                                   | Resolution                                                     |
+| ---------------------------------------------------------------- | -------------------------------------------------------------- |
+| "Per-column summary: record count + sum"                         | → Compact `number_card` below each column header               |
+| "Weighted pipeline: sum × probability"                           | → Kanban view computes weighted value, passes to `number_card` |
+| "Summary bar at top: total records, total value, weighted total" | → Row of `number_card` components in Kanban toolbar            |
 
 ### `ai-metering.md` > Admin AI Dashboard
 
-| Spec Reference | Resolution |
-|---|---|
+| Spec Reference                             | Resolution                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | "Admin AI dashboard" (usage visualization) | → `summary` Table View type with `line` chart (AI usage over time), `bar` chart (usage by model), `number_card` (total credits used, remaining budget) |
 
 ---

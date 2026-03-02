@@ -10,16 +10,17 @@
 
 ## Summary
 
-| Check | Scanned | Findings | Fixed | Decision Required |
-|-------|---------|----------|-------|-------------------|
-| 1. Scope conflicts (doc vs GLOSSARY) | All docs | 3 root conflicts (12 locations) | 12 | 0 |
-| 2. Internal scope contradictions | All docs | 2 | 2 | 0 |
-| 3. Missing scope labels | All docs | 0 | — | — |
-| 4. Scope label format | All docs | 0 | — | — |
-| 5. Dependency ordering | All roadmap tables | 1 | 1 | 0 |
-| **Totals** | | **6 issues (15 locations)** | **15** | **0** |
+| Check                                | Scanned            | Findings                        | Fixed  | Decision Required |
+| ------------------------------------ | ------------------ | ------------------------------- | ------ | ----------------- |
+| 1. Scope conflicts (doc vs GLOSSARY) | All docs           | 3 root conflicts (12 locations) | 12     | 0                 |
+| 2. Internal scope contradictions     | All docs           | 2                               | 2      | 0                 |
+| 3. Missing scope labels              | All docs           | 0                               | —      | —                 |
+| 4. Scope label format                | All docs           | 0                               | —      | —                 |
+| 5. Dependency ordering               | All roadmap tables | 1                               | 1      | 0                 |
+| **Totals**                           |                    | **6 issues (15 locations)**     | **15** | **0**             |
 
 **All findings resolved.** Decisions applied:
+
 - Kanban View: stays post-MVP → `chart-blocks.md` NumberCard retagged, `mobile.md` Kanban row moved
 - Calendar View: stays post-MVP → `booking-scheduling.md`, `meetings.md`, `mobile.md` rows retagged
 - File Embeddings: scope split in GLOSSARY → embedding generation MVP, semantic search UX post-MVP
@@ -42,14 +43,14 @@
 
 **data-model.md:53:** `view_type (VARCHAR: grid|card — MVP; kanban|list|gantt|calendar|gallery|smart_doc — reserved post-MVP)`
 
-| File | Line(s) | What It Says | Issue |
-|------|---------|-------------|-------|
-| `chart-blocks.md` | 912 | "NumberCard.tsx ships in MVP — Core UX as part of Kanban view" | Tags Kanban as MVP |
-| `chart-blocks.md` | 943 | Roadmap: "MVP — Core UX \| NumberCard.tsx...Used in Kanban view" | Tags Kanban as MVP |
-| `chart-blocks.md` | 949 | Section header: "MVP — Core UX Scope (Minimal — Ships with Kanban View)" | Tags Kanban as MVP |
-| `chart-blocks.md` | 1011 | "shipping with Kanban view in MVP — Core UX" | Tags Kanban as MVP |
-| `chart-blocks.md` | 1122 | "Kanban view computes aggregate values locally...MVP — Core UX" | Tags Kanban as MVP |
-| `mobile.md` | 1207 | Roadmap: "MVP — Core UX \| **Kanban view** on mobile" | Tags Kanban as MVP |
+| File              | Line(s) | What It Says                                                             | Issue              |
+| ----------------- | ------- | ------------------------------------------------------------------------ | ------------------ |
+| `chart-blocks.md` | 912     | "NumberCard.tsx ships in MVP — Core UX as part of Kanban view"           | Tags Kanban as MVP |
+| `chart-blocks.md` | 943     | Roadmap: "MVP — Core UX \| NumberCard.tsx...Used in Kanban view"         | Tags Kanban as MVP |
+| `chart-blocks.md` | 949     | Section header: "MVP — Core UX Scope (Minimal — Ships with Kanban View)" | Tags Kanban as MVP |
+| `chart-blocks.md` | 1011    | "shipping with Kanban view in MVP — Core UX"                             | Tags Kanban as MVP |
+| `chart-blocks.md` | 1122    | "Kanban view computes aggregate values locally...MVP — Core UX"          | Tags Kanban as MVP |
+| `mobile.md`       | 1207    | Roadmap: "MVP — Core UX \| **Kanban view** on mobile"                    | Tags Kanban as MVP |
 
 **Note:** `mobile.md` reconciliation note (line 7) says "Tagged post-MVP features per glossary: Kanban View, Calendar View" — but the roadmap table at line 1207 still lists them under MVP — Core UX. The reconciler flagged the conflict but didn't resolve it in the table.
 
@@ -63,11 +64,11 @@
 
 **GLOSSARY.md:678:** (same row as Kanban — Calendar views are Post-MVP)
 
-| File | Line(s) | What It Says | Issue |
-|------|---------|-------------|-------|
-| `booking-scheduling.md` | 1090 | Roadmap: "MVP — Core UX \| Calendar View architecture (day/week/month grid rendering...)" | Tags Calendar View as MVP |
-| `meetings.md` | 600 | Roadmap: "MVP — Core UX \| Calendar View with Schedule mode" | Tags Calendar View as MVP |
-| `mobile.md` | 1207 | Roadmap: "MVP — Core UX \| **Calendar view** (month/week/day)" | Tags Calendar View as MVP |
+| File                    | Line(s) | What It Says                                                                              | Issue                     |
+| ----------------------- | ------- | ----------------------------------------------------------------------------------------- | ------------------------- |
+| `booking-scheduling.md` | 1090    | Roadmap: "MVP — Core UX \| Calendar View architecture (day/week/month grid rendering...)" | Tags Calendar View as MVP |
+| `meetings.md`           | 600     | Roadmap: "MVP — Core UX \| Calendar View with Schedule mode"                              | Tags Calendar View as MVP |
+| `mobile.md`             | 1207    | Roadmap: "MVP — Core UX \| **Calendar view** (month/week/day)"                            | Tags Calendar View as MVP |
 
 **Internal contradiction in `booking-scheduling.md`:** The banner at line 3 says "Calendar View (day/week/month) is also post-MVP per GLOSSARY" — but the roadmap table at line 1090 uses "MVP — Core UX" for Calendar View architecture.
 
@@ -81,10 +82,10 @@
 
 **GLOSSARY.md:685:** `Vector embeddings / semantic search | Post-MVP`
 
-| File | Line(s) | What It Says | Issue |
-|------|---------|-------------|-------|
-| `document-intelligence.md` | 63 | "file.embed_content ← Vector embedding of extracted text (MVP — Core UX)" | Tags embeddings as MVP |
-| `document-intelligence.md` | 693 | Roadmap: "MVP — Core UX \| **Activate content embeddings:** file.embed_content job generates embeddings" | Tags embeddings as MVP |
+| File                       | Line(s) | What It Says                                                                                             | Issue                  |
+| -------------------------- | ------- | -------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `document-intelligence.md` | 63      | "file.embed_content ← Vector embedding of extracted text (MVP — Core UX)"                                | Tags embeddings as MVP |
+| `document-intelligence.md` | 693     | Roadmap: "MVP — Core UX \| **Activate content embeddings:** file.embed_content job generates embeddings" | Tags embeddings as MVP |
 
 **Internal contradiction in `document-intelligence.md`:** Line 28 section index says "semantic search explicitly post-MVP per glossary" and line 470 says "Post-MVP — vector embeddings / semantic search explicitly listed as post-MVP in glossary" — but lines 63 and 693 tag `file.embed_content` as MVP — Core UX.
 
@@ -99,7 +100,7 @@ Already captured under Finding 2, but noting as a standalone internal contradict
 - **Line 5:** "⚠️ POST-MVP FEATURE... do not build the Meetings feature set until post-MVP"
 - **Line 600:** "**MVP — Core UX** | meeting_table_config overlay. Auto-created fields..."
 
-The roadmap table appears to use MVP scope labels as *relative* sequencing within the post-MVP build (i.e., "this is the first thing to build when we get to meetings"). But Claude Code reads "MVP — Core UX" literally.
+The roadmap table appears to use MVP scope labels as _relative_ sequencing within the post-MVP build (i.e., "this is the first thing to build when we get to meetings"). But Claude Code reads "MVP — Core UX" literally.
 
 ---
 
@@ -122,6 +123,7 @@ No docs assign conflicting scopes to the same feature in different sections, oth
 ### Check 3 — Missing Scope Labels ✅
 
 Every reference doc has scope assignments. Checked:
+
 - `design-system.md` — Cross-cutting concern, uses inline "(post-MVP)" tags on individual features rather than a roadmap table. Appropriate for a horizontal doc.
 - `command-bar.md` — Has "Slash Command Catalog (MVP)" section and post-MVP deferred list.
 - `cross-linking.md` — Core MVP feature. Post-MVP section clearly labeled.
@@ -132,6 +134,7 @@ Every reference doc has scope assignments. Checked:
 ### Check 4 — Scope Label Format ✅
 
 All scope labels use canonical format. Two "v2" hits are false positives:
+
 - `platform-api.md:208` — API version bump ("version bump to `v2`"), not a scope label
 - `vector-embeddings.md:100` — ML model name (`all-MiniLM-L6-v2`), not a scope label
 
@@ -143,11 +146,11 @@ No "Phase 2", "Future", "v2", or freeform scope labels found.
 
 Three scope questions for you to decide. Each has two resolution paths:
 
-| # | Feature | Option A: Move to MVP | Option B: Keep Post-MVP |
-|---|---------|----------------------|------------------------|
-| 1 | Kanban View | Update GLOSSARY:678. Fix `chart-blocks.md` dependency chain. | Retag `chart-blocks.md` NumberCard + `mobile.md` Kanban as post-MVP. |
-| 2 | Calendar View | Update GLOSSARY:678. | Retag `booking-scheduling.md`, `meetings.md`, `mobile.md` Calendar View rows as post-MVP. |
-| 3 | File Embeddings | Update GLOSSARY:685 to separate file embeddings from full semantic search. | Retag `document-intelligence.md` embed_content as post-MVP. |
+| #   | Feature         | Option A: Move to MVP                                                      | Option B: Keep Post-MVP                                                                   |
+| --- | --------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | Kanban View     | Update GLOSSARY:678. Fix `chart-blocks.md` dependency chain.               | Retag `chart-blocks.md` NumberCard + `mobile.md` Kanban as post-MVP.                      |
+| 2   | Calendar View   | Update GLOSSARY:678.                                                       | Retag `booking-scheduling.md`, `meetings.md`, `mobile.md` Calendar View rows as post-MVP. |
+| 3   | File Embeddings | Update GLOSSARY:685 to separate file embeddings from full semantic search. | Retag `document-intelligence.md` embed_content as post-MVP.                               |
 
 Once you decide, I can apply the fixes in either direction.
 
@@ -155,14 +158,14 @@ Once you decide, I can apply the fixes in either direction.
 
 ## Files Modified
 
-| File | Changes |
-|------|---------|
-| `chart-blocks.md` | Lines 7, 912, 943, 949–960, 1009, 1103, 1120: Retagged NumberCard as Post-MVP — Portals & Apps (ships with Kanban). ProgressChart stays MVP — Core UX. |
-| `mobile.md` | Line 1207: Moved Kanban view + Calendar view from MVP — Core UX row to new Post-MVP — Portals & Apps (View Types) row. |
-| `booking-scheduling.md` | Line 1090: Retagged Calendar View architecture row from MVP — Core UX to Post-MVP — Portals & Apps (Calendar View). |
-| `meetings.md` | Lines 600–606: Retagged roadmap from MVP — Core UX to Post-MVP — Portals & Apps (Meetings Foundation). Section header updated. |
-| `GLOSSARY.md` | Line 685: Split vector embeddings scope — file content embedding generation ships MVP — Core UX; semantic search UX is post-MVP. |
-| `MANIFEST.md` | Updated `chart-blocks.md` line count (1448→1446) and scope description. Updated `mobile.md` line count (1231→1232). Moved `meetings.md` from MVP — Core UX to Post-MVP — Portals & Apps in Reference Doc Scope Map. |
+| File                    | Changes                                                                                                                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chart-blocks.md`       | Lines 7, 912, 943, 949–960, 1009, 1103, 1120: Retagged NumberCard as Post-MVP — Portals & Apps (ships with Kanban). ProgressChart stays MVP — Core UX.                                                              |
+| `mobile.md`             | Line 1207: Moved Kanban view + Calendar view from MVP — Core UX row to new Post-MVP — Portals & Apps (View Types) row.                                                                                              |
+| `booking-scheduling.md` | Line 1090: Retagged Calendar View architecture row from MVP — Core UX to Post-MVP — Portals & Apps (Calendar View).                                                                                                 |
+| `meetings.md`           | Lines 600–606: Retagged roadmap from MVP — Core UX to Post-MVP — Portals & Apps (Meetings Foundation). Section header updated.                                                                                      |
+| `GLOSSARY.md`           | Line 685: Split vector embeddings scope — file content embedding generation ships MVP — Core UX; semantic search UX is post-MVP.                                                                                    |
+| `MANIFEST.md`           | Updated `chart-blocks.md` line count (1448→1446) and scope description. Updated `mobile.md` line count (1231→1232). Moved `meetings.md` from MVP — Core UX to Post-MVP — Portals & Apps in Reference Doc Scope Map. |
 
 ## Verification Commands
 

@@ -1,0 +1,26 @@
+{
+  "name": "@everystack/shared",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./db": "./db/index.ts",
+    "./sync": "./sync/index.ts",
+    "./ai": "./ai/index.ts",
+    "./testing": "./testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "check:i18n": "echo 'No i18n strings yet' && exit 0",
+    "test": "echo 'No tests yet' && exit 0",
+    "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0",
+    "test:ai-eval": "echo 'No AI eval suite yet' && exit 0",
+    "db:migrate": "echo 'No migrations yet' && exit 0",
+    "db:migrate:check": "echo 'No migration check yet' && exit 0",
+    "db:seed-staging": "echo 'No staging seed yet' && exit 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

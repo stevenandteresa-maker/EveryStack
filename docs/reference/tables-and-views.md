@@ -11,16 +11,16 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Table Type System | 27–119 | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior |
-| Table (Grid) View Architecture | 120–553 | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
-| Record View | 554–615 | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs |
-| Card View | 616–656 | Card layout, card fields, grouping, mobile card list |
-| Sections — Universal List Organizer | 657–689 | Sidebar sections, drag-to-reorder, section-scoped operations |
-| Inline Sub-Table Display for Linked Records | 690–793 | Linked record expansion, inline sub-table rendering in Record View |
-| Kanban View — Post-MVP | 794–805 | Kanban columns, drag-and-drop, WIP limits |
-| Quick Entry — Post-MVP | 806–812 | Rapid record creation mode, barcode scanning |
+| Section                                     | Lines   | Covers                                                                                      |
+| ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| Table Type System                           | 27–119  | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior    |
+| Table (Grid) View Architecture              | 120–553 | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
+| Record View                                 | 554–615 | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs                |
+| Card View                                   | 616–656 | Card layout, card fields, grouping, mobile card list                                        |
+| Sections — Universal List Organizer         | 657–689 | Sidebar sections, drag-to-reorder, section-scoped operations                                |
+| Inline Sub-Table Display for Linked Records | 690–793 | Linked record expansion, inline sub-table rendering in Record View                          |
+| Kanban View — Post-MVP                      | 794–805 | Kanban columns, drag-and-drop, WIP limits                                                   |
+| Quick Entry — Post-MVP                      | 806–812 | Rapid record creation mode, barcode scanning                                                |
 
 ---
 
@@ -28,19 +28,20 @@
 
 Every table has a `table_type` that determines its icon, color, default view, and available views. The data model is the same — all types store data in `records.canonical_data`. The type controls presentation.
 
-| Type | Icon | Tab Color | Default View | Description |
-|------|------|-----------|-------------|-------------|
-| `table` | Grid/spreadsheet | Gray | Grid | Standard rows, columns, filters, sorts |
-| `projects` | Checklist/kanban | Teal | List (post-MVP; Grid for MVP) | Project cards → List/Board/Timeline/Gantt |
-| `calendar` | Calendar | Amber | Calendar (post-MVP; Grid for MVP) | Event records: meetings, appointments |
-| `documents` | Folder/file | Purple | Gallery (post-MVP; Grid for MVP) | File storage, generated docs |
-| `wiki` | Book/pages | Blue | Smart Doc (post-MVP; Grid for MVP) | Base-level knowledge base |
+| Type        | Icon             | Tab Color | Default View                       | Description                               |
+| ----------- | ---------------- | --------- | ---------------------------------- | ----------------------------------------- |
+| `table`     | Grid/spreadsheet | Gray      | Grid                               | Standard rows, columns, filters, sorts    |
+| `projects`  | Checklist/kanban | Teal      | List (post-MVP; Grid for MVP)      | Project cards → List/Board/Timeline/Gantt |
+| `calendar`  | Calendar         | Amber     | Calendar (post-MVP; Grid for MVP)  | Event records: meetings, appointments     |
+| `documents` | Folder/file      | Purple    | Gallery (post-MVP; Grid for MVP)   | File storage, generated docs              |
+| `wiki`      | Book/pages       | Blue      | Smart Doc (post-MVP; Grid for MVP) | Base-level knowledge base                 |
 
 - `table_type` is set at creation; cannot change after records exist
 - Any view type is available on any table type — type controls default, not restriction
 - A projects table can always be viewed as raw grid
 
 **Default fields on new table creation:**
+
 1. **Primary field** (Text, required, frozen) — the record's display name
 2. **Notes** (Rich Text) — positioned last in default field order. Manager can rename, move, hide, or delete.
 
@@ -52,28 +53,28 @@ Every table tab in the sidebar supports a user-assignable color stripe — a **3
 
 Default colors by table type:
 
-| table_type | Default Stripe Color |
-|------------|---------------------|
-| `table` | `textSecondary` (Gray) |
-| `projects` | Teal (`#0D9488`) |
-| `calendar` | `accent` (Amber) |
-| `documents` | `#A78BFA` (Purple) |
-| `wiki` | `#60A5FA` (Blue) |
+| table_type  | Default Stripe Color   |
+| ----------- | ---------------------- |
+| `table`     | `textSecondary` (Gray) |
+| `projects`  | Teal (`#0D9488`)       |
+| `calendar`  | `accent` (Amber)       |
+| `documents` | `#A78BFA` (Purple)     |
+| `wiki`      | `#60A5FA` (Blue)       |
 
 **Tab color palette** (10 colors):
 
 | Color Name | Dark Mode Hex | Light Mode Hex |
-|------------|--------------|----------------|
-| Gray | `#94A3B8` | `#64748B` |
-| Teal | `#2DD4BF` | `#0D9488` |
-| Amber | `#FBBF24` | `#D97706` |
-| Purple | `#A78BFA` | `#7C3AED` |
-| Blue | `#60A5FA` | `#2563EB` |
-| Green | `#34D399` | `#059669` |
-| Red | `#F87171` | `#DC2626` |
-| Pink | `#F472B6` | `#DB2777` |
-| Orange | `#FB923C` | `#EA580C` |
-| Indigo | `#818CF8` | `#4F46E5` |
+| ---------- | ------------- | -------------- |
+| Gray       | `#94A3B8`     | `#64748B`      |
+| Teal       | `#2DD4BF`     | `#0D9488`      |
+| Amber      | `#FBBF24`     | `#D97706`      |
+| Purple     | `#A78BFA`     | `#7C3AED`      |
+| Blue       | `#60A5FA`     | `#2563EB`      |
+| Green      | `#34D399`     | `#059669`      |
+| Red        | `#F87171`     | `#DC2626`      |
+| Pink       | `#F472B6`     | `#DB2777`      |
+| Orange     | `#FB923C`     | `#EA580C`      |
+| Indigo     | `#818CF8`     | `#4F46E5`      |
 
 **Setting tab color:** Right-click table tab → "Tab Color" → color swatch picker (10 options + "Default" to reset).
 
@@ -98,22 +99,22 @@ Sidebar tab rendering:
 
 **MVP view types:**
 
-| View Type | Icon | Description |
-|-----------|------|-------------|
-| `grid` | Grid | Spreadsheet grid. Rows, columns, inline editing, filters, sorts, grouping, color. See Grid View Architecture below. |
-| `card` | Cards | Card-based view. Customizable field layout per card. Inline editable. See Card View section. |
+| View Type | Icon  | Description                                                                                                         |
+| --------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
+| `grid`    | Grid  | Spreadsheet grid. Rows, columns, inline editing, filters, sorts, grouping, color. See Grid View Architecture below. |
+| `card`    | Cards | Card-based view. Customizable field layout per card. Inline editable. See Card View section.                        |
 
 **Post-MVP view types:**
 
-| View Type | Description | Spec |
-|-----------|-------------|------|
-| `kanban` | Kanban — cards grouped by status/select. Drag between columns. | See Kanban View section below. |
-| `list` | Asana-style indented nested list. | — |
-| `timeline` | Horizontal bars on calendar axis. | `project-management.md` |
-| `gantt` | Full PM Gantt with dependencies, critical path. | `project-management.md` |
-| `calendar` | Date-based day/week/month grid. | `booking-scheduling.md` |
-| `gallery` | Visual card grid, thumbnail-forward. | — |
-| `smart_doc` | Wiki page tree + rich text editor. | `smart-docs.md` |
+| View Type   | Description                                                    | Spec                           |
+| ----------- | -------------------------------------------------------------- | ------------------------------ |
+| `kanban`    | Kanban — cards grouped by status/select. Drag between columns. | See Kanban View section below. |
+| `list`      | Asana-style indented nested list.                              | —                              |
+| `timeline`  | Horizontal bars on calendar axis.                              | `project-management.md`        |
+| `gantt`     | Full PM Gantt with dependencies, critical path.                | `project-management.md`        |
+| `calendar`  | Date-based day/week/month grid.                                | `booking-scheduling.md`        |
+| `gallery`   | Visual card grid, thumbnail-forward.                           | —                              |
+| `smart_doc` | Wiki page tree + rich text editor.                             | `smart-docs.md`                |
 
 ---
 
@@ -135,16 +136,17 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 
 ### Permission Gating on Structural UI
 
-| Element | Visible To | Others See |
-|---|---|---|
-| "+" column (new field) | Manager+ | Last data column is rightmost |
-| Double-click field name to rename | Manager+ | Non-interactive header text |
-| Right-click column → Edit/Delete field, Edit permissions | Manager+ | Menu items hidden (Sort, Filter, Hide remain) |
-| Table settings structural items | Manager+ (≥768px only) | Hidden |
+| Element                                                  | Visible To             | Others See                                    |
+| -------------------------------------------------------- | ---------------------- | --------------------------------------------- |
+| "+" column (new field)                                   | Manager+               | Last data column is rightmost                 |
+| Double-click field name to rename                        | Manager+               | Non-interactive header text                   |
+| Right-click column → Edit/Delete field, Edit permissions | Manager+               | Menu items hidden (Sort, Filter, Hide remain) |
+| Table settings structural items                          | Manager+ (≥768px only) | Hidden                                        |
 
 ### Row Behavior
 
 **Density modes** (user-selectable, saved per view):
+
 - Compact: 32px
 - Medium: 44px (default)
 - Tall: 64px
@@ -163,26 +165,26 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 
 **Default column widths by field type:**
 
-| Field Type | Default Width (px) |
-|-----------|-------------------|
-| Text (primary field) | 280 |
-| Text | 200 |
-| Text Area | 240 |
-| Number / Currency / Percent | 120 |
-| Date | 140 |
-| Date-Time | 180 |
-| Single Select | 160 |
-| Multiple Select / Tags | 200 |
-| Checkbox | 60 |
-| People | 160 |
-| Phone / Email / URL | 180 |
-| Rating | 100 |
-| File / Attachment | 120 |
-| Linked Record | 200 |
-| Smart Doc | 200 |
-| Duration | 100 |
-| Barcode | 140 |
-| All others | 160 |
+| Field Type                  | Default Width (px) |
+| --------------------------- | ------------------ |
+| Text (primary field)        | 280                |
+| Text                        | 200                |
+| Text Area                   | 240                |
+| Number / Currency / Percent | 120                |
+| Date                        | 140                |
+| Date-Time                   | 180                |
+| Single Select               | 160                |
+| Multiple Select / Tags      | 200                |
+| Checkbox                    | 60                 |
+| People                      | 160                |
+| Phone / Email / URL         | 180                |
+| Rating                      | 100                |
+| File / Attachment           | 120                |
+| Linked Record               | 200                |
+| Smart Doc                   | 200                |
+| Duration                    | 100                |
+| Barcode                     | 140                |
+| All others                  | 160                |
 
 **Reordering:** Drag-and-drop column headers. Order saved per view.
 
@@ -193,6 +195,7 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 **Column header contents:** Field type icon + sort arrow (▲/▼ when sorted) + filter dot (when column has active filter).
 
 **Header interactions:**
+
 - Click header → selects entire column
 - Click sort indicator → cycles sort (none → asc → desc)
 - Double-click name → inline rename (Manager+)
@@ -232,6 +235,7 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 **Windowed virtualization:** Render only visible rows + overscan buffer. Library: **TanStack Virtual**.
 
 **Virtualization buffer tuning:**
+
 - **Row overscan:** 10 rows above/below (20 total).
 - **Column overscan:** 3 columns before/after (6 total).
 - **Frozen columns:** Row number + checkbox + primary field always rendered. Up to 5 additional user-frozen.
@@ -241,12 +245,12 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 
 **Performance thresholds:**
 
-| Metric | Threshold | Action |
-|--------|-----------|--------|
-| Visible rows (unfiltered) | >10,000 | Info banner: "Showing 10,000+ records. Apply filters for better performance." |
-| Visible rows (unfiltered) | >50,000 | Warning + auto-enable pagination (100 rows/page). |
-| Columns visible | >30 | Suggestion: "Hide unused columns for faster rendering." |
-| Loading time | >2s | Skeleton shimmer. "Still loading…" after 2s. |
+| Metric                    | Threshold | Action                                                                        |
+| ------------------------- | --------- | ----------------------------------------------------------------------------- |
+| Visible rows (unfiltered) | >10,000   | Info banner: "Showing 10,000+ records. Apply filters for better performance." |
+| Visible rows (unfiltered) | >50,000   | Warning + auto-enable pagination (100 rows/page).                             |
+| Columns visible           | >30       | Suggestion: "Hide unused columns for faster rendering."                       |
+| Loading time              | >2s       | Skeleton shimmer. "Still loading…" after 2s.                                  |
 
 **No hard caps.** No maximum row or field count.
 
@@ -255,6 +259,7 @@ Drag Handle (hover) → Checkbox → Row # → Primary Field (frozen) → Field 
 **Overflow:** Truncate with ellipsis. Full content on cell click (edit mode).
 
 **Editing modes (spreadsheet-style):**
+
 - **Single click + type:** Replace mode — existing content cleared.
 - **Double-click:** Edit mode — cursor placed within existing content.
 
@@ -267,6 +272,7 @@ Auto-save on blur. No save button.
 **Multi-cell copy/paste:** Click-drag or Shift+click for range. Ctrl+C/V for ranges. Supports paste from Excel/Google Sheets.
 
 **Paste type conflict resolution:**
+
 - **Coercible:** Auto-coerce silently (text "42" → number 42).
 - **Incompatible:** Skip cell, leave original. Toast: "3 cells skipped — incompatible types" with "Show Details."
 
@@ -284,35 +290,35 @@ Auto-save on blur. No save button.
 
 Applied via wrapper component across all field type renderers.
 
-| State | Visual | Interaction |
-|---|---|---|
-| Broken reference | Value with strikethrough + "(deleted)" badge | Tooltip: "This record was deleted in [source]" |
-| Sync conflict | Red sync icon in cell corner | Click opens conflict resolution |
-| Processing (sync in progress) | Yellow/amber shimmer | Tooltip: "Updating..." |
-| Succeeded (just resolved) | Brief green flash (1–2s) | No interaction |
-| Type coercion issue | Dash + amber warning icon | Tooltip: "Value couldn't be converted" |
-| Attachment loading | File type thumbnail placeholder | Replaced when loaded |
+| State                         | Visual                                       | Interaction                                    |
+| ----------------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Broken reference              | Value with strikethrough + "(deleted)" badge | Tooltip: "This record was deleted in [source]" |
+| Sync conflict                 | Red sync icon in cell corner                 | Click opens conflict resolution                |
+| Processing (sync in progress) | Yellow/amber shimmer                         | Tooltip: "Updating..."                         |
+| Succeeded (just resolved)     | Brief green flash (1–2s)                     | No interaction                                 |
+| Type coercion issue           | Dash + amber warning icon                    | Tooltip: "Value couldn't be converted"         |
+| Attachment loading            | File type thumbnail placeholder              | Replaced when loaded                           |
 
 ### Cell Type Rendering
 
-| Field Type | Grid Rendering | Edit Interaction |
-|---|---|---|
-| **Single Select / Status** | Configurable: full colored block, colored pill, dot + text, or plain | Click opens dropdown |
-| **Multi-Select** | Same display styles. Overflow as "+N" badge | Click opens multi-select dropdown |
-| **Linked Record** | Clickable pills showing primary field. Overflow "+N" | Click pill navigates. Edit opens record picker |
-| **Attachment** | Thumbnail strip (3–4 small). File icons for non-images. "+N" | Click opens attachment manager |
-| **People** | Configurable: grey pill + avatar, colored pill + name, avatar only. Overflow "+N" | Click opens people picker |
-| **Percent / Progress** | Inline progress bar filling cell. Value text overlaid | Click to type number |
-| **Checklist** | Compact "3/7 done" + mini progress bar | Click opens checklist editor |
-| **Date** | Formatted text (e.g., "Feb 9, 2026") | Click opens date picker |
-| **Checkbox** | Checkbox | Single click toggles directly |
-| **URL** | Clickable link (blue, external icon on hover) | Double-click to edit |
-| **Email** | Clickable mailto link | Double-click to edit |
-| **Phone** | Formatted number + phone icon | Click to edit on desktop |
-| **Rating** | Inline star widget (★★★☆☆) | Click star to set |
-| **Currency** | Formatted with symbol ($1,250.00) | Click to type number |
-| **Smart Doc** | Badge indicating content exists | Click opens editor in side panel |
-| **Barcode** | Value as text + barcode icon | Click → text input. Paste-friendly for USB scanners. |
+| Field Type                 | Grid Rendering                                                                    | Edit Interaction                                     |
+| -------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Single Select / Status** | Configurable: full colored block, colored pill, dot + text, or plain              | Click opens dropdown                                 |
+| **Multi-Select**           | Same display styles. Overflow as "+N" badge                                       | Click opens multi-select dropdown                    |
+| **Linked Record**          | Clickable pills showing primary field. Overflow "+N"                              | Click pill navigates. Edit opens record picker       |
+| **Attachment**             | Thumbnail strip (3–4 small). File icons for non-images. "+N"                      | Click opens attachment manager                       |
+| **People**                 | Configurable: grey pill + avatar, colored pill + name, avatar only. Overflow "+N" | Click opens people picker                            |
+| **Percent / Progress**     | Inline progress bar filling cell. Value text overlaid                             | Click to type number                                 |
+| **Checklist**              | Compact "3/7 done" + mini progress bar                                            | Click opens checklist editor                         |
+| **Date**                   | Formatted text (e.g., "Feb 9, 2026")                                              | Click opens date picker                              |
+| **Checkbox**               | Checkbox                                                                          | Single click toggles directly                        |
+| **URL**                    | Clickable link (blue, external icon on hover)                                     | Double-click to edit                                 |
+| **Email**                  | Clickable mailto link                                                             | Double-click to edit                                 |
+| **Phone**                  | Formatted number + phone icon                                                     | Click to edit on desktop                             |
+| **Rating**                 | Inline star widget (★★★☆☆)                                                        | Click star to set                                    |
+| **Currency**               | Formatted with symbol ($1,250.00)                                                 | Click to type number                                 |
+| **Smart Doc**              | Badge indicating content exists                                                   | Click opens editor in side panel                     |
+| **Barcode**                | Value as text + barcode icon                                                      | Click → text input. Paste-friendly for USB scanners. |
 
 ### Keyboard Shortcuts
 
@@ -320,48 +326,48 @@ Full spreadsheet-style navigation. `Cmd` = `Ctrl` on Windows/Linux.
 
 **Navigation:**
 
-| Shortcut | Action |
-|----------|--------|
-| Arrow keys | Move between cells |
-| Tab / Shift+Tab | Next / previous cell |
-| Enter | Edit cell / confirm + move down |
-| Escape | Cancel edit / deselect |
-| Home / End | First / last column in row |
-| Cmd+Home / Cmd+End | First / last row |
-| Page Up / Page Down | Scroll one viewport |
+| Shortcut            | Action                          |
+| ------------------- | ------------------------------- |
+| Arrow keys          | Move between cells              |
+| Tab / Shift+Tab     | Next / previous cell            |
+| Enter               | Edit cell / confirm + move down |
+| Escape              | Cancel edit / deselect          |
+| Home / End          | First / last column in row      |
+| Cmd+Home / Cmd+End  | First / last row                |
+| Page Up / Page Down | Scroll one viewport             |
 
 **Selection:**
 
-| Shortcut | Action |
-|----------|--------|
-| Shift+Arrow | Extend selection |
-| Shift+Click | Range select |
-| Cmd+Click | Toggle individual row |
-| Cmd+A | Select all rows |
+| Shortcut    | Action                |
+| ----------- | --------------------- |
+| Shift+Arrow | Extend selection      |
+| Shift+Click | Range select          |
+| Cmd+Click   | Toggle individual row |
+| Cmd+A       | Select all rows       |
 
 **Editing:**
 
-| Shortcut | Action |
-|----------|--------|
-| Cmd+Z / Cmd+Shift+Z | Undo / Redo |
-| Cmd+C / Cmd+V | Copy / Paste |
-| Cmd+D | Fill down (copy cell above) |
-| Delete / Backspace | Clear cell contents |
-| Space | Toggle checkbox |
-| Type any character | Start editing (overwrites) |
-| F2 | Start editing (cursor at end, preserves) |
+| Shortcut            | Action                                   |
+| ------------------- | ---------------------------------------- |
+| Cmd+Z / Cmd+Shift+Z | Undo / Redo                              |
+| Cmd+C / Cmd+V       | Copy / Paste                             |
+| Cmd+D               | Fill down (copy cell above)              |
+| Delete / Backspace  | Clear cell contents                      |
+| Space               | Toggle checkbox                          |
+| Type any character  | Start editing (overwrites)               |
+| F2                  | Start editing (cursor at end, preserves) |
 
 **Grid Actions:**
 
-| Shortcut | Action |
-|----------|--------|
-| Cmd+Shift+F | Toggle filter panel |
-| Cmd+Shift+S | Toggle sort panel |
-| Cmd+F | Command Bar scoped to current table |
+| Shortcut    | Action                               |
+| ----------- | ------------------------------------ |
+| Cmd+Shift+F | Toggle filter panel                  |
+| Cmd+Shift+S | Toggle sort panel                    |
+| Cmd+F       | Command Bar scoped to current table  |
 | Cmd+Shift+E | Open Record View for selected record |
-| Cmd+Shift+N | New record |
-| Cmd+K | Command Bar |
-| Cmd+/ | Keyboard shortcuts help |
+| Cmd+Shift+N | New record                           |
+| Cmd+K       | Command Bar                          |
+| Cmd+/       | Keyboard shortcuts help              |
 
 ### Selection & Bulk Actions
 
@@ -378,6 +384,7 @@ Full spreadsheet-style navigation. `Cmd` = `Ctrl` on Windows/Linux.
 Multi-level grouping up to 3 levels. Each level: collapsible headers, record count, aggregation row per group, drag records between groups to change value.
 
 **Grouped view + summary footer:**
+
 - **Per-group summary:** Each group footer with group-specific aggregates.
 - **Table-wide summary:** Sticky bar at bottom, aggregates across all groups.
 
@@ -388,6 +395,7 @@ Multi-level sort with drag-to-reorder priority. Sort config saved per view. Also
 ### Color Coding (Conditional)
 
 Two levels, combinable:
+
 - **Row-level:** Entire row background tint based on conditions
 - **Cell-level:** Individual cells colored by value or conditions
 
@@ -396,6 +404,7 @@ Separate from structural column coloring.
 ### Filtering
 
 Two paths:
+
 - **Quick filters:** Click filter icon in column header → field-appropriate dropdown.
 - **Full filter builder:** Toolbar panel with condition rows. Field + operator + value. AND/OR logic. Nested groups.
 
@@ -405,32 +414,32 @@ Optional row below data. Each column independently configurable with field-type-
 
 **Aggregation Options by Field Type:**
 
-| Field Category | Available Aggregations |
-|---|---|
-| Number, Currency, Percent, Duration | sum, avg, min, max, count, none |
-| Date, Date-Time | earliest, latest, range, count, none |
-| Checkbox | checked count, unchecked count, percent checked, none |
-| Single Select, Status | count per value (mini distribution bar), none |
-| Multi-Select, Tags | unique count, total count, none |
-| People | unique count, none |
-| Linked Record | linked row count, total link count, none |
-| Attachment | row count with files, total file count, none |
-| Text, URL, Email, Phone | filled count, empty count, none |
-| All others | count, none |
+| Field Category                      | Available Aggregations                                |
+| ----------------------------------- | ----------------------------------------------------- |
+| Number, Currency, Percent, Duration | sum, avg, min, max, count, none                       |
+| Date, Date-Time                     | earliest, latest, range, count, none                  |
+| Checkbox                            | checked count, unchecked count, percent checked, none |
+| Single Select, Status               | count per value (mini distribution bar), none         |
+| Multi-Select, Tags                  | unique count, total count, none                       |
+| People                              | unique count, none                                    |
+| Linked Record                       | linked row count, total link count, none              |
+| Attachment                          | row count with files, total file count, none          |
+| Text, URL, Email, Phone             | filled count, empty count, none                       |
+| All others                          | count, none                                           |
 
 ### Grid Toolbar
 
-| Position | Button | Notes |
-|----------|--------|-------|
-| Left group | View switcher (Grid ▾) | Sets context |
-| | Hide fields | Declutter |
-| | Filter | Narrow data |
-| | Sort | Reorder |
-| | Group | Categorical views |
-| | Color | Visual coding |
-| Right group | Density toggle | Compact / Default / Expanded |
-| | Share / Export | Occasional |
-| | "…" overflow | Row height, print, copy view URL, field stats |
+| Position    | Button                 | Notes                                         |
+| ----------- | ---------------------- | --------------------------------------------- |
+| Left group  | View switcher (Grid ▾) | Sets context                                  |
+|             | Hide fields            | Declutter                                     |
+|             | Filter                 | Narrow data                                   |
+|             | Sort                   | Reorder                                       |
+|             | Group                  | Categorical views                             |
+|             | Color                  | Visual coding                                 |
+| Right group | Density toggle         | Compact / Default / Expanded                  |
+|             | Share / Export         | Occasional                                    |
+|             | "…" overflow           | Row height, print, copy view URL, field stats |
 
 **No search in grid toolbar.** All search via Command Bar (`Cmd+K` or `Cmd+F`), auto-scoped to current table.
 
@@ -474,6 +483,7 @@ Quick Panel + Record View overlay (both active):
 ### Permissions in the Grid
 
 Field-level only. Manager configures per field, per role:
+
 - **Hidden** — column not rendered for that role
 - **Read-only** — column visible but locked (lock icon)
 - **Full access** — visible and editable (default)
@@ -483,6 +493,7 @@ Row-level visibility handled by shared view base filters with `$me` token.
 ### Import / Export
 
 **Import (four paths):**
+
 - CSV import with column mapping step
 - Excel (.xlsx) import with column mapping (sheet selector for multi-sheet)
 - Copy-paste bulk from external spreadsheet (position-based column alignment)
@@ -495,6 +506,7 @@ Row-level visibility handled by shared view base filters with `$me` token.
 ### My Views & Shared Views
 
 **Visibility model:**
+
 - **My View** (default): Only creator sees it. Any role can create.
 - **Shared View**: Visible to all workspace members with table access. Manager+ creates.
 - **Locked Shared View**: Shared + filters/sorts can't be modified by non-creators. Manager+ only.
@@ -506,6 +518,7 @@ View switcher shows "My Views" and "Shared Views" sections, separated by divider
 **Creator deactivation:** Shared views transfer to workspace Owner.
 
 **Default view fallback chain:**
+
 1. Manager-assigned default view
 2. First shared Grid view by `sort_order`
 3. First shared view of any type by `sort_order`
@@ -530,6 +543,7 @@ When a user focuses a field (click/tap to edit), a lock is acquired on that fiel
 #### Real-Time Updates & Event Coalescing
 
 Edits propagate via WebSocket (Redis pub/sub):
+
 - **Buffer window:** 100ms of no new events, OR 500ms max.
 - **Flush:** All buffered events applied as single batch update.
 - **Indicator:** "Updating..." in amber text during buffer.
@@ -560,6 +574,7 @@ The Record View is a **configurable field canvas** for viewing and editing a sin
 **Header:** Record name, colored by workspace theme. Navigation arrows (← →) to move between records in the current Table View. Close button (✕).
 
 **Body:** White canvas displaying selected fields arranged in columns:
+
 - Up to **4 columns** on desktop, up to **2 on mobile**.
 - Fields are **rearrangeable** via drag-and-drop.
 - Fields are **adjustable in width** (spanning 1–4 columns) and **height**.
@@ -583,11 +598,11 @@ Clicking the chat/thread icon within the Record View header opens the Record Thr
 
 The Record View layout engine is the shared foundation for three concepts:
 
-| Concept | Difference from Record View | DB Table |
-|---------|---------------------------|----------|
-| **Record View** | Workspace user viewing/editing existing record | Uses `record_view_configs` |
-| **Portal** | External client viewing a record, read-only default, own auth | Uses `portals` + `record_view_configs` |
-| **Form** | Anyone creating a new record, empty fields, submit action | Uses `forms` + `record_view_configs` |
+| Concept         | Difference from Record View                                   | DB Table                               |
+| --------------- | ------------------------------------------------------------- | -------------------------------------- |
+| **Record View** | Workspace user viewing/editing existing record                | Uses `record_view_configs`             |
+| **Portal**      | External client viewing a record, read-only default, own auth | Uses `portals` + `record_view_configs` |
+| **Form**        | Anyone creating a new record, empty fields, submit action     | Uses `forms` + `record_view_configs`   |
 
 All three share the same field canvas layout engine. They differ in context (workspace vs external), permissions (full vs restricted), and lifecycle (view existing vs create new).
 
@@ -605,11 +620,11 @@ Linked Record fields display as clickable pills. Clicking a pill navigates to th
 
 ### Responsive Behavior
 
-| Breakpoint | Record View | Record Thread | Behavior |
-|---|---|---|---|
-| ≥1024px | 60% overlay (or 55% with Thread) | 25% alongside | Side-by-side |
-| 768–1023px | 60% overlay | Overlay with scrim (toggle) | Two modes |
-| <768px | Full-screen sheet, single column | Bottom tabs contextual swap | Stacked. See `mobile.md`. |
+| Breakpoint | Record View                      | Record Thread               | Behavior                  |
+| ---------- | -------------------------------- | --------------------------- | ------------------------- |
+| ≥1024px    | 60% overlay (or 55% with Thread) | 25% alongside               | Side-by-side              |
+| 768–1023px | 60% overlay                      | Overlay with scrim (toggle) | Two modes                 |
+| <768px     | Full-screen sheet, single column | Bottom tabs contextual swap | Stacked. See `mobile.md`. |
 
 ---
 
@@ -621,11 +636,11 @@ Card View is a card-based Table View type (`view_type: card`). MVP view type alo
 
 Manager sets default layout. Users can override in personal preferences.
 
-| Layout | Description | Best For |
-|---|---|---|
-| **Single column** | Full-width cards, vertical scroll | Detailed records, reading focus |
-| **Grid (2–3 cols)** | Fixed grid, equal-height cards with internal scroll | Overview scanning |
-| **Compact list** | Narrow cards, key fields only | Large record sets, quick scanning |
+| Layout              | Description                                         | Best For                          |
+| ------------------- | --------------------------------------------------- | --------------------------------- |
+| **Single column**   | Full-width cards, vertical scroll                   | Detailed records, reading focus   |
+| **Grid (2–3 cols)** | Fixed grid, equal-height cards with internal scroll | Overview scanning                 |
+| **Compact list**    | Narrow cards, key fields only                       | Large record sets, quick scanning |
 
 ### Card Content
 
@@ -643,12 +658,12 @@ Same capabilities as Grid: hide/show fields, conditional filtering, grouping, so
 
 Mobile Card View uses compact list layout with mobile interaction extensions. One component, one code path.
 
-| Prop | Desktop/Tablet | Phone |
-|------|---------------|-------|
-| `swipeActions` | `false` | `true` — configurable swipe right/left |
-| `badges` | Status only | Status + priority + overdue + unread + sync |
-| `tapBehavior` | Opens Record View overlay | Full-screen Record View sheet |
-| `layout` | Configurable | Always compact list |
+| Prop           | Desktop/Tablet            | Phone                                       |
+| -------------- | ------------------------- | ------------------------------------------- |
+| `swipeActions` | `false`                   | `true` — configurable swipe right/left      |
+| `badges`       | Status only               | Status + priority + overdue + unread + sync |
+| `tapBehavior`  | Opens Record View overlay | Full-screen Record View sheet               |
+| `layout`       | Configurable              | Always compact list                         |
 
 See `mobile.md` for mobile-specific patterns.
 
@@ -714,10 +729,10 @@ fields.config.display (when style = "inline_table"):
 
 **Available display styles for Linked Record fields:**
 
-| Style | Rendering | Use When |
-|-------|-----------|----------|
+| Style             | Rendering                             | Use When               |
+| ----------------- | ------------------------------------- | ---------------------- |
 | `pills` (default) | Clickable chips showing display field | General linked records |
-| `inline_table` | Embedded editable grid | Parent-child patterns |
+| `inline_table`    | Embedded editable grid                | Parent-child patterns  |
 
 ### Rendering in Record View
 
@@ -738,6 +753,7 @@ fields.config.display (when style = "inline_table"):
 ```
 
 **Widget elements:**
+
 1. **Search bar** — filter existing linked records or find new ones to link.
 2. **Linked record list** — rows with configured columns. Max 5 visible, scroll for more. Each row inline-editable.
 3. **Creation row** — blank row at bottom. Type to create and link in one action.
@@ -745,6 +761,7 @@ fields.config.display (when style = "inline_table"):
 ### Inline Editing Flow
 
 Spreadsheet-like — no modals:
+
 1. Click "+ Add Row" → new empty row, cursor in first cell.
 2. Type and Tab through columns. Auto-save on blur.
 3. Enter on last column → save row, create new blank row.
@@ -753,9 +770,11 @@ Spreadsheet-like — no modals:
 ### Rendering in Grid View
 
 In the grid, inline_table Linked Record fields show a compact summary:
+
 ```
 "3 items"
 ```
+
 **(Post-MVP)** Grid compact summary includes aggregated values (e.g., "3 items · $6,100") when rollup fields are available.
 
 Clicking opens Record View scrolled to the sub-table section.
@@ -763,6 +782,7 @@ Clicking opens Record View scrolled to the sub-table section.
 ### Rendering on Mobile (<768px)
 
 Compact summary + action links:
+
 ```
 Line Items
 3 items
@@ -778,12 +798,12 @@ Line Items
 
 ### Common Use Cases
 
-| Parent Table | Linked Table | Inline Columns | Summary |
-|-------------|-------------|----------------|---------|
-| Invoices | Line Items | Description, Qty, Rate, Amount | (Post-MVP) Amount: sum |
-| Projects | Tasks | Title, Assignee, Status, Due Date | — |
-| Clients | Invoices | Invoice #, Date, Total, Status | (Post-MVP) Total: sum |
-| Orders | Order Items | Product, Qty, Unit Price, Amount | (Post-MVP) Amount: sum |
+| Parent Table | Linked Table | Inline Columns                    | Summary                |
+| ------------ | ------------ | --------------------------------- | ---------------------- |
+| Invoices     | Line Items   | Description, Qty, Rate, Amount    | (Post-MVP) Amount: sum |
+| Projects     | Tasks        | Title, Assignee, Status, Due Date | —                      |
+| Clients      | Invoices     | Invoice #, Date, Total, Status    | (Post-MVP) Total: sum  |
+| Orders       | Order Items  | Product, Qty, Unit Price, Amount  | (Post-MVP) Amount: sum |
 
 ### Data Model Impact
 

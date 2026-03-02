@@ -11,21 +11,21 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Core Principle | 32–36 | Design for compliance now, enforce progressively |
-| GDPR & CCPA/CPRA | 38–62 | Data subject rights table, right to delete, portability, CCPA categories |
-| PII Handling | 64–100 | PII registry (table/column map), anonymization cascade, logging redaction |
-| Encryption | 102–125 | At rest (AES-256 per data store), in transit (TLS 1.3, mTLS) |
-| Security Headers | 127–196 | Platform CSP (/w/*, /api/*), portal CSP (custom domains), portal cookie security |
-| Row-Level Security | 198–217 | RLS policy specs, tenant isolation defense-in-depth |
-| Webhook Signatures & Gotenberg | 219–243 | Inbound webhook HMAC verification, Gotenberg sandbox config (network disabled, resource limits) |
-| WAF & Session Management | 245–268 | WAF rules per environment, session controls, enterprise idle timeout, device management |
-| SSO, API Security & Vulnerability Mgmt | 270–306 | SAML SSO, SCIM provisioning, API key model (prefix, scopes, rotation), CVE response SLAs |
-| Subprocessor Registry & Breach Notification | 308–334 | Subprocessor table with DPA status, 72-hour breach notification procedure |
-| AI Compliance & Self-Hosted AI | 336–401 | EU AI Act classification, data processing guarantees, air-gapped AI, 3 deployment modes, open-weight model security |
-| Data Residency Strategy | 403–421 | MVP foundation, built-from-day-one patterns, multi-region post-MVP |
-| SOC 2 & Certification Roadmap | 423–432 | Type I timeline (Post-MVP — Comms & Polish), certification path |
+| Section                                     | Lines   | Covers                                                                                                              |
+| ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| Core Principle                              | 32–36   | Design for compliance now, enforce progressively                                                                    |
+| GDPR & CCPA/CPRA                            | 38–62   | Data subject rights table, right to delete, portability, CCPA categories                                            |
+| PII Handling                                | 64–100  | PII registry (table/column map), anonymization cascade, logging redaction                                           |
+| Encryption                                  | 102–125 | At rest (AES-256 per data store), in transit (TLS 1.3, mTLS)                                                        |
+| Security Headers                            | 127–196 | Platform CSP (/w/_, /api/_), portal CSP (custom domains), portal cookie security                                    |
+| Row-Level Security                          | 198–217 | RLS policy specs, tenant isolation defense-in-depth                                                                 |
+| Webhook Signatures & Gotenberg              | 219–243 | Inbound webhook HMAC verification, Gotenberg sandbox config (network disabled, resource limits)                     |
+| WAF & Session Management                    | 245–268 | WAF rules per environment, session controls, enterprise idle timeout, device management                             |
+| SSO, API Security & Vulnerability Mgmt      | 270–306 | SAML SSO, SCIM provisioning, API key model (prefix, scopes, rotation), CVE response SLAs                            |
+| Subprocessor Registry & Breach Notification | 308–334 | Subprocessor table with DPA status, 72-hour breach notification procedure                                           |
+| AI Compliance & Self-Hosted AI              | 336–401 | EU AI Act classification, data processing guarantees, air-gapped AI, 3 deployment modes, open-weight model security |
+| Data Residency Strategy                     | 403–421 | MVP foundation, built-from-day-one patterns, multi-region post-MVP                                                  |
+| SOC 2 & Certification Roadmap               | 423–432 | Type I timeline (Post-MVP — Comms & Polish), certification path                                                     |
 
 ---
 
@@ -37,25 +37,25 @@
 
 ## GDPR Rights Implementation
 
-| Right | Implementation | Phase |
-|-------|---------------|-------|
-| **Right to Access (Art. 15)** | Data export endpoint: JSON/ZIP archive of all user data across workspaces. | MVP — Foundation (schema), Post-MVP — Portals & Apps (endpoint) |
-| **Right to Erasure (Art. 17)** | User deletion cascade: anonymize user records. Clerk webhook triggers. | MVP — Foundation (schema), Post-MVP — Portals & Apps (endpoint) |
-| **Right to Portability (Art. 20)** | Workspace data export: tables, records, fields, cross-links, automations in JSON + CSV. | Post-MVP — Portals & Apps |
-| **Right to Rectification (Art. 16)** | Users update profile via Settings. Records editable by authorized users. | MVP — Foundation |
-| **Consent Management** | Cookie consent (portal visitors). AI processing consent (admin opt-in). | Post-MVP — Portals & Apps |
+| Right                                | Implementation                                                                          | Phase                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Right to Access (Art. 15)**        | Data export endpoint: JSON/ZIP archive of all user data across workspaces.              | MVP — Foundation (schema), Post-MVP — Portals & Apps (endpoint) |
+| **Right to Erasure (Art. 17)**       | User deletion cascade: anonymize user records. Clerk webhook triggers.                  | MVP — Foundation (schema), Post-MVP — Portals & Apps (endpoint) |
+| **Right to Portability (Art. 20)**   | Workspace data export: tables, records, fields, cross-links, automations in JSON + CSV. | Post-MVP — Portals & Apps                                       |
+| **Right to Rectification (Art. 16)** | Users update profile via Settings. Records editable by authorized users.                | MVP — Foundation                                                |
+| **Consent Management**               | Cookie consent (portal visitors). AI processing consent (admin opt-in).                 | Post-MVP — Portals & Apps                                       |
 
 ---
 
 ## CCPA/CPRA Compliance
 
-| Right | Implementation | Notes |
-|-------|---------------|-------|
-| **Right to Know** | Same as GDPR Access — data export endpoint. | Categories in privacy policy. |
-| **Right to Delete** | Same as GDPR Erasure — anonymization cascade. | |
-| **Right to Opt-Out** | EveryStack does not sell PI. "Do Not Sell" in portal footer. `tenants.settings.ccpa_opt_out`. | Anthropic DPA: no training. |
-| **Right to Correct** | Same as GDPR Rectification. | |
-| **Right to Limit Sensitive PI** | Flagged in PII registry. `pii-registry.ts` sensitivity classification. | |
+| Right                           | Implementation                                                                                | Notes                         |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------- |
+| **Right to Know**               | Same as GDPR Access — data export endpoint.                                                   | Categories in privacy policy. |
+| **Right to Delete**             | Same as GDPR Erasure — anonymization cascade.                                                 |                               |
+| **Right to Opt-Out**            | EveryStack does not sell PI. "Do Not Sell" in portal footer. `tenants.settings.ccpa_opt_out`. | Anthropic DPA: no training.   |
+| **Right to Correct**            | Same as GDPR Rectification.                                                                   |                               |
+| **Right to Limit Sensitive PI** | Flagged in PII registry. `pii-registry.ts` sensitivity classification.                        |                               |
 
 **Other jurisdictions:** LGPD (Brazil), PIPEDA (Canada), UK GDPR addressed by same architecture. PIPL (China) requires data localization (post-MVP multi-region).
 
@@ -65,19 +65,19 @@
 
 ### PII Registry
 
-| Table | PII Columns | On User Deletion |
-|-------|-------------|-----------------|
-| `users` | email, name, avatar_url, preferences | Anonymize: `deleted_user_<hash>`, null, null, `{}` |
-| `workspace_memberships` | user_id (FK) | Retain with anonymized user |
-| `records` | canonical_data (may contain PII) | Tenant-owned — not deleted on user deletion |
-| `thread_messages` | sender_id, content | Anonymize sender. Content retained. |
-| `ai_usage_log` | user_id, prompt content | Delete rows. Aggregates retained anonymized. |
-| `command_bar_sessions` | user_id, history | Delete entirely. |
-| `audit_log` | actor_id, action details | Anonymize actor. Retain action. |
-| `portal_access` | email, auth_hash, token | Quick Portal auth (MVP). Per-record access credentials. Manager deletes. |
-| `portal_clients` | email, display_name, avatar_url | App Portal auth (post-MVP). Identity-based client record. Manager deletes. |
-| `portal_sessions` | auth_id (FK — polymorphic) | Cascade on portal_access or portal_clients deletion. |
-| `portal_magic_links` | portal_client_id, token | App Portal only. Cascade on client deletion. |
+| Table                   | PII Columns                          | On User Deletion                                                           |
+| ----------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| `users`                 | email, name, avatar_url, preferences | Anonymize: `deleted_user_<hash>`, null, null, `{}`                         |
+| `workspace_memberships` | user_id (FK)                         | Retain with anonymized user                                                |
+| `records`               | canonical_data (may contain PII)     | Tenant-owned — not deleted on user deletion                                |
+| `thread_messages`       | sender_id, content                   | Anonymize sender. Content retained.                                        |
+| `ai_usage_log`          | user_id, prompt content              | Delete rows. Aggregates retained anonymized.                               |
+| `command_bar_sessions`  | user_id, history                     | Delete entirely.                                                           |
+| `audit_log`             | actor_id, action details             | Anonymize actor. Retain action.                                            |
+| `portal_access`         | email, auth_hash, token              | Quick Portal auth (MVP). Per-record access credentials. Manager deletes.   |
+| `portal_clients`        | email, display_name, avatar_url      | App Portal auth (post-MVP). Identity-based client record. Manager deletes. |
+| `portal_sessions`       | auth_id (FK — polymorphic)           | Cascade on portal_access or portal_clients deletion.                       |
+| `portal_magic_links`    | portal_client_id, token              | App Portal only. Cascade on client deletion.                               |
 
 ### Anonymization Cascade
 
@@ -103,24 +103,24 @@ Pino paths: `password`, `token`, `authorization`, `cookie`, `email`, `name`. **L
 
 ### At Rest
 
-| Data Store | Method | Phase |
-|-----------|--------|-------|
-| **PostgreSQL** | Cloud disk encryption (RDS: AES-256/KMS) | MVP — Foundation |
-| **Redis** | Cloud disk encryption (ElastiCache) | MVP — Foundation |
-| **R2/S3** | Server-side encryption on bucket | MVP — Foundation |
-| **Backups** | Encrypted at rest. Snapshots inherit. | MVP — Foundation |
-| **OAuth tokens** | App-level AES-256-GCM. Key in secrets manager. | MVP — Sync |
+| Data Store       | Method                                         | Phase            |
+| ---------------- | ---------------------------------------------- | ---------------- |
+| **PostgreSQL**   | Cloud disk encryption (RDS: AES-256/KMS)       | MVP — Foundation |
+| **Redis**        | Cloud disk encryption (ElastiCache)            | MVP — Foundation |
+| **R2/S3**        | Server-side encryption on bucket               | MVP — Foundation |
+| **Backups**      | Encrypted at rest. Snapshots inherit.          | MVP — Foundation |
+| **OAuth tokens** | App-level AES-256-GCM. Key in secrets manager. | MVP — Sync       |
 
 ### In Transit
 
-| Connection | TLS | Phase |
-|-----------|-----|-------|
-| **Client → Web** | HTTPS via HSTS. HTTP → HTTPS redirect. | MVP — Foundation |
-| **Web → PgBouncer → Postgres** | `sslmode=require` | MVP — Foundation |
-| **App → Redis** | `rediss://` in production | MVP — Foundation |
-| **Inter-service** | Redis pub/sub (TLS) | MVP — Foundation |
-| **External APIs** | All SDKs use HTTPS | MVP — Foundation |
-| **Outbound webhooks** | HTTPS required in production | Post-MVP — Automations |
+| Connection                     | TLS                                    | Phase                  |
+| ------------------------------ | -------------------------------------- | ---------------------- |
+| **Client → Web**               | HTTPS via HSTS. HTTP → HTTPS redirect. | MVP — Foundation       |
+| **Web → PgBouncer → Postgres** | `sslmode=require`                      | MVP — Foundation       |
+| **App → Redis**                | `rediss://` in production              | MVP — Foundation       |
+| **Inter-service**              | Redis pub/sub (TLS)                    | MVP — Foundation       |
+| **External APIs**              | All SDKs use HTTPS                     | MVP — Foundation       |
+| **Outbound webhooks**          | HTTPS required in production           | Post-MVP — Automations |
 
 ---
 
@@ -128,7 +128,7 @@ Pino paths: `password`, `token`, `authorization`, `cookie`, `email`, `name`. **L
 
 Two profiles in Next.js middleware:
 
-### Platform Headers (/w/*, /api/*)
+### Platform Headers (/w/_, /api/_)
 
 ```typescript
 const PLATFORM_HEADERS = {
@@ -143,7 +143,7 @@ const PLATFORM_HEADERS = {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://img.clerk.com https://files.everystack.com",
     "connect-src 'self' https://api.clerk.dev https://api.stripe.com wss://*.everystack.com",
-    "frame-src https://js.stripe.com",
+    'frame-src https://js.stripe.com',
     "font-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -153,7 +153,7 @@ const PLATFORM_HEADERS = {
 };
 ```
 
-### Portal Headers (portal.everystack.com/*, custom domains)
+### Portal Headers (portal.everystack.com/\*, custom domains)
 
 ```typescript
 const PORTAL_HEADERS = {
@@ -168,7 +168,7 @@ const PORTAL_HEADERS = {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://files.everystack.com",
     "connect-src 'self' wss://*.everystack.com",
-    "frame-src https://js.stripe.com",
+    'frame-src https://js.stripe.com',
     "font-src 'self' https://fonts.gstatic.com",
     "object-src 'none'",
     "base-uri 'self'",
@@ -182,14 +182,14 @@ const PORTAL_HEADERS = {
 
 ## Portal Cookie Security
 
-| Attribute | Value | Rationale |
-|-----------|-------|-----------|
-| `Secure` | `true` (prod) | No HTTP |
-| `HttpOnly` | `true` | No JS access |
-| `SameSite` | `Lax` | CSRF protection |
-| `Path` | `/` | Portal root |
-| `Domain` | Portal's domain only | Custom domain cookies never leak to `*.everystack.com` |
-| `Max-Age` | 7 days | Auto-expiry |
+| Attribute  | Value                | Rationale                                              |
+| ---------- | -------------------- | ------------------------------------------------------ |
+| `Secure`   | `true` (prod)        | No HTTP                                                |
+| `HttpOnly` | `true`               | No JS access                                           |
+| `SameSite` | `Lax`                | CSRF protection                                        |
+| `Path`     | `/`                  | Portal root                                            |
+| `Domain`   | Portal's domain only | Custom domain cookies never leak to `*.everystack.com` |
+| `Max-Age`  | 7 days               | Auto-expiry                                            |
 
 **Post-MVP — Portals & Apps.**
 
@@ -218,11 +218,11 @@ CREATE POLICY tenant_isolation ON {table_name}
 
 ## Inbound Webhook Signature Verification
 
-| Provider | Method | Header |
-|----------|--------|--------|
-| **Clerk** | SVIX signature | `svix-signature`, `svix-id`, `svix-timestamp` |
-| **Stripe** | `stripe.webhooks.constructEvent()` | `stripe-signature` |
-| **Resend** | SVIX signature | `svix-signature`, `svix-id`, `svix-timestamp` |
+| Provider   | Method                             | Header                                        |
+| ---------- | ---------------------------------- | --------------------------------------------- |
+| **Clerk**  | SVIX signature                     | `svix-signature`, `svix-id`, `svix-timestamp` |
+| **Stripe** | `stripe.webhooks.constructEvent()` | `stripe-signature`                            |
+| **Resend** | SVIX signature                     | `svix-signature`, `svix-id`, `svix-timestamp` |
 
 Failed → 401 + Sentry warning. **MVP — Foundation** (Clerk), **Post-MVP — Documents** (Resend), **Post-MVP — Comms & Polish** (Stripe).
 
@@ -244,10 +244,10 @@ Gotenberg renders user content to PDF. Potential SSRF/execution vector.
 
 ## WAF
 
-| Environment | Provider | Config |
-|------------|---------|--------|
-| Dev | None | — |
-| Production | **Cloudflare WAF** | OWASP Core + Managed rulesets. 100 req/min per IP on `/api/*`. Bot management. DDoS auto-mitigation. |
+| Environment | Provider           | Config                                                                                               |
+| ----------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| Dev         | None               | —                                                                                                    |
+| Production  | **Cloudflare WAF** | OWASP Core + Managed rulesets. 100 req/min per IP on `/api/*`. Bot management. DDoS auto-mitigation. |
 
 **Post-MVP — Portals & Apps.** Basic Cloudflare proxy in MVP — Foundation.
 
@@ -255,13 +255,13 @@ Gotenberg renders user content to PDF. Potential SSRF/execution vector.
 
 ## Session Management & Enterprise Controls
 
-| Control | Default | Plan |
-|---------|---------|------|
-| Session timeout | 7d (workspace), 24h (portal) | Professional+ |
-| Idle timeout | None | Business+ |
-| Force logout all | N/A | All |
-| Concurrent sessions | Unlimited | Business+ |
-| IP allowlist | Disabled | Enterprise |
+| Control             | Default                      | Plan          |
+| ------------------- | ---------------------------- | ------------- |
+| Session timeout     | 7d (workspace), 24h (portal) | Professional+ |
+| Idle timeout        | None                         | Business+     |
+| Force logout all    | N/A                          | All           |
+| Concurrent sessions | Unlimited                    | Business+     |
+| IP allowlist        | Disabled                     | Enterprise    |
 
 Stored in `tenants.settings.security` JSONB. Clerk APIs enforce.
 
@@ -269,10 +269,10 @@ Stored in `tenants.settings.security` JSONB. Clerk APIs enforce.
 
 ## SSO & Identity Provisioning
 
-| Feature | Plan | Implementation |
-|---------|------|---------------|
-| **SAML SSO** | Professional+ | Clerk Enterprise Organizations |
-| **SCIM provisioning** | Enterprise | Clerk SCIM. Auto-create/deactivate from IdP. |
+| Feature               | Plan          | Implementation                               |
+| --------------------- | ------------- | -------------------------------------------- |
+| **SAML SSO**          | Professional+ | Clerk Enterprise Organizations               |
+| **SCIM provisioning** | Enterprise    | Clerk SCIM. Auto-create/deactivate from IdP. |
 
 ---
 
@@ -293,29 +293,29 @@ Stored in `tenants.settings.security` JSONB. Clerk APIs enforce.
 
 ## Vulnerability Management
 
-| Tool | Purpose | Phase |
-|------|---------|-------|
-| **Dependabot** | npm + Docker scanning | MVP — Foundation |
-| **npm audit** | CI gate (high/critical block) | MVP — Foundation |
-| **eslint-plugin-security** | SAST basics | MVP — Foundation |
-| **Trivy** | Container scanning | Post-MVP — Portals & Apps |
-| **Semgrep** | OWASP SAST | Post-MVP — Comms & Polish |
-| **Pentest** | Annual external | Post-MVP — Comms & Polish+ |
-| **security.txt** | Responsible disclosure | MVP — Foundation |
+| Tool                       | Purpose                       | Phase                      |
+| -------------------------- | ----------------------------- | -------------------------- |
+| **Dependabot**             | npm + Docker scanning         | MVP — Foundation           |
+| **npm audit**              | CI gate (high/critical block) | MVP — Foundation           |
+| **eslint-plugin-security** | SAST basics                   | MVP — Foundation           |
+| **Trivy**                  | Container scanning            | Post-MVP — Portals & Apps  |
+| **Semgrep**                | OWASP SAST                    | Post-MVP — Comms & Polish  |
+| **Pentest**                | Annual external               | Post-MVP — Comms & Polish+ |
+| **security.txt**           | Responsible disclosure        | MVP — Foundation           |
 
 ---
 
 ## Subprocessor Registry
 
-| Subprocessor | Purpose | DPA |
-|-------------|---------|-----|
-| Clerk | Auth, user management | ✅ |
-| Anthropic | AI processing (zero-retention) | ✅ |
-| Cloudflare | CDN, R2, WAF, email workers | ✅ |
-| Resend | Outbound email | ✅ |
-| Stripe | Payments (PCI DSS) | ✅ |
-| Sentry | Error tracking (PII-redacted) | ✅ |
-| Hosting (Railway/Render/AWS) | Infrastructure | ✅ |
+| Subprocessor                 | Purpose                        | DPA |
+| ---------------------------- | ------------------------------ | --- |
+| Clerk                        | Auth, user management          | ✅  |
+| Anthropic                    | AI processing (zero-retention) | ✅  |
+| Cloudflare                   | CDN, R2, WAF, email workers    | ✅  |
+| Resend                       | Outbound email                 | ✅  |
+| Stripe                       | Payments (PCI DSS)             | ✅  |
+| Sentry                       | Error tracking (PII-redacted)  | ✅  |
+| Hosting (Railway/Render/AWS) | Infrastructure                 | ✅  |
 
 Enterprise: 30 days notice before changes. Public page: `everystack.com/legal/subprocessors`. **Post-MVP — Portals & Apps.**
 
@@ -337,11 +337,11 @@ Enterprise: 30 days notice before changes. Public page: `everystack.com/legal/su
 
 ### EU AI Act
 
-| Requirement | Implementation | Phase |
-|------------|---------------|-------|
-| Transparency labeling | AI content labeled. User review before applying. | MVP — Foundation |
-| Human oversight | AI never acts without approval. Agent approval model. | Architecture |
-| Record keeping | `ai_usage_log` + `agent_sessions` track all invocations. | MVP — Foundation |
+| Requirement           | Implementation                                           | Phase            |
+| --------------------- | -------------------------------------------------------- | ---------------- |
+| Transparency labeling | AI content labeled. User review before applying.         | MVP — Foundation |
+| Human oversight       | AI never acts without approval. Agent approval model.    | Architecture     |
+| Record keeping        | `ai_usage_log` + `agent_sessions` track all invocations. | MVP — Foundation |
 
 ### Data Processing Guarantees
 
@@ -373,11 +373,11 @@ Customer's VPC / Private Cloud / On-Prem
 
 ### Three Deployment Modes
 
-| Mode | Description | Target |
-|------|-------------|--------|
-| **EveryStack-Managed** | Validated model bundle, customer deploys via Helm | Most enterprise (80%+) |
-| **BYOM** | Customer's existing inference endpoint | Large enterprises with ML teams |
-| **Hybrid** | Some tiers self-hosted, others cloud | Sophisticated compliance |
+| Mode                   | Description                                       | Target                          |
+| ---------------------- | ------------------------------------------------- | ------------------------------- |
+| **EveryStack-Managed** | Validated model bundle, customer deploys via Helm | Most enterprise (80%+)          |
+| **BYOM**               | Customer's existing inference endpoint            | Large enterprises with ML teams |
+| **Hybrid**             | Some tiers self-hosted, others cloud              | Sophisticated compliance        |
 
 ### Security for Open-Weight Models
 
@@ -390,13 +390,13 @@ Customer's VPC / Private Cloud / On-Prem
 
 ### Compliance Implications
 
-| Requirement | How Self-Hosted Addresses |
-|------------|--------------------------|
-| GDPR Art. 22 | Full audit trail, human-in-the-loop |
-| EU AI Act | Model identity disclosed, evaluations available |
-| HIPAA | Zero data leaves HIPAA infrastructure |
-| ITAR/FedRAMP | Air-gapped, no external calls |
-| SOC 2 | Customer controls entire pipeline |
+| Requirement  | How Self-Hosted Addresses                       |
+| ------------ | ----------------------------------------------- |
+| GDPR Art. 22 | Full audit trail, human-in-the-loop             |
+| EU AI Act    | Model identity disclosed, evaluations available |
+| HIPAA        | Zero data leaves HIPAA infrastructure           |
+| ITAR/FedRAMP | Air-gapped, no external calls                   |
+| SOC 2        | Customer controls entire pipeline               |
 
 ---
 
@@ -422,11 +422,11 @@ Per-region PostgreSQL + Redis + app instances behind global edge. `getDbForTenan
 
 ## SOC 2 & Certification Roadmap
 
-| Phase | Work |
-|-------|------|
-| **MVP — Foundation** | Encryption documented. Security headers. RLS. Dependency scanning. ESLint security. PII registry. Clerk webhook verification. `security.txt`. AI transparency. `self-hosted.ts` skeleton. |
-| **Post-MVP — Portals & Apps** | GDPR export/deletion. Cookie consent. Privacy policy + DPA. Subprocessor page. Portal cookies. WAF. SOC 2 readiness (Vanta/Drata). CCPA. |
-| **Post-MVP — Documents** | Gotenberg sandboxing. Template validation. Resend webhooks. |
-| **Post-MVP — Automations** | API key security. Webhook SSRF protection. |
-| **Post-MVP — Comms & Polish** | SOC 2 Type I. First pentest. Vulnerability disclosure. Breach procedure. Session controls. Container scanning. SAST. SSO. Type II observation begins. |
-| **Post-MVP — Self-Hosted AI** | Multi-region enforcement. EU AI routing. SOC 2 Type II. SCIM. HIPAA eval. ISO 27001 eval. Self-hosted AI eval. Enterprise air-gapped certification. |
+| Phase                         | Work                                                                                                                                                                                      |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation**          | Encryption documented. Security headers. RLS. Dependency scanning. ESLint security. PII registry. Clerk webhook verification. `security.txt`. AI transparency. `self-hosted.ts` skeleton. |
+| **Post-MVP — Portals & Apps** | GDPR export/deletion. Cookie consent. Privacy policy + DPA. Subprocessor page. Portal cookies. WAF. SOC 2 readiness (Vanta/Drata). CCPA.                                                  |
+| **Post-MVP — Documents**      | Gotenberg sandboxing. Template validation. Resend webhooks.                                                                                                                               |
+| **Post-MVP — Automations**    | API key security. Webhook SSRF protection.                                                                                                                                                |
+| **Post-MVP — Comms & Polish** | SOC 2 Type I. First pentest. Vulnerability disclosure. Breach procedure. Session controls. Container scanning. SAST. SSO. Type II observation begins.                                     |
+| **Post-MVP — Self-Hosted AI** | Multi-region enforcement. EU AI routing. SOC 2 Type II. SCIM. HIPAA eval. ISO 27001 eval. Self-hosted AI eval. Enterprise air-gapped certification.                                       |

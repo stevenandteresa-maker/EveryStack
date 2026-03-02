@@ -2,6 +2,7 @@
 
 > **Glossary Reconciliation — 2026-02-27**
 > Aligned with `GLOSSARY.md` (source of truth). Changes:
+>
 > - "Interface/Portal Generation" → "App Generation" (post-MVP per glossary — App Designer is post-MVP)
 > - "interface gen" / "generate_interface" → "app generation" / "generate_app" in descriptions and code identifiers
 > - "Interface Designer" → "App Designer" (glossary naming discipline)
@@ -17,23 +18,23 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Core Principle | 40–47 | Provider independence, Context Assembly → Prompt → AI Call → Output → Review → Apply pattern |
-| AI Capabilities | 48–60 | Feature matrix with MVP status: Command Bar AI, App Gen, Doc Drafting, Automation Building |
-| Provider Adapter Interface | 61–93 | AIProviderAdapter TypeScript interface, capabilities, config, auth, provider registration |
-| Capability-Based Model Routing | 94–143 | 4 capability tiers (basic→specialized), model mapping, fallback chains, routing config |
-| Prompt Registry & Versioning | 144–181 | Provider-agnostic templates, version-controlled, PromptTemplate interface, compiler pattern |
-| Tool Definition Abstraction | 182–203 | ToolDefinition interface, parameter schemas, provider-specific compilation |
-| Provider Evaluation Framework | 204–233 | EvaluationCase interface, scoring, regression detection, provider comparison |
-| Streaming Support | 234–241 | Vercel AI SDK SSE for interactive features, BullMQ worker for heavy tasks |
-| Technical Architecture | 242–250 | Context Builder, Structured Output, User Review Loop, Audit Trail |
-| Agent Integration | 251–265 | Post-MVP agent hooks: schema, session tables, delegation model, nullable FKs |
-| Self-Hosted LLM Deployment | 266–296 | Post-MVP OpenAI-compatible adapter, vLLM/SGLang/Ollama, hybrid routing |
-| MCP (Model Context Protocol) | 297–326 | EveryStack as MCP Server and Client (post-MVP) |
-| External Consumption via Platform API | 327–348 | AI API endpoints, prompt template registration, credit metering for external consumers |
-| Self-Hosted LLM Readiness (Summary) | 349–365 | Deployment requirements summary, reference to self-hosted-ai.md |
-| Phase Implementation | 366–376 | Phase breakdown: MVP — Foundation through Post-MVP — Intelligence |
+| Section                               | Lines   | Covers                                                                                       |
+| ------------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| Core Principle                        | 40–47   | Provider independence, Context Assembly → Prompt → AI Call → Output → Review → Apply pattern |
+| AI Capabilities                       | 48–60   | Feature matrix with MVP status: Command Bar AI, App Gen, Doc Drafting, Automation Building   |
+| Provider Adapter Interface            | 61–93   | AIProviderAdapter TypeScript interface, capabilities, config, auth, provider registration    |
+| Capability-Based Model Routing        | 94–143  | 4 capability tiers (basic→specialized), model mapping, fallback chains, routing config       |
+| Prompt Registry & Versioning          | 144–181 | Provider-agnostic templates, version-controlled, PromptTemplate interface, compiler pattern  |
+| Tool Definition Abstraction           | 182–203 | ToolDefinition interface, parameter schemas, provider-specific compilation                   |
+| Provider Evaluation Framework         | 204–233 | EvaluationCase interface, scoring, regression detection, provider comparison                 |
+| Streaming Support                     | 234–241 | Vercel AI SDK SSE for interactive features, BullMQ worker for heavy tasks                    |
+| Technical Architecture                | 242–250 | Context Builder, Structured Output, User Review Loop, Audit Trail                            |
+| Agent Integration                     | 251–265 | Post-MVP agent hooks: schema, session tables, delegation model, nullable FKs                 |
+| Self-Hosted LLM Deployment            | 266–296 | Post-MVP OpenAI-compatible adapter, vLLM/SGLang/Ollama, hybrid routing                       |
+| MCP (Model Context Protocol)          | 297–326 | EveryStack as MCP Server and Client (post-MVP)                                               |
+| External Consumption via Platform API | 327–348 | AI API endpoints, prompt template registration, credit metering for external consumers       |
+| Self-Hosted LLM Readiness (Summary)   | 349–365 | Deployment requirements summary, reference to self-hosted-ai.md                              |
+| Phase Implementation                  | 366–376 | Phase breakdown: MVP — Foundation through Post-MVP — Intelligence                            |
 
 ---
 
@@ -47,14 +48,14 @@
 
 ## AI Capabilities
 
-| Feature | Description | MVP Status |
-|---------|-------------|------------|
-| Command Bar Conversational AI | Data querying, cross-link traversal, action suggestions. Primary AI surface. | **MVP** |
-| App Generation | Schema analysis → infer visualizations → generate block tree | **Post-MVP** (App Designer is post-MVP) |
-| Document Content Drafting | AI content blocks generate contextual prose from record data | **MVP** (Document AI Draft) |
-| Automation Building | Natural language to automation config. Highest-impact MVP AI feature. | **MVP** |
-| Communication Drafting | Draft contextual messages based on record data and history | **MVP** (Post-MVP — Comms & Polish) |
-| Document Review | Consistency, tone, completeness checking | **Post-MVP** |
+| Feature                       | Description                                                                  | MVP Status                              |
+| ----------------------------- | ---------------------------------------------------------------------------- | --------------------------------------- |
+| Command Bar Conversational AI | Data querying, cross-link traversal, action suggestions. Primary AI surface. | **MVP**                                 |
+| App Generation                | Schema analysis → infer visualizations → generate block tree                 | **Post-MVP** (App Designer is post-MVP) |
+| Document Content Drafting     | AI content blocks generate contextual prose from record data                 | **MVP** (Document AI Draft)             |
+| Automation Building           | Natural language to automation config. Highest-impact MVP AI feature.        | **MVP**                                 |
+| Communication Drafting        | Draft contextual messages based on record data and history                   | **MVP** (Post-MVP — Comms & Polish)     |
+| Document Review               | Consistency, tone, completeness checking                                     | **Post-MVP**                            |
 
 ---
 
@@ -63,7 +64,7 @@
 ```typescript
 // packages/shared/ai/providers/adapter.ts
 interface AIProviderAdapter {
-  readonly providerId: string;  // 'anthropic' | 'openai' | 'self-hosted'
+  readonly providerId: string; // 'anthropic' | 'openai' | 'self-hosted'
 
   complete(request: CompiledAIRequest): Promise<AIResponse>;
   streamComplete(request: CompiledAIRequest): AsyncIterable<AIStreamChunk>;
@@ -95,31 +96,31 @@ interface ProviderCapabilities {
 
 Feature code routes to **capability tiers**, never to providers or models.
 
-| Tier | Characteristics | Current Mapping | Use Cases |
-|------|----------------|-----------------|-----------|
-| `fast` | Sub-second, low cost, simple tasks | Claude Haiku | Intent classification, autocomplete, summarization, notification digests, search ranking |
-| `standard` | Balanced latency/quality, streaming, tool use | Claude Sonnet | Conversational AI, doc drafting, communication, schema suggestions, automation building |
-| `advanced` | Maximum reasoning, complex multi-step | Claude Opus | Complex automations, full app generation (post-MVP), cross-base analysis, advanced reports |
+| Tier       | Characteristics                               | Current Mapping | Use Cases                                                                                  |
+| ---------- | --------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| `fast`     | Sub-second, low cost, simple tasks            | Claude Haiku    | Intent classification, autocomplete, summarization, notification digests, search ranking   |
+| `standard` | Balanced latency/quality, streaming, tool use | Claude Sonnet   | Conversational AI, doc drafting, communication, schema suggestions, automation building    |
+| `advanced` | Maximum reasoning, complex multi-step         | Claude Opus     | Complex automations, full app generation (post-MVP), cross-base analysis, advanced reports |
 
 ### Routing Configuration
 
 ```typescript
 // packages/shared/ai/config/routing.ts
 const CAPABILITY_ROUTING: Record<CapabilityTier, ProviderModelConfig> = {
-  fast:     { providerId: 'anthropic', modelId: 'claude-haiku-4-5-20251001' },
+  fast: { providerId: 'anthropic', modelId: 'claude-haiku-4-5-20251001' },
   standard: { providerId: 'anthropic', modelId: 'claude-sonnet-4-5-20250929' },
   advanced: { providerId: 'anthropic', modelId: 'claude-opus-4-6' },
 };
 
 const FEATURE_ROUTING: Record<AITaskType, CapabilityTier> = {
-  classify_intent:      'fast',
-  summarize:            'fast',
-  conversation:         'standard',
-  draft_content:        'standard',
-  draft_communication:  'standard',
-  suggest_schema:       'standard',
-  generate_automation:  'standard',  // upgrades to 'advanced' for complex automations
-  generate_app:         'advanced',  // Post-MVP — App Designer AI generation
+  classify_intent: 'fast',
+  summarize: 'fast',
+  conversation: 'standard',
+  draft_content: 'standard',
+  draft_communication: 'standard',
+  suggest_schema: 'standard',
+  generate_automation: 'standard', // upgrades to 'advanced' for complex automations
+  generate_app: 'advanced', // Post-MVP — App Designer AI generation
 };
 ```
 
@@ -131,9 +132,17 @@ const FEATURE_ROUTING: Record<AITaskType, CapabilityTier> = {
 
 ```typescript
 const FALLBACK_CHAIN: Record<CapabilityTier, ProviderModelConfig[]> = {
-  fast:     [/* primary */, /* fallback 1 */],
-  standard: [/* primary */, /* fallback 1 */],
-  advanced: [/* primary */],  // No fallback — fail gracefully
+  fast: [
+    ,/* primary */
+    /* fallback 1 */
+  ],
+  standard: [
+    ,/* primary */
+    /* fallback 1 */
+  ],
+  advanced: [
+    /* primary */
+  ], // No fallback — fail gracefully
 };
 ```
 
@@ -148,15 +157,15 @@ All prompts stored as **provider-agnostic templates** with a **provider-specific
 ```typescript
 // packages/shared/ai/prompts/registry.ts
 interface PromptTemplate {
-  id: string;                      // 'automation_builder', 'document_draft', etc.
-  version: number;                 // Monotonically increasing
+  id: string; // 'automation_builder', 'document_draft', etc.
+  version: number; // Monotonically increasing
   description: string;
   capabilityTier: 'fast' | 'standard' | 'advanced';
-  systemInstruction: string;       // Template with {{variables}}
-  outputSchema: JSONSchema;        // Expected output (Zod → JSON Schema)
+  systemInstruction: string; // Template with {{variables}}
+  outputSchema: JSONSchema; // Expected output (Zod → JSON Schema)
   variables: VariableDefinition[];
-  examples: PromptExample[];       // Few-shot pairs
-  testedWith: TestedModel[];       // Validated provider+model combos
+  examples: PromptExample[]; // Few-shot pairs
+  testedWith: TestedModel[]; // Validated provider+model combos
   createdAt: string;
   changelog: string;
 }
@@ -165,6 +174,7 @@ interface PromptTemplate {
 ### Provider-Specific Compilation
 
 Each adapter includes `compilePrompt()` that transforms generic templates:
+
 - **Anthropic:** Injects `cache_control: { type: 'ephemeral' }`, uses XML tags
 - **OpenAI:** Uses `response_format: { type: 'json_schema' }`, adapts system message style
 - **Self-hosted (post-MVP):** May inject more explicit formatting instructions
@@ -184,15 +194,16 @@ Each adapter includes `compilePrompt()` that transforms generic templates:
 ```typescript
 // packages/shared/ai/tools/registry.ts
 interface ToolDefinition {
-  name: string;                    // 'search_records', 'create_record', etc.
+  name: string; // 'search_records', 'create_record', etc.
   description: string;
-  parameters: JSONSchema;          // Standard JSON Schema
+  parameters: JSONSchema; // Standard JSON Schema
   handler: (params: unknown) => Promise<ToolResult>;
   requiredPermissions: Permission[];
 }
 ```
 
 **Provider compilation:** Each adapter translates `ToolDefinition` to native format:
+
 - Anthropic: `tools` array with `input_schema`
 - OpenAI: `functions` array with `parameters`
 - Self-hosted (post-MVP): Prompt-based tool use with structured output parsing as fallback
@@ -216,14 +227,14 @@ interface EvaluationCase {
 
 ### Evaluation Metrics (per template, per provider/model)
 
-| Metric | Description |
-|--------|-------------|
-| Schema compliance | % outputs parsing against expected schema |
-| Assertion pass rate | % automated assertions passed |
-| Latency (p50, p95) | Time to complete or TTFT |
-| Token efficiency | Average input + output tokens |
-| Cost per call | Credits consumed per execution |
-| Tool use accuracy | % valid, correctly parameterized tool calls |
+| Metric              | Description                                 |
+| ------------------- | ------------------------------------------- |
+| Schema compliance   | % outputs parsing against expected schema   |
+| Assertion pass rate | % automated assertions passed               |
+| Latency (p50, p95)  | Time to complete or TTFT                    |
+| Token efficiency    | Average input + output tokens               |
+| Cost per call       | Credits consumed per execution              |
+| Tool use accuracy   | % valid, correctly parameterized tool calls |
 
 **Passing threshold:** ≥95% schema compliance, ≥90% assertion pass rate.
 
@@ -351,6 +362,7 @@ The AIService is consumable by external systems — branded verticals, third-par
 > **Post-MVP.** Full specification: `self-hosted-ai.md` — open-weight model strategy, hybrid routing, enterprise air-gapped deployment modes, security model, cost breakeven, licensing.
 
 Deploying an in-house LLM requires only:
+
 1. Implement `AIProviderAdapter` for the hosting infra (`self-hosted.ts` targeting OpenAI-compatible endpoint)
 2. Implement `calculateCost()` for GPU-seconds/tokens
 3. Write a prompt compiler for the model's instruction format in `prompts/compiler.ts`
@@ -365,12 +377,12 @@ No feature code changes. No prompt template changes. No tool definition changes.
 
 ## Phase Implementation
 
-| Phase | AI Work |
-|-------|---------|
-| MVP — Foundation | AIService skeleton, Anthropic adapter, `self-hosted.ts` adapter skeleton, prompt registry structure, capability routing config (incl. `'self-hosted'` in providerId union), tool definition schema, EmbeddingProvider interface, context-builder placeholder, metering flow, `agent_sessions` table (schema only), `AgentScope`/`AgentConfig` type interfaces, `agent_session_id` nullable FK on `ai_usage_log` |
-| MVP — Core UX | Context Builder with heuristic schema retrieval (semantic retrieval via pgvector is post-MVP — see `vector-embeddings.md`), Command Bar AI, full tool suite, dynamic tool set composition |
-| Post-MVP — Documents | Doc drafting AI (Document AI Draft), document review |
-| Post-MVP — Automations | Automation building AI, MCP server MVP, `trigger_automation` tool in registry, reusable checkpointing/chain-depth primitives in `packages/shared/` |
-| Post-MVP — Comms & Polish | Communication drafting, AI polish, notification infrastructure for agent approval gates |
-| **Post-MVP (Post-MVP — AI Agents)** | Agent execution runtime, memory system, tiered approval model, safety framework, agent debugging UI, specialized agent types. See `agent-architecture.md`. |
-| **Post-MVP (Post-MVP — Self-Hosted AI)** | MCP client, self-hosted model evaluation (Qwen3), prompt compiler for open-weight models, Helm chart, enterprise security documentation, hybrid routing activation. See `self-hosted-ai.md`. |
+| Phase                                    | AI Work                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVP — Foundation                         | AIService skeleton, Anthropic adapter, `self-hosted.ts` adapter skeleton, prompt registry structure, capability routing config (incl. `'self-hosted'` in providerId union), tool definition schema, EmbeddingProvider interface, context-builder placeholder, metering flow, `agent_sessions` table (schema only), `AgentScope`/`AgentConfig` type interfaces, `agent_session_id` nullable FK on `ai_usage_log` |
+| MVP — Core UX                            | Context Builder with heuristic schema retrieval (semantic retrieval via pgvector is post-MVP — see `vector-embeddings.md`), Command Bar AI, full tool suite, dynamic tool set composition                                                                                                                                                                                                                       |
+| Post-MVP — Documents                     | Doc drafting AI (Document AI Draft), document review                                                                                                                                                                                                                                                                                                                                                            |
+| Post-MVP — Automations                   | Automation building AI, MCP server MVP, `trigger_automation` tool in registry, reusable checkpointing/chain-depth primitives in `packages/shared/`                                                                                                                                                                                                                                                              |
+| Post-MVP — Comms & Polish                | Communication drafting, AI polish, notification infrastructure for agent approval gates                                                                                                                                                                                                                                                                                                                         |
+| **Post-MVP (Post-MVP — AI Agents)**      | Agent execution runtime, memory system, tiered approval model, safety framework, agent debugging UI, specialized agent types. See `agent-architecture.md`.                                                                                                                                                                                                                                                      |
+| **Post-MVP (Post-MVP — Self-Hosted AI)** | MCP client, self-hosted model evaluation (Qwen3), prompt compiler for open-weight models, Helm chart, enterprise security documentation, hybrid routing activation. See `self-hosted-ai.md`.                                                                                                                                                                                                                    |

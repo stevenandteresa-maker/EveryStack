@@ -12,17 +12,17 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Connection Pooling (MVP — Foundation — Day One) | 29–39 | PgBouncer transaction mode, per-environment config (Docker/Railway/AWS), connection strings |
-| Read/Write Connection Routing & `getDbForTenant()` | 43–171 | `getDbForTenant()` full implementation, read/write intent routing, usage patterns, multi-region routing (post-MVP), tenant region cache, migration path |
-| Table Partitioning | 175–185 | Hash-partitioned `records` by `tenant_id` (16 partitions), other partitioned tables, autovacuum benefits |
-| Tenant-Aware Resource Protection | 189–198 | 30s/5min statement timeouts, per-tenant query budgeting, expensive query guardrails (50K+ limits, cross-link depth cap) |
-| Row-Level Security at Scale | 202–210 | RLS as defense-in-depth at 100M+ rows, partition pruning mitigation, monitoring strategy, never relaxed on write primary |
-| Zero-Downtime Migration Rules | 214–222 | 7 safe migration patterns: ADD COLUMN, renames, CONCURRENTLY indexes, type changes, table drops, partition ops, validation |
-| tsvector Indexing Strategy | 226–482 | 4-weight search vectors (A–D), `extractSearchableText()` full impl, `buildSearchVector()` full impl, `simple` dictionary rationale, prefix matching, update triggers, GIN schema, table-scoped + workspace-scoped search queries, entity search, performance at scale |
-| JSONB Expression Indexes | 486–498 | Expression indexes on JSONB paths, btree on `canonical_data` fields, `record_cells` decision point |
-| Scaling Decision Points | 502–513 | Trigger → action table: connection count, query latency, record thresholds, tenant count, CockroachDB tier |
+| Section                                            | Lines   | Covers                                                                                                                                                                                                                                                                |
+| -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Connection Pooling (MVP — Foundation — Day One)    | 29–39   | PgBouncer transaction mode, per-environment config (Docker/Railway/AWS), connection strings                                                                                                                                                                           |
+| Read/Write Connection Routing & `getDbForTenant()` | 43–171  | `getDbForTenant()` full implementation, read/write intent routing, usage patterns, multi-region routing (post-MVP), tenant region cache, migration path                                                                                                               |
+| Table Partitioning                                 | 175–185 | Hash-partitioned `records` by `tenant_id` (16 partitions), other partitioned tables, autovacuum benefits                                                                                                                                                              |
+| Tenant-Aware Resource Protection                   | 189–198 | 30s/5min statement timeouts, per-tenant query budgeting, expensive query guardrails (50K+ limits, cross-link depth cap)                                                                                                                                               |
+| Row-Level Security at Scale                        | 202–210 | RLS as defense-in-depth at 100M+ rows, partition pruning mitigation, monitoring strategy, never relaxed on write primary                                                                                                                                              |
+| Zero-Downtime Migration Rules                      | 214–222 | 7 safe migration patterns: ADD COLUMN, renames, CONCURRENTLY indexes, type changes, table drops, partition ops, validation                                                                                                                                            |
+| tsvector Indexing Strategy                         | 226–482 | 4-weight search vectors (A–D), `extractSearchableText()` full impl, `buildSearchVector()` full impl, `simple` dictionary rationale, prefix matching, update triggers, GIN schema, table-scoped + workspace-scoped search queries, entity search, performance at scale |
+| JSONB Expression Indexes                           | 486–498 | Expression indexes on JSONB paths, btree on `canonical_data` fields, `record_cells` decision point                                                                                                                                                                    |
+| Scaling Decision Points                            | 502–513 | Trigger → action table: connection count, query latency, record thresholds, tenant count, CockroachDB tier                                                                                                                                                            |
 
 ---
 
@@ -33,6 +33,7 @@ Both the Next.js web app and the Node.js worker service connect to PostgreSQL th
 **Why non-negotiable from MVP — Foundation:** Next.js on serverless-style platforms spawns many concurrent Node processes — each opening its own Postgres connection. Without pooling, connection exhaustion occurs as low as 50–100 concurrent users. PgBouncer multiplexes hundreds of application connections into ~20–50 actual PostgreSQL connections.
 
 **Implementation per environment:**
+
 - **Development:** PgBouncer container in Docker Compose alongside PostgreSQL. All services connect to PgBouncer port (6432), not PostgreSQL port (5432).
 - **Railway/Render:** PgBouncer as sidecar or provider's built-in pooling.
 - **AWS:** RDS Proxy (managed PgBouncer equivalent) in front of RDS PostgreSQL.
@@ -46,7 +47,7 @@ Both the Next.js web app and the Node.js worker service connect to PostgreSQL th
 
 ```typescript
 // packages/shared/db/client.ts
-const db = createDrizzleClient(env.DATABASE_URL);          // Write primary (via pooler)
+const db = createDrizzleClient(env.DATABASE_URL); // Write primary (via pooler)
 const dbRead = createDrizzleClient(env.DATABASE_READ_URL); // Read replica (via pooler)
 // MVP — Foundation: DATABASE_READ_URL = DATABASE_URL (same instance).
 // Adding a read replica later = change one env var.
@@ -78,16 +79,23 @@ export function getDbForTenant(tenantId: string, intent: DbIntent = 'write'): Dr
 ```typescript
 // apps/web/src/data/records.ts
 export async function getRecords(tenantId: string, tableId: string): Promise<Record[]> {
-  const dbConn = getDbForTenant(tenantId, 'read');  // ← Reads go to replica
-  return dbConn.select().from(records)
-    .where(and(eq(records.tenantId, tenantId), eq(records.tableId, tableId), isNull(records.deletedAt)));
+  const dbConn = getDbForTenant(tenantId, 'read'); // ← Reads go to replica
+  return dbConn
+    .select()
+    .from(records)
+    .where(
+      and(eq(records.tenantId, tenantId), eq(records.tableId, tableId), isNull(records.deletedAt)),
+    );
 }
 
 // apps/web/src/data/records.ts
 export async function insertRecord(tenantId: string, data: NewRecord): Promise<Record> {
   const dbConn = getDbForTenant(tenantId, 'write'); // ← Writes go to primary
   return dbConn.transaction(async (tx) => {
-    const record = await tx.insert(records).values({ tenantId, ...data }).returning();
+    const record = await tx
+      .insert(records)
+      .values({ tenantId, ...data })
+      .returning();
     // ... search_vector, cross_link_index, audit log in same transaction
     return record;
   });
@@ -96,14 +104,14 @@ export async function insertRecord(tenantId: string, data: NewRecord): Promise<R
 
 **Routing rules (who uses which intent):**
 
-| Caller | Intent | Rationale |
-|--------|--------|-----------|
-| Server Components (data fetching) | `'read'` | Read replica safe, no mutation |
-| Server Actions (mutations) | `'write'` | Must hit primary |
-| Worker writes (sync, formula recalc) | `'write'` | Must hit primary |
-| Worker reads (reports, cross-link resolution) | `'read'` | Read replica safe |
-| Automation evaluation (read context) | `'read'` | Reads to build execution context |
-| Automation execution (write steps) | `'write'` | Mutation steps hit primary |
+| Caller                                        | Intent    | Rationale                        |
+| --------------------------------------------- | --------- | -------------------------------- |
+| Server Components (data fetching)             | `'read'`  | Read replica safe, no mutation   |
+| Server Actions (mutations)                    | `'write'` | Must hit primary                 |
+| Worker writes (sync, formula recalc)          | `'write'` | Must hit primary                 |
+| Worker reads (reports, cross-link resolution) | `'read'`  | Read replica safe                |
+| Automation evaluation (read context)          | `'read'`  | Reads to build execution context |
+| Automation execution (write steps)            | `'write'` | Mutation steps hit primary       |
 
 ### Multi-Region Routing (Post-MVP)
 
@@ -123,7 +131,8 @@ async function getTenantRegionCached(tenantId: string): Promise<string> {
   if (cached && cached.expiresAt > Date.now()) return cached.region;
 
   // Cache miss: lookup from DB (uses write primary — regions rarely change)
-  const tenant = await db.select({ dataRegion: tenants.dataRegion })
+  const tenant = await db
+    .select({ dataRegion: tenants.dataRegion })
     .from(tenants)
     .where(eq(tenants.id, tenantId))
     .limit(1);
@@ -161,12 +170,12 @@ export function getDbForTenant(tenantId: string, intent: DbIntent = 'write'): Dr
 
 **Migration path (single-region → multi-region):**
 
-| Step | What Changes | Downtime |
-|------|-------------|----------|
-| 1. Deploy regional DB instances | Infrastructure only. No code changes. | None |
-| 2. Add `regionConnections` env config | New env vars per region. | None |
-| 3. Uncomment regional routing in `getDbForTenant()` | Feature flag, deploy. New tenants routed regionally. | None |
-| 4. Migrate existing EU tenants | `pg_dump` → restore to EU region → update `data_region` → clear cache. Per-tenant, scheduled. | Per-tenant, ~minutes |
+| Step                                                | What Changes                                                                                  | Downtime             |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------- |
+| 1. Deploy regional DB instances                     | Infrastructure only. No code changes.                                                         | None                 |
+| 2. Add `regionConnections` env config               | New env vars per region.                                                                      | None                 |
+| 3. Uncomment regional routing in `getDbForTenant()` | Feature flag, deploy. New tenants routed regionally.                                          | None                 |
+| 4. Migrate existing EU tenants                      | `pg_dump` → restore to EU region → update `data_region` → clear cache. Per-tenant, scheduled. | Per-tenant, ~minutes |
 
 **Scale trigger:** Add read replica when grid query p95 latency exceeds 200ms or when sync write volume causes observable read latency degradation on the primary.
 
@@ -193,6 +202,7 @@ The `records` table is **hash-partitioned by `tenant_id`** from initial schema c
 **Per-tenant query budgeting (scale phase):** Track query execution time per tenant via OpenTelemetry. Alert when a tenant exceeds 2× the median query budget. Observability first, enforcement later.
 
 **Expensive query guardrails:**
+
 - Grid queries on tables >50K records without a filter: implicit `LIMIT 10000` with UI indicator
 - Cross-link resolution: capped at 3 levels depth (configurable, hard cap 5)
 - Full-text search: `ts_rank` with cutoff to avoid scoring every row
@@ -204,7 +214,8 @@ The `records` table is **hash-partitioned by `tenant_id`** from initial schema c
 RLS is defense-in-depth (application-level `tenant_id` filtering is primary enforcement). At 100M+ rows, RLS adds measurable overhead.
 
 **Mitigation:**
-1. Partition pruning runs *before* RLS — most queries touch 1 of 16 partitions
+
+1. Partition pruning runs _before_ RLS — most queries touch 1 of 16 partitions
 2. RLS policies use simple equality checks (no subqueries, no function calls)
 3. Monitor overhead via OpenTelemetry. If RLS adds >10% latency on grid queries, evaluate relaxing on read-replica connections
 4. RLS is **never relaxed** on the write primary
@@ -237,12 +248,12 @@ Full-text search requires `tsvector` columns populated from the canonical JSONB 
 
 Four PostgreSQL tsvector weights (A–D) reflect field importance for ranking:
 
-| Weight | Assigned To | Rank Boost | Example Fields |
-|--------|------------|------------|----------------|
-| **A** | Primary field | Highest | Record title, project name, contact name |
-| **B** | Fields marked `searchPriority: 'high'` | High | Status, email, tags, category |
-| **C** | Default (all other searchable fields) | Medium | Description, notes, custom text fields |
-| **D** | Derived text (cross-link display values, computed labels) | Lowest | Linked record titles, formula string results |
+| Weight | Assigned To                                               | Rank Boost | Example Fields                               |
+| ------ | --------------------------------------------------------- | ---------- | -------------------------------------------- |
+| **A**  | Primary field                                             | Highest    | Record title, project name, contact name     |
+| **B**  | Fields marked `searchPriority: 'high'`                    | High       | Status, email, tags, category                |
+| **C**  | Default (all other searchable fields)                     | Medium     | Description, notes, custom text fields       |
+| **D**  | Derived text (cross-link display values, computed labels) | Lowest     | Linked record titles, formula string results |
 
 ### The `searchable` Field Property
 
@@ -251,13 +262,14 @@ Every field definition includes a `searchable` boolean (default: `true`) and an 
 ```typescript
 interface FieldDefinition {
   // ... existing properties
-  searchable: boolean;           // Default: true. Set false for binary/internal fields.
+  searchable: boolean; // Default: true. Set false for binary/internal fields.
   searchPriority: 'high' | 'normal'; // Default: 'normal'. 'high' → weight B.
 }
 ```
 
 **Always non-searchable (hardcoded, regardless of field config):**
-- File/attachment fields (binary data — but file *names* are searchable)
+
+- File/attachment fields (binary data — but file _names_ are searchable)
 - Embedding vector fields
 - Internal ID fields
 
@@ -292,7 +304,7 @@ function extractSearchableText(value: CanonicalFieldValue, fieldType: string): s
     // Multi-select/tags → join all labels
     case 'multi_select':
     case 'tags':
-      return (value as { label: string }[]).map(v => v.label).join(' ');
+      return (value as { label: string }[]).map((v) => v.label).join(' ');
 
     // Number → string representation (enables searching "500" or "3.14")
     case 'number':
@@ -316,7 +328,7 @@ function extractSearchableText(value: CanonicalFieldValue, fieldType: string): s
 
     // File/attachment → file names only (not content)
     case 'file':
-      return (value as { name: string }[]).map(f => f.name).join(' ');
+      return (value as { name: string }[]).map((f) => f.name).join(' ');
 
     // Formula → string representation of computed result
     case 'formula':
@@ -332,7 +344,7 @@ function extractSearchableText(value: CanonicalFieldValue, fieldType: string): s
 
     // Multi-user → join display names
     case 'multi_user':
-      return (value as { displayName: string }[]).map(u => u.displayName).join(' ');
+      return (value as { displayName: string }[]).map((u) => u.displayName).join(' ');
 
     default:
       // Unknown field types — attempt string coercion, skip if object
@@ -345,10 +357,7 @@ function extractSearchableText(value: CanonicalFieldValue, fieldType: string): s
 
 ```typescript
 // packages/shared/db/search.ts
-function buildSearchVector(
-  canonicalData: CanonicalData,
-  fields: FieldDefinition[]
-): string {
+function buildSearchVector(canonicalData: CanonicalData, fields: FieldDefinition[]): string {
   const parts: string[] = [];
 
   for (const field of fields) {
@@ -385,6 +394,7 @@ function buildSearchVector(
 **Decision: `'simple'` dictionary for tsvector, not a language-specific one.**
 
 Rationale:
+
 - EveryStack is multi-tenant and multi-language. A tenant in Japan and a tenant in Germany share the same database. PostgreSQL tsvector dictionaries are per-column, not per-row — we cannot use `'english'` for some records and `'german'` for others within the same column.
 - `'simple'` performs no stemming but matches exact tokens and prefixes. This is predictable and consistent across all languages.
 - Semantic search (pgvector) **(post-MVP: Vector Embeddings)** handles the "fuzzy/conceptual" matching that stemming would provide. The hybrid search pipeline (tsvector + pgvector + RRF) **(post-MVP)** gives users the best of both: exact keyword matches from tsvector, conceptual matches from embeddings.
@@ -394,12 +404,12 @@ Rationale:
 
 ### When Updated
 
-| Trigger | Mechanism | Synchronous? |
-|---------|-----------|-------------|
-| Record create/update (Server Action) | `buildSearchVector()` called in same transaction | Yes — same DB transaction |
-| Inbound sync batch | Bulk `UPDATE ... SET search_vector = ...` after canonical data write | Yes — same job, after data commit |
-| Field definition change (field renamed, `searchable` toggled, `isPrimary` changed) | Background BullMQ job recalculates `search_vector` for all records in that table | No — async job, may take minutes for large tables |
-| Cross-link display value change | Background job recalculates `search_vector` for records with cross-links to the changed record | No — async job |
+| Trigger                                                                            | Mechanism                                                                                      | Synchronous?                                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Record create/update (Server Action)                                               | `buildSearchVector()` called in same transaction                                               | Yes — same DB transaction                         |
+| Inbound sync batch                                                                 | Bulk `UPDATE ... SET search_vector = ...` after canonical data write                           | Yes — same job, after data commit                 |
+| Field definition change (field renamed, `searchable` toggled, `isPrimary` changed) | Background BullMQ job recalculates `search_vector` for all records in that table               | No — async job, may take minutes for large tables |
+| Cross-link display value change                                                    | Background job recalculates `search_vector` for records with cross-links to the changed record | No — async job                                    |
 
 ### Schema
 
@@ -501,13 +511,13 @@ CREATE INDEX CONCURRENTLY idx_records_status ON records USING btree (
 
 ## Scaling Decision Points
 
-| Trigger | Action |
-|---------|--------|
-| >100 concurrent DB connections | Verify PgBouncer pool sizing, increase if needed |
-| Grid query p95 > 200ms | Add read replica, route Server Components to replica |
-| Single tenant > 250K records | Monitor partition performance, verify expression indexes |
-| Total records > 50M | Benchmark expression indexes vs `record_cells` denormalization |
-| Total records > 200M | Evaluate partition count increase (16 → 64) |
-| >5,000 tenants | Benchmark RLS overhead, establish per-tenant query budgets |
-| >10,000 tenants | Evaluate multi-region read replicas, dedicated partition tablespaces |
+| Trigger                                                                     | Action                                                                                        |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| >100 concurrent DB connections                                              | Verify PgBouncer pool sizing, increase if needed                                              |
+| Grid query p95 > 200ms                                                      | Add read replica, route Server Components to replica                                          |
+| Single tenant > 250K records                                                | Monitor partition performance, verify expression indexes                                      |
+| Total records > 50M                                                         | Benchmark expression indexes vs `record_cells` denormalization                                |
+| Total records > 200M                                                        | Evaluate partition count increase (16 → 64)                                                   |
+| >5,000 tenants                                                              | Benchmark RLS overhead, establish per-tenant query budgets                                    |
+| >10,000 tenants                                                             | Evaluate multi-region read replicas, dedicated partition tablespaces                          |
 | Enterprise client requires geo-distribution, data residency, or 99.999% SLA | **(Post-MVP)** Deploy CockroachDB tier. See `cockroachdb-readiness.md` for migration playbook |

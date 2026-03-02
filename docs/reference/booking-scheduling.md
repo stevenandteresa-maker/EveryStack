@@ -15,31 +15,31 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Design Philosophy | 46–57 | Tables-as-calendars, availability as computation, progressive complexity |
-| Calendar View Architecture | 58–172 | Day/week/month views, event rendering, drag-and-drop, mobile calendar |
-| Bookable Tables — The Core Model | 173–278 | 4 bookable types (appointments, resources, services, events), table_type overlay |
-| Computed Availability Engine | 279–393 | Availability computation, business hours, buffer times, conflict detection |
-| Scheduler Block (App Designer) | 394–466 | Embeddable scheduling UI block, slot picker, booking form |
-| Public Booking Pages & Shareable Links | 467–551 | Public booking URLs, embed options, Turnstile protection |
-| Booking Lifecycle & Record Creation | 552–617 | 8-step booking flow, confirmation, reminders |
-| Self-Service Rescheduling & Cancellation | 618–656 | Client-initiated changes, cancellation policies |
-| Routing & Pre-Booking Qualification | 657–700 | Routing forms, conditional assignment, qualification questions |
-| No-Show Detection & Workflows | 701–730 | No-show detection, automated follow-up, penalty tracking |
-| Video Conferencing Integration | 731–758 | Zoom integration, meeting link generation |
-| Meeting Polls | 759–812 | Poll creation, voting, auto-scheduling |
-| Single-Use Booking Links | 813–861 | One-time use links, expiration |
-| Managed Booking Templates | 862–897 | Pre-configured booking types, template library |
-| Scheduling Analytics | 898–922 | Booking metrics, utilization, no-show rates |
-| Quick Setup Wizard | 923–977 | 3-step booking setup wizard |
-| Automation Integration | 978–1014 | 6 triggers, 3 actions, 5 recipes for booking automations |
-| External Calendar Sync (Post-MVP — Comms & Polish Dependency — Designed Now) | 1015–1040 | Google/Outlook calendar sync architecture |
-| Data Model Additions Summary | 1041–1069 | New tables and columns for booking system |
-| Permissions | 1070–1085 | Booking-specific permission rules |
-| Phase Implementation Summary | 1086–1111 | Post-MVP — Portals & Apps (Fast-Follow) delivery scope |
-| Reconciliation with Existing Docs | 1112–1132 | Cross-reference alignment notes |
-| Key Architectural Decisions | 1133–1153 | ADR-style decisions with rationale |
+| Section                                                                      | Lines     | Covers                                                                           |
+| ---------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------- |
+| Design Philosophy                                                            | 46–57     | Tables-as-calendars, availability as computation, progressive complexity         |
+| Calendar View Architecture                                                   | 58–172    | Day/week/month views, event rendering, drag-and-drop, mobile calendar            |
+| Bookable Tables — The Core Model                                             | 173–278   | 4 bookable types (appointments, resources, services, events), table_type overlay |
+| Computed Availability Engine                                                 | 279–393   | Availability computation, business hours, buffer times, conflict detection       |
+| Scheduler Block (App Designer)                                               | 394–466   | Embeddable scheduling UI block, slot picker, booking form                        |
+| Public Booking Pages & Shareable Links                                       | 467–551   | Public booking URLs, embed options, Turnstile protection                         |
+| Booking Lifecycle & Record Creation                                          | 552–617   | 8-step booking flow, confirmation, reminders                                     |
+| Self-Service Rescheduling & Cancellation                                     | 618–656   | Client-initiated changes, cancellation policies                                  |
+| Routing & Pre-Booking Qualification                                          | 657–700   | Routing forms, conditional assignment, qualification questions                   |
+| No-Show Detection & Workflows                                                | 701–730   | No-show detection, automated follow-up, penalty tracking                         |
+| Video Conferencing Integration                                               | 731–758   | Zoom integration, meeting link generation                                        |
+| Meeting Polls                                                                | 759–812   | Poll creation, voting, auto-scheduling                                           |
+| Single-Use Booking Links                                                     | 813–861   | One-time use links, expiration                                                   |
+| Managed Booking Templates                                                    | 862–897   | Pre-configured booking types, template library                                   |
+| Scheduling Analytics                                                         | 898–922   | Booking metrics, utilization, no-show rates                                      |
+| Quick Setup Wizard                                                           | 923–977   | 3-step booking setup wizard                                                      |
+| Automation Integration                                                       | 978–1014  | 6 triggers, 3 actions, 5 recipes for booking automations                         |
+| External Calendar Sync (Post-MVP — Comms & Polish Dependency — Designed Now) | 1015–1040 | Google/Outlook calendar sync architecture                                        |
+| Data Model Additions Summary                                                 | 1041–1069 | New tables and columns for booking system                                        |
+| Permissions                                                                  | 1070–1085 | Booking-specific permission rules                                                |
+| Phase Implementation Summary                                                 | 1086–1111 | Post-MVP — Portals & Apps (Fast-Follow) delivery scope                           |
+| Reconciliation with Existing Docs                                            | 1112–1132 | Cross-reference alignment notes                                                  |
+| Key Architectural Decisions                                                  | 1133–1153 | ADR-style decisions with rationale                                               |
 
 ---
 
@@ -65,11 +65,11 @@ Calendar View renders records from any table that has date or date-range fields 
 
 Three modes accessible via segmented control in the view toolbar:
 
-| Mode | Default For | Layout |
-|------|-------------|--------|
-| **Month** | Overview / planning | 7-column grid. Day cells show up to 3 event chips; "+N more" overflow opens day popover. Dot indicators on mobile. |
-| **Week** | Day-to-day work (default) | 7-day columns, vertical time axis (00:00–23:59, visible range 06:00–22:00 with scroll). 30-minute row height slots. All-day events in top banner row. |
-| **Day** | Detailed single-day | Single column, vertical time axis. Wider event blocks with more detail (title + location + attendees). All-day events in top banner. |
+| Mode      | Default For               | Layout                                                                                                                                                |
+| --------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Month** | Overview / planning       | 7-column grid. Day cells show up to 3 event chips; "+N more" overflow opens day popover. Dot indicators on mobile.                                    |
+| **Week**  | Day-to-day work (default) | 7-day columns, vertical time axis (00:00–23:59, visible range 06:00–22:00 with scroll). 30-minute row height slots. All-day events in top banner row. |
+| **Day**   | Detailed single-day       | Single column, vertical time axis. Wider event blocks with more detail (title + location + attendees). All-day events in top banner.                  |
 
 ### Time Axis & Grid
 
@@ -88,10 +88,12 @@ Three modes accessible via segmented control in the view toolbar:
 - **All-day events:** Rendered in dedicated banner row above time grid. Span columns for multi-day. Stacked if multiple (max 3 visible, "+N" overflow).
 
 **Multi-day events (Week/Month):**
+
 - Week: Span across day columns in all-day banner, connected visual bar.
 - Month: Span across day cells, wrap at week boundary, continuation arrow indicator.
 
 **Overlap handling (Week/Day):**
+
 - Two overlapping events: side-by-side, each 50% width.
 - Three+ overlapping: cascade layout, each offset right by 20%, stacked by start time.
 - Maximum visible overlap: 4 events before "+N more" in the time slot.
@@ -99,35 +101,40 @@ Three modes accessible via segmented control in the view toolbar:
 ### Interactions
 
 **Click empty slot → Quick-create popover:**
+
 - Pre-fills date and time from clicked position (snaps to nearest 15-minute increment).
 - Fields: title (auto-focused), start time, end time (defaults to +1 hour), target table picker (if multiple calendar tables exist in workspace). Save button creates the record.
 - If table has `calendar_table_config`: quick-create also shows mapped fields (location, event type) as optional inputs.
 
 **Click existing event → Open Record View:**
+
 - Opens the record in the standard Record View (overlay panel from right side).
 - All record fields visible and editable per normal permissions.
 
 **Drag event to new time (Week/Day):**
+
 - Drag handle on event block. Snaps to 15-minute increments during drag. Ghost preview shows new position. Drop updates start_time and end_time fields on the record.
 - Drag in Month view changes date only (time preserved).
 - Permission check: requires edit access to the date/time fields.
 
 **Resize event (Week/Day):**
+
 - Bottom edge drag handle. Extends or shrinks end time. Minimum duration: 15 minutes. Snaps to 15-minute increments.
 
 **Drag to reschedule across days (Week):**
+
 - Drag event from one day column to another. Updates date. Time adjusts to drop position.
 
 ### Date Field Binding
 
 Calendar View requires at least one date or date_range field to render. Configuration in view settings:
 
-| Setting | Purpose |
-|---------|---------|
-| **Start field** | Which date/datetime field positions the event start. Required. |
-| **End field** | Which date/datetime field positions the event end. Optional — if unset, events render as point-in-time (1-hour default block). |
-| **Color field** | Select or status field that determines event color. Optional. |
-| **Group field** | Field to visually group events (colored sidebar stripe or legend). Optional. |
+| Setting         | Purpose                                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Start field** | Which date/datetime field positions the event start. Required.                                                                 |
+| **End field**   | Which date/datetime field positions the event end. Optional — if unset, events render as point-in-time (1-hour default block). |
+| **Color field** | Select or status field that determines event color. Optional.                                                                  |
+| **Group field** | Field to visually group events (colored sidebar stripe or legend). Optional.                                                   |
 
 For calendar-type tables with `calendar_table_config`, these bindings are pre-configured from the config and inherited automatically. Users can override per-view.
 
@@ -144,11 +151,11 @@ Standard view toolbar (consistent with Grid/Card/etc.) plus calendar-specific co
 
 ### Responsive Behavior
 
-| Breakpoint | Layout |
-|-----------|--------|
-| Desktop (1024+) | Full week/day grid with time axis. Month grid with event chips. Side panel expand record. |
-| Tablet (768–1023) | Week shows 5 days (work week default), swipe for weekends. Day view full-featured. Month grid with dot indicators (tap day → bottom sheet day view). |
-| Mobile (<768) | **Month:** Dot indicators per day. Tap day → scrollable day list below calendar. **Week:** Horizontal swipe through days (one day visible at a time, day header shows week context). **Day:** Vertical timeline, full width. Long press empty slot → new event. Long press event → drag to reschedule. |
+| Breakpoint        | Layout                                                                                                                                                                                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Desktop (1024+)   | Full week/day grid with time axis. Month grid with event chips. Side panel expand record.                                                                                                                                                                                                              |
+| Tablet (768–1023) | Week shows 5 days (work week default), swipe for weekends. Day view full-featured. Month grid with dot indicators (tap day → bottom sheet day view).                                                                                                                                                   |
+| Mobile (<768)     | **Month:** Dot indicators per day. Tap day → scrollable day list below calendar. **Week:** Horizontal swipe through days (one day visible at a time, day header shows week context). **Day:** Vertical timeline, full width. Long press empty slot → new event. Long press event → drag to reschedule. |
 
 ### Calendar View Data Model
 
@@ -156,15 +163,15 @@ No new tables. Calendar View is a `view_type = 'calendar'` on Table View tabs (D
 
 ```typescript
 interface CalendarViewConfig {
-  start_field_id: string;                    // Required: date/datetime field
-  end_field_id: string | null;               // Optional: renders as duration block
-  color_field_id: string | null;             // Optional: event color source
-  group_field_id: string | null;             // Optional: visual grouping
-  default_mode: 'month' | 'week' | 'day';   // Default: 'week'
-  working_hours_start: string;               // Default: '09:00' (from workspace calendar)
-  working_hours_end: string;                 // Default: '17:00'
-  week_start: 'monday' | 'sunday';          // Default: locale-based
-  show_weekends: boolean;                    // Default: true
+  start_field_id: string; // Required: date/datetime field
+  end_field_id: string | null; // Optional: renders as duration block
+  color_field_id: string | null; // Optional: event color source
+  group_field_id: string | null; // Optional: visual grouping
+  default_mode: 'month' | 'week' | 'day'; // Default: 'week'
+  working_hours_start: string; // Default: '09:00' (from workspace calendar)
+  working_hours_end: string; // Default: '17:00'
+  week_start: 'monday' | 'sunday'; // Default: locale-based
+  show_weekends: boolean; // Default: true
 }
 ```
 
@@ -172,7 +179,7 @@ interface CalendarViewConfig {
 
 ## Bookable Tables — The Core Model
 
-A booking in EveryStack is a record in a calendar-type table. The table *is* the booking system. When booking is enabled on a calendar table, external parties (portal clients or public visitors) can create records in it by selecting available time slots.
+A booking in EveryStack is a record in a calendar-type table. The table _is_ the booking system. When booking is enabled on a calendar table, external parties (portal clients or public visitors) can create records in it by selecting available time slots.
 
 ### Enabling Booking
 
@@ -203,60 +210,60 @@ interface BookingConfig {
   color_field_id: string | null;
 
   // --- New: Booking configuration ---
-  booking_enabled: boolean;                  // Default: false. Enables the entire booking system for this table.
+  booking_enabled: boolean; // Default: false. Enables the entire booking system for this table.
 
   // Event type
   booking_type: 'one_on_one' | 'group' | 'round_robin' | 'collective';
-  duration_minutes: number;                  // Default slot duration (15, 30, 45, 60, 90, 120). User-facing as "Meeting length."
-  duration_options: number[] | null;         // Optional: let invitee choose (e.g., [15, 30, 60]). Null = fixed duration.
+  duration_minutes: number; // Default slot duration (15, 30, 45, 60, 90, 120). User-facing as "Meeting length."
+  duration_options: number[] | null; // Optional: let invitee choose (e.g., [15, 30, 60]). Null = fixed duration.
 
   // Assignment
-  assignee_field_id: string;                 // User/collaborator field — who hosts the booking. Required.
-  assignee_pool: string[];                   // User IDs eligible for assignment (round-robin / collective pools).
-  round_robin_mode: 'availability' | 'equal_distribution' | null;  // Only for round_robin type.
+  assignee_field_id: string; // User/collaborator field — who hosts the booking. Required.
+  assignee_pool: string[]; // User IDs eligible for assignment (round-robin / collective pools).
+  round_robin_mode: 'availability' | 'equal_distribution' | null; // Only for round_robin type.
 
   // Scheduling constraints
-  buffer_before_minutes: number;             // Gap before each booking. Default: 0.
-  buffer_after_minutes: number;              // Gap after each booking. Default: 0.
-  max_bookings_per_day: number | null;       // Per-assignee daily cap. Null = unlimited.
-  min_notice_hours: number;                  // Minimum advance booking time. Default: 1.
-  max_advance_days: number;                  // How far ahead can someone book. Default: 60.
-  slot_interval_minutes: number;             // Slot start alignment (15, 30, 60). Default: 30. Controls "start times offered every N minutes."
+  buffer_before_minutes: number; // Gap before each booking. Default: 0.
+  buffer_after_minutes: number; // Gap after each booking. Default: 0.
+  max_bookings_per_day: number | null; // Per-assignee daily cap. Null = unlimited.
+  min_notice_hours: number; // Minimum advance booking time. Default: 1.
+  max_advance_days: number; // How far ahead can someone book. Default: 60.
+  slot_interval_minutes: number; // Slot start alignment (15, 30, 60). Default: 30. Controls "start times offered every N minutes."
 
   // Group booking (only for booking_type = 'group')
-  group_max_invitees: number | null;         // Max attendees per slot. Null = unlimited.
-  group_show_remaining: boolean;             // Show "3 spots left" on booking page. Default: true.
+  group_max_invitees: number | null; // Max attendees per slot. Null = unlimited.
+  group_show_remaining: boolean; // Show "3 spots left" on booking page. Default: true.
 
   // Invitee experience
-  require_approval: boolean;                 // If true, bookings land as "Pending" — host must confirm. Default: false.
+  require_approval: boolean; // If true, bookings land as "Pending" — host must confirm. Default: false.
   cancellation_policy: 'anytime' | 'before_buffer' | 'custom_hours';
-  cancellation_cutoff_hours: number | null;  // For 'custom_hours': minimum hours before event to cancel. Default: 24.
+  cancellation_cutoff_hours: number | null; // For 'custom_hours': minimum hours before event to cancel. Default: 24.
   rescheduling_policy: 'anytime' | 'before_buffer' | 'custom_hours';
-  rescheduling_cutoff_hours: number | null;  // Same pattern as cancellation.
-  collect_payment: boolean;                  // If true, Stripe payment required at booking. Uses App Stripe infrastructure.
-  payment_amount_cents: number | null;       // Fixed amount. Null = from table field.
-  payment_amount_field_id: string | null;    // Dynamic amount from record field.
+  rescheduling_cutoff_hours: number | null; // Same pattern as cancellation.
+  collect_payment: boolean; // If true, Stripe payment required at booking. Uses App Stripe infrastructure.
+  payment_amount_cents: number | null; // Fixed amount. Null = from table field.
+  payment_amount_field_id: string | null; // Dynamic amount from record field.
 
   // Confirmation & reminders
-  confirmation_email: boolean;               // Send confirmation on booking. Default: true.
-  reminder_minutes: number[];                // Reminder offsets before event. Default: [1440, 60] (24h + 1h).
-  follow_up_enabled: boolean;                // Send follow-up after event. Default: false.
-  follow_up_delay_minutes: number;           // How long after event ends. Default: 60.
+  confirmation_email: boolean; // Send confirmation on booking. Default: true.
+  reminder_minutes: number[]; // Reminder offsets before event. Default: [1440, 60] (24h + 1h).
+  follow_up_enabled: boolean; // Send follow-up after event. Default: false.
+  follow_up_delay_minutes: number; // How long after event ends. Default: 60.
 
   // Video conferencing
   video_provider: 'zoom' | 'google_meet' | 'microsoft_teams' | null;
-  video_auto_generate: boolean;              // Auto-create meeting link on booking. Default: true when provider set.
-  video_link_field_id: string | null;        // URL field where generated link is stored on the record.
+  video_auto_generate: boolean; // Auto-create meeting link on booking. Default: true when provider set.
+  video_link_field_id: string | null; // URL field where generated link is stored on the record.
 
   // Branding
-  booking_page_title: string | null;         // Custom title for public booking page. Default: table name.
-  booking_page_description: string | null;   // Description shown to invitees.
-  booking_page_slug: string | null;          // URL slug: workspace.everystack.app/book/{slug}
+  booking_page_title: string | null; // Custom title for public booking page. Default: table name.
+  booking_page_description: string | null; // Description shown to invitees.
+  booking_page_slug: string | null; // URL slug: workspace.everystack.app/book/{slug}
 
   // No-show tracking
-  noshow_enabled: boolean;                   // Enable no-show detection. Default: false.
-  noshow_status_value: string | null;        // Status field value that marks a no-show (e.g., "No Show").
-  noshow_auto_mark_minutes: number | null;   // Auto-mark as no-show if not checked in N minutes after start. Null = manual only.
+  noshow_enabled: boolean; // Enable no-show detection. Default: false.
+  noshow_status_value: string | null; // Status field value that marks a no-show (e.g., "No Show").
+  noshow_auto_mark_minutes: number | null; // Auto-mark as no-show if not checked in N minutes after start. Null = manual only.
 }
 ```
 
@@ -267,6 +274,7 @@ interface BookingConfig {
 **Group:** One host, multiple invitees book the same slot. Think: workshop, webinar, group fitness class. The host defines a time slot; invitees fill it. `group_max_invitees` caps attendance. The attendee field on the record is a multi-user/multi-link field — each booking adds to it. The Scheduler block shows remaining spots.
 
 **Round Robin:** A pool of hosts (`assignee_pool`). Invitees see the combined availability of the pool. On booking, the system assigns a host based on `round_robin_mode`:
+
 - `availability`: Maximize bookable slots — show any time at least one pool member is free. Assign to whichever pool member is available at the selected time (priority tiebreaker: fewest bookings today → fewest bookings this week → alphabetical).
 - `equal_distribution`: Spread bookings evenly. Track per-member booking counts. If a member is more than 2 bookings ahead, temporarily hide their slots until others catch up. Show fewer total slots in exchange for fairness.
 
@@ -293,7 +301,7 @@ Available Slots = Bookable Hours Schedule
 
 ### Bookable Hours Schedule
 
-Each user has a weekly availability template — the hours they're open for bookings. This is the *starting* availability before any subtractions.
+Each user has a weekly availability template — the hours they're open for bookings. This is the _starting_ availability before any subtractions.
 
 Stored on a new `booking_availability` table (user-level, one row per user):
 
@@ -301,18 +309,19 @@ Stored on a new `booking_availability` table (user-level, one row per user):
 interface BookableHoursSchedule {
   user_id: string;
   tenant_id: string;
-  timezone: string;                        // User's booking timezone. IANA format.
+  timezone: string; // User's booking timezone. IANA format.
   weekly_schedule: {
-    monday:    { start: string; end: string }[] | null;   // e.g., [{ start: "09:00", end: "12:00" }, { start: "13:00", end: "17:00" }]
-    tuesday:   { start: string; end: string }[] | null;
+    monday: { start: string; end: string }[] | null; // e.g., [{ start: "09:00", end: "12:00" }, { start: "13:00", end: "17:00" }]
+    tuesday: { start: string; end: string }[] | null;
     wednesday: { start: string; end: string }[] | null;
-    thursday:  { start: string; end: string }[] | null;
-    friday:    { start: string; end: string }[] | null;
-    saturday:  { start: string; end: string }[] | null;   // Null = not available
-    sunday:    { start: string; end: string }[] | null;
+    thursday: { start: string; end: string }[] | null;
+    friday: { start: string; end: string }[] | null;
+    saturday: { start: string; end: string }[] | null; // Null = not available
+    sunday: { start: string; end: string }[] | null;
   };
-  date_overrides: {                         // Specific date exceptions
-    [date: string]: { start: string; end: string }[] | null;  // ISO date key. Null = unavailable that day. Array = custom hours.
+  date_overrides: {
+    // Specific date exceptions
+    [date: string]: { start: string; end: string }[] | null; // ISO date key. Null = unavailable that day. Array = custom hours.
   };
 }
 ```
@@ -327,17 +336,17 @@ The availability engine consumes the existing Calendar Feed API (`GET /api/v1/ca
 
 Busy block sources, in order of existing implementation status:
 
-| Source | Blocks Availability | Available Now | How |
-|--------|---------------------|---------------|-----|
-| **Calendar-type table records** | ✅ Always (where user is attendee/assignee) | ✅ MVP — Core UX | Calendar feed query |
-| **Projects-type tasks** | ✅ Always (where user is assignee, has date fields) | ✅ MVP — Core UX | Calendar feed query |
-| **Other bookings in same table** | ✅ Always | ✅ Post-MVP — Portals & Apps (Fast-Follow) | Calendar feed query |
-| **Personal events** (`user_events`) | ✅ When `show_as = 'busy'` (default) | ✅ MVP — Core UX | Calendar feed query |
-| **Holidays** (`calendar_exceptions`) | ✅ Always | ✅ MVP — Core UX | Calendar exceptions query |
-| **Workspace non-working days** (`workspace_calendars`) | ✅ Always | ✅ MVP — Core UX | Working days check |
-| **External calendar events** (Google/Outlook) | ✅ When `show_as = 'busy'` (default) | ⏳ Post-MVP — Comms & Polish | Calendar feed, external source |
+| Source                                                 | Blocks Availability                                 | Available Now                              | How                            |
+| ------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------ | ------------------------------ |
+| **Calendar-type table records**                        | ✅ Always (where user is attendee/assignee)         | ✅ MVP — Core UX                           | Calendar feed query            |
+| **Projects-type tasks**                                | ✅ Always (where user is assignee, has date fields) | ✅ MVP — Core UX                           | Calendar feed query            |
+| **Other bookings in same table**                       | ✅ Always                                           | ✅ Post-MVP — Portals & Apps (Fast-Follow) | Calendar feed query            |
+| **Personal events** (`user_events`)                    | ✅ When `show_as = 'busy'` (default)                | ✅ MVP — Core UX                           | Calendar feed query            |
+| **Holidays** (`calendar_exceptions`)                   | ✅ Always                                           | ✅ MVP — Core UX                           | Calendar exceptions query      |
+| **Workspace non-working days** (`workspace_calendars`) | ✅ Always                                           | ✅ MVP — Core UX                           | Working days check             |
+| **External calendar events** (Google/Outlook)          | ✅ When `show_as = 'busy'` (default)                | ⏳ Post-MVP — Comms & Polish               | Calendar feed, external source |
 
-**Post-MVP — Portals & Apps (Fast-Follow) ships with all internal sources.** External calendar sync plugs in as an additional source when Post-MVP — Comms & Polish lands — no architectural change, just a new `source_type` in the feed. The system is accurate against everything EveryStack knows; the Post-MVP — Comms & Polish addition makes it accurate against everything the user's *entire calendar* knows.
+**Post-MVP — Portals & Apps (Fast-Follow) ships with all internal sources.** External calendar sync plugs in as an additional source when Post-MVP — Comms & Polish lands — no architectural change, just a new `source_type` in the feed. The system is accurate against everything EveryStack knows; the Post-MVP — Comms & Polish addition makes it accurate against everything the user's _entire calendar_ knows.
 
 **Messaging to users before Post-MVP — Comms & Polish:** Booking settings page shows: "Availability is computed from your EveryStack calendar, tasks, and blocked time. Connect Google or Outlook Calendar in Settings → Integrations for complete accuracy." Non-blocking — the system works without it.
 
@@ -367,12 +376,13 @@ Given a booking request for a specific date range and user (or user pool):
 Parameters: `table_id`, `start_date`, `end_date`, `timezone`, `duration_minutes` (optional override from invitee duration picker).
 
 Returns:
+
 ```typescript
 interface AvailabilityResponse {
   slots: {
-    start: string;           // ISO datetime
-    end: string;             // ISO datetime
-    available_hosts: string[];  // User IDs (for round robin/collective display)
+    start: string; // ISO datetime
+    end: string; // ISO datetime
+    available_hosts: string[]; // User IDs (for round robin/collective display)
   }[];
   timezone: string;
   booking_config: {
@@ -380,7 +390,7 @@ interface AvailabilityResponse {
     duration_options: number[] | null;
     buffer_before_minutes: number;
     buffer_after_minutes: number;
-    group_remaining: number | null;    // For group bookings: spots left per slot
+    group_remaining: number | null; // For group bookings: spots left per slot
   };
 }
 ```
@@ -399,20 +409,20 @@ The Scheduler block is an App block type (post-MVP App Designer) that renders an
 
 ```typescript
 interface SchedulerBlockConfig {
-  source_table_id: string;                 // Calendar-type table with booking_enabled
-  booking_config_override: Partial<BookingConfig> | null;  // Optional per-block overrides (e.g., different duration)
+  source_table_id: string; // Calendar-type table with booking_enabled
+  booking_config_override: Partial<BookingConfig> | null; // Optional per-block overrides (e.g., different duration)
   display: {
-    style: 'calendar' | 'list';           // Calendar grid or time-slot list. Default: 'calendar'.
-    show_timezone_picker: boolean;         // Let invitee change timezone. Default: true.
-    show_host_info: boolean;               // Show host name + photo. Default: true (one_on_one), false (round_robin).
-    show_remaining_spots: boolean;         // For group bookings. Default: true.
-    accent_color: string | null;           // Override App theme for this block. Null = inherit.
+    style: 'calendar' | 'list'; // Calendar grid or time-slot list. Default: 'calendar'.
+    show_timezone_picker: boolean; // Let invitee change timezone. Default: true.
+    show_host_info: boolean; // Show host name + photo. Default: true (one_on_one), false (round_robin).
+    show_remaining_spots: boolean; // For group bookings. Default: true.
+    accent_color: string | null; // Override App theme for this block. Null = inherit.
   };
-  intake_fields: IntakeField[];            // Additional fields to collect from invitee at booking.
+  intake_fields: IntakeField[]; // Additional fields to collect from invitee at booking.
   success_action: 'message' | 'redirect' | 'page';
-  success_message: string | null;          // "You're booked! Check your email for confirmation."
-  success_redirect_url: string | null;     // External URL redirect.
-  success_page_id: string | null;          // App page ID to navigate to.
+  success_message: string | null; // "You're booked! Check your email for confirmation."
+  success_redirect_url: string | null; // External URL redirect.
+  success_page_id: string | null; // App page ID to navigate to.
 }
 
 interface IntakeField {
@@ -420,14 +430,15 @@ interface IntakeField {
   label: string;
   type: 'text' | 'email' | 'phone' | 'select' | 'textarea';
   required: boolean;
-  options: string[] | null;                // For select type.
-  maps_to_field_id: string | null;         // Table field to write value into. Null = stored in booking metadata.
+  options: string[] | null; // For select type.
+  maps_to_field_id: string | null; // Table field to write value into. Null = stored in booking metadata.
 }
 ```
 
 ### Invitee Booking Flow (3 Steps)
 
 **Step 1 — Select Time:**
+
 - Calendar or list view showing available slots (from Availability API).
 - Date navigation (previous/next week, month picker).
 - Timezone display with optional picker.
@@ -436,6 +447,7 @@ interface IntakeField {
 - Click a slot → selected state (highlight), proceed button appears.
 
 **Step 2 — Your Details:**
+
 - Name (required — always).
 - Email (required — always. Used for confirmation, reminders, rescheduling link).
 - Phone (optional, configurable).
@@ -445,6 +457,7 @@ interface IntakeField {
 - Book button.
 
 **Step 3 — Confirmation:**
+
 - Success message, calendar event download (.ics file link), "Add to Google Calendar" / "Add to Outlook" buttons.
 - Rescheduling and cancellation links (if policies allow).
 - If `require_approval: true`: message changes to "Your booking request has been submitted. You'll receive confirmation once the host approves."
@@ -452,11 +465,13 @@ interface IntakeField {
 ### Authenticated vs. Public Access
 
 **In authenticated portal (existing client):**
+
 - Step 2 pre-fills name and email from portal client profile.
 - The created record is automatically linked to the client's scoped records via the portal's `record_scope` config.
 - Client sees the booking in their portal's data blocks alongside their other records.
 
 **On public booking page (new visitor):**
+
 - No authentication required. Name + email collected in Step 2.
 - Turnstile spam protection (same as embeddable forms).
 - Record created with the visitor's info. If an email match exists in a workspace contacts/CRM table, the record is auto-linked. If no match, a new contact record can be auto-created (configurable in booking settings: "Auto-create contact on booking from new visitor" toggle).
@@ -522,12 +537,14 @@ Public booking pages are lightweight — server-rendered HTML with the Scheduler
 Same embed protocol as Commerce Embed and embeddable forms:
 
 **Script tag:**
+
 ```html
 <script src="https://book.everystack.app/embed/{table_id}.js" async></script>
 <div id="everystack-booking-{table_id}"></div>
 ```
 
 **Iframe:**
+
 ```html
 <iframe
   src="https://book.everystack.app/b/{table_id}"
@@ -536,15 +553,16 @@ Same embed protocol as Commerce Embed and embeddable forms:
 ```
 
 **React component:**
+
 ```jsx
 import { EveryStackBooking } from '@everystack/booking-widget';
 
 <EveryStackBooking
   tableId="tbl_xyz789"
-  userSlug="steven"                  // Optional: pre-select host
-  duration={30}                      // Optional: pre-select duration
+  userSlug="steven" // Optional: pre-select host
+  duration={30} // Optional: pre-select duration
   onBooked={(result) => console.log('Booking confirmed:', result)}
-/>
+/>;
 ```
 
 ---
@@ -601,15 +619,15 @@ When an invitee completes the booking flow, the system executes an atomic sequen
 
 Every bookable calendar table gets a system-managed `booking_status` field (hidden by default, visible in view settings):
 
-| Status | Meaning | Set By |
-|--------|---------|--------|
-| `confirmed` | Booking is active and confirmed. | System on creation (or host approval). |
-| `pending` | Awaiting host approval (`require_approval = true`). | System on creation. |
-| `cancelled_by_invitee` | Invitee cancelled via self-service link. | System on cancellation. |
-| `cancelled_by_host` | Host cancelled from record view. | System on host cancellation. |
-| `rescheduled` | Original booking was rescheduled (new booking created). | System on reschedule. |
-| `completed` | Event time has passed and no no-show flag. | System (BullMQ job after event_end + grace period). |
-| `no_show` | Invitee did not attend. | System (auto after noshow_auto_mark_minutes) or host manual. |
+| Status                 | Meaning                                                 | Set By                                                       |
+| ---------------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
+| `confirmed`            | Booking is active and confirmed.                        | System on creation (or host approval).                       |
+| `pending`              | Awaiting host approval (`require_approval = true`).     | System on creation.                                          |
+| `cancelled_by_invitee` | Invitee cancelled via self-service link.                | System on cancellation.                                      |
+| `cancelled_by_host`    | Host cancelled from record view.                        | System on host cancellation.                                 |
+| `rescheduled`          | Original booking was rescheduled (new booking created). | System on reschedule.                                        |
+| `completed`            | Event time has passed and no no-show flag.              | System (BullMQ job after event_end + grace period).          |
+| `no_show`              | Invitee did not attend.                                 | System (auto after noshow_auto_mark_minutes) or host manual. |
 
 Status transitions are enforced — only valid transitions allowed (e.g., can't go from `cancelled` to `confirmed`).
 
@@ -666,12 +684,12 @@ Routing forms let the workspace qualify and direct invitees before they see the 
 
 ```typescript
 interface BookingRoutingRule {
-  conditions: FormCondition[];             // AND-combined conditions on form field values.
+  conditions: FormCondition[]; // AND-combined conditions on form field values.
   destination_type: 'booking_table' | 'booking_user' | 'external_url' | 'message';
-  destination_table_id: string | null;     // Route to a specific bookable table.
-  destination_user_slug: string | null;    // Route to a specific user's booking page.
-  destination_url: string | null;          // External redirect (e.g., disqualified leads → marketing page).
-  destination_message: string | null;      // "Thanks for your interest, we'll be in touch." (no booking offered).
+  destination_table_id: string | null; // Route to a specific bookable table.
+  destination_user_slug: string | null; // Route to a specific user's booking page.
+  destination_url: string | null; // External redirect (e.g., disqualified leads → marketing page).
+  destination_message: string | null; // "Thanks for your interest, we'll be in touch." (no booking offered).
 }
 ```
 
@@ -716,15 +734,15 @@ Execution context: `record_id`, `invitee_email`, `invitee_name`, `host_user_id`,
 
 **Pre-built recipe: No-Show Follow-Up**
 
-| Step | Action |
-|------|--------|
-| Trigger | Booking No-Show |
-| Wait | 30 minutes |
-| Send Email | To invitee: "Sorry we missed you. Would you like to reschedule?" with reschedule link. |
-| Condition | If invitee rescheduled within 48 hours → end. |
-| Wait | 48 hours |
-| Send Email | To invitee: "Your missed appointment — here's a link to rebook when you're ready." |
-| Update Record | Tag invitee contact record with "No Show History." |
+| Step          | Action                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------- |
+| Trigger       | Booking No-Show                                                                        |
+| Wait          | 30 minutes                                                                             |
+| Send Email    | To invitee: "Sorry we missed you. Would you like to reschedule?" with reschedule link. |
+| Condition     | If invitee rescheduled within 48 hours → end.                                          |
+| Wait          | 48 hours                                                                               |
+| Send Email    | To invitee: "Your missed appointment — here's a link to rebook when you're ready."     |
+| Update Record | Tag invitee contact record with "No Show History."                                     |
 
 ---
 
@@ -732,11 +750,11 @@ Execution context: `record_id`, `invitee_email`, `invitee_name`, `host_user_id`,
 
 ### Supported Providers
 
-| Provider | Auth Method | Auto-Link Generation | Phase |
-|----------|-------------|---------------------|-------|
-| **Zoom** | OAuth 2.0 (user-level) | Create meeting via Zoom API → return join URL + host URL | Post-MVP — Portals & Apps (Fast-Follow) |
-| **Google Meet** | OAuth 2.0 (same as calendar sync) | Create event in Google Calendar with conferenceData → return meet link | Post-MVP — Comms & Polish (ships with calendar sync — same OAuth) |
-| **Microsoft Teams** | OAuth 2.0 (same as calendar sync) | Create online meeting via Graph API → return join URL | Post-MVP — Comms & Polish (same OAuth) |
+| Provider            | Auth Method                       | Auto-Link Generation                                                   | Phase                                                             |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Zoom**            | OAuth 2.0 (user-level)            | Create meeting via Zoom API → return join URL + host URL               | Post-MVP — Portals & Apps (Fast-Follow)                           |
+| **Google Meet**     | OAuth 2.0 (same as calendar sync) | Create event in Google Calendar with conferenceData → return meet link | Post-MVP — Comms & Polish (ships with calendar sync — same OAuth) |
+| **Microsoft Teams** | OAuth 2.0 (same as calendar sync) | Create online meeting via Graph API → return join URL                  | Post-MVP — Comms & Polish (same OAuth)                            |
 
 ### How It Works
 
@@ -780,17 +798,17 @@ Meeting polls solve the "find a time that works for everyone" problem for intern
 interface MeetingPoll {
   id: string;
   tenant_id: string;
-  created_by: string;                      // User ID
+  created_by: string; // User ID
   title: string;
   description: string | null;
   proposed_times: { start: string; end: string }[];
-  participant_emails: string[];             // External participants
-  participant_user_ids: string[];           // Internal participants
+  participant_emails: string[]; // External participants
+  participant_user_ids: string[]; // Internal participants
   allow_suggestions: boolean;
-  deadline: string | null;                  // ISO datetime
+  deadline: string | null; // ISO datetime
   status: 'open' | 'booked' | 'expired';
-  selected_time_index: number | null;       // Which proposed time was chosen
-  result_record_id: string | null;          // Created calendar record
+  selected_time_index: number | null; // Which proposed time was chosen
+  result_record_id: string | null; // Created calendar record
   created_at: string;
 }
 
@@ -799,8 +817,8 @@ interface MeetingPollResponse {
   id: string;
   poll_id: string;
   respondent_email: string;
-  respondent_user_id: string | null;        // If internal user
-  votes: ('available' | 'if_needed' | 'unavailable')[];  // One per proposed_time
+  respondent_user_id: string | null; // If internal user
+  votes: ('available' | 'if_needed' | 'unavailable')[]; // One per proposed_time
   suggested_times: { start: string; end: string }[] | null;
   responded_at: string;
 }
@@ -825,12 +843,12 @@ For sales outreach, recruitment, or any situation where the host wants to send a
 
 ### Link Tracking
 
-| Status | Meaning |
-|--------|---------|
-| `created` | Link generated, not yet accessed. |
-| `viewed` | Invitee opened the link (page loaded). |
-| `booked` | Invitee completed a booking. |
-| `expired` | Expiry time passed without booking. |
+| Status    | Meaning                                |
+| --------- | -------------------------------------- |
+| `created` | Link generated, not yet accessed.      |
+| `viewed`  | Invitee opened the link (page loaded). |
+| `booked`  | Invitee completed a booking.           |
+| `expired` | Expiry time passed without booking.    |
 
 Tracking visible to the host in a "Booking Links" management view (table-level, accessible from booking settings).
 
@@ -843,7 +861,7 @@ interface BookingLink {
   tenant_id: string;
   table_id: string;
   created_by: string;
-  token: string;                            // Unique, URL-safe, indexed
+  token: string; // Unique, URL-safe, indexed
   invitee_name: string | null;
   invitee_email: string | null;
   custom_message: string | null;
@@ -880,8 +898,8 @@ interface BookingTemplate {
   tenant_id: string;
   name: string;
   description: string | null;
-  config: Partial<BookingConfig>;           // Subset of BookingConfig fields
-  locked_fields: string[];                  // Which config keys are locked (non-overridable by Manager)
+  config: Partial<BookingConfig>; // Subset of BookingConfig fields
+  locked_fields: string[]; // Which config keys are locked (non-overridable by Manager)
   assigned_table_ids: string[];
   created_by: string;
   created_at: string;
@@ -903,16 +921,16 @@ Scheduling analytics are powered by the existing chart blocks system (`chart-blo
 
 When booking is enabled on a table, EveryStack auto-generates a "Booking Analytics" Table View tab (summary view type) with these chart blocks:
 
-| Chart | Type | Data |
-|-------|------|------|
-| **Bookings This Week** | `number_card` | Count of records with booking_status in (confirmed, completed) and start_time in current week. Delta vs. previous week. |
-| **Bookings by Day of Week** | `bar` | Aggregate booking count grouped by day of week over trailing 30 days. Identifies busiest days. |
-| **Bookings by Time of Day** | `bar` | Aggregate booking count grouped by hour over trailing 30 days. Identifies peak hours. |
-| **Completion Rate** | `donut` | Breakdown: completed vs. cancelled_by_invitee vs. cancelled_by_host vs. no_show over trailing 30 days. |
-| **Average Lead Time** | `number_card` | Average hours between booking creation and event start. Trend vs. previous period. |
-| **Top Hosts** (round-robin only) | `bar` | Booking count per team member over trailing 30 days. Identifies distribution balance. |
-| **Booking Source** | `donut` | Breakdown by booking_source: booking_page, portal, embed, api. |
-| **No-Show Rate** | `number_card` | Percentage of bookings marked no_show. Delta vs. previous period. Red accent if above 15%. |
+| Chart                            | Type          | Data                                                                                                                    |
+| -------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Bookings This Week**           | `number_card` | Count of records with booking_status in (confirmed, completed) and start_time in current week. Delta vs. previous week. |
+| **Bookings by Day of Week**      | `bar`         | Aggregate booking count grouped by day of week over trailing 30 days. Identifies busiest days.                          |
+| **Bookings by Time of Day**      | `bar`         | Aggregate booking count grouped by hour over trailing 30 days. Identifies peak hours.                                   |
+| **Completion Rate**              | `donut`       | Breakdown: completed vs. cancelled_by_invitee vs. cancelled_by_host vs. no_show over trailing 30 days.                  |
+| **Average Lead Time**            | `number_card` | Average hours between booking creation and event start. Trend vs. previous period.                                      |
+| **Top Hosts** (round-robin only) | `bar`         | Booking count per team member over trailing 30 days. Identifies distribution balance.                                   |
+| **Booking Source**               | `donut`       | Breakdown by booking_source: booking_page, portal, embed, api.                                                          |
+| **No-Show Rate**                 | `number_card` | Percentage of bookings marked no_show. Delta vs. previous period. Red accent if above 15%.                              |
 
 All charts use the Table Aggregate data binding mode (Mode A from `chart-blocks.md`). Record-scoped in portals — clients see analytics for their own bookings only.
 
@@ -934,12 +952,14 @@ All charts use the Table Aggregate data binding mode (Mode A from `chart-blocks.
 ### Wizard Steps (4 steps, ~3 minutes)
 
 **Step 1 — What are you scheduling?**
+
 - Meeting name (e.g., "30-min Consultation", "Strategy Call", "Group Workshop")
 - Duration picker: quick-select buttons [15, 30, 45, 60] with custom option
 - Type picker: One-on-one (default, radio selected) / Group / Round Robin / With Multiple Hosts
 - For round robin / multiple hosts: user picker to add team members
 
 **Step 2 — When are you available?**
+
 - Visual weekly grid (Mon–Sun, scrollable time axis)
 - Pre-populated with workspace default working hours (Mon–Fri 9–5)
 - Drag to paint available/unavailable blocks (intuitive, similar to Google Calendar's working hours UI)
@@ -947,6 +967,7 @@ All charts use the Table Aggregate data binding mode (Mode A from `chart-blocks.
 - "Different hours for different days" expand toggle (most users skip this)
 
 **Step 3 — Details & Branding**
+
 - Booking page title (pre-filled from step 1)
 - Description (optional, placeholder: "Book a time to chat with me about...")
 - Location: Auto-detect connected Zoom → default to Zoom. Otherwise: text input for custom location, or "No location" for phone calls
@@ -955,6 +976,7 @@ All charts use the Table Aggregate data binding mode (Mode A from `chart-blocks.
 - Preview pane on right side (live rendering of booking page)
 
 **Step 4 — Your Link**
+
 - Generated URL shown prominently with copy button
 - QR code rendered inline (downloadable)
 - "Share via" buttons: Copy Link, Email, Embed on Website (shows embed code)
@@ -963,6 +985,7 @@ All charts use the Table Aggregate data binding mode (Mode A from `chart-blocks.
 ### What the Wizard Creates
 
 Behind the scenes, the wizard:
+
 1. Creates a calendar-type table (if not starting from existing table) with appropriate fields.
 2. Sets `calendar_table_config` with booking config populated from wizard inputs.
 3. Creates `booking_availability` record for the user with the weekly schedule from step 2.
@@ -981,34 +1004,34 @@ The user can customize everything after creation. The wizard just gets them to "
 
 Extending the existing trigger system (currently 16 triggers):
 
-| # | Trigger | Fires When | Context |
-|---|---------|------------|---------|
-| 17 | **Booking Created** | New booking record created (any source) | record_id, table_id, invitee_email, invitee_name, host_user_id, booking_source, payment_status, booking_type |
-| 18 | **Booking Rescheduled** | Invitee or host reschedules | record_id, original_record_id, old_start, new_start, rescheduled_by (invitee \| host) |
-| 19 | **Booking Cancelled** | Invitee or host cancels | record_id, cancelled_by (invitee \| host), cancellation_reason, refund_status |
-| 20 | **Booking No-Show** | Record marked as no-show (manual or auto) | record_id, invitee_email, host_user_id, detection_method (manual \| auto) |
-| 21 | **Booking Follow-Up Due** | Follow-up delay elapsed after event end | record_id, invitee_email, host_user_id, event_end |
-| 22 | **Booking Approval Requested** | New booking with require_approval = true | record_id, invitee_email, host_user_id |
+| #   | Trigger                        | Fires When                                | Context                                                                                                      |
+| --- | ------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 17  | **Booking Created**            | New booking record created (any source)   | record_id, table_id, invitee_email, invitee_name, host_user_id, booking_source, payment_status, booking_type |
+| 18  | **Booking Rescheduled**        | Invitee or host reschedules               | record_id, original_record_id, old_start, new_start, rescheduled_by (invitee \| host)                        |
+| 19  | **Booking Cancelled**          | Invitee or host cancels                   | record_id, cancelled_by (invitee \| host), cancellation_reason, refund_status                                |
+| 20  | **Booking No-Show**            | Record marked as no-show (manual or auto) | record_id, invitee_email, host_user_id, detection_method (manual \| auto)                                    |
+| 21  | **Booking Follow-Up Due**      | Follow-up delay elapsed after event end   | record_id, invitee_email, host_user_id, event_end                                                            |
+| 22  | **Booking Approval Requested** | New booking with require_approval = true  | record_id, invitee_email, host_user_id                                                                       |
 
 **Note:** Trigger #10 (Client Portal Action — appointment booked) remains for portal-context bookings. Triggers 17–22 fire for ALL booking sources and provide richer context. Automations can use either.
 
 ### New Actions
 
-| # | Action | What It Does |
-|---|--------|-------------|
-| 40 | **Send Booking Link** | Generates a single-use booking link and makes it available as `{{step.booking_link_url}}` for email/SMS templates. |
-| 41 | **Reschedule Booking** | Updates a booking record's time to a new specified datetime. Sends reschedule notification to invitee. |
-| 42 | **Cancel Booking** | Sets booking_status to cancelled_by_host. Sends cancellation email with configured reason. Processes refund if applicable. |
+| #   | Action                 | What It Does                                                                                                               |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 40  | **Send Booking Link**  | Generates a single-use booking link and makes it available as `{{step.booking_link_url}}` for email/SMS templates.         |
+| 41  | **Reschedule Booking** | Updates a booking record's time to a new specified datetime. Sends reschedule notification to invitee.                     |
+| 42  | **Cancel Booking**     | Sets booking_status to cancelled_by_host. Sends cancellation email with configured reason. Processes refund if applicable. |
 
 ### Pre-Built Booking Recipes
 
-| Recipe | Trigger | Steps | Outcome |
-|--------|---------|-------|---------|
-| **New Client Onboarding** | Booking Created (source = booking_page, new contact) | Create contact record → Link booking to contact → Send welcome email → Create onboarding project → Assign tasks → Provision portal access | Full client setup from a single booking |
-| **No-Show Recovery** | Booking No-Show | Wait 30 min → Send "Sorry we missed you" email with reschedule link → Wait 48h → Send follow-up → Tag contact | Automated no-show recovery |
-| **Post-Meeting Follow-Up** | Booking Follow-Up Due | Send thank-you email → Create follow-up task for host → If payment: send invoice | Post-meeting workflow |
-| **Booking + Payment → Invoice** | Booking Created (payment = succeeded) | Create invoice record → Link to contact → Push to accounting (#31) → Send receipt email | Payment reconciliation |
-| **Approval Queue** | Booking Approval Requested | Notify host (in-app + email) → Wait for Event (booking_status changes) → If approved: send confirmation to invitee. If rejected: send "unfortunately" email with alternative link | Managed approval flow |
+| Recipe                          | Trigger                                              | Steps                                                                                                                                                                             | Outcome                                 |
+| ------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **New Client Onboarding**       | Booking Created (source = booking_page, new contact) | Create contact record → Link booking to contact → Send welcome email → Create onboarding project → Assign tasks → Provision portal access                                         | Full client setup from a single booking |
+| **No-Show Recovery**            | Booking No-Show                                      | Wait 30 min → Send "Sorry we missed you" email with reschedule link → Wait 48h → Send follow-up → Tag contact                                                                     | Automated no-show recovery              |
+| **Post-Meeting Follow-Up**      | Booking Follow-Up Due                                | Send thank-you email → Create follow-up task for host → If payment: send invoice                                                                                                  | Post-meeting workflow                   |
+| **Booking + Payment → Invoice** | Booking Created (payment = succeeded)                | Create invoice record → Link to contact → Push to accounting (#31) → Send receipt email                                                                                           | Payment reconciliation                  |
+| **Approval Queue**              | Booking Approval Requested                           | Notify host (in-app + email) → Wait for Event (booking_status changes) → If approved: send confirmation to invitee. If rejected: send "unfortunately" email with alternative link | Managed approval flow                   |
 
 ---
 
@@ -1024,11 +1047,11 @@ The availability engine's busy block subtraction step already handles any source
 
 ### What Ships When
 
-| Phase | Calendar Sync Capability | Booking System Impact |
-|-------|--------------------------|----------------------|
-| 4b | Internal sources only (EveryStack events, tasks, personal events, holidays) | Availability accurate against EveryStack data. Users manually block external commitments via personal events. |
-| 7 | One-way pull from Google Calendar + Outlook Calendar (read-only, busy/free) | Availability automatically accounts for external commitments. Zero user action needed. |
-| 7+ | Bidirectional push (EveryStack bookings appear on external calendars) | Bookings auto-appear on host's Google/Outlook calendar. Invitees get calendar invites. |
+| Phase | Calendar Sync Capability                                                    | Booking System Impact                                                                                         |
+| ----- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 4b    | Internal sources only (EveryStack events, tasks, personal events, holidays) | Availability accurate against EveryStack data. Users manually block external commitments via personal events. |
+| 7     | One-way pull from Google Calendar + Outlook Calendar (read-only, busy/free) | Availability automatically accounts for external commitments. Zero user action needed.                        |
+| 7+    | Bidirectional push (EveryStack bookings appear on external calendars)       | Bookings auto-appear on host's Google/Outlook calendar. Invitees get calendar invites.                        |
 
 ### OAuth Scope Requirements (for Post-MVP — Comms & Polish implementation)
 
@@ -1042,94 +1065,93 @@ The availability engine's busy block subtraction step already handles any source
 
 ### New Tables
 
-| Table | Key Columns | Purpose |
-|-------|-------------|---------|
-| `booking_availability` | id, user_id, tenant_id, timezone, weekly_schedule (JSONB), date_overrides (JSONB), created_at, updated_at | Per-user bookable hours schedule |
-| `meeting_polls` | id, tenant_id, created_by, title, proposed_times (JSONB), participant_emails, participant_user_ids, status, selected_time_index, result_record_id, deadline, created_at | Meeting poll definitions |
-| `meeting_poll_responses` | id, poll_id, respondent_email, respondent_user_id, votes (JSONB), suggested_times (JSONB), responded_at | Poll votes |
-| `booking_links` | id, tenant_id, table_id, created_by, token (indexed, unique), invitee_name, invitee_email, status, expires_at, booked_record_id, created_at | Single-use trackable booking links |
-| `booking_templates` | id, tenant_id, name, config (JSONB), locked_fields (JSONB), assigned_table_ids (JSONB), created_by, created_at, updated_at | Admin-managed booking config templates (Post-MVP — Verticals & Advanced) |
+| Table                    | Key Columns                                                                                                                                                             | Purpose                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `booking_availability`   | id, user_id, tenant_id, timezone, weekly_schedule (JSONB), date_overrides (JSONB), created_at, updated_at                                                               | Per-user bookable hours schedule                                         |
+| `meeting_polls`          | id, tenant_id, created_by, title, proposed_times (JSONB), participant_emails, participant_user_ids, status, selected_time_index, result_record_id, deadline, created_at | Meeting poll definitions                                                 |
+| `meeting_poll_responses` | id, poll_id, respondent_email, respondent_user_id, votes (JSONB), suggested_times (JSONB), responded_at                                                                 | Poll votes                                                               |
+| `booking_links`          | id, tenant_id, table_id, created_by, token (indexed, unique), invitee_name, invitee_email, status, expires_at, booked_record_id, created_at                             | Single-use trackable booking links                                       |
+| `booking_templates`      | id, tenant_id, name, config (JSONB), locked_fields (JSONB), assigned_table_ids (JSONB), created_by, created_at, updated_at                                              | Admin-managed booking config templates (Post-MVP — Verticals & Advanced) |
 
 ### Modified Tables
 
-| Table | Changes |
-|-------|---------|
-| `calendar_table_config` | Add all `BookingConfig` columns (booking_enabled through noshow_auto_mark_minutes). Add `booking_hours_override` (JSONB, nullable). |
-| `records.canonical_data` | Booking records store `booking_status` and `booking_metadata` in standard JSONB field values — no schema change needed. |
+| Table                    | Changes                                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `calendar_table_config`  | Add all `BookingConfig` columns (booking_enabled through noshow_auto_mark_minutes). Add `booking_hours_override` (JSONB, nullable). |
+| `records.canonical_data` | Booking records store `booking_status` and `booking_metadata` in standard JSONB field values — no schema change needed.             |
 
 ### New System Fields (Auto-Created on Booking-Enabled Tables)
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `booking_status` | Status (select) | Lifecycle tracking. Values: confirmed, pending, cancelled_by_invitee, cancelled_by_host, rescheduled, completed, no_show, checked_in. Hidden by default. |
+| Field              | Type              | Purpose                                                                                                                                                   |
+| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `booking_status`   | Status (select)   | Lifecycle tracking. Values: confirmed, pending, cancelled_by_invitee, cancelled_by_host, rescheduled, completed, no_show, checked_in. Hidden by default.  |
 | `booking_metadata` | Long Text (JSONB) | Invitee contact info, notes, routing form data, payment ID, reschedule history, cancellation reason, source, referrer. Hidden by default. System-managed. |
-| `booking_source` | Select | How the booking was created: booking_page, portal, embed, api, internal. Hidden by default. |
+| `booking_source`   | Select            | How the booking was created: booking_page, portal, embed, api, internal. Hidden by default.                                                               |
 
 ---
 
 ## Permissions
 
-| Action | Owner | Admin | Manager | Team Member | Viewer | Portal Client |
-|--------|-------|-------|---------|-------------|--------|---------------|
-| Enable/disable booking on table | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Configure booking settings | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Edit own availability schedule | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| View booking analytics | ✅ | ✅ | ✅ | Own bookings | ❌ | Own bookings |
-| Cancel/reschedule any booking | ✅ | ✅ | ✅ | Own bookings | ❌ | Own bookings (self-service) |
-| Mark no-show | ✅ | ✅ | ✅ | Own bookings | ❌ | ❌ |
-| Create booking templates | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Create meeting polls | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Book via public page | — | — | — | — | — | ✅ (unauthenticated) |
+| Action                          | Owner | Admin | Manager | Team Member  | Viewer | Portal Client               |
+| ------------------------------- | ----- | ----- | ------- | ------------ | ------ | --------------------------- |
+| Enable/disable booking on table | ✅    | ✅    | ✅      | ❌           | ❌     | ❌                          |
+| Configure booking settings      | ✅    | ✅    | ✅      | ❌           | ❌     | ❌                          |
+| Edit own availability schedule  | ✅    | ✅    | ✅      | ✅           | ❌     | ❌                          |
+| View booking analytics          | ✅    | ✅    | ✅      | Own bookings | ❌     | Own bookings                |
+| Cancel/reschedule any booking   | ✅    | ✅    | ✅      | Own bookings | ❌     | Own bookings (self-service) |
+| Mark no-show                    | ✅    | ✅    | ✅      | Own bookings | ❌     | ❌                          |
+| Create booking templates        | ✅    | ✅    | ❌      | ❌           | ❌     | ❌                          |
+| Create meeting polls            | ✅    | ✅    | ✅      | ✅           | ❌     | ❌                          |
+| Book via public page            | —     | —     | —       | —            | —      | ✅ (unauthenticated)        |
 
 ---
 
 ## Phase Implementation Summary
 
-| Phase | Booking Work |
-|-------|-------------|
-| **Post-MVP — Portals & Apps (Calendar View)** | Calendar View architecture (day/week/month grid rendering, event blocks, drag interactions, click-to-create, responsive behavior). No booking functionality — just the view type. Calendar View is post-MVP per GLOSSARY.md:678. |
-| **Post-MVP — Portals & Apps (Fast-Follow)** | **Full booking system.** `booking_availability` table + availability engine + Scheduler block (App Designer) + public booking pages + shareable links + embeddable widget. All 4 booking types (one_on_one, group, round_robin, collective). Buffer time, meeting limits, minimum notice, max advance. Quick Setup Wizard. Booking lifecycle (creation sequence, status system, confirmation emails, reminders). Self-service rescheduling & cancellation. Routing forms. Single-use booking links. Meeting polls. No-show detection (manual + auto). Zoom video integration. Booking automation triggers (#17–22) + actions (#40–42). 5 pre-built recipes. Basic scheduling analytics (NumberCard metrics). |
-| **Post-MVP — Comms & Polish** | External calendar sync (Google + Outlook one-way pull → bidirectional push). Google Meet + Microsoft Teams video integration (shared OAuth). Availability engine automatically gains external calendar awareness — no booking system changes. |
-| **Post-MVP — Verticals & Advanced** | Managed booking templates. Full scheduling analytics dashboard (summary view type with 8 chart blocks). Advanced round-robin weighting. Booking page A/B testing. |
-
+| Phase                                         | Booking Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Post-MVP — Portals & Apps (Calendar View)** | Calendar View architecture (day/week/month grid rendering, event blocks, drag interactions, click-to-create, responsive behavior). No booking functionality — just the view type. Calendar View is post-MVP per GLOSSARY.md:678.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Post-MVP — Portals & Apps (Fast-Follow)**   | **Full booking system.** `booking_availability` table + availability engine + Scheduler block (App Designer) + public booking pages + shareable links + embeddable widget. All 4 booking types (one_on_one, group, round_robin, collective). Buffer time, meeting limits, minimum notice, max advance. Quick Setup Wizard. Booking lifecycle (creation sequence, status system, confirmation emails, reminders). Self-service rescheduling & cancellation. Routing forms. Single-use booking links. Meeting polls. No-show detection (manual + auto). Zoom video integration. Booking automation triggers (#17–22) + actions (#40–42). 5 pre-built recipes. Basic scheduling analytics (NumberCard metrics). |
+| **Post-MVP — Comms & Polish**                 | External calendar sync (Google + Outlook one-way pull → bidirectional push). Google Meet + Microsoft Teams video integration (shared OAuth). Availability engine automatically gains external calendar awareness — no booking system changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Post-MVP — Verticals & Advanced**           | Managed booking templates. Full scheduling analytics dashboard (summary view type with 8 chart blocks). Advanced round-robin weighting. Booking page A/B testing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
 ### Claude Code Prompt Roadmap (10 Prompts)
 
-| Prompt | Scope | Output |
-|--------|-------|--------|
-| 1 | **Calendar View rendering** | CalendarView component (month/week/day), event block rendering, overlap layout algorithm, time axis, responsive breakpoints. CalendarViewConfig in view_config JSONB. |
-| 2 | **Calendar View interactions** | Click-to-create popover, drag-to-reschedule, resize-to-change-duration, date field binding, toolbar controls. Permission checks on drag/resize. |
-| 3 | **Availability engine** | `booking_availability` table + migration. `BookableHoursSchedule` CRUD. Slot generation algorithm. `GET /api/v1/booking/availability` endpoint. Calendar feed integration for busy blocks. Buffer/limit/notice constraint filtering. Timezone handling. |
-| 4 | **Booking config + bookable tables** | `calendar_table_config` booking columns migration. BookingConfig validation. System field auto-creation (booking_status, booking_metadata, booking_source). Booking type logic (one_on_one, group, round_robin assignment algorithm, collective intersection). |
-| 5 | **Scheduler block (App Designer)** | SchedulerBlock component (calendar/list display modes). 3-step booking flow (select time → details → confirmation). Intake fields. Stripe payment integration. Authenticated vs. public mode. Rate limiting. Turnstile. |
-| 6 | **Booking lifecycle** | Atomic creation sequence (10 steps). Status transitions. Confirmation + reminder email templates (Resend). BullMQ scheduled jobs for reminders + follow-ups + auto-complete + auto-no-show. .ics file generation. |
-| 7 | **Public booking pages + links** | App page in public mode with Scheduler block. URL routing (`/book/{slug}`, `/book/{slug}/{user}`). Short link generation. Embeddable widget (script tag + iframe). Single-use booking links (BookingLink CRUD + token validation + status tracking). |
-| 8 | **Self-service + routing** | Reschedule flow (tokenized link → new time → record update → notifications). Cancel flow (tokenized link → confirmation → status update → refund). Routing form integration (completion action → booking page routing rules). Routing data pass-through. |
-| 9 | **Meeting polls + no-show** | `meeting_polls` + `meeting_poll_responses` tables + migrations. Poll creation UI. Voting interface. Response matrix. Schedule from poll. No-show detection (manual + auto BullMQ job). Check-in status. |
-| 10 | **Automation integration + wizard** | Triggers #17–22 registration in TriggerRegistry. Actions #40–42. 5 pre-built recipes. Quick Setup Wizard (4-step flow → auto-creates table + config + App page + automations). Zoom OAuth + meeting creation. |
+| Prompt | Scope                                | Output                                                                                                                                                                                                                                                         |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | **Calendar View rendering**          | CalendarView component (month/week/day), event block rendering, overlap layout algorithm, time axis, responsive breakpoints. CalendarViewConfig in view_config JSONB.                                                                                          |
+| 2      | **Calendar View interactions**       | Click-to-create popover, drag-to-reschedule, resize-to-change-duration, date field binding, toolbar controls. Permission checks on drag/resize.                                                                                                                |
+| 3      | **Availability engine**              | `booking_availability` table + migration. `BookableHoursSchedule` CRUD. Slot generation algorithm. `GET /api/v1/booking/availability` endpoint. Calendar feed integration for busy blocks. Buffer/limit/notice constraint filtering. Timezone handling.        |
+| 4      | **Booking config + bookable tables** | `calendar_table_config` booking columns migration. BookingConfig validation. System field auto-creation (booking_status, booking_metadata, booking_source). Booking type logic (one_on_one, group, round_robin assignment algorithm, collective intersection). |
+| 5      | **Scheduler block (App Designer)**   | SchedulerBlock component (calendar/list display modes). 3-step booking flow (select time → details → confirmation). Intake fields. Stripe payment integration. Authenticated vs. public mode. Rate limiting. Turnstile.                                        |
+| 6      | **Booking lifecycle**                | Atomic creation sequence (10 steps). Status transitions. Confirmation + reminder email templates (Resend). BullMQ scheduled jobs for reminders + follow-ups + auto-complete + auto-no-show. .ics file generation.                                              |
+| 7      | **Public booking pages + links**     | App page in public mode with Scheduler block. URL routing (`/book/{slug}`, `/book/{slug}/{user}`). Short link generation. Embeddable widget (script tag + iframe). Single-use booking links (BookingLink CRUD + token validation + status tracking).           |
+| 8      | **Self-service + routing**           | Reschedule flow (tokenized link → new time → record update → notifications). Cancel flow (tokenized link → confirmation → status update → refund). Routing form integration (completion action → booking page routing rules). Routing data pass-through.       |
+| 9      | **Meeting polls + no-show**          | `meeting_polls` + `meeting_poll_responses` tables + migrations. Poll creation UI. Voting interface. Response matrix. Schedule from poll. No-show detection (manual + auto BullMQ job). Check-in status.                                                        |
+| 10     | **Automation integration + wizard**  | Triggers #17–22 registration in TriggerRegistry. Actions #40–42. 5 pre-built recipes. Quick Setup Wizard (4-step flow → auto-creates table + config + App page + automations). Zoom OAuth + meeting creation.                                                  |
 
 ---
 
 ## Reconciliation with Existing Docs
 
-| Document | Change Required |
-|----------|----------------|
-| `app-designer.md` | Replace "Booking/Scheduling System (Dedicated Spec Session — Build Post-MVP — Portals & Apps (Fast-Follow))" placeholder with: "See `booking-scheduling.md` for full specification." Scheduler block added to block library under "Scheduling" category. |
-| `tables-and-views.md` | Add cross-reference to this doc for Calendar View architecture. Calendar View entry in Available View Types table gains: "Full spec in `booking-scheduling.md` > Calendar View Architecture." |
-| `data-model.md` | Add `booking_availability`, `meeting_polls`, `meeting_poll_responses`, `booking_links`, `booking_templates` to table list. Add booking columns to `calendar_table_config` description. Note 3 new system fields on booking-enabled tables. |
-| `automations.md` | Add triggers #17–22, actions #40–42, 5 booking recipes. Update trigger count 16 → 22, action count 39 → 42. Update cross-references header. |
-| `my-office.md` | Add cross-reference: booking records appear in My Calendar feed as `source_type: 'booking'` (already in the feed spec table). |
-| *(Phase build doc)* | When creating a Portals & Apps phase build doc, include the booking system scope from this reference doc. |
-| `mobile.md` | Calendar view mobile spec (month dots, week blocks, day timeline) now cross-references this doc's responsive behavior section for authoritative spec. |
-| `MANIFEST.md` | Add `booking-scheduling.md` entry to "Created from Strategic Planning Sessions" section. Add to Post-MVP — Portals & Apps reading order. |
-| `embeddable-extensions.md` | Add cross-reference for embeddable booking widget (follows same embed protocol as Commerce Embed). |
-| `communications.md` | Add cross-reference: booking confirmation/reminder/cancellation notifications delivered via communications system (notifications channel). |
-| `design-system.md` | Add cross-reference: booking UI follows responsive breakpoints and design system palette. |
-| `permissions.md` | Add cross-reference: booking permission matrix (Manager+ configures, Team Member manages own bookings, portal clients book/reschedule/cancel). |
-| `chart-blocks.md` | Add cross-reference: scheduling analytics dashboard uses `summary` view type with NumberCard metrics and chart blocks. |
-| `email.md` | Add cross-reference: Post-MVP — Comms & Polish shared OAuth enables Google/Microsoft calendar sync for booking availability engine. |
+| Document                   | Change Required                                                                                                                                                                                                                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app-designer.md`          | Replace "Booking/Scheduling System (Dedicated Spec Session — Build Post-MVP — Portals & Apps (Fast-Follow))" placeholder with: "See `booking-scheduling.md` for full specification." Scheduler block added to block library under "Scheduling" category. |
+| `tables-and-views.md`      | Add cross-reference to this doc for Calendar View architecture. Calendar View entry in Available View Types table gains: "Full spec in `booking-scheduling.md` > Calendar View Architecture."                                                            |
+| `data-model.md`            | Add `booking_availability`, `meeting_polls`, `meeting_poll_responses`, `booking_links`, `booking_templates` to table list. Add booking columns to `calendar_table_config` description. Note 3 new system fields on booking-enabled tables.               |
+| `automations.md`           | Add triggers #17–22, actions #40–42, 5 booking recipes. Update trigger count 16 → 22, action count 39 → 42. Update cross-references header.                                                                                                              |
+| `my-office.md`             | Add cross-reference: booking records appear in My Calendar feed as `source_type: 'booking'` (already in the feed spec table).                                                                                                                            |
+| _(Phase build doc)_        | When creating a Portals & Apps phase build doc, include the booking system scope from this reference doc.                                                                                                                                                |
+| `mobile.md`                | Calendar view mobile spec (month dots, week blocks, day timeline) now cross-references this doc's responsive behavior section for authoritative spec.                                                                                                    |
+| `MANIFEST.md`              | Add `booking-scheduling.md` entry to "Created from Strategic Planning Sessions" section. Add to Post-MVP — Portals & Apps reading order.                                                                                                                 |
+| `embeddable-extensions.md` | Add cross-reference for embeddable booking widget (follows same embed protocol as Commerce Embed).                                                                                                                                                       |
+| `communications.md`        | Add cross-reference: booking confirmation/reminder/cancellation notifications delivered via communications system (notifications channel).                                                                                                               |
+| `design-system.md`         | Add cross-reference: booking UI follows responsive breakpoints and design system palette.                                                                                                                                                                |
+| `permissions.md`           | Add cross-reference: booking permission matrix (Manager+ configures, Team Member manages own bookings, portal clients book/reschedule/cancel).                                                                                                           |
+| `chart-blocks.md`          | Add cross-reference: scheduling analytics dashboard uses `summary` view type with NumberCard metrics and chart blocks.                                                                                                                                   |
+| `email.md`                 | Add cross-reference: Post-MVP — Comms & Polish shared OAuth enables Google/Microsoft calendar sync for booking availability engine.                                                                                                                      |
 
 ---
 

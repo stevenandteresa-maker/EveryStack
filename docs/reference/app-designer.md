@@ -5,6 +5,7 @@
 > **⚠️ POST-MVP SCOPE (entire App Designer).** Per `GLOSSARY.md`: the App Designer (visual page builder) is **post-MVP**. MVP uses Quick Portals (externally-shared Record View of one record, auth wrapper — see `portals.md`) and simple Forms (Record View layout for record creation — see `forms.md`). These MVP features do NOT use the App Designer — they use the Record View layout engine. The App Designer builds upon them post-MVP with spatial layouts, multi-page structures, and custom block canvases. Build clean extension points in MVP, but do not build the App Designer itself.
 >
 > **App Types (three categories) — all post-MVP except where noted:**
+>
 > - **External** (audience outside the workspace): **Custom Portal** (multi-page, multi-record, custom layout — post-MVP upgrade of MVP Quick Portal), **App Form** (multi-step, conditional logic — post-MVP upgrade of MVP Quick Form), **Website** (public-facing pages, no auth/record context — post-MVP)
 > - **Internal** (workspace users): **Custom Table View** (opinionated, view-based, fast setup — see `tables-and-views.md`), **Widget** (renders inside My Office grid cell, responsive to container width — see `my-office.md`), **Internal App** (full spatial layout, POS/kiosk/dispatch — see `custom-apps.md`)
 > - **Document** (file output): **Document** (fixed-size page canvas, renders to PDF/DOCX via Gotenberg — invoices, contracts, proposals, reports — see `document-designer.md`)
@@ -25,44 +26,44 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Progressive Disclosure Mapping | 69–80 | 3-level disclosure for app creation |
-| Portal Overview (App Designer — Post-MVP) | 81–92 | App Portal concept and relationship to Quick Portals |
-| Portal Architecture (App Designer — Post-MVP) | 93–104 | Apps/app_pages/app_blocks table architecture |
-| App Navigation in Workspace (Post-MVP) | 105–116 | How apps appear in sidebar and workspace |
-| App Creation — Type Selection (Progressive Disclosure) — Post-MVP | 117–149 | 7 app types, creation wizard entry |
-| Portal Creation Flow (App Designer — Post-MVP) | 150–173 | Step-by-step App Portal creation |
-| Designer Architecture (Post-MVP) | 174–208 | 12-column grid canvas, recursive block tree, drag-and-drop |
-| Block Model | 209–245 | Block types, block tree structure, nesting rules |
-| Canvas Behavior (Post-MVP) | 246–260 | Grid snapping, responsive preview, undo/redo |
-| Property Panel (Three Tabs) — Post-MVP | 261–283 | Content, Style, Logic tabs for block configuration |
-| Data Binding Modes (Post-MVP) | 284–331 | Record context, list binding, aggregation binding |
-| Theme System (Post-MVP) | 332–368 | App-level theming, color tokens, font overrides |
-| Client Interaction Capabilities (Post-MVP) | 369–382 | Form submissions, file uploads, chat from portals |
-| Record Scoping (Identity-Based) | 383–434 | portal_clients, linked_record_id scoping, per-table scope config |
-| Client Authentication | 435–517 | Magic link + password auth, portal_sessions, session lifecycle |
-| Portal Client Data Model | 518–649 | portal_clients table, identity resolution, CRM linking |
-| Client Management | 650–683 | Client list, access management, bulk operations |
-| Portal Write-Back Flow (Form Submissions) | 684–737 | Data submission pipeline, validation, record creation |
-| Portal Analytics (Post-MVP) | 738–757 | Page views, session tracking, engagement metrics |
-| Stripe Payment Integration (Post-MVP) | 758–765 | Stripe Elements, payment blocks, invoice integration |
-| Rendering Modes (Post-MVP — App Designer) | 766–773 | SSR, client-side, hybrid rendering strategies |
-| Preview and Publish Flow (Post-MVP — App Designer) | 774–798 | Draft/live workflow, preview URLs, versioning |
-| Caching Infrastructure (Three-Tier) | 799–834 | CDN, Redis, in-memory caching for portal pages |
-| Portal Client Limits | 835–850 | Plan-based limits on portal clients and pages |
-| Automation Integration | 851–864 | Portal event triggers, automation actions for portals |
-| Audit Trail for Portal Actions | 865–888 | Portal client audit logging, actor_type: portal_client |
-| Session Cleanup | 889–911 | Expired session pruning, revocation |
-| Custom Domain Architecture (Specced — Build Post-MVP — Portals & Apps (Fast-Follow)) | 912–934 | CNAME setup, SSL provisioning, routing |
-| Mobile Portal Experience — PWA with Offline (Post-MVP) | 935–963 | Mobile PWA portal, offline support |
-| Portal SEO — Basic Meta Tags (Post-MVP) | 964–977 | Meta tags, Open Graph, sitemap |
-| Embeddable External Forms | 978–1004 | Script tag / iframe embedding for forms |
-| GDPR for Portal Clients | 1005–1019 | Data rights, deletion, export for portal users |
-| Booking/Scheduling System (Post-MVP) | 1020–1027 | Booking integration with App Designer |
-| Multi-Language Portal Content (Designed — Build Deferred) | 1028–1042 | i18n for portal content |
-| MVP Feature Split | 1043–1052 | What ships as Quick Portal vs App Designer |
-| Phase Implementation Summary (App Designer — Post-MVP) | 1053–1061 | Post-MVP — Portals & Apps+ delivery scope |
+| Section                                                                              | Lines     | Covers                                                           |
+| ------------------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------- |
+| Progressive Disclosure Mapping                                                       | 69–80     | 3-level disclosure for app creation                              |
+| Portal Overview (App Designer — Post-MVP)                                            | 81–92     | App Portal concept and relationship to Quick Portals             |
+| Portal Architecture (App Designer — Post-MVP)                                        | 93–104    | Apps/app_pages/app_blocks table architecture                     |
+| App Navigation in Workspace (Post-MVP)                                               | 105–116   | How apps appear in sidebar and workspace                         |
+| App Creation — Type Selection (Progressive Disclosure) — Post-MVP                    | 117–149   | 7 app types, creation wizard entry                               |
+| Portal Creation Flow (App Designer — Post-MVP)                                       | 150–173   | Step-by-step App Portal creation                                 |
+| Designer Architecture (Post-MVP)                                                     | 174–208   | 12-column grid canvas, recursive block tree, drag-and-drop       |
+| Block Model                                                                          | 209–245   | Block types, block tree structure, nesting rules                 |
+| Canvas Behavior (Post-MVP)                                                           | 246–260   | Grid snapping, responsive preview, undo/redo                     |
+| Property Panel (Three Tabs) — Post-MVP                                               | 261–283   | Content, Style, Logic tabs for block configuration               |
+| Data Binding Modes (Post-MVP)                                                        | 284–331   | Record context, list binding, aggregation binding                |
+| Theme System (Post-MVP)                                                              | 332–368   | App-level theming, color tokens, font overrides                  |
+| Client Interaction Capabilities (Post-MVP)                                           | 369–382   | Form submissions, file uploads, chat from portals                |
+| Record Scoping (Identity-Based)                                                      | 383–434   | portal_clients, linked_record_id scoping, per-table scope config |
+| Client Authentication                                                                | 435–517   | Magic link + password auth, portal_sessions, session lifecycle   |
+| Portal Client Data Model                                                             | 518–649   | portal_clients table, identity resolution, CRM linking           |
+| Client Management                                                                    | 650–683   | Client list, access management, bulk operations                  |
+| Portal Write-Back Flow (Form Submissions)                                            | 684–737   | Data submission pipeline, validation, record creation            |
+| Portal Analytics (Post-MVP)                                                          | 738–757   | Page views, session tracking, engagement metrics                 |
+| Stripe Payment Integration (Post-MVP)                                                | 758–765   | Stripe Elements, payment blocks, invoice integration             |
+| Rendering Modes (Post-MVP — App Designer)                                            | 766–773   | SSR, client-side, hybrid rendering strategies                    |
+| Preview and Publish Flow (Post-MVP — App Designer)                                   | 774–798   | Draft/live workflow, preview URLs, versioning                    |
+| Caching Infrastructure (Three-Tier)                                                  | 799–834   | CDN, Redis, in-memory caching for portal pages                   |
+| Portal Client Limits                                                                 | 835–850   | Plan-based limits on portal clients and pages                    |
+| Automation Integration                                                               | 851–864   | Portal event triggers, automation actions for portals            |
+| Audit Trail for Portal Actions                                                       | 865–888   | Portal client audit logging, actor_type: portal_client           |
+| Session Cleanup                                                                      | 889–911   | Expired session pruning, revocation                              |
+| Custom Domain Architecture (Specced — Build Post-MVP — Portals & Apps (Fast-Follow)) | 912–934   | CNAME setup, SSL provisioning, routing                           |
+| Mobile Portal Experience — PWA with Offline (Post-MVP)                               | 935–963   | Mobile PWA portal, offline support                               |
+| Portal SEO — Basic Meta Tags (Post-MVP)                                              | 964–977   | Meta tags, Open Graph, sitemap                                   |
+| Embeddable External Forms                                                            | 978–1004  | Script tag / iframe embedding for forms                          |
+| GDPR for Portal Clients                                                              | 1005–1019 | Data rights, deletion, export for portal users                   |
+| Booking/Scheduling System (Post-MVP)                                                 | 1020–1027 | Booking integration with App Designer                            |
+| Multi-Language Portal Content (Designed — Build Deferred)                            | 1028–1042 | i18n for portal content                                          |
+| MVP Feature Split                                                                    | 1043–1052 | What ships as Quick Portal vs App Designer                       |
+| Phase Implementation Summary (App Designer — Post-MVP)                               | 1053–1061 | Post-MVP — Portals & Apps+ delivery scope                        |
 
 ---
 
@@ -70,11 +71,11 @@
 
 > **⚠️ POST-MVP.** This entire section describes the App Designer's progressive disclosure — the App Designer is post-MVP per `GLOSSARY.md`.
 
-| Level | User Experience | What's Visible |
-|---|---|---|
-| **L1 (80%)** | Choose a use case card ("Client Dashboard", "Public Form", etc.), pick a table, select a theme, and get a working app with template pre-built. Edit content by selecting blocks and changing fields in the property panel. Publish with one click. | Intent-based type picker, 3-step wizard, template gallery, canvas with pre-placed blocks, Content tab in property panel, Preview and Publish buttons. |
+| Level        | User Experience                                                                                                                                                                                                                                               | What's Visible                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L1 (80%)** | Choose a use case card ("Client Dashboard", "Public Form", etc.), pick a table, select a theme, and get a working app with template pre-built. Edit content by selecting blocks and changing fields in the property panel. Publish with one click.            | Intent-based type picker, 3-step wizard, template gallery, canvas with pre-placed blocks, Content tab in property panel, Preview and Publish buttons.                                                       |
 | **L2 (15%)** | Add blocks from the library, configure data binding (context-bound default, relationship-bound for linked data), set visibility rules, adjust per-breakpoint column spans, create multi-page apps, configure portal client authentication and record scoping. | Block library sidebar, Layers tree mode, relationship-bound data binding, Logic tab (visibility rules, permissions), page tree with add/duplicate/delete, client auth settings, embed/custom domain config. |
-| **L3 (5%)** | Query-bound data binding (custom queries across any portal table), Grid Container with CSS Grid cell placement, rate limiting on form submissions, PWA configuration, Commerce Embed and Stripe Terminal integration, AI-generated apps (Opus, 20 credits). | Query builder in data binding, Grid Container block, advanced Logic tab options, PWA settings, commerce/payment configuration, AI generation prompt. |
+| **L3 (5%)**  | Query-bound data binding (custom queries across any portal table), Grid Container with CSS Grid cell placement, rate limiting on form submissions, PWA configuration, Commerce Embed and Stripe Terminal integration, AI-generated apps (Opus, 20 credits).   | Query builder in data binding, Grid Container block, advanced Logic tab options, PWA settings, commerce/payment configuration, AI generation prompt.                                                        |
 
 ---
 
@@ -124,16 +125,16 @@ Client portals built in the App Designer let EveryStack users create branded, cl
 
 The user sees **use case cards**, not type names. Each card describes what the user wants to accomplish. The system resolves the card to the correct app type automatically.
 
-| Card Label | Description | Resolves To |
-|---|---|---|
-| **Client Dashboard** | "Give your clients a branded portal to see their data" | Custom Portal |
-| **Booking Page** | "Let people book appointments on your website" | App Form (with Scheduler block) |
-| **Internal App** | "Build a custom screen for your team — POS, dispatch, check-in" | Internal App |
-| **Public Form** | "Collect submissions from anyone with a link" | App Form |
-| **Business Website** | "Build a marketing site or help center" | Website |
-| **Dashboard Widget** | "Add a live data widget to your home screen" | Widget |
-| **Create a Document** | "Design a document template — invoices, contracts, proposals, and more" | Document |
-| **Custom Table View** | "Create an opinionated view of a table for your team" | Table View (redirects to `tables-and-views.md` Table View creation) |
+| Card Label            | Description                                                             | Resolves To                                                         |
+| --------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Client Dashboard**  | "Give your clients a branded portal to see their data"                  | Custom Portal                                                       |
+| **Booking Page**      | "Let people book appointments on your website"                          | App Form (with Scheduler block)                                     |
+| **Internal App**      | "Build a custom screen for your team — POS, dispatch, check-in"         | Internal App                                                        |
+| **Public Form**       | "Collect submissions from anyone with a link"                           | App Form                                                            |
+| **Business Website**  | "Build a marketing site or help center"                                 | Website                                                             |
+| **Dashboard Widget**  | "Add a live data widget to your home screen"                            | Widget                                                              |
+| **Create a Document** | "Design a document template — invoices, contracts, proposals, and more" | Document                                                            |
+| **Custom Table View** | "Create an opinionated view of a table for your team"                   | Table View (redirects to `tables-and-views.md` Table View creation) |
 
 The "Custom Table View" card is a shortcut that navigates to the table's view configuration — it does not enter the App Designer wizard. It's included here so users looking for "custom view" find it in the expected place.
 
@@ -214,28 +215,28 @@ Everything is a block. Blocks form a tree (via `parent_block_id`) rendered recur
 
 ### Block Categories
 
-| Category | Block Types |
-|---|---|
-| **Layout** | Row, Column, Card Container, Tab Container, Collapsible Section, Grid Container |
-| **Data** | Field Display, Table/List, Chart, Kanban, Image, Metric/KPI Card. Chart and Metric/KPI Card blocks use the shared chart component library — see `chart-blocks.md` > Chart Rendering in Portals. |
-| **Static** | Rich Text, Static Image, Divider, Spacer, Navigation Menu, Embed |
-| **Action** | Button (runs automation, navigates, generates document, submits form), Link, File Download |
-| **Form Input** | Text Input, Select, Date Picker, File Upload, Checkbox, Multi-select |
-| **Special** | Scheduler, Payment (Stripe), Approval, Comment Thread |
+| Category       | Block Types                                                                                                                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Layout**     | Row, Column, Card Container, Tab Container, Collapsible Section, Grid Container                                                                                                                 |
+| **Data**       | Field Display, Table/List, Chart, Kanban, Image, Metric/KPI Card. Chart and Metric/KPI Card blocks use the shared chart component library — see `chart-blocks.md` > Chart Rendering in Portals. |
+| **Static**     | Rich Text, Static Image, Divider, Spacer, Navigation Menu, Embed                                                                                                                                |
+| **Action**     | Button (runs automation, navigates, generates document, submits form), Link, File Download                                                                                                      |
+| **Form Input** | Text Input, Select, Date Picker, File Upload, Checkbox, Multi-select                                                                                                                            |
+| **Special**    | Scheduler, Payment (Stripe), Approval, Comment Thread                                                                                                                                           |
 
 ### Container Rules & Nesting
 
 Containers define the layout structure. Each container type has specific behavior, default background, and valid children:
 
-| Container | Behavior | Background | Valid Children |
-|---|---|---|---|
-| **Page Root** | Full-width vertical stack. Always exists. | `theme.surfaceAlt` (light gray) | Any block |
-| **Row** | Horizontal layout. 12-column distribution (2 children = 6+6, 3 = 4+4+4). Adjust via divider drag or explicit spans. Auto-wraps on smaller viewports. | Transparent | Columns only (auto-created, min 1, max 6) |
-| **Column** | Vertical stack within a Row. | Transparent | Any block except Column and Row |
-| **Card Container** | Visually distinct content group with border, radius, padding, shadow. | White (`theme.surface`) | Any block except Card (no card-in-card) |
-| **Tab Container** | Named tab panels, one visible at a time. `[+ Add Tab]` in design mode. Right-click tabs: Rename, Reorder, Delete. | Tab bar: `theme.surfaceAlt`; panels: white | Tab Panels only → Tab Panels accept any block except Column, Row, Tab Container |
-| **Collapsible Section** | Header with label and chevron toggle. Animates open/closed. `defaultExpanded` toggle. | White with subtle borders | Any block except Collapsible (no nested collapsibles) |
-| **Grid Container** | CSS Grid for complex dashboard layouts. Define rows/columns, place children into specific cells with optional spanning. (Power user.) | Transparent | Any block |
+| Container               | Behavior                                                                                                                                             | Background                                 | Valid Children                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| **Page Root**           | Full-width vertical stack. Always exists.                                                                                                            | `theme.surfaceAlt` (light gray)            | Any block                                                                       |
+| **Row**                 | Horizontal layout. 12-column distribution (2 children = 6+6, 3 = 4+4+4). Adjust via divider drag or explicit spans. Auto-wraps on smaller viewports. | Transparent                                | Columns only (auto-created, min 1, max 6)                                       |
+| **Column**              | Vertical stack within a Row.                                                                                                                         | Transparent                                | Any block except Column and Row                                                 |
+| **Card Container**      | Visually distinct content group with border, radius, padding, shadow.                                                                                | White (`theme.surface`)                    | Any block except Card (no card-in-card)                                         |
+| **Tab Container**       | Named tab panels, one visible at a time. `[+ Add Tab]` in design mode. Right-click tabs: Rename, Reorder, Delete.                                    | Tab bar: `theme.surfaceAlt`; panels: white | Tab Panels only → Tab Panels accept any block except Column, Row, Tab Container |
+| **Collapsible Section** | Header with label and chevron toggle. Animates open/closed. `defaultExpanded` toggle.                                                                | White with subtle borders                  | Any block except Collapsible (no nested collapsibles)                           |
+| **Grid Container**      | CSS Grid for complex dashboard layouts. Define rows/columns, place children into specific cells with optional spanning. (Power user.)                | Transparent                                | Any block                                                                       |
 
 **Maximum nesting depth:** 4 levels. Page → Row → Column → Card → blocks inside card. Drop zones do not appear beyond this depth. Tooltip: "Maximum nesting depth reached."
 
@@ -287,11 +288,11 @@ Visibility rules: Show if `[field] [operator] [value]`, multiple conditions with
 
 All data binding is configured on the block in the App Designer. Three modes, presented progressively from simplest to most powerful:
 
-| Mode | Description | Coverage |
-|---|---|---|
-| **Context-Bound** (default) | Page has a context table (set during page creation). Block field picker shows fields from that table. Detail pages show one record; list pages show all visible records (filtered by client's `record_scope`). | ~70% of use cases |
-| **Relationship-Bound** | On detail pages, Table/List blocks show a "Related Data" section listing all cross-links from the context table. Pick one → block shows linked records. Cross-base linking differentiator visible here. | ~20% of use cases |
-| **Query-Bound** (power user) | "Custom Query" option: pick any table bound to this portal, add filters, sort. For dashboards pulling from multiple tables. | ~10% of use cases |
+| Mode                         | Description                                                                                                                                                                                                    | Coverage          |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **Context-Bound** (default)  | Page has a context table (set during page creation). Block field picker shows fields from that table. Detail pages show one record; list pages show all visible records (filtered by client's `record_scope`). | ~70% of use cases |
+| **Relationship-Bound**       | On detail pages, Table/List blocks show a "Related Data" section listing all cross-links from the context table. Pick one → block shows linked records. Cross-base linking differentiator visible here.        | ~20% of use cases |
+| **Query-Bound** (power user) | "Custom Query" option: pick any table bound to this portal, add filters, sort. For dashboards pulling from multiple tables.                                                                                    | ~10% of use cases |
 
 **Important:** All three modes are subject to `record_scope` filtering. The portal client only ever sees records that belong to them, regardless of how the block is bound. See Record Scoping below.
 
@@ -308,17 +309,17 @@ interface ContextBinding {
 // Relationship-Bound
 interface RelationshipBinding {
   mode: 'relationship';
-  crossLinkFieldId: string;    // The cross-link field on the page's context table
+  crossLinkFieldId: string; // The cross-link field on the page's context table
   // Shows records linked via this field
 }
 
 // Query-Bound
 interface QueryBinding {
   mode: 'query';
-  tableId: string;             // Any table bound to this portal
-  filters: FilterRule[];       // Portal-designer-configured filters
+  tableId: string; // Any table bound to this portal
+  filters: FilterRule[]; // Portal-designer-configured filters
   sort: SortRule[];
-  groupBy: string | null;      // Field ID
+  groupBy: string | null; // Field ID
 }
 
 // Union type
@@ -337,12 +338,12 @@ Every app has a theme stored in `apps.theme` (JSONB). All blocks inherit from th
 
 ### Theme Tokens
 
-| Token Group | Tokens |
-|---|---|
+| Token Group             | Tokens                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | **Palette (12 colors)** | surface, surfaceAlt, border, text, textMuted, primary, primaryText, accent, accentText, success, warning, danger |
-| **Typography** | Heading font, body font, mono font, type scale (6 size/weight pairs) |
-| **Shape** | radius, radiusLg, radiusSm |
-| **Spacing** | cardPadding, sectionGap, blockGap |
+| **Typography**          | Heading font, body font, mono font, type scale (6 size/weight pairs)                                             |
+| **Shape**               | radius, radiusLg, radiusSm                                                                                       |
+| **Spacing**             | cardPadding, sectionGap, blockGap                                                                                |
 
 ### Gallery Tab (default, ~80% of builders)
 
@@ -420,11 +421,11 @@ When a portal block renders data, three layers of filtering apply in order. Each
 ```typescript
 interface PortalScopingConfig {
   scopingFields: Array<{
-    tableId: string;           // Table bound to this portal
-    scopingFieldId: string;    // Field on that table used for client matching
-    scopingType: 'cross_link' | 'email';  // How matching works
+    tableId: string; // Table bound to this portal
+    scopingFieldId: string; // Field on that table used for client matching
+    scopingType: 'cross_link' | 'email'; // How matching works
   }>;
-  identityTableId: string;     // The CRM/contacts table that clients link to
+  identityTableId: string; // The CRM/contacts table that clients link to
 }
 ```
 
@@ -466,11 +467,11 @@ Best for clients who access the portal infrequently. Zero friction — no passwo
 
 The auth method above applies to authenticated portals. Portals also support two unauthenticated modes:
 
-| Mode | Description | Use Cases |
-|---|---|---|
-| **Public** | No auth. Any visitor can view. CDN cacheable. | Listings, catalogs, status pages, knowledge bases |
+| Mode               | Description                                                                                                                                                                | Use Cases                                                                |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Public**         | No auth. Any visitor can view. CDN cacheable.                                                                                                                              | Listings, catalogs, status pages, knowledge bases                        |
 | **Link-Protected** | Secret token in URL. Anyone with the link can view. Prevents indexing and casual discovery. Token validated server-side on every page load using `crypto.timingSafeEqual`. | Project dashboards shared with clients, event pages, temporary campaigns |
-| **Authenticated** | Portal clients log in via password or magic link (as above). Each client sees only their records via `record_scope`. | Client dashboards, project portals, invoice portals |
+| **Authenticated**  | Portal clients log in via password or magic link (as above). Each client sees only their records via `record_scope`.                                                       | Client dashboards, project portals, invoice portals                      |
 
 ### Session Management
 
@@ -498,12 +499,12 @@ Clerk middleware config excludes `/portal/*` — portal routes use their own ses
 
 ### Rate Limiting
 
-| Target | Limit | Window |
-|---|---|---|
-| Magic link requests per email | 5 | 15 minutes |
-| Magic link requests per IP | 20 | 15 minutes |
-| Password login attempts per email | 10 | 15 minutes (then lockout) |
-| Password login attempts per IP | 50 | 15 minutes |
+| Target                            | Limit | Window                    |
+| --------------------------------- | ----- | ------------------------- |
+| Magic link requests per email     | 5     | 15 minutes                |
+| Magic link requests per IP        | 20    | 15 minutes                |
+| Password login attempts per email | 10    | 15 minutes (then lockout) |
+| Password login attempts per IP    | 50    | 15 minutes                |
 
 Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:{email}:{portalId}`, etc.
 
@@ -523,92 +524,92 @@ Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:
 
 > **🚫 DO NOT BUILD FROM THIS SCHEMA.** This section preserves the pre-glossary unified portal schema for reference only. It must be fully rewritten to use `apps` / `app_pages` / `app_blocks` tables before Post-MVP — Portals & Apps development begins. The canonical MVP schema is in `data-model.md`.
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Workspace that owns this portal |
-| `name` | VARCHAR | Display name |
-| `slug` | VARCHAR | URL slug (`portal.everystack.app/{slug}`) |
-| `description` | TEXT (nullable) | |
-| `type` | VARCHAR | `'portal'`, `'app'`, `'form'`, `'website'`, `'widget'`, `'document'`. Determines designer behavior, rendering target, and available blocks. **⚠️ POST-MVP schema note:** Per `GLOSSARY.md`, this unified `type` column on a single `portals` table is the post-MVP App Designer schema. MVP uses separate `portals` and `forms` tables with `record_view_config_id`. |
-| `layout_config` | JSONB (nullable) | Type-specific layout settings. For `type='document'`: page size, orientation, margins, header/footer heights. See `document-designer.md`. |
-| `access_mode` | VARCHAR | `'public'`, `'link_protected'`, `'authenticated'`. Not applicable for `type='document'`. |
-| `auth_method` | VARCHAR (nullable) | `'password'`, `'magic_link'`. Set when `access_mode = 'authenticated'` |
-| `secret_token` | VARCHAR(64) (nullable) | Set when `access_mode = 'link_protected'`. Generated via `crypto.randomBytes(32).toString('base64url')` |
-| `custom_domain` | VARCHAR (nullable) | e.g., `portal.clientcompany.com` |
-| `theme` | JSONB | Colors, typography, logo URL, custom CSS (see Theme System) |
-| `navigation` | JSONB | Nav structure — page order, grouping, icons |
-| `scoping_config` | JSONB | `PortalScopingConfig` — which field on each table identifies the client (see Record Scoping) |
-| `seo_defaults` | JSONB | `{ title, description, ogImage, noIndex }` — portal-level defaults |
-| `favicon_url` | VARCHAR (nullable) | |
-| `publish_state` | VARCHAR | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note) |
-| `version` | INTEGER | Incremented on publish |
-| `published_at` | TIMESTAMPTZ (nullable) | |
-| `created_by` | UUID | |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column           | Type                   | Purpose                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | UUID                   | Primary key                                                                                                                                                                                                                                                                                                                                                          |
+| `tenant_id`      | UUID                   | Workspace that owns this portal                                                                                                                                                                                                                                                                                                                                      |
+| `name`           | VARCHAR                | Display name                                                                                                                                                                                                                                                                                                                                                         |
+| `slug`           | VARCHAR                | URL slug (`portal.everystack.app/{slug}`)                                                                                                                                                                                                                                                                                                                            |
+| `description`    | TEXT (nullable)        |                                                                                                                                                                                                                                                                                                                                                                      |
+| `type`           | VARCHAR                | `'portal'`, `'app'`, `'form'`, `'website'`, `'widget'`, `'document'`. Determines designer behavior, rendering target, and available blocks. **⚠️ POST-MVP schema note:** Per `GLOSSARY.md`, this unified `type` column on a single `portals` table is the post-MVP App Designer schema. MVP uses separate `portals` and `forms` tables with `record_view_config_id`. |
+| `layout_config`  | JSONB (nullable)       | Type-specific layout settings. For `type='document'`: page size, orientation, margins, header/footer heights. See `document-designer.md`.                                                                                                                                                                                                                            |
+| `access_mode`    | VARCHAR                | `'public'`, `'link_protected'`, `'authenticated'`. Not applicable for `type='document'`.                                                                                                                                                                                                                                                                             |
+| `auth_method`    | VARCHAR (nullable)     | `'password'`, `'magic_link'`. Set when `access_mode = 'authenticated'`                                                                                                                                                                                                                                                                                               |
+| `secret_token`   | VARCHAR(64) (nullable) | Set when `access_mode = 'link_protected'`. Generated via `crypto.randomBytes(32).toString('base64url')`                                                                                                                                                                                                                                                              |
+| `custom_domain`  | VARCHAR (nullable)     | e.g., `portal.clientcompany.com`                                                                                                                                                                                                                                                                                                                                     |
+| `theme`          | JSONB                  | Colors, typography, logo URL, custom CSS (see Theme System)                                                                                                                                                                                                                                                                                                          |
+| `navigation`     | JSONB                  | Nav structure — page order, grouping, icons                                                                                                                                                                                                                                                                                                                          |
+| `scoping_config` | JSONB                  | `PortalScopingConfig` — which field on each table identifies the client (see Record Scoping)                                                                                                                                                                                                                                                                         |
+| `seo_defaults`   | JSONB                  | `{ title, description, ogImage, noIndex }` — portal-level defaults                                                                                                                                                                                                                                                                                                   |
+| `favicon_url`    | VARCHAR (nullable)     |                                                                                                                                                                                                                                                                                                                                                                      |
+| `publish_state`  | VARCHAR                | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note)                                                                                                                                                                                                                                                                                      |
+| `version`        | INTEGER                | Incremented on publish                                                                                                                                                                                                                                                                                                                                               |
+| `published_at`   | TIMESTAMPTZ (nullable) |                                                                                                                                                                                                                                                                                                                                                                      |
+| `created_by`     | UUID                   |                                                                                                                                                                                                                                                                                                                                                                      |
+| `created_at`     | TIMESTAMPTZ            |                                                                                                                                                                                                                                                                                                                                                                      |
+| `updated_at`     | TIMESTAMPTZ            |                                                                                                                                                                                                                                                                                                                                                                      |
 
 **Indexes:** `(tenant_id, environment)`, `UNIQUE (slug)`.
 
 ### `app_pages` Table (Post-MVP — per GLOSSARY.md DB Entity Reference)
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `app_id` | UUID | FK to apps |
-| `tenant_id` | UUID | |
-| `slug` | VARCHAR | Page URL slug |
-| `name` | VARCHAR | Display name |
-| `page_type` | VARCHAR | `'dashboard'`, `'list'`, `'detail'`, `'form'`, `'custom'` |
-| `context_table_id` | UUID (nullable) | Primary table this page displays data from |
-| `layout_config` | JSONB | Page-level layout settings |
-| `seo` | JSONB (nullable) | Per-page SEO overrides (title, description, og:image, robots) |
-| `sort_order` | INTEGER | Order in navigation |
-| `publish_state` | VARCHAR | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note) |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column             | Type             | Purpose                                                                         |
+| ------------------ | ---------------- | ------------------------------------------------------------------------------- |
+| `id`               | UUID             | Primary key                                                                     |
+| `app_id`           | UUID             | FK to apps                                                                      |
+| `tenant_id`        | UUID             |                                                                                 |
+| `slug`             | VARCHAR          | Page URL slug                                                                   |
+| `name`             | VARCHAR          | Display name                                                                    |
+| `page_type`        | VARCHAR          | `'dashboard'`, `'list'`, `'detail'`, `'form'`, `'custom'`                       |
+| `context_table_id` | UUID (nullable)  | Primary table this page displays data from                                      |
+| `layout_config`    | JSONB            | Page-level layout settings                                                      |
+| `seo`              | JSONB (nullable) | Per-page SEO overrides (title, description, og:image, robots)                   |
+| `sort_order`       | INTEGER          | Order in navigation                                                             |
+| `publish_state`    | VARCHAR          | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note) |
+| `created_at`       | TIMESTAMPTZ      |                                                                                 |
+| `updated_at`       | TIMESTAMPTZ      |                                                                                 |
 
 **Indexes:** `(app_id, environment)`, `UNIQUE (app_id, slug, environment)`.
 
 ### `app_blocks` Table (Post-MVP — per GLOSSARY.md DB Entity Reference)
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `page_id` | UUID | FK to app_pages |
-| `parent_block_id` | UUID (nullable) | FK to app_blocks (tree structure) |
-| `tenant_id` | UUID | |
-| `block_type` | VARCHAR | Block type from Block Categories |
-| `config` | JSONB | Block-specific content config (field selection, display format, sort, filters, grouping, colors, etc.) |
-| `data_binding` | JSONB | `BlockDataBinding` — see Data Binding Modes |
-| `style_overrides` | JSONB (nullable) | Theme overrides for this block |
-| `visibility_rules` | JSONB (nullable) | Conditional show/hide logic |
-| `grid_position` | JSONB | `{ colStart, colSpan, rowOrder }` — position on 12-column grid |
-| `responsive` | JSONB (nullable) | Per-breakpoint overrides (column span, visibility) |
-| `sort_order` | INTEGER | Order among siblings |
-| `publish_state` | VARCHAR | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note) |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column             | Type             | Purpose                                                                                                |
+| ------------------ | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `id`               | UUID             | Primary key                                                                                            |
+| `page_id`          | UUID             | FK to app_pages                                                                                        |
+| `parent_block_id`  | UUID (nullable)  | FK to app_blocks (tree structure)                                                                      |
+| `tenant_id`        | UUID             |                                                                                                        |
+| `block_type`       | VARCHAR          | Block type from Block Categories                                                                       |
+| `config`           | JSONB            | Block-specific content config (field selection, display format, sort, filters, grouping, colors, etc.) |
+| `data_binding`     | JSONB            | `BlockDataBinding` — see Data Binding Modes                                                            |
+| `style_overrides`  | JSONB (nullable) | Theme overrides for this block                                                                         |
+| `visibility_rules` | JSONB (nullable) | Conditional show/hide logic                                                                            |
+| `grid_position`    | JSONB            | `{ colStart, colSpan, rowOrder }` — position on 12-column grid                                         |
+| `responsive`       | JSONB (nullable) | Per-breakpoint overrides (column span, visibility)                                                     |
+| `sort_order`       | INTEGER          | Order among siblings                                                                                   |
+| `publish_state`    | VARCHAR          | `'live'` or `'draft'` — authoring workflow (see data-model.md environment note)                        |
+| `created_at`       | TIMESTAMPTZ      |                                                                                                        |
+| `updated_at`       | TIMESTAMPTZ      |                                                                                                        |
 
 **Indexes:** `(page_id, environment)`, `(parent_block_id)`.
 
 ### `portal_clients` Table
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Workspace that owns this portal |
-| `portal_id` | UUID | FK to `portals` (MVP Quick Portals) or `apps` (post-MVP App Designer portals) — client belongs to one portal/app |
-| `email` | VARCHAR | Client's email address (PII — registered in compliance registry) |
-| `display_name` | VARCHAR (nullable) | Name shown in portal UI and activity feeds |
-| `avatar_url` | VARCHAR (nullable) | Optional avatar |
-| `auth_hash` | VARCHAR (nullable) | bcrypt hash. Set when portal uses password auth. NULL for magic-link-only portals |
-| `linked_record_id` | UUID | FK to the client's record in the CRM/contacts table. Used for record_scope resolution |
-| `status` | VARCHAR | `'invited'`, `'active'`, `'suspended'`, `'deleted'` |
-| `metadata` | JSONB (nullable) | Custom key-value data (e.g., `{ company: "Acme Corp", region: "West" }`) |
-| `last_login_at` | TIMESTAMPTZ (nullable) | |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column             | Type                   | Purpose                                                                                                          |
+| ------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `id`               | UUID                   | Primary key                                                                                                      |
+| `tenant_id`        | UUID                   | Workspace that owns this portal                                                                                  |
+| `portal_id`        | UUID                   | FK to `portals` (MVP Quick Portals) or `apps` (post-MVP App Designer portals) — client belongs to one portal/app |
+| `email`            | VARCHAR                | Client's email address (PII — registered in compliance registry)                                                 |
+| `display_name`     | VARCHAR (nullable)     | Name shown in portal UI and activity feeds                                                                       |
+| `avatar_url`       | VARCHAR (nullable)     | Optional avatar                                                                                                  |
+| `auth_hash`        | VARCHAR (nullable)     | bcrypt hash. Set when portal uses password auth. NULL for magic-link-only portals                                |
+| `linked_record_id` | UUID                   | FK to the client's record in the CRM/contacts table. Used for record_scope resolution                            |
+| `status`           | VARCHAR                | `'invited'`, `'active'`, `'suspended'`, `'deleted'`                                                              |
+| `metadata`         | JSONB (nullable)       | Custom key-value data (e.g., `{ company: "Acme Corp", region: "West" }`)                                         |
+| `last_login_at`    | TIMESTAMPTZ (nullable) |                                                                                                                  |
+| `created_at`       | TIMESTAMPTZ            |                                                                                                                  |
+| `updated_at`       | TIMESTAMPTZ            |                                                                                                                  |
 
 **Indexes:** `(tenant_id, portal_id)`, `UNIQUE (portal_id, email)`.
 
@@ -620,30 +621,30 @@ Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:
 
 ### `portal_sessions` Table
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Session ID (stored in httpOnly cookie) |
-| `auth_type` | VARCHAR | `'quick'` (Quick Portal → portal_access) or `'app'` (App Portal → portal_clients) |
-| `auth_id` | UUID | Polymorphic FK: → portal_access.id when auth_type='quick', → portal_clients.id when auth_type='app' |
-| `portal_id` | UUID | Which portal/app this session is for |
-| `tenant_id` | UUID | |
-| `created_at` | TIMESTAMPTZ | |
-| `expires_at` | TIMESTAMPTZ | 30 days from creation |
-| `revoked_at` | TIMESTAMPTZ (nullable) | Set when manually revoked by Manager |
+| Column       | Type                   | Purpose                                                                                             |
+| ------------ | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `id`         | UUID                   | Session ID (stored in httpOnly cookie)                                                              |
+| `auth_type`  | VARCHAR                | `'quick'` (Quick Portal → portal_access) or `'app'` (App Portal → portal_clients)                   |
+| `auth_id`    | UUID                   | Polymorphic FK: → portal_access.id when auth_type='quick', → portal_clients.id when auth_type='app' |
+| `portal_id`  | UUID                   | Which portal/app this session is for                                                                |
+| `tenant_id`  | UUID                   |                                                                                                     |
+| `created_at` | TIMESTAMPTZ            |                                                                                                     |
+| `expires_at` | TIMESTAMPTZ            | 30 days from creation                                                                               |
+| `revoked_at` | TIMESTAMPTZ (nullable) | Set when manually revoked by Manager                                                                |
 
 **Indexes:** `(auth_type, auth_id)`, `(portal_id)`. Shared by both Quick Portals and App Portals — see `data-model.md` for canonical schema.
 
 ### `portal_magic_links` Table
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | |
-| `portal_client_id` | UUID | |
-| `token` | VARCHAR(64) | Random token sent in magic link |
-| `portal_id` | UUID | Scoped to one portal |
-| `tenant_id` | UUID | |
-| `expires_at` | TIMESTAMPTZ | 15 minutes from creation |
-| `used_at` | TIMESTAMPTZ (nullable) | Set on first use (single-use) |
+| Column             | Type                   | Purpose                         |
+| ------------------ | ---------------------- | ------------------------------- |
+| `id`               | UUID                   |                                 |
+| `portal_client_id` | UUID                   |                                 |
+| `token`            | VARCHAR(64)            | Random token sent in magic link |
+| `portal_id`        | UUID                   | Scoped to one portal            |
+| `tenant_id`        | UUID                   |                                 |
+| `expires_at`       | TIMESTAMPTZ            | 15 minutes from creation        |
+| `used_at`          | TIMESTAMPTZ (nullable) | Set on first use (single-use)   |
 
 ---
 
@@ -654,6 +655,7 @@ Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:
 List of `portal_clients` for this portal. Columns: display name, email, status, last login, linked CRM record. Actions: Invite, Suspend, Delete.
 
 **Invite flow:**
+
 1. Manager enters client email + optional display name
 2. Manager selects which CRM record this client is linked to (autocomplete search on identity table)
 3. System creates `portal_clients` row with `status='invited'` and `linked_record_id`
@@ -776,6 +778,7 @@ Payment blocks use Stripe Elements (card data never touches EveryStack). On succ
 **Preview:** Canvas switches to live rendering. Grid lines and builder chrome hidden. Top banner: "Preview Mode — viewing as: [client picker dropdown] | Back to Editor." Client picker tests `record_scope` filtering per specific portal_client.
 
 **Publish button** opens a modal with:
+
 1. **Diff summary** showing changes since last publish
 2. **Pre-publish Smart Setup** — system scans portal blocks and auto-suggests needed automations as toggles
 3. **Client access** section with existing clients and invite button
@@ -783,14 +786,14 @@ Payment blocks use Stripe Elements (card data never touches EveryStack). On succ
 
 ### Pre-Publish Smart Setup Suggestions
 
-| Block Type | Auto-Suggested Automations |
-|---|---|
-| Payment block | Update status to "Paid", store receipt URL, email receipt |
-| Form page | Notify Manager on submission, send client confirmation |
-| Comment Thread | Notify on client/Manager comments |
-| Approval block | Notify on approval/revision, update status |
-| Scheduling block | Send calendar invite, send reminder |
-| Always | Create Portal Access Link field for magic links, send invitation emails |
+| Block Type       | Auto-Suggested Automations                                              |
+| ---------------- | ----------------------------------------------------------------------- |
+| Payment block    | Update status to "Paid", store receipt URL, email receipt               |
+| Form page        | Notify Manager on submission, send client confirmation                  |
+| Comment Thread   | Notify on client/Manager comments                                       |
+| Approval block   | Notify on approval/revision, update status                              |
+| Scheduling block | Send calendar invite, send reminder                                     |
+| Always           | Create Portal Access Link field for magic links, send invitation emails |
 
 Each enabled toggle creates an `automation_definition` on publish.
 
@@ -824,6 +827,7 @@ Portal pages are read-heavy and client-facing — caching is critical for perfor
 ### Cache Invalidation
 
 Event-driven: when a record is mutated, the system:
+
 1. Looks up which portals reference that record's table (via `scoping_config`)
 2. Purges Redis keys for affected portal pages
 3. Issues CDN surrogate-key purge for public pages
@@ -836,13 +840,13 @@ Redis TTL for authenticated content: 60 seconds (shorter than public pages becau
 
 Portal clients are **unlimited on all plans** (pricing: "Unlimited Team Members, Viewers, and portal clients at every tier"). The constraint is on the number of portals:
 
-| Plan | Max Portals | Portal Clients | Portal Page Views/month |
-|------|-------------|----------------|------------------------|
-| Freelancer | 1 | Unlimited | 10,000 |
-| Starter | 5 | Unlimited | 50,000 |
-| Professional | 15 | Unlimited | 250,000 |
-| Business | Unlimited | Unlimited | 1,000,000 |
-| Enterprise | Unlimited | Unlimited | Custom |
+| Plan         | Max Portals | Portal Clients | Portal Page Views/month |
+| ------------ | ----------- | -------------- | ----------------------- |
+| Freelancer   | 1           | Unlimited      | 10,000                  |
+| Starter      | 5           | Unlimited      | 50,000                  |
+| Professional | 15          | Unlimited      | 250,000                 |
+| Business     | Unlimited   | Unlimited      | 1,000,000               |
+| Enterprise   | Unlimited   | Unlimited      | Custom                  |
 
 **Page view tracking:** Redis counter per portal per month: `portal:views:{portalId}:{YYYY-MM}`, TTL 35 days. Incremented on every non-cached portal page request (CDN cache hits don't count). When limit reached: portal continues serving but a banner appears in the Manager's portal admin panel ("Approaching page view limit — upgrade to avoid throttling"). At 120% of limit: new requests receive a "This portal is temporarily unavailable" static page. No data loss — the portal is throttled, not deleted.
 
@@ -853,10 +857,12 @@ Portal clients are **unlimited on all plans** (pricing: "Unlimited Team Members,
 Portal events drive automations via dedicated triggers and actions:
 
 **Triggers:**
+
 - Form Submitted — portal form submission with portal/client/form context
 - Client Portal Action — sub-types: payment received/failed, approval given, comment posted, appointment booked, file uploaded/downloaded, client logged in
 
 **Actions:**
+
 - Post to Portal — notification, cache refresh, page toggle
 - Create Report — render portal report page to PDF with time period filter
 
@@ -895,14 +901,18 @@ Background job cleans expired sessions and stale magic links:
 // BullMQ repeatable job
 async function cleanupExpiredPortalSessions() {
   // Expired sessions
-  await db.delete(portalSessions)
-    .where(or(
-      lt(portalSessions.expiresAt, new Date()),
-      lt(portalSessions.revokedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-    ));
+  await db
+    .delete(portalSessions)
+    .where(
+      or(
+        lt(portalSessions.expiresAt, new Date()),
+        lt(portalSessions.revokedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+      ),
+    );
 
   // Stale magic links (well past 15-minute expiry)
-  await db.delete(portalMagicLinks)
+  await db
+    .delete(portalMagicLinks)
     .where(lt(portalMagicLinks.expiresAt, new Date(Date.now() - 24 * 60 * 60 * 1000)));
 }
 ```
@@ -914,6 +924,7 @@ async function cleanupExpiredPortalSessions() {
 Portals default to `portal.everystack.app/{portalSlug}`. Custom domains let clients access portals at `clients.youragency.com`.
 
 **DNS & SSL:**
+
 - Customer adds CNAME record: `clients.youragency.com → portals.everystack.com`
 - SSL provisioned automatically via Let's Encrypt (Caddy or cert-manager). Free, auto-renewing.
 - Routing layer resolves incoming hostname → tenant + portal. Mapping cached in Redis.
@@ -921,13 +932,14 @@ Portals default to `portal.everystack.app/{portalSlug}`. Custom domains let clie
 **Setup Flow:** Portal Settings > Domain tab → enter domain → show CNAME instructions with copy button → "Verify" button polls DNS → once resolved, provision SSL cert → green checkmark + "Active" status.
 
 **URL Resolution (designed for custom domains from day one):**
+
 1. Incoming request hostname → lookup `app_domains` → resolve app
 2. If no match → parse path `/portal/{portalSlug}` → resolve by slug + tenant
 
 **Data Model:**
 
-| Table | Columns |
-|-------|---------|
+| Table         | Columns                                                                                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app_domains` | `id`, `tenant_id`, `app_id` (FK → apps), `domain` (unique), `status` (pending / verified / active / error), `ssl_expires_at`, `verified_at`, `created_at` |
 
 ---
@@ -941,20 +953,24 @@ Portals default to `portal.everystack.app/{portalSlug}`. Custom domains let clie
 ### Tiered Offline Strategy
 
 **Tier 1 — Cached Reads (Post-MVP — Portals & Apps (Initial)):**
+
 - Service worker caches portal pages, record data, and documents the user has viewed
 - Stale-while-revalidate pattern: show cached content immediately, refresh in background when connected
 
 **Tier 2 — Queued Writes (Post-MVP — Portals & Apps (Initial)):**
+
 - When offline, form submissions, status updates, time entries, approvals, and comments enter an IndexedDB queue
 - **Sync indicator** in portal header: green dot = online, amber dot = N queued changes, red dot = offline
 - When connectivity returns, queue replays in order
 - Conflict detection on sync: last-write-wins with toast notification if server state changed
 
 **Tier 3 — Smart Pre-Caching (Post-MVP — Portals & Apps (Fast-Follow)):**
+
 - "Going offline? Tap to cache today's jobs" prompt
 - Background sync when connection quality is good
 
 ### Home Screen Install
+
 - `manifest.json` generated per portal: portal name, logo, theme colors
 - "Add to Home Screen" prompt after 2nd portal visit
 - Launches in standalone mode (no browser chrome)
@@ -966,6 +982,7 @@ Portals default to `portal.everystack.app/{portalSlug}`. Custom domains let clie
 Most portals are authenticated — SEO irrelevant for those. Public portal pages get basic meta tags.
 
 **Per-page configuration** in App Designer property panel (page-level settings):
+
 - `<title>` — defaults to portal name + page name
 - `<meta name="description">` — defaults to portal description
 - `og:title`, `og:description`, `og:image` — for link sharing
@@ -1006,12 +1023,12 @@ Portal form pages can be embedded externally for lead capture on external websit
 
 Portal clients are external individuals with PII (email, name). GDPR applies:
 
-| Right | Implementation |
-|-------|----------------|
-| **Access** | Portal client can request a data export from portal settings page (exports their profile + all records visible via their `record_scope`) |
-| **Erasure** | Manager can delete a portal client. Triggers: delete `portal_client` record, delete all `portal_sessions`, delete all `portal_magic_links`. Records visible via `record_scope` are NOT deleted (they belong to the workspace). |
-| **Rectification** | Portal client can update their display_name and email from portal settings. Email change triggers re-verification. |
-| **Portability** | Data export in JSON format from portal settings. |
+| Right             | Implementation                                                                                                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Access**        | Portal client can request a data export from portal settings page (exports their profile + all records visible via their `record_scope`)                                                                                       |
+| **Erasure**       | Manager can delete a portal client. Triggers: delete `portal_client` record, delete all `portal_sessions`, delete all `portal_magic_links`. Records visible via `record_scope` are NOT deleted (they belong to the workspace). |
+| **Rectification** | Portal client can update their display_name and email from portal settings. Email change triggers re-verification.                                                                                                             |
+| **Portability**   | Data export in JSON format from portal settings.                                                                                                                                                                               |
 
 Portal client emails are registered in the PII compliance registry (`packages/shared/compliance/`). Portal client deletion is separate from workspace user deletion.
 
@@ -1028,6 +1045,7 @@ See `booking-scheduling.md` for the full specification. Covers: Calendar View ar
 ## Multi-Language Portal Content (Designed — Build Deferred)
 
 Portal block `config` JSONB fields that contain user-visible text will support locale-keyed values in the future:
+
 ```
 // Post-MVP — Portals & Apps (Initial): plain string
 config.label = "Submit Payment"
@@ -1054,8 +1072,8 @@ config.label = { en: "Submit Payment", es: "Enviar Pago", default: "en" }
 
 > **⚠️ POST-MVP.** All phases below describe the App Designer's internal phasing — all are post-MVP relative to the platform MVP defined in `GLOSSARY.md`.
 
-| Phase | App Designer Work |
-|-------|------------|
-| Post-MVP — Portals & Apps (Initial) | `apps`, `app_pages`, `app_blocks`, `portal_clients`, `portal_magic_links`, `portal_events` tables. `portal_sessions` updated with polymorphic auth (already exists from MVP). App Portal creation wizard with identity-based scoping setup. Designer (4-zone layout, block library, canvas, property panel Content+Style tabs). Three access modes. Password + magic link auth. Record scoping via `linked_record_id` + `scoping_config`. Write-back flow. Session middleware. Rate limiting. Three-tier caching. PWA Tier 1+2. Embeddable forms. Page view tracking. Audit logging. GDPR endpoints. Optional Quick Portal → App Portal conversion wizard. |
-| Post-MVP — Portals & Apps (Fast-Follow) | Logic tab. Grid Container. Query-bound binding. Analytics dashboard. Stripe integration. AI-generated apps. Custom domains. Booking/scheduling. Offline Tier 3. |
-| Post-MVP — Automations | Automation triggers: Form Submitted, Client Portal Action (payment, approval, comment, etc.). Automation actions: Post to Portal, Create Report. Auto-create portal client accounts on CRM record creation. |
+| Phase                                   | App Designer Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Post-MVP — Portals & Apps (Initial)     | `apps`, `app_pages`, `app_blocks`, `portal_clients`, `portal_magic_links`, `portal_events` tables. `portal_sessions` updated with polymorphic auth (already exists from MVP). App Portal creation wizard with identity-based scoping setup. Designer (4-zone layout, block library, canvas, property panel Content+Style tabs). Three access modes. Password + magic link auth. Record scoping via `linked_record_id` + `scoping_config`. Write-back flow. Session middleware. Rate limiting. Three-tier caching. PWA Tier 1+2. Embeddable forms. Page view tracking. Audit logging. GDPR endpoints. Optional Quick Portal → App Portal conversion wizard. |
+| Post-MVP — Portals & Apps (Fast-Follow) | Logic tab. Grid Container. Query-bound binding. Analytics dashboard. Stripe integration. AI-generated apps. Custom domains. Booking/scheduling. Offline Tier 3.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Post-MVP — Automations                  | Automation triggers: Form Submitted, Client Portal Action (payment, approval, comment, etc.). Automation actions: Post to Portal, Create Report. Auto-create portal client accounts on CRM record creation.                                                                                                                                                                                                                                                                                                                                                                                                                                                |

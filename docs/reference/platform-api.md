@@ -12,24 +12,24 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Overview | 36–55 | API philosophy, audience, base URL, versioning strategy |
-| Authentication | 56–169 | API keys, SHA-256 hashing, key prefixes (esk_live_/esk_test_/esk_platform_), scopes, management |
-| Rate Limiting | 170–196 | 4 tiers, Redis token bucket, rate limit headers |
-| API Versioning | 197–213 | URL-based versioning (/api/v1/), deprecation policy |
-| Error Format | 214–256 | Structured JSON errors, error codes, validation errors |
-| Audit Integration | 257–272 | actor_type: api_key, actor_label, audit log attribution |
-| Data API | 273–459 | Record CRUD, table queries, filter syntax, batch create, cursor pagination |
-| Schema API | 460–603 | Workspace/Table/Field/Cross-Link structure, SDS endpoint |
-| Provisioning API | 604–840 | Create workspaces, tables, fields, cross-links, automations, portals, forms, templates |
-| Automation API | 841–907 | Trigger automations via API, run status, manual trigger endpoint |
-| AI API | 908–993 | AIService consumption via capability tiers, prompt templates, credit metering |
-| Webhook Management API | 994–1049 | Endpoint registration, event types, delivery log, signature verification |
-| File Upload API | 1050–1089 | Presigned URL flow, file metadata, content-type validation |
-| Tenant Management API | 1090–1133 | Tenant creation with platform-level keys, tenant listing |
-| Phase Implementation | 1134–1148 | Phased API surface delivery (MVP — Foundation through Post-MVP — Automations) |
-| SDK Considerations (Post-MVP) | 1149–1170 | Future SDK design notes |
+| Section                       | Lines     | Covers                                                                                          |
+| ----------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| Overview                      | 36–55     | API philosophy, audience, base URL, versioning strategy                                         |
+| Authentication                | 56–169    | API keys, SHA-256 hashing, key prefixes (esk*live*/esk*test*/esk*platform*), scopes, management |
+| Rate Limiting                 | 170–196   | 4 tiers, Redis token bucket, rate limit headers                                                 |
+| API Versioning                | 197–213   | URL-based versioning (/api/v1/), deprecation policy                                             |
+| Error Format                  | 214–256   | Structured JSON errors, error codes, validation errors                                          |
+| Audit Integration             | 257–272   | actor_type: api_key, actor_label, audit log attribution                                         |
+| Data API                      | 273–459   | Record CRUD, table queries, filter syntax, batch create, cursor pagination                      |
+| Schema API                    | 460–603   | Workspace/Table/Field/Cross-Link structure, SDS endpoint                                        |
+| Provisioning API              | 604–840   | Create workspaces, tables, fields, cross-links, automations, portals, forms, templates          |
+| Automation API                | 841–907   | Trigger automations via API, run status, manual trigger endpoint                                |
+| AI API                        | 908–993   | AIService consumption via capability tiers, prompt templates, credit metering                   |
+| Webhook Management API        | 994–1049  | Endpoint registration, event types, delivery log, signature verification                        |
+| File Upload API               | 1050–1089 | Presigned URL flow, file metadata, content-type validation                                      |
+| Tenant Management API         | 1090–1133 | Tenant creation with platform-level keys, tenant listing                                        |
+| Phase Implementation          | 1134–1148 | Phased API surface delivery (MVP — Foundation through Post-MVP — Automations)                   |
+| SDK Considerations (Post-MVP) | 1149–1170 | Future SDK design notes                                                                         |
 
 ---
 
@@ -75,21 +75,21 @@ All Platform API requests authenticate via API keys. Keys are service-level cred
 
 Each API key has a permission scope that controls what operations it can perform:
 
-| Scope | Permissions |
-|---|---|
-| `data:read` | Read Records, query Tables, read Cross-Links |
-| `data:write` | Create, update, delete Records. Manage Cross-Link entries |
-| `schema:read` | Read Table, Field, View, Cross-Link definitions. Query SDS |
-| `schema:write` | Create/update/delete Tables, Fields, Views, Cross-Links |
-| `automation:read` | Read Automation definitions and run history |
-| `automation:write` | Create/update Automations, trigger Automations |
-| `automation:trigger` | Trigger Automations only (no create/update) |
-| `portal:read` | Read Quick Portal and Quick Form configurations |
-| `portal:write` | Create/update Quick Portals, Quick Forms, Portal Access entries |
-| `document:read` | Read Document Template definitions and generated documents |
-| `document:write` | Create/update Document Templates, trigger document generation |
-| `ai:use` | Call AIService endpoints (metered against Tenant credit budget) |
-| `admin` | All permissions. Tenant-level operations (create Workspaces, manage API keys, read settings) |
+| Scope                | Permissions                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| `data:read`          | Read Records, query Tables, read Cross-Links                                                 |
+| `data:write`         | Create, update, delete Records. Manage Cross-Link entries                                    |
+| `schema:read`        | Read Table, Field, View, Cross-Link definitions. Query SDS                                   |
+| `schema:write`       | Create/update/delete Tables, Fields, Views, Cross-Links                                      |
+| `automation:read`    | Read Automation definitions and run history                                                  |
+| `automation:write`   | Create/update Automations, trigger Automations                                               |
+| `automation:trigger` | Trigger Automations only (no create/update)                                                  |
+| `portal:read`        | Read Quick Portal and Quick Form configurations                                              |
+| `portal:write`       | Create/update Quick Portals, Quick Forms, Portal Access entries                              |
+| `document:read`      | Read Document Template definitions and generated documents                                   |
+| `document:write`     | Create/update Document Templates, trigger document generation                                |
+| `ai:use`             | Call AIService endpoints (metered against Tenant credit budget)                              |
+| `admin`              | All permissions. Tenant-level operations (create Workspaces, manage API keys, read settings) |
 
 Keys can hold multiple scopes. A typical B2B vertical provisioning key uses `admin`. A domain service writing session results uses `data:read` + `data:write` + `automation:trigger`.
 
@@ -181,12 +181,12 @@ When exceeded: `429 Too Many Requests` with `Retry-After` header.
 
 ### Tiers
 
-| Tier | Requests/min | Burst | Target Audience |
-|---|---|---|---|
-| `basic` | 60 | 10 | Customer scripts, light integrations |
-| `standard` | 120 | 20 | Vertical backends, active integrations |
-| `high` | 600 | 100 | High-volume vertical services (B2C domain services) |
-| `enterprise` | 2,000 | 500 | Enterprise plan customers, dedicated |
+| Tier         | Requests/min | Burst | Target Audience                                     |
+| ------------ | ------------ | ----- | --------------------------------------------------- |
+| `basic`      | 60           | 10    | Customer scripts, light integrations                |
+| `standard`   | 120          | 20    | Vertical backends, active integrations              |
+| `high`       | 600          | 100   | High-volume vertical services (B2C domain services) |
+| `enterprise` | 2,000        | 500   | Enterprise plan customers, dedicated                |
 
 Rate limit tier is set per API key at creation. Upgradable via Settings or API.
 
@@ -199,6 +199,7 @@ Rate limit tier is set per API key at creation. Upgradable via Settings or API.
 **URL-based:** All endpoints prefixed with `/api/v1/`.
 
 **Version lifecycle:**
+
 - **Current** (`v1`) — actively developed, backwards-compatible changes only.
 - **Deprecated** — still functional, sunset date announced. `Sunset` header on responses.
 - **Retired** — returns `410 Gone`.
@@ -234,23 +235,23 @@ All errors return a consistent JSON structure:
 
 ### Error Codes
 
-| HTTP Status | Code | Meaning |
-|---|---|---|
-| 400 | `VALIDATION_ERROR` | Request body failed validation. `details` array has per-field errors |
-| 400 | `INVALID_FILTER` | Query filter syntax is invalid |
-| 400 | `INVALID_SORT` | Sort parameter references a nonexistent Field |
-| 401 | `UNAUTHORIZED` | Missing or invalid API key |
-| 401 | `KEY_EXPIRED` | API key has passed its `expires_at` |
-| 401 | `KEY_REVOKED` | API key has been revoked |
-| 403 | `INSUFFICIENT_SCOPE` | API key lacks the required scope for this operation |
-| 403 | `FIELD_PERMISSION_DENIED` | API key scope allows the operation, but a specific Field is restricted |
-| 404 | `NOT_FOUND` | Resource does not exist (or is in a different Tenant — same response for security) |
-| 409 | `CONFLICT` | Record was modified since last read (optimistic concurrency, if `If-Match` header used) |
-| 413 | `PAYLOAD_TOO_LARGE` | Request body exceeds 1MB limit |
-| 422 | `RECORD_QUOTA_EXCEEDED` | Tenant has reached their plan's Record quota |
-| 422 | `AI_CREDITS_EXHAUSTED` | Tenant has no remaining AI credits for this billing period |
-| 429 | `RATE_LIMITED` | Rate limit exceeded. `Retry-After` header included |
-| 500 | `INTERNAL_ERROR` | Server error. `request_id` included for support |
+| HTTP Status | Code                      | Meaning                                                                                 |
+| ----------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| 400         | `VALIDATION_ERROR`        | Request body failed validation. `details` array has per-field errors                    |
+| 400         | `INVALID_FILTER`          | Query filter syntax is invalid                                                          |
+| 400         | `INVALID_SORT`            | Sort parameter references a nonexistent Field                                           |
+| 401         | `UNAUTHORIZED`            | Missing or invalid API key                                                              |
+| 401         | `KEY_EXPIRED`             | API key has passed its `expires_at`                                                     |
+| 401         | `KEY_REVOKED`             | API key has been revoked                                                                |
+| 403         | `INSUFFICIENT_SCOPE`      | API key lacks the required scope for this operation                                     |
+| 403         | `FIELD_PERMISSION_DENIED` | API key scope allows the operation, but a specific Field is restricted                  |
+| 404         | `NOT_FOUND`               | Resource does not exist (or is in a different Tenant — same response for security)      |
+| 409         | `CONFLICT`                | Record was modified since last read (optimistic concurrency, if `If-Match` header used) |
+| 413         | `PAYLOAD_TOO_LARGE`       | Request body exceeds 1MB limit                                                          |
+| 422         | `RECORD_QUOTA_EXCEEDED`   | Tenant has reached their plan's Record quota                                            |
+| 422         | `AI_CREDITS_EXHAUSTED`    | Tenant has no remaining AI credits for this billing period                              |
+| 429         | `RATE_LIMITED`            | Rate limit exceeded. `Retry-After` header included                                      |
+| 500         | `INTERNAL_ERROR`          | Server error. `request_id` included for support                                         |
 
 ---
 
@@ -258,10 +259,10 @@ All errors return a consistent JSON structure:
 
 Every mutation via the Platform API records an Audit Log entry:
 
-| Field | Value |
-|---|---|
-| `actor_type` | `'api_key'` |
-| `actor_id` | `api_keys.id` (UUID of the key used) |
+| Field         | Value                                                                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `actor_type`  | `'api_key'`                                                                                                                                                                |
+| `actor_id`    | `api_keys.id` (UUID of the key used)                                                                                                                                       |
 | `actor_label` | Value of `X-Actor-Label` request header, if provided (max 255 chars). Optional metadata for readability (e.g., "JobStack: plumber@acme.com"). Not validated by EveryStack. |
 
 **Note:** `actor_type: 'api_key'` is a new addition to the audit actor type enum. Existing types per `audit-log.md`: user, sync, automation, portal_client, system, agent. The `api_key` type joins this list when the Platform API ships. See `audit-log.md` and `data-model.md` for schema updates.
@@ -284,13 +285,13 @@ GET /api/v1/tables/{tableId}/records
 
 **Query parameters:**
 
-| Parameter | Type | Description |
-|---|---|---|
-| `filter` | string | Filter expression (see §Filter Syntax) |
-| `sort` | string | Sort expression: `field_id:asc` or `field_id:desc`. Comma-separated for multi-sort |
-| `fields` | string | Comma-separated Field IDs to include. Default: all visible Fields |
-| `page_size` | integer | Records per page (default 50, max 500) |
-| `cursor` | string | Pagination cursor from previous response |
+| Parameter             | Type    | Description                                                                            |
+| --------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `filter`              | string  | Filter expression (see §Filter Syntax)                                                 |
+| `sort`                | string  | Sort expression: `field_id:asc` or `field_id:desc`. Comma-separated for multi-sort     |
+| `fields`              | string  | Comma-separated Field IDs to include. Default: all visible Fields                      |
+| `page_size`           | integer | Records per page (default 50, max 500)                                                 |
+| `cursor`              | string  | Pagination cursor from previous response                                               |
 | `include_cross_links` | boolean | Include Cross-Linked Record data (default false). Level 0 only — IDs and display field |
 
 **Response:**
@@ -306,9 +307,7 @@ GET /api/v1/tables/{tableId}/records
         "fld_ghi789": { "type": "select", "value": "active" },
         "fld_jkl012": {
           "type": "cross_link",
-          "linked_records": [
-            { "id": "rec_xyz", "display": "Job #1042" }
-          ]
+          "linked_records": [{ "id": "rec_xyz", "display": "Job #1042" }]
         }
       },
       "created_at": "2026-02-28T10:00:00Z",
@@ -324,6 +323,7 @@ GET /api/v1/tables/{tableId}/records
 ```
 
 **Notes:**
+
 - Field values are returned in canonical format, keyed by Field ID (not Field name). See `sync-engine.md` for canonical JSONB format per field type.
 - `total_count` is approximate for tables with >10,000 Records (uses `EXPLAIN` row estimate for performance).
 - Cursor-based pagination only. No offset pagination — it doesn't scale with large datasets.
@@ -340,22 +340,22 @@ filter=fld_ghi789:eq:active,fld_jkl012:gt:2026-01-01
 
 **Operators:**
 
-| Operator | Types | Meaning |
-|---|---|---|
-| `eq` | All | Equals |
-| `neq` | All | Not equals |
-| `gt` | Number, Date | Greater than |
-| `gte` | Number, Date | Greater than or equal |
-| `lt` | Number, Date | Less than |
-| `lte` | Number, Date | Less than or equal |
-| `contains` | Text, Email, URL, Phone | Substring match (case-insensitive) |
-| `not_contains` | Text, Email, URL, Phone | Substring exclusion |
-| `is_empty` | All | Field is null or empty |
-| `is_not_empty` | All | Field has a value |
-| `in` | Select, Multi-Select | Value is one of (comma-separated within parentheses) |
-| `has_any` | Multi-Select | Record has any of the specified values |
-| `has_all` | Multi-Select | Record has all of the specified values |
-| `linked_to` | Cross-Link | Linked to specific Record ID |
+| Operator       | Types                   | Meaning                                              |
+| -------------- | ----------------------- | ---------------------------------------------------- |
+| `eq`           | All                     | Equals                                               |
+| `neq`          | All                     | Not equals                                           |
+| `gt`           | Number, Date            | Greater than                                         |
+| `gte`          | Number, Date            | Greater than or equal                                |
+| `lt`           | Number, Date            | Less than                                            |
+| `lte`          | Number, Date            | Less than or equal                                   |
+| `contains`     | Text, Email, URL, Phone | Substring match (case-insensitive)                   |
+| `not_contains` | Text, Email, URL, Phone | Substring exclusion                                  |
+| `is_empty`     | All                     | Field is null or empty                               |
+| `is_not_empty` | All                     | Field has a value                                    |
+| `in`           | Select, Multi-Select    | Value is one of (comma-separated within parentheses) |
+| `has_any`      | Multi-Select            | Record has any of the specified values               |
+| `has_all`      | Multi-Select            | Record has all of the specified values               |
+| `linked_to`    | Cross-Link              | Linked to specific Record ID                         |
 
 **Multiple filters** are comma-separated and ANDed. OR logic requires separate queries (or a future `filter_json` parameter for complex expressions).
 
@@ -392,12 +392,14 @@ POST /api/v1/tables/{tableId}/records
 **Record Templates (optional):** The request body also accepts an optional `template_id` to apply a Record Template before field values, and an optional `context_record_id` for templates that use `$context_record` tokens. Resolution order: field defaults → template values → request `fields`. See `record-templates.md` §API Surface for full template integration.
 
 **Validation:**
+
 - Required Fields must be present (per Field `required` flag in `fields` table).
 - Values are validated against Field type (email format, number range, select option exists, etc.).
 - Cross-Link Fields accept an array of target Record IDs: `"fld_jkl012": ["rec_abc", "rec_def"]`.
 - Record quota checked before creation. If exceeded: `422 RECORD_QUOTA_EXCEEDED`.
 
 **Side effects:**
+
 - Audit Log entry: `actor_type: 'api_key'`, action: `record.created`.
 - Automation triggers: "Record Created" fires for matching Automations.
 - Real-time event: `record.created` published to `table:{tableId}` Redis room.
@@ -940,6 +942,7 @@ Response 200: {
 ```
 
 **Behavior:**
+
 - Resolves `capability_tier` to a provider/model via `CAPABILITY_ROUTING` (see `ai-architecture.md`).
 - If `prompt_template_id` is provided, loads the template from the Prompt Registry and compiles it with the supplied `variables`.
 - If no template, a raw `messages` array can be sent instead (same shape as the Anthropic Messages API, compiled through the provider adapter).
@@ -1137,14 +1140,14 @@ Returns the Tenant associated with the API key: name, slug, plan, settings, usag
 
 The Platform API ships incrementally alongside EveryStack's core development:
 
-| Phase | API Work |
-|---|---|
-| **MVP — Foundation** | `api_keys` table schema. Key creation/revocation via Settings UI. Auth middleware for `Authorization: Bearer` header. Rate limiting infrastructure (Redis token bucket). Error format. `actor_type: 'api_key'` in Audit Log. |
-| **MVP — Core UX** | Data API (Record CRUD, Table queries, filter/sort). Schema API (list Workspaces, Tables, Fields, Cross-Links). File Upload API. API request logging. |
-| **Post-MVP — Portals & Apps** | Provisioning API (create Workspaces, Tables, Fields, Cross-Links). Portal/Form management endpoints. Document Template management. |
-| **Post-MVP — Documents** | Document Generation endpoint. Automation management and trigger endpoints. Webhook management API. |
-| **Post-MVP — Automations** | AI API (AIService consumption, prompt template registration). Tenant Management API (Tenant creation with platform keys). SDS endpoint. Full API documentation site. |
-| **Post-MVP** | Batch provisioning (create full Workspace structure in one call). SDK generation (TypeScript, Python). API analytics dashboard. |
+| Phase                         | API Work                                                                                                                                                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation**          | `api_keys` table schema. Key creation/revocation via Settings UI. Auth middleware for `Authorization: Bearer` header. Rate limiting infrastructure (Redis token bucket). Error format. `actor_type: 'api_key'` in Audit Log. |
+| **MVP — Core UX**             | Data API (Record CRUD, Table queries, filter/sort). Schema API (list Workspaces, Tables, Fields, Cross-Links). File Upload API. API request logging.                                                                         |
+| **Post-MVP — Portals & Apps** | Provisioning API (create Workspaces, Tables, Fields, Cross-Links). Portal/Form management endpoints. Document Template management.                                                                                           |
+| **Post-MVP — Documents**      | Document Generation endpoint. Automation management and trigger endpoints. Webhook management API.                                                                                                                           |
+| **Post-MVP — Automations**    | AI API (AIService consumption, prompt template registration). Tenant Management API (Tenant creation with platform keys). SDS endpoint. Full API documentation site.                                                         |
+| **Post-MVP**                  | Batch provisioning (create full Workspace structure in one call). SDK generation (TypeScript, Python). API analytics dashboard.                                                                                              |
 
 ---
 

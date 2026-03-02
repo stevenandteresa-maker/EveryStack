@@ -16,22 +16,22 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Problem Statement | 38–49 | Why document intelligence matters for the platform |
-| Architecture Overview | 50–74 | Pipeline architecture, integration points |
-| 1. File Metadata Extraction *(MVP — Core UX)* | 75–145 | EXIF, file properties, auto-tagging |
-| 2. File Content Extraction *(MVP — Core UX)* | 146–188 | PDF/DOCX/XLSX text extraction, OCR for scanned docs |
-| 3. Vision Analysis & Labeling *(Post-MVP — Comms & Polish)* | 189–233 | Image analysis, auto-labeling, scene detection |
-| 4. Document-to-Record Extraction *(Post-MVP — Portals & Apps)* | 234–380 | Structured data extraction from documents to records |
-| 5. Asset Version Comparison *(Post-MVP — Verticals & Advanced)* | 381–421 | 4 comparison modes, diff visualization |
-| 6. Content Search Integration *(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)* | 422–545 | Full-text + embedding search over file content |
-| 7. Extended File Detail Panel *(Post-MVP — Comms & Polish)* | 546–589 | Rich file preview, metadata display, AI analysis |
-| 8. Data Model Additions | 590–654 | file_embeddings, extraction_jobs tables |
-| 9. AI Credit Costs | 655–670 | Credit costs per extraction/analysis operation |
-| 10. Permissions | 671–687 | File access respects table and field permissions |
-| 11. Phase Implementation | 688–714 | MVP — Core UX–8 delivery across capabilities |
-| Reconciliation with Existing Docs | 715–727 | Cross-reference alignment notes |
+| Section                                                                                             | Lines   | Covers                                               |
+| --------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------- |
+| Problem Statement                                                                                   | 38–49   | Why document intelligence matters for the platform   |
+| Architecture Overview                                                                               | 50–74   | Pipeline architecture, integration points            |
+| 1. File Metadata Extraction _(MVP — Core UX)_                                                       | 75–145  | EXIF, file properties, auto-tagging                  |
+| 2. File Content Extraction _(MVP — Core UX)_                                                        | 146–188 | PDF/DOCX/XLSX text extraction, OCR for scanned docs  |
+| 3. Vision Analysis & Labeling _(Post-MVP — Comms & Polish)_                                         | 189–233 | Image analysis, auto-labeling, scene detection       |
+| 4. Document-to-Record Extraction _(Post-MVP — Portals & Apps)_                                      | 234–380 | Structured data extraction from documents to records |
+| 5. Asset Version Comparison _(Post-MVP — Verticals & Advanced)_                                     | 381–421 | 4 comparison modes, diff visualization               |
+| 6. Content Search Integration _(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)_ | 422–545 | Full-text + embedding search over file content       |
+| 7. Extended File Detail Panel _(Post-MVP — Comms & Polish)_                                         | 546–589 | Rich file preview, metadata display, AI analysis     |
+| 8. Data Model Additions                                                                             | 590–654 | file_embeddings, extraction_jobs tables              |
+| 9. AI Credit Costs                                                                                  | 655–670 | Credit costs per extraction/analysis operation       |
+| 10. Permissions                                                                                     | 671–687 | File access respects table and field permissions     |
+| 11. Phase Implementation                                                                            | 688–714 | MVP — Core UX–8 delivery across capabilities         |
+| Reconciliation with Existing Docs                                                                   | 715–727 | Cross-reference alignment notes                      |
 
 ---
 
@@ -72,7 +72,7 @@ User triggers document extraction (manual action, not automatic):
 
 ---
 
-## 1. File Metadata Extraction *(MVP — Core UX)*
+## 1. File Metadata Extraction _(MVP — Core UX)_
 
 ### Extended `files.metadata` JSONB
 
@@ -83,41 +83,41 @@ interface FileMetadata {
   // Existing (files.md)
   width?: number;
   height?: number;
-  page_count?: number;          // PDFs
-  duration_seconds?: number;    // audio/video
-  blurhash?: string;            // 10-char placeholder
+  page_count?: number; // PDFs
+  duration_seconds?: number; // audio/video
+  blurhash?: string; // 10-char placeholder
 
   // NEW — EXIF / document properties
-  captured_at?: string;         // ISO 8601 — EXIF DateTimeOriginal or PDF CreationDate
-  camera_make?: string;         // "Canon", "Apple"
-  camera_model?: string;        // "EOS R5", "iPhone 15 Pro"
-  gps_latitude?: number;        // Decimal degrees
-  gps_longitude?: number;       // Decimal degrees
-  gps_altitude?: number;        // Meters
-  orientation?: number;         // EXIF orientation tag (1-8)
-  color_space?: string;         // "sRGB", "Adobe RGB", "P3"
-  dpi?: number;                 // Dots per inch (print resolution)
-  iso?: number;                 // ISO speed
-  aperture?: string;            // "f/2.8"
-  shutter_speed?: string;       // "1/250"
-  focal_length?: string;        // "50mm"
-  lens_model?: string;          // "EF 50mm f/1.4 USM"
-  artist?: string;              // EXIF Artist tag
-  copyright?: string;           // EXIF Copyright tag
+  captured_at?: string; // ISO 8601 — EXIF DateTimeOriginal or PDF CreationDate
+  camera_make?: string; // "Canon", "Apple"
+  camera_model?: string; // "EOS R5", "iPhone 15 Pro"
+  gps_latitude?: number; // Decimal degrees
+  gps_longitude?: number; // Decimal degrees
+  gps_altitude?: number; // Meters
+  orientation?: number; // EXIF orientation tag (1-8)
+  color_space?: string; // "sRGB", "Adobe RGB", "P3"
+  dpi?: number; // Dots per inch (print resolution)
+  iso?: number; // ISO speed
+  aperture?: string; // "f/2.8"
+  shutter_speed?: string; // "1/250"
+  focal_length?: string; // "50mm"
+  lens_model?: string; // "EF 50mm f/1.4 USM"
+  artist?: string; // EXIF Artist tag
+  copyright?: string; // EXIF Copyright tag
 
   // NEW — document properties
-  document_title?: string;      // PDF title, DOCX title
-  document_author?: string;     // PDF author, DOCX author
-  document_created?: string;    // ISO 8601
-  document_modified?: string;   // ISO 8601
+  document_title?: string; // PDF title, DOCX title
+  document_author?: string; // PDF author, DOCX author
+  document_created?: string; // ISO 8601
+  document_modified?: string; // ISO 8601
 
   // NEW — AI-generated (populated by file.vision_analyze)
-  ai_description?: string;      // Natural language description of image content
-  ai_tags?: string[];           // Generated tags: ["sunset", "beach", "ocean", "warm tones"]
-  ai_text_content?: string;     // Any text visible in the image (signs, labels, etc.)
-  ai_dominant_colors?: string[];// Hex colors: ["#E8A444", "#2C5F8A", "#F5F0E8"]
-  ai_model_id?: string;         // Which model generated the analysis
-  ai_analyzed_at?: string;      // When analysis ran
+  ai_description?: string; // Natural language description of image content
+  ai_tags?: string[]; // Generated tags: ["sunset", "beach", "ocean", "warm tones"]
+  ai_text_content?: string; // Any text visible in the image (signs, labels, etc.)
+  ai_dominant_colors?: string[]; // Hex colors: ["#E8A444", "#2C5F8A", "#F5F0E8"]
+  ai_model_id?: string; // Which model generated the analysis
+  ai_analyzed_at?: string; // When analysis ran
 }
 ```
 
@@ -128,6 +128,7 @@ interface FileMetadata {
 **Library:** `exifr` (lightweight, handles EXIF/IPTC/XMP from JPEG/TIFF/HEIC/WebP), `pdf-lib` for PDF properties, `mammoth` or `JSZip` for DOCX properties.
 
 **Process:**
+
 1. Download first 256KB of file from R2/S3 via range request (EXIF is always in the header)
 2. Parse by MIME type:
    - `image/*` → `exifr.parse()` for EXIF/IPTC/XMP data
@@ -143,7 +144,7 @@ interface FileMetadata {
 
 ---
 
-## 2. File Content Extraction *(MVP — Core UX)*
+## 2. File Content Extraction _(MVP — Core UX)_
 
 ### New Column: `files.extracted_text`
 
@@ -165,16 +166,16 @@ CREATE INDEX idx_files_extracted_text_search
 
 **Extraction by MIME type:**
 
-| MIME Type | Method | Library | Output |
-|-----------|--------|---------|--------|
-| `application/pdf` | Text extraction from PDF content streams | `pdf-parse` (wraps `pdf.js`) | Full text, max 50,000 chars |
-| `application/pdf` (scanned/image-only) | Falls back to OCR if `pdf-parse` returns <50 chars per page | Gotenberg → image → vision model | OCR text, AI `standard` tier |
-| `application/vnd.openxmlformats-*.wordprocessingml` | XML text extraction | `mammoth` | Full text, max 50,000 chars |
-| `application/vnd.openxmlformats-*.spreadsheetml` | Cell values + sheet names | `SheetJS` | Concatenated cell text, max 50,000 chars |
-| `application/vnd.openxmlformats-*.presentationml` | Slide text extraction | `JSZip` + XML parse | Slide text in order, max 50,000 chars |
-| `text/csv` | Raw text | Direct read | First 50,000 chars |
-| `text/plain` | Raw text | Direct read | First 50,000 chars |
-| `image/*` with text | Vision OCR | Vision model, AI `standard` tier | Extracted visible text |
+| MIME Type                                           | Method                                                      | Library                          | Output                                   |
+| --------------------------------------------------- | ----------------------------------------------------------- | -------------------------------- | ---------------------------------------- |
+| `application/pdf`                                   | Text extraction from PDF content streams                    | `pdf-parse` (wraps `pdf.js`)     | Full text, max 50,000 chars              |
+| `application/pdf` (scanned/image-only)              | Falls back to OCR if `pdf-parse` returns <50 chars per page | Gotenberg → image → vision model | OCR text, AI `standard` tier             |
+| `application/vnd.openxmlformats-*.wordprocessingml` | XML text extraction                                         | `mammoth`                        | Full text, max 50,000 chars              |
+| `application/vnd.openxmlformats-*.spreadsheetml`    | Cell values + sheet names                                   | `SheetJS`                        | Concatenated cell text, max 50,000 chars |
+| `application/vnd.openxmlformats-*.presentationml`   | Slide text extraction                                       | `JSZip` + XML parse              | Slide text in order, max 50,000 chars    |
+| `text/csv`                                          | Raw text                                                    | Direct read                      | First 50,000 chars                       |
+| `text/plain`                                        | Raw text                                                    | Direct read                      | First 50,000 chars                       |
+| `image/*` with text                                 | Vision OCR                                                  | Vision model, AI `standard` tier | Extracted visible text                   |
 
 **Scanned PDF detection:** If `pdf-parse` returns fewer than 50 characters per page on average, the PDF is likely scanned images. In that case, render pages to images via Gotenberg and send to the vision model for OCR. This is the only content extraction path that costs AI credits — flagged in processing metadata.
 
@@ -186,7 +187,7 @@ CREATE INDEX idx_files_extracted_text_search
 
 ---
 
-## 3. Vision Analysis & Labeling *(Post-MVP — Comms & Polish)*
+## 3. Vision Analysis & Labeling _(Post-MVP — Comms & Polish)_
 
 ### BullMQ Job: `file.vision_analyze`
 
@@ -197,6 +198,7 @@ CREATE INDEX idx_files_extracted_text_search
 **Why scope to asset library by default?** A marketing agency's asset library is where searchable images live. A construction company attaching a job-site photo to a task record probably doesn't need AI labeling. But they can still trigger it manually. "AI capable, not AI obnoxious."
 
 **Process:**
+
 1. Load 800px WebP thumbnail (already generated by `file.thumbnail`)
 2. Send to vision-capable model via LLM Router (`supportsVision: true` — already in provider interface)
 3. System prompt:
@@ -231,7 +233,7 @@ Record View → file attachment → ⋮ menu → "Analyze Image"
 
 ---
 
-## 4. Document-to-Record Extraction *(Post-MVP — Portals & Apps)*
+## 4. Document-to-Record Extraction _(Post-MVP — Portals & Apps)_
 
 This is the headline feature: upload an invoice PDF (or photograph it on mobile), and the AI reads it and populates your record fields.
 
@@ -326,24 +328,25 @@ interface ExtractionTemplate {
   id: string;
   tenant_id: string;
   table_id: string;
-  name: string;                     // "Acme Corp invoices", "Equipment receipts"
-  document_type: string;            // "invoice", "receipt", "business_card", "contract", "custom"
-  field_mapping: Record<string, string>;  // { extracted_key: field_id }
+  name: string; // "Acme Corp invoices", "Equipment receipts"
+  document_type: string; // "invoice", "receipt", "business_card", "contract", "custom"
+  field_mapping: Record<string, string>; // { extracted_key: field_id }
   line_item_config?: {
     target_table_id: string;
     field_mapping: Record<string, string>;
   };
-  match_hints?: string[];           // ["Acme", "INV-"] — helps auto-select template
-  auto_apply: boolean;              // Skip review step when template matches
+  match_hints?: string[]; // ["Acme", "INV-"] — helps auto-select template
+  auto_apply: boolean; // Skip review step when template matches
   created_by: string;
   created_at: string;
-  usage_count: number;              // Track popularity for template suggestions
+  usage_count: number; // Track popularity for template suggestions
 }
 ```
 
 **Storage:** `extraction_templates` table or `scan_templates` table if shared with mobile scan templates from `mobile.md` — same concept, different entry point. The mobile spec already describes scan templates; this extends them to work from web uploads too.
 
 **Template matching:** When a user triggers extraction, the pipeline checks existing templates:
+
 1. Match by `match_hints` against extracted text (vendor name, document ID patterns)
 2. If match found and `auto_apply` is true → pre-fill mapping, show "Extracted using 'Acme invoices' template. [Edit mapping]"
 3. If match found but `auto_apply` is false → pre-fill but show full review UI
@@ -351,22 +354,23 @@ interface ExtractionTemplate {
 
 ### Supported Document Types
 
-| Document Type | Key Extracted Fields | Typical Target Table |
-|--------------|---------------------|---------------------|
-| **Invoice** | Vendor, date, invoice #, line items, subtotal, tax, total, payment terms, due date | Invoices, Expenses, Bills |
-| **Receipt** | Merchant, date, items, total, payment method, last 4 digits | Expenses, Receipts |
-| **Business card** | Name, title, company, email, phone, address, website | Contacts, Leads |
-| **Contract** | Parties, effective date, term, key clauses, signatures, renewal date | Contracts, Agreements |
-| **Purchase order** | PO #, vendor, items, quantities, unit prices, total, delivery date | Purchase Orders |
-| **Shipping label** | Tracking #, carrier, origin, destination, weight | Shipments, Orders |
-| **Bank statement** | Account #, period, transactions (date, description, amount), balance | Transactions |
-| **Any structured document** | AI determines structure from table schema context | Any table |
+| Document Type               | Key Extracted Fields                                                               | Typical Target Table      |
+| --------------------------- | ---------------------------------------------------------------------------------- | ------------------------- |
+| **Invoice**                 | Vendor, date, invoice #, line items, subtotal, tax, total, payment terms, due date | Invoices, Expenses, Bills |
+| **Receipt**                 | Merchant, date, items, total, payment method, last 4 digits                        | Expenses, Receipts        |
+| **Business card**           | Name, title, company, email, phone, address, website                               | Contacts, Leads           |
+| **Contract**                | Parties, effective date, term, key clauses, signatures, renewal date               | Contracts, Agreements     |
+| **Purchase order**          | PO #, vendor, items, quantities, unit prices, total, delivery date                 | Purchase Orders           |
+| **Shipping label**          | Tracking #, carrier, origin, destination, weight                                   | Shipments, Orders         |
+| **Bank statement**          | Account #, period, transactions (date, description, amount), balance               | Transactions              |
+| **Any structured document** | AI determines structure from table schema context                                  | Any table                 |
 
 The last row is important — the extraction is schema-driven, not template-driven. The AI sees the target table's fields and extracts whatever matches, even for document types not listed above.
 
 ### Mobile Integration
 
 The mobile scanning flow in `mobile.md` (Camera Scanning & OCR section) already specifies this UX for camera captures. This spec **unifies** that flow so it works identically for:
+
 - Mobile camera capture → extract
 - Mobile gallery pick → extract
 - Web file upload → extract
@@ -378,7 +382,7 @@ The extraction pipeline, field mapping UI, and template system are shared across
 
 ---
 
-## 5. Asset Version Comparison *(Post-MVP — Verticals & Advanced)*
+## 5. Asset Version Comparison _(Post-MVP — Verticals & Advanced)_
 
 ### Visual Diff for Image Versions
 
@@ -386,12 +390,12 @@ When a documents-type table (asset library) has versioned files via `asset_versi
 
 **Comparison modes:**
 
-| Mode | UX | Use Case |
-|------|-----|----------|
-| **Side by side** | Two versions rendered at same scale, synced zoom/pan | Compare layouts, compositions |
-| **Overlay slider** | Single view with a draggable vertical divider — left shows version A, right shows version B | Spot subtle color/detail changes |
-| **Onion skin** | Version B overlaid on version A with opacity slider (0-100%) | Alignment checks, logo refinements |
-| **Highlight diff** | Pixel-level difference rendered as a heat map overlay | Technical QA, print proofing |
+| Mode               | UX                                                                                          | Use Case                           |
+| ------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------- |
+| **Side by side**   | Two versions rendered at same scale, synced zoom/pan                                        | Compare layouts, compositions      |
+| **Overlay slider** | Single view with a draggable vertical divider — left shows version A, right shows version B | Spot subtle color/detail changes   |
+| **Onion skin**     | Version B overlaid on version A with opacity slider (0-100%)                                | Alignment checks, logo refinements |
+| **Highlight diff** | Pixel-level difference rendered as a heat map overlay                                       | Technical QA, print proofing       |
 
 **Implementation:** Client-side only. Two `<canvas>` elements with synchronized transforms. Pixel diff computed via `ImageData` comparison in a Web Worker (no server cost). Available for `image/*` files only. PDF comparison uses side-by-side rendered pages.
 
@@ -419,7 +423,7 @@ This means version history shows not just "Version 3 — uploaded by Sarah, Feb 
 
 ---
 
-## 6. Content Search Integration *(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)*
+## 6. Content Search Integration _(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)_
 
 ### Extending the Search Pipeline
 
@@ -467,7 +471,7 @@ CREATE INDEX idx_files_ai_search ON files USING gin (ai_search_tsv)
 
 Now searching "sunset beach" matches images that the AI tagged with those terms, even if the filename is `IMG_4872.jpg`.
 
-**Semantic search (embeddings):** *(Post-MVP — vector embeddings / semantic search explicitly listed as post-MVP in glossary MVP scope summary)*
+**Semantic search (embeddings):** _(Post-MVP — vector embeddings / semantic search explicitly listed as post-MVP in glossary MVP scope summary)_
 
 New embedding table extending the `vector-embeddings.md` schema:
 
@@ -536,6 +540,7 @@ EXIF `captured_at` enables temporal queries. The Command Bar and filter system s
 - Asset library filter bar: Date Captured range picker (distinct from Date Uploaded)
 
 In the asset library gallery view, sort options include:
+
 - Date uploaded (existing: `files.created_at`)
 - Date captured (new: `files.metadata->>'captured_at'`)
 - Name (existing)
@@ -543,7 +548,7 @@ In the asset library gallery view, sort options include:
 
 ---
 
-## 7. Extended File Detail Panel *(Post-MVP — Comms & Polish)*
+## 7. Extended File Detail Panel _(Post-MVP — Comms & Polish)_
 
 The file detail panel (lightbox / attachment detail view) gains new sections from extracted data:
 
@@ -654,15 +659,15 @@ CREATE INDEX idx_files_captured_at ON files
 
 ## 9. AI Credit Costs
 
-| Operation | Tier | Credits | Trigger | Who Pays |
-|-----------|------|---------|---------|----------|
-| EXIF/metadata extraction | — | 0 | Auto on upload | Free |
-| PDF/DOCX text extraction | — | 0 | Auto on upload | Free |
-| Scanned PDF OCR | `standard` | 2-5 per page | Auto on upload (if text extraction fails) | Platform infrastructure |
-| Image vision analysis | `standard` | 1-2 per image | Auto in asset library; manual elsewhere | Asset library: platform. Manual: workspace credits |
-| Document-to-record extraction | `standard` | 3-5 per document | User-initiated | Workspace credits |
-| Version change summary | `standard` | 2-3 per version | Auto on version upload in asset library | Platform infrastructure |
-| File content embedding | — | 0 | Auto after extraction | Platform infrastructure (same as record embeddings) |
+| Operation                     | Tier       | Credits          | Trigger                                   | Who Pays                                            |
+| ----------------------------- | ---------- | ---------------- | ----------------------------------------- | --------------------------------------------------- |
+| EXIF/metadata extraction      | —          | 0                | Auto on upload                            | Free                                                |
+| PDF/DOCX text extraction      | —          | 0                | Auto on upload                            | Free                                                |
+| Scanned PDF OCR               | `standard` | 2-5 per page     | Auto on upload (if text extraction fails) | Platform infrastructure                             |
+| Image vision analysis         | `standard` | 1-2 per image    | Auto in asset library; manual elsewhere   | Asset library: platform. Manual: workspace credits  |
+| Document-to-record extraction | `standard` | 3-5 per document | User-initiated                            | Workspace credits                                   |
+| Version change summary        | `standard` | 2-3 per version  | Auto on version upload in asset library   | Platform infrastructure                             |
+| File content embedding        | —          | 0                | Auto after extraction                     | Platform infrastructure (same as record embeddings) |
 
 **Credit cost transparency:** Every AI-consuming operation shows the estimated cost before execution. The AI usage dashboard (`ai-metering.md`) tracks "Document Intelligence" as a category with subcategories for OCR, Vision Analysis, Extraction, and Version Comparison.
 
@@ -670,30 +675,30 @@ CREATE INDEX idx_files_captured_at ON files
 
 ## 10. Permissions
 
-| Action | Required Permission |
-|--------|-------------------|
-| Upload file | Team Member+ on the record |
-| View extracted text / AI description | Viewer+ on the record (same as viewing the file) |
-| Trigger "Extract to Record" | Team Member+ on the record |
-| Trigger "Analyze Image" (manual) | Team Member+ on the record |
-| Edit AI tags / description | Team Member+ on the record |
-| Create/edit extraction templates | Manager+ on the table |
-| View EXIF GPS / camera metadata | Team Member+ on the record (stripped for Viewers and portal clients) |
-| View version history | Viewer+ on the record |
-| Upload new version | Team Member+ on the record |
-| Compare versions | Viewer+ on the record |
+| Action                               | Required Permission                                                  |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| Upload file                          | Team Member+ on the record                                           |
+| View extracted text / AI description | Viewer+ on the record (same as viewing the file)                     |
+| Trigger "Extract to Record"          | Team Member+ on the record                                           |
+| Trigger "Analyze Image" (manual)     | Team Member+ on the record                                           |
+| Edit AI tags / description           | Team Member+ on the record                                           |
+| Create/edit extraction templates     | Manager+ on the table                                                |
+| View EXIF GPS / camera metadata      | Team Member+ on the record (stripped for Viewers and portal clients) |
+| View version history                 | Viewer+ on the record                                                |
+| Upload new version                   | Team Member+ on the record                                           |
+| Compare versions                     | Viewer+ on the record                                                |
 
 ---
 
 ## 11. Phase Implementation
 
-| Phase | Document Intelligence Work |
-|-------|---------------------------|
-| **MVP — Foundation** | `files.extracted_text` column added to schema. `files.metadata` JSONB shape extended (no new columns, just richer JSON). `extraction_templates` table in schema. `file_embeddings` table in schema (empty). BullMQ job definitions registered (no-op until activated). |
-| **MVP — Core UX** | **Activate metadata extraction:** `file.extract_metadata` job processes EXIF on image upload, PDF/DOCX properties on document upload. **Activate content extraction:** `file.extract_content` job extracts text from PDF/DOCX/XLSX/CSV. **Activate content search:** `extracted_text_tsv` index live, Command Bar Channel 3 extended to include file content. **Activate content embeddings:** `file.embed_content` job generates embeddings for extracted text, Command Bar Channel 4 extended. Date Captured sort/filter in file views. |
-| **Post-MVP — Portals & Apps** | **Document-to-record extraction:** Full extraction pipeline with field mapping UI, extraction templates, linked record resolution. "Extract from file" button in Record View. Template save/auto-apply. Portal file upload → extraction flow (Professional+ plans). |
-| **Post-MVP — Comms & Polish** | **Vision analysis:** `file.vision_analyze` job for image description + tagging. AI search tsvector index. Asset library auto-analysis on upload. Manual "Analyze Image" for other tables. Extended file detail panel with AI tags/description. Chat and email attachment extraction triggers. |
-| **Post-MVP — Verticals & Advanced (post-MVP)** | **Asset library integration:** Version comparison tools (side-by-side, overlay, diff). `ai_change_summary` on version upload. Batch re-analysis for existing assets. Advanced search filters (color-based search, similar image search via embedding distance). Scanned PDF OCR pipeline. |
+| Phase                                          | Document Intelligence Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation**                           | `files.extracted_text` column added to schema. `files.metadata` JSONB shape extended (no new columns, just richer JSON). `extraction_templates` table in schema. `file_embeddings` table in schema (empty). BullMQ job definitions registered (no-op until activated).                                                                                                                                                                                                                                                                    |
+| **MVP — Core UX**                              | **Activate metadata extraction:** `file.extract_metadata` job processes EXIF on image upload, PDF/DOCX properties on document upload. **Activate content extraction:** `file.extract_content` job extracts text from PDF/DOCX/XLSX/CSV. **Activate content search:** `extracted_text_tsv` index live, Command Bar Channel 3 extended to include file content. **Activate content embeddings:** `file.embed_content` job generates embeddings for extracted text, Command Bar Channel 4 extended. Date Captured sort/filter in file views. |
+| **Post-MVP — Portals & Apps**                  | **Document-to-record extraction:** Full extraction pipeline with field mapping UI, extraction templates, linked record resolution. "Extract from file" button in Record View. Template save/auto-apply. Portal file upload → extraction flow (Professional+ plans).                                                                                                                                                                                                                                                                       |
+| **Post-MVP — Comms & Polish**                  | **Vision analysis:** `file.vision_analyze` job for image description + tagging. AI search tsvector index. Asset library auto-analysis on upload. Manual "Analyze Image" for other tables. Extended file detail panel with AI tags/description. Chat and email attachment extraction triggers.                                                                                                                                                                                                                                             |
+| **Post-MVP — Verticals & Advanced (post-MVP)** | **Asset library integration:** Version comparison tools (side-by-side, overlay, diff). `ai_change_summary` on version upload. Batch re-analysis for existing assets. Advanced search filters (color-based search, similar image search via embedding distance). Scanned PDF OCR pipeline.                                                                                                                                                                                                                                                 |
 
 ### Claude Code Prompt Roadmap
 
@@ -714,14 +719,14 @@ CREATE INDEX idx_files_captured_at ON files
 
 ## Reconciliation with Existing Docs
 
-| Existing Spec | What Changes |
-|--------------|-------------|
-| `files.md` | `metadata` JSONB shape extended (documented here, files.md references this doc for extended schema). New columns: `extracted_text`, `extracted_text_tsv`, `ai_search_tsv`. Three new BullMQ jobs in upload completion flow. |
-| `vector-embeddings.md` | "NOT embedded: file attachments" → now embedded via `file_embeddings` table. New embedding trigger: `embedding.file.upsert`. Section 6 of this doc is the canonical spec; vector-embeddings.md should add a cross-reference. |
-| `ai-architecture.md` | `supportsVision: boolean` now actively used. New `AITaskType` entries: `document_extraction`, `vision_analysis`, `version_comparison`. Added to `FEATURE_ROUTING` map. |
-| `ai-data-contract.md` | Category 8 (Files) `aiToCanonical()` still rejects direct AI writes to file fields — extraction writes to OTHER fields on the record, not the file field itself. No change needed. |
-| `ai-field-agents-ref.md` | Future extension #3 (Image/file analysis) partially addressed — field agents can now reference `files.metadata.ai_description` and `files.extracted_text` in their prompts. Full multimodal agent support (sending images directly to field agent models) remains a future extension. |
-| `agency-features.md` | Asset library `searchable_text` reference → replaced by `files.extracted_text` + `files.ai_search_tsv` (richer, not a separate field on the asset record). Thumbnail pipeline unchanged. Version history enhanced with `ai_change_summary`. |
-| `mobile.md` | Camera Scanning & OCR flow → unified with this spec's extraction pipeline. Scan templates → extraction templates (same table). Mobile-specific UX (edge detection, perspective correction, viewfinder) remains in mobile.md. The extraction pipeline, field mapping, and template system are shared. |
-| `command-bar.md` | Search channels 3 and 4 extended to include file content. New result group: "Files" with content-match context. |
-| `data-model.md` | New table: `extraction_templates`. New table: `file_embeddings`. Modified: `files` (new columns), `asset_versions` (new columns). |
+| Existing Spec            | What Changes                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `files.md`               | `metadata` JSONB shape extended (documented here, files.md references this doc for extended schema). New columns: `extracted_text`, `extracted_text_tsv`, `ai_search_tsv`. Three new BullMQ jobs in upload completion flow.                                                                          |
+| `vector-embeddings.md`   | "NOT embedded: file attachments" → now embedded via `file_embeddings` table. New embedding trigger: `embedding.file.upsert`. Section 6 of this doc is the canonical spec; vector-embeddings.md should add a cross-reference.                                                                         |
+| `ai-architecture.md`     | `supportsVision: boolean` now actively used. New `AITaskType` entries: `document_extraction`, `vision_analysis`, `version_comparison`. Added to `FEATURE_ROUTING` map.                                                                                                                               |
+| `ai-data-contract.md`    | Category 8 (Files) `aiToCanonical()` still rejects direct AI writes to file fields — extraction writes to OTHER fields on the record, not the file field itself. No change needed.                                                                                                                   |
+| `ai-field-agents-ref.md` | Future extension #3 (Image/file analysis) partially addressed — field agents can now reference `files.metadata.ai_description` and `files.extracted_text` in their prompts. Full multimodal agent support (sending images directly to field agent models) remains a future extension.                |
+| `agency-features.md`     | Asset library `searchable_text` reference → replaced by `files.extracted_text` + `files.ai_search_tsv` (richer, not a separate field on the asset record). Thumbnail pipeline unchanged. Version history enhanced with `ai_change_summary`.                                                          |
+| `mobile.md`              | Camera Scanning & OCR flow → unified with this spec's extraction pipeline. Scan templates → extraction templates (same table). Mobile-specific UX (edge detection, perspective correction, viewfinder) remains in mobile.md. The extraction pipeline, field mapping, and template system are shared. |
+| `command-bar.md`         | Search channels 3 and 4 extended to include file content. New result group: "Files" with content-match context.                                                                                                                                                                                      |
+| `data-model.md`          | New table: `extraction_templates`. New table: `file_embeddings`. Modified: `files` (new columns), `asset_versions` (new columns).                                                                                                                                                                    |

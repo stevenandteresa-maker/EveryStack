@@ -15,20 +15,20 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| 1. Integration Architecture & Platform Coverage | 35–100 | Apideck/Merge unified API, QuickBooks/Xero/1C support |
-| 2. Accounting Data Model — Finance Tables | 101–273 | invoice_table_config, expense_table_config, financial snapshots |
-| 3. Accounting Sync Engine — Adapter Specification | 274–395 | UnifiedAccountingAdapter, transactional sync, reconciliation |
-| 4. Automation Actions — Accounting | 396–449 | 7 automation actions (#31–37) for invoicing and expenses |
-| 5. Invoice Lifecycle — End-to-End Workflow | 450–517 | Draft → sent → paid flow, payment tracking, reminders |
-| 6. Expense Lifecycle & Budget Tracking | 518–582 | Expense capture, approval, budget monitoring |
-| 7. Financial Command Center — Dashboard & Apps (Post-MVP) | 583–663 | 4-tab financial dashboard app |
-| 8. AI Financial Intelligence | 664–734 | AI briefings, anomaly detection, cash flow forecasting |
-| 9. Chart of Accounts & Tax Rate — Remote Reference Fields | 735–769 | Accounting reference data, field mapping |
-| 10. Multi-Currency Handling | 770–787 | Exchange rates, currency conversion, multi-currency invoices |
-| 11. Retainer Management | 788–809 | Retainer tracking, drawdown, top-up workflows |
-| Phase Integration | 810–838 | Post-MVP — Accounting Integration delivery scope |
+| Section                                                   | Lines   | Covers                                                          |
+| --------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| 1. Integration Architecture & Platform Coverage           | 35–100  | Apideck/Merge unified API, QuickBooks/Xero/1C support           |
+| 2. Accounting Data Model — Finance Tables                 | 101–273 | invoice_table_config, expense_table_config, financial snapshots |
+| 3. Accounting Sync Engine — Adapter Specification         | 274–395 | UnifiedAccountingAdapter, transactional sync, reconciliation    |
+| 4. Automation Actions — Accounting                        | 396–449 | 7 automation actions (#31–37) for invoicing and expenses        |
+| 5. Invoice Lifecycle — End-to-End Workflow                | 450–517 | Draft → sent → paid flow, payment tracking, reminders           |
+| 6. Expense Lifecycle & Budget Tracking                    | 518–582 | Expense capture, approval, budget monitoring                    |
+| 7. Financial Command Center — Dashboard & Apps (Post-MVP) | 583–663 | 4-tab financial dashboard app                                   |
+| 8. AI Financial Intelligence                              | 664–734 | AI briefings, anomaly detection, cash flow forecasting          |
+| 9. Chart of Accounts & Tax Rate — Remote Reference Fields | 735–769 | Accounting reference data, field mapping                        |
+| 10. Multi-Currency Handling                               | 770–787 | Exchange rates, currency conversion, multi-currency invoices    |
+| 11. Retainer Management                                   | 788–809 | Retainer tracking, drawdown, top-up workflows                   |
+| Phase Integration                                         | 810–838 | Post-MVP — Accounting Integration delivery scope                |
 
 ---
 
@@ -40,25 +40,25 @@ EveryStack enhances accounting software — it does not replace it. The accounti
 
 ### Supported Platforms
 
-| Platform | Market | Direction | Notes |
-|----------|--------|-----------|-------|
-| QuickBooks Online | US, UK, AU, CA | Action-oriented bidirectional | Dominant US SMB platform. REST API v3. |
-| Xero | UK, AU, NZ, global | Action-oriented bidirectional | Strong internationally. OAuth 2.0. |
-| 1C | Russia, CIS | Action-oriented bidirectional | Dominant in Russian-speaking markets. Different API architecture. |
+| Platform          | Market             | Direction                     | Notes                                                             |
+| ----------------- | ------------------ | ----------------------------- | ----------------------------------------------------------------- |
+| QuickBooks Online | US, UK, AU, CA     | Action-oriented bidirectional | Dominant US SMB platform. REST API v3.                            |
+| Xero              | UK, AU, NZ, global | Action-oriented bidirectional | Strong internationally. OAuth 2.0.                                |
+| 1C                | Russia, CIS        | Action-oriented bidirectional | Dominant in Russian-speaking markets. Different API architecture. |
 
 **Direction model — "action-oriented bidirectional":** Unlike database sync adapters (Airtable/Notion) which mirror entire tables bidirectionally, accounting connectors are asymmetric:
 
-| Data Type | Direction | Mechanism |
-|-----------|-----------|-----------|
-| Chart of Accounts | Inbound only | Polling (CoA changes rarely). Read-only reference table in EveryStack. |
-| Tax Rates | Inbound only | Polling. Read-only reference table. |
-| Contacts (Customers/Vendors) | Bidirectional | Push on create/update in EveryStack. Pull on create/update in accounting. |
-| Invoices | Outbound primary | Push when Invoice status → Sent. Inbound status/payment sync via webhook. |
-| Payments | Bidirectional | Push Stripe portal payments to accounting. Pull payments recorded in accounting. |
-| Bills / Expenses | Bidirectional | Push project expenses to accounting. Pull bills entered by bookkeeper. |
-| Purchase Orders | Outbound primary | Push PO on approval. Inbound status sync. |
-| Journal Entries | Outbound only | Push revenue recognition entries, adjustments. |
-| Financial Reports (P&L, Balance Sheet, Cash Flow) | Inbound only | Nightly snapshot sync via report API endpoints. |
+| Data Type                                         | Direction        | Mechanism                                                                        |
+| ------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| Chart of Accounts                                 | Inbound only     | Polling (CoA changes rarely). Read-only reference table in EveryStack.           |
+| Tax Rates                                         | Inbound only     | Polling. Read-only reference table.                                              |
+| Contacts (Customers/Vendors)                      | Bidirectional    | Push on create/update in EveryStack. Pull on create/update in accounting.        |
+| Invoices                                          | Outbound primary | Push when Invoice status → Sent. Inbound status/payment sync via webhook.        |
+| Payments                                          | Bidirectional    | Push Stripe portal payments to accounting. Pull payments recorded in accounting. |
+| Bills / Expenses                                  | Bidirectional    | Push project expenses to accounting. Pull bills entered by bookkeeper.           |
+| Purchase Orders                                   | Outbound primary | Push PO on approval. Inbound status sync.                                        |
+| Journal Entries                                   | Outbound only    | Push revenue recognition entries, adjustments.                                   |
+| Financial Reports (P&L, Balance Sheet, Cash Flow) | Inbound only     | Nightly snapshot sync via report API endpoints.                                  |
 
 ### Architectural Decision: Unified Accounting API
 
@@ -110,66 +110,66 @@ Rationale: Matches the `time_tracking_config` / `pm_table_config` / `calendar_ta
 
 One per table with invoice tracking enabled. Maps existing fields to invoice semantic roles.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| table_id | UUID → tables.id | Which table has invoice tracking |
-| client_field_id | UUID → fields.id | Linked Record → Clients table |
-| invoice_number_field_id | UUID → fields.id | Auto Number or Text field |
-| issue_date_field_id | UUID → fields.id | Date field |
-| due_date_field_id | UUID → fields.id | Date or Formula field (issue_date + payment_terms) |
-| status_field_id | UUID → fields.id | Status field (Draft, Sent, Partially Paid, Paid, Overdue, Void) |
-| subtotal_field_id | UUID → fields.id | Rollup or Formula field |
-| tax_field_id | UUID → fields.id | Formula field |
-| total_field_id | UUID → fields.id | Formula field (subtotal + tax) |
-| amount_paid_field_id | UUID → fields.id | Currency or Rollup field |
-| balance_due_field_id | UUID → fields.id | Formula field (total - amount_paid) |
-| external_invoice_id_field_id | UUID → fields.id | Text field (read-only, accounting platform ID) |
-| line_items_field_id | UUID → fields.id | Linked Record field → Line Items table |
-| payment_terms_source | ENUM: client_field | fixed | `client_field`: resolve from client record. `fixed`: use default_payment_days. |
-| default_payment_days | INTEGER | Default: 30. Used when payment_terms_source = fixed. |
-| auto_overdue | BOOLEAN | Default: true. Automation marks Sent/Partially Paid → Overdue when past due. |
-| connection_id | UUID (nullable) → base_connections.id | Which accounting connection pushes/pulls invoices. |
+| Column                       | Type                                  | Purpose                                                                      |
+| ---------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| id                           | UUID                                  | Primary key                                                                  |
+| tenant_id                    | UUID                                  | Workspace scoping                                                            |
+| table_id                     | UUID → tables.id                      | Which table has invoice tracking                                             |
+| client_field_id              | UUID → fields.id                      | Linked Record → Clients table                                                |
+| invoice_number_field_id      | UUID → fields.id                      | Auto Number or Text field                                                    |
+| issue_date_field_id          | UUID → fields.id                      | Date field                                                                   |
+| due_date_field_id            | UUID → fields.id                      | Date or Formula field (issue_date + payment_terms)                           |
+| status_field_id              | UUID → fields.id                      | Status field (Draft, Sent, Partially Paid, Paid, Overdue, Void)              |
+| subtotal_field_id            | UUID → fields.id                      | Rollup or Formula field                                                      |
+| tax_field_id                 | UUID → fields.id                      | Formula field                                                                |
+| total_field_id               | UUID → fields.id                      | Formula field (subtotal + tax)                                               |
+| amount_paid_field_id         | UUID → fields.id                      | Currency or Rollup field                                                     |
+| balance_due_field_id         | UUID → fields.id                      | Formula field (total - amount_paid)                                          |
+| external_invoice_id_field_id | UUID → fields.id                      | Text field (read-only, accounting platform ID)                               |
+| line_items_field_id          | UUID → fields.id                      | Linked Record field → Line Items table                                       |
+| payment_terms_source         | ENUM: client_field                    | fixed                                                                        | `client_field`: resolve from client record. `fixed`: use default_payment_days. |
+| default_payment_days         | INTEGER                               | Default: 30. Used when payment_terms_source = fixed.                         |
+| auto_overdue                 | BOOLEAN                               | Default: true. Automation marks Sent/Partially Paid → Overdue when past due. |
+| connection_id                | UUID (nullable) → base_connections.id | Which accounting connection pushes/pulls invoices.                           |
 
 ### `expense_table_config`
 
 One per table with expense tracking enabled. Maps fields to expense semantic roles.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| table_id | UUID → tables.id | Which table has expense tracking |
-| amount_field_id | UUID → fields.id | Currency field |
-| date_field_id | UUID → fields.id | Date field |
-| vendor_field_id | UUID → fields.id | Linked Record → Vendors/Contacts table |
-| project_field_id | UUID → fields.id | Linked Record → Projects table |
-| client_field_id | UUID → fields.id | Linked Record → Clients table (for pass-through billing) |
-| account_code_field_id | UUID → fields.id | Linked Record → Chart of Accounts table |
-| category_field_id | UUID → fields.id | Single Select (Travel, Software, Subcontractor, etc.) |
-| status_field_id | UUID → fields.id | Status field (Draft, Submitted, Approved, Paid, Rejected) |
-| billable_field_id | UUID → fields.id | Checkbox (billable to client?) |
-| reimbursable_field_id | UUID → fields.id | Checkbox (reimbursable to employee?) |
-| receipt_field_id | UUID → fields.id | File Attachment field |
-| external_bill_id_field_id | UUID → fields.id | Text field (accounting platform bill ID) |
-| connection_id | UUID (nullable) → base_connections.id | Accounting connection |
+| Column                    | Type                                  | Purpose                                                   |
+| ------------------------- | ------------------------------------- | --------------------------------------------------------- |
+| id                        | UUID                                  | Primary key                                               |
+| tenant_id                 | UUID                                  | Workspace scoping                                         |
+| table_id                  | UUID → tables.id                      | Which table has expense tracking                          |
+| amount_field_id           | UUID → fields.id                      | Currency field                                            |
+| date_field_id             | UUID → fields.id                      | Date field                                                |
+| vendor_field_id           | UUID → fields.id                      | Linked Record → Vendors/Contacts table                    |
+| project_field_id          | UUID → fields.id                      | Linked Record → Projects table                            |
+| client_field_id           | UUID → fields.id                      | Linked Record → Clients table (for pass-through billing)  |
+| account_code_field_id     | UUID → fields.id                      | Linked Record → Chart of Accounts table                   |
+| category_field_id         | UUID → fields.id                      | Single Select (Travel, Software, Subcontractor, etc.)     |
+| status_field_id           | UUID → fields.id                      | Status field (Draft, Submitted, Approved, Paid, Rejected) |
+| billable_field_id         | UUID → fields.id                      | Checkbox (billable to client?)                            |
+| reimbursable_field_id     | UUID → fields.id                      | Checkbox (reimbursable to employee?)                      |
+| receipt_field_id          | UUID → fields.id                      | File Attachment field                                     |
+| external_bill_id_field_id | UUID → fields.id                      | Text field (accounting platform bill ID)                  |
+| connection_id             | UUID (nullable) → base_connections.id | Accounting connection                                     |
 
 ### `financial_snapshots`
 
 Time-series storage for accounting report data. Evolution of `metric_snapshots` pattern for financial reports.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| connection_id | UUID → base_connections.id | Which accounting connection |
-| report_type | ENUM: profit_loss \| balance_sheet \| cash_flow \| aged_receivables \| aged_payables | Report category |
-| period_start | DATE | Report period start |
-| period_end | DATE | Report period end |
-| report_data | JSONB | Structured rows — see Report Data Shapes below |
-| currency | VARCHAR(3) | ISO 4217 currency code |
-| pulled_at | TIMESTAMPTZ | When this snapshot was fetched |
+| Column        | Type                                                                                 | Purpose                                        |
+| ------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| id            | UUID                                                                                 | Primary key                                    |
+| tenant_id     | UUID                                                                                 | Workspace scoping                              |
+| connection_id | UUID → base_connections.id                                                           | Which accounting connection                    |
+| report_type   | ENUM: profit_loss \| balance_sheet \| cash_flow \| aged_receivables \| aged_payables | Report category                                |
+| period_start  | DATE                                                                                 | Report period start                            |
+| period_end    | DATE                                                                                 | Report period end                              |
+| report_data   | JSONB                                                                                | Structured rows — see Report Data Shapes below |
+| currency      | VARCHAR(3)                                                                           | ISO 4217 currency code                         |
+| pulled_at     | TIMESTAMPTZ                                                                          | When this snapshot was fetched                 |
 
 Indexes: (tenant_id, report_type, period_end), (tenant_id, connection_id, pulled_at).
 
@@ -178,6 +178,7 @@ Retention: All snapshots retained indefinitely (monthly data, low volume — ~5 
 **Report Data Shapes:**
 
 Profit & Loss `report_data`:
+
 ```json
 {
   "sections": [
@@ -219,6 +220,7 @@ Profit & Loss `report_data`:
 ```
 
 Balance Sheet `report_data`:
+
 ```json
 {
   "sections": [
@@ -239,31 +241,31 @@ Balance Sheet `report_data`:
 
 Materialized aggregation table combining accounting snapshots with EveryStack-native data. Populated nightly by automation after accounting sync completes.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| period_month | DATE | First day of month (2026-01-01, 2026-02-01, etc.) |
-| currency | VARCHAR(3) | Base currency from accounting connection |
-| actual_revenue | DECIMAL | From P&L snapshot: total_revenue |
-| actual_cogs | DECIMAL | From P&L snapshot: total_cogs |
-| actual_expenses | DECIMAL | From P&L snapshot: total_expenses (overhead) |
-| actual_net_income | DECIMAL | From P&L snapshot: net_income |
-| cash_position | DECIMAL | From Balance Sheet: cash_and_equivalents |
-| accounts_receivable | DECIMAL | From Balance Sheet or Aged Receivables |
-| accounts_payable | DECIMAL | From Balance Sheet or Aged Payables |
-| invoiced_revenue | DECIMAL | From EveryStack invoices table (sum of Total where issue_date in period) |
-| collected_revenue | DECIMAL | From EveryStack payments table (sum where date in period) |
-| outstanding_invoices | DECIMAL | From EveryStack: sum of Balance Due where Status ∈ {Sent, Partially Paid, Overdue} |
-| overdue_invoices | DECIMAL | From EveryStack: sum of Balance Due where Status = Overdue |
-| project_labor_cost | DECIMAL | From time_entries: sum(duration_minutes / 60 × billing_rate_snapshot) for period |
-| project_expenses | DECIMAL | From EveryStack expenses table: sum where date in period |
-| unbilled_labor | DECIMAL | From time_entries: billable = true, invoiced = false, sum of hours × rate |
-| pipeline_weighted | DECIMAL | From pipeline/proposals: sum(value × probability) for expected close in next 90 days |
-| retainer_monthly | DECIMAL | Sum of active retainer agreements' monthly amounts |
-| team_utilization_pct | DECIMAL | Billable hours / available hours for period |
-| avg_collection_days | DECIMAL | Average days between invoice issue_date and payment date for period |
-| updated_at | TIMESTAMPTZ | Last materialization time |
+| Column               | Type        | Purpose                                                                              |
+| -------------------- | ----------- | ------------------------------------------------------------------------------------ |
+| id                   | UUID        | Primary key                                                                          |
+| tenant_id            | UUID        | Workspace scoping                                                                    |
+| period_month         | DATE        | First day of month (2026-01-01, 2026-02-01, etc.)                                    |
+| currency             | VARCHAR(3)  | Base currency from accounting connection                                             |
+| actual_revenue       | DECIMAL     | From P&L snapshot: total_revenue                                                     |
+| actual_cogs          | DECIMAL     | From P&L snapshot: total_cogs                                                        |
+| actual_expenses      | DECIMAL     | From P&L snapshot: total_expenses (overhead)                                         |
+| actual_net_income    | DECIMAL     | From P&L snapshot: net_income                                                        |
+| cash_position        | DECIMAL     | From Balance Sheet: cash_and_equivalents                                             |
+| accounts_receivable  | DECIMAL     | From Balance Sheet or Aged Receivables                                               |
+| accounts_payable     | DECIMAL     | From Balance Sheet or Aged Payables                                                  |
+| invoiced_revenue     | DECIMAL     | From EveryStack invoices table (sum of Total where issue_date in period)             |
+| collected_revenue    | DECIMAL     | From EveryStack payments table (sum where date in period)                            |
+| outstanding_invoices | DECIMAL     | From EveryStack: sum of Balance Due where Status ∈ {Sent, Partially Paid, Overdue}   |
+| overdue_invoices     | DECIMAL     | From EveryStack: sum of Balance Due where Status = Overdue                           |
+| project_labor_cost   | DECIMAL     | From time_entries: sum(duration_minutes / 60 × billing_rate_snapshot) for period     |
+| project_expenses     | DECIMAL     | From EveryStack expenses table: sum where date in period                             |
+| unbilled_labor       | DECIMAL     | From time_entries: billable = true, invoiced = false, sum of hours × rate            |
+| pipeline_weighted    | DECIMAL     | From pipeline/proposals: sum(value × probability) for expected close in next 90 days |
+| retainer_monthly     | DECIMAL     | Sum of active retainer agreements' monthly amounts                                   |
+| team_utilization_pct | DECIMAL     | Billable hours / available hours for period                                          |
+| avg_collection_days  | DECIMAL     | Average days between invoice issue_date and payment date for period                  |
+| updated_at           | TIMESTAMPTZ | Last materialization time                                                            |
 
 Indexes: (tenant_id, period_month).
 
@@ -315,14 +317,14 @@ Flow: Pull all accounts from unified API → For each account, upsert a record i
 
 Field mapping:
 
-| Accounting Platform Field | EveryStack Field Type | Purpose |
-|--------------------------|----------------------|---------|
-| code | Text | Account code (4000, 6100, etc.) |
-| name | Text | Account name |
-| type | Single Select | Revenue, Expense, Asset, Liability, Equity |
-| sub_type | Single Select | Current Asset, Fixed Asset, COGS, Operating Expense, etc. |
-| status | Status | Active, Archived |
-| external_account_id | Text (read-only) | Platform ID for sync matching |
+| Accounting Platform Field | EveryStack Field Type | Purpose                                                   |
+| ------------------------- | --------------------- | --------------------------------------------------------- |
+| code                      | Text                  | Account code (4000, 6100, etc.)                           |
+| name                      | Text                  | Account name                                              |
+| type                      | Single Select         | Revenue, Expense, Asset, Liability, Equity                |
+| sub_type                  | Single Select         | Current Asset, Fixed Asset, COGS, Operating Expense, etc. |
+| status                    | Status                | Active, Archived                                          |
+| external_account_id       | Text (read-only)      | Platform ID for sync matching                             |
 
 The CoA table is marked read-only in EveryStack (users cannot create/edit records manually). Changes flow from accounting platform only.
 
@@ -333,6 +335,7 @@ Nightly sync job (configurable to weekly for lower-tier plans).
 Flow: For each enabled report type → Call unified API report endpoint with current month period → Store as `financial_snapshots` row → After all reports pulled, run Financial Summary materialization automation.
 
 Report types pulled:
+
 - Profit & Loss (current month MTD + prior complete month)
 - Balance Sheet (as of today)
 - Cash Flow Statement (current month MTD)
@@ -372,24 +375,24 @@ Two mechanisms:
 
 Accounting data is source of truth for financial totals. Explicit conflict resolution:
 
-| Field Category | Source of Truth | Rationale |
-|----------------|----------------|-----------|
-| Amounts (totals, payments, balances) | Accounting platform | Accountant's numbers are authoritative |
-| Status (paid, overdue) | Computed from amounts | Derives from payment state |
-| Metadata (descriptions, notes, categories) | Last-write-wins | Non-financial, either source acceptable |
-| Line item details | EveryStack (pre-push) | EveryStack is where lines are created |
-| Contact info | Last-write-wins | Updated in either system |
+| Field Category                             | Source of Truth       | Rationale                               |
+| ------------------------------------------ | --------------------- | --------------------------------------- |
+| Amounts (totals, payments, balances)       | Accounting platform   | Accountant's numbers are authoritative  |
+| Status (paid, overdue)                     | Computed from amounts | Derives from payment state              |
+| Metadata (descriptions, notes, categories) | Last-write-wins       | Non-financial, either source acceptable |
+| Line item details                          | EveryStack (pre-push) | EveryStack is where lines are created   |
+| Contact info                               | Last-write-wins       | Updated in either system                |
 
 ### Rate Limits
 
 Platform rate limit registry entries (extends existing `sync-engine.md` registry):
 
-| Platform | Limit | Scope | Strategy |
-|----------|-------|-------|----------|
-| QuickBooks Online | 500 req/min | Per company (realm) | Token bucket with 80% target |
-| Xero | 5,000 req/day, 60 req/min | Per tenant | Daily budget allocation + per-minute bucket |
-| 1C | Varies by deployment | Per instance | Configurable per connection |
-| Unified API (Apideck) | Varies by plan | Per API key | Governed by unified API plan tier |
+| Platform              | Limit                     | Scope               | Strategy                                    |
+| --------------------- | ------------------------- | ------------------- | ------------------------------------------- |
+| QuickBooks Online     | 500 req/min               | Per company (realm) | Token bucket with 80% target                |
+| Xero                  | 5,000 req/day, 60 req/min | Per tenant          | Daily budget allocation + per-minute bucket |
+| 1C                    | Varies by deployment      | Per instance        | Configurable per connection                 |
+| Unified API (Apideck) | Varies by plan            | Per API key         | Governed by unified API plan tier           |
 
 ---
 
@@ -397,51 +400,58 @@ Platform rate limit registry entries (extends existing `sync-engine.md` registry
 
 ### New Actions (added to Full Action Catalog)
 
-| # | Action | Config Fields | Output |
-|---|--------|--------------|--------|
-| 31 | **Create Invoice in Accounting** | `connectionId`, `invoiceRecordSelector`, `lineItemTableId`, `fieldMapping` (auto-resolved from invoice_table_config if present) | `{ externalInvoiceId, externalUrl }` |
-| 32 | **Record Payment in Accounting** | `connectionId`, `invoiceRecordSelector`, `amount` (template), `date`, `paymentMethod`, `depositAccountId` | `{ externalPaymentId }` |
-| 33 | **Create/Update Contact in Accounting** | `connectionId`, `recordSelector`, `contactType` (customer \| vendor), `fieldMapping` | `{ externalContactId }` |
-| 34 | **Create Bill in Accounting** | `connectionId`, `expenseRecordSelector`, `fieldMapping` (auto-resolved from expense_table_config if present) | `{ externalBillId }` |
-| 35 | **Create Journal Entry** | `connectionId`, `lines[]` (each: accountId, debit template, credit template, description template), `date`, `memo` | `{ externalJournalId }` |
-| 36 | **Create Purchase Order in Accounting** | `connectionId`, `poRecordSelector`, `lineItemTableId`, `fieldMapping` | `{ externalPOId }` |
-| 37 | **Fetch Account Balance** | `connectionId`, `accountCode`, `asOfDate` | `{ balance, currency }` |
+| #   | Action                                  | Config Fields                                                                                                                   | Output                               |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 31  | **Create Invoice in Accounting**        | `connectionId`, `invoiceRecordSelector`, `lineItemTableId`, `fieldMapping` (auto-resolved from invoice_table_config if present) | `{ externalInvoiceId, externalUrl }` |
+| 32  | **Record Payment in Accounting**        | `connectionId`, `invoiceRecordSelector`, `amount` (template), `date`, `paymentMethod`, `depositAccountId`                       | `{ externalPaymentId }`              |
+| 33  | **Create/Update Contact in Accounting** | `connectionId`, `recordSelector`, `contactType` (customer \| vendor), `fieldMapping`                                            | `{ externalContactId }`              |
+| 34  | **Create Bill in Accounting**           | `connectionId`, `expenseRecordSelector`, `fieldMapping` (auto-resolved from expense_table_config if present)                    | `{ externalBillId }`                 |
+| 35  | **Create Journal Entry**                | `connectionId`, `lines[]` (each: accountId, debit template, credit template, description template), `date`, `memo`              | `{ externalJournalId }`              |
+| 36  | **Create Purchase Order in Accounting** | `connectionId`, `poRecordSelector`, `lineItemTableId`, `fieldMapping`                                                           | `{ externalPOId }`                   |
+| 37  | **Fetch Account Balance**               | `connectionId`, `accountCode`, `asOfDate`                                                                                       | `{ balance, currency }`              |
 
 ### New Triggers
 
-| Trigger | Event Source | Payload |
-|---------|-------------|---------|
-| **Payment Received in Accounting** | Webhook from accounting platform via unified API | `{ externalPaymentId, externalInvoiceId, amount, date }` |
-| **Invoice Status Changed in Accounting** | Webhook / polling | `{ externalInvoiceId, oldStatus, newStatus }` |
-| **Bill Created in Accounting** | Webhook / polling | `{ externalBillId, vendorName, amount, date }` |
+| Trigger                                  | Event Source                                     | Payload                                                  |
+| ---------------------------------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| **Payment Received in Accounting**       | Webhook from accounting platform via unified API | `{ externalPaymentId, externalInvoiceId, amount, date }` |
+| **Invoice Status Changed in Accounting** | Webhook / polling                                | `{ externalInvoiceId, oldStatus, newStatus }`            |
+| **Bill Created in Accounting**           | Webhook / polling                                | `{ externalBillId, vendorName, amount, date }`           |
 
 ### Pre-Built Automation Recipes
 
 **Recipe 1: "Invoice from Completed Tasks"**
+
 - Trigger: Button click on selected task records (or "When Task status → Done AND billable = true AND billing_milestone = 'Bill on completion'")
 - Steps: Find/create draft invoice for client → Loop over tasks → For each task: create line item record (description = task name, quantity = sum of time_entries.duration_minutes / 60, rate = resolved billing rate, account code = default revenue account) → Link line item to invoice and task → Mark task as invoiced = true → Compute totals
 
 **Recipe 2: "Monthly Billing Cycle"**
+
 - Trigger: Scheduled — first of month
 - Steps: Find all tasks where billing_milestone = "Bill monthly" AND invoiced = false AND completed in prior month → Group by client → For each client: create invoice → Loop over client's tasks → Create line items → Link and mark invoiced
 
 **Recipe 3: "Send Invoice to Accounting + Client"**
+
 - Trigger: When Invoice status → Sent
 - Steps: Create Invoice in Accounting (action #31) → Generate PDF via Document Template (action #11) → Send email with PDF + portal payment link (action #7) → Create notification for PM (action #14)
 
 **Recipe 4: "Overdue Invoice Reminder"**
+
 - Trigger: Scheduled — daily
 - Steps: Find invoices where due_date < today AND status ∈ {Sent, Partially Paid} → Update status → Overdue → For each: notify PM (action #14) → Optionally send client reminder email (configurable)
 
 **Recipe 5: "Stripe Payment → Accounting"**
+
 - Trigger: Portal Stripe payment webhook (existing)
 - Steps: Create Payment record linked to invoice → Update invoice Amount Paid → If Amount Paid ≥ Total: status → Paid → Record Payment in Accounting (action #32)
 
 **Recipe 6: "Monthly Revenue Recognition"**
+
 - Trigger: Scheduled — first of month
 - Steps: Find all projects with deferred revenue (contract value, progress field, previously recognized amount) → For each: compute delta = (progress_pct × contract_value) - previously_recognized → Create Journal Entry (action #35) with debit: Deferred Revenue, credit: Revenue, amount = delta → Update previously_recognized field
 
 **Recipe 7: "Financial Summary Materialization"**
+
 - Trigger: Scheduled — nightly, after report sync completes
 - Steps: Read latest financial_snapshots for current month → Query EveryStack invoices, payments, expenses, time_entries → Compute all financial_summary columns → Upsert financial_summary row for current month and prior month
 
@@ -557,16 +567,16 @@ Labor cost already exists via `agency-features.md` time tracking. Project expens
 
 Each project can have a Budget field (Currency). Budget tracking shows:
 
-| Metric | Source | Calculation |
-|--------|--------|-------------|
-| Budget | Project record Budget field | Fixed value set by PM |
-| Labor Spent | time_entries for this project | sum(hours × rate) where status = approved |
-| Expenses Spent | Expenses table linked to project | sum(amount) where status ∈ {Approved, Paid} |
-| Total Spent | | Labor Spent + Expenses Spent |
-| Committed (not yet spent) | | Estimated remaining hours × avg rate + approved-but-unpaid expenses |
-| Remaining | | Budget − Total Spent − Committed |
-| Burn Rate | | Total Spent / elapsed project days |
-| Projected Overrun | | If burn_rate × remaining_days > Remaining, flag |
+| Metric                    | Source                           | Calculation                                                         |
+| ------------------------- | -------------------------------- | ------------------------------------------------------------------- |
+| Budget                    | Project record Budget field      | Fixed value set by PM                                               |
+| Labor Spent               | time_entries for this project    | sum(hours × rate) where status = approved                           |
+| Expenses Spent            | Expenses table linked to project | sum(amount) where status ∈ {Approved, Paid}                         |
+| Total Spent               |                                  | Labor Spent + Expenses Spent                                        |
+| Committed (not yet spent) |                                  | Estimated remaining hours × avg rate + approved-but-unpaid expenses |
+| Remaining                 |                                  | Budget − Total Spent − Committed                                    |
+| Burn Rate                 |                                  | Total Spent / elapsed project days                                  |
+| Projected Overrun         |                                  | If burn_rate × remaining_days > Remaining, flag                     |
 
 These are Formula/Rollup field computations on the project record. No new infrastructure needed — the formula engine and cross-link rollups handle this.
 
@@ -595,16 +605,19 @@ Tabs use the `summary` App page type from `chart-blocks.md` — a grid layout of
 **Layout:**
 
 Top section — four summary cards (App summary blocks):
+
 - **Revenue:** `financial_summary.actual_revenue` (from accounting) with delta indicator vs. prior month
 - **Expenses:** `financial_summary.actual_expenses + actual_cogs` with delta vs. prior month
 - **Net Income:** `financial_summary.actual_net_income` with delta vs. prior month. Color: green if positive, red if negative.
 - **Cash Position:** `financial_summary.cash_position` (from Balance Sheet). With runway indicator: cash_position / avg monthly burn = "X months runway"
 
 Middle section — two-column layout:
+
 - **Left: Revenue Breakdown** — Invoices table grouped by Client, filtered to current month, showing sum of Total per client. Progress bar against client's monthly retainer or project budget.
 - **Right: Expense Breakdown** — Combined view: P&L expense categories from `financial_snapshots.report_data` sections (rent, salaries, software, etc.) + project expenses from EveryStack Expenses table. Unified category list with amounts.
 
 Bottom section — Cash Flow Calendar:
+
 - Timeline showing expected inflows (invoices by due date, retainer payments) and expected outflows (recurring bills extrapolated from P&L history, known upcoming payments).
 - Implemented as an App page tab with `view_type: 'timeline'` bound to a computed data source combining invoice due dates and projected expenses.
 
@@ -629,6 +642,7 @@ Overhead allocation: Total overhead from P&L (rent + salaries + software + etc.)
 **Layout:**
 
 Cash flow projection (30/60/90 days):
+
 - Starting point: current cash position (from Balance Sheet)
 - Add: expected inflows — outstanding invoices by projected payment date (due date + historical avg days late per client), retainer renewals, weighted pipeline
 - Subtract: expected outflows — recurring expenses (extrapolated from P&L monthly averages), known large upcoming expenses
@@ -668,6 +682,7 @@ Year-over-year comparison where data exists: current month vs. same month prior 
 **Implementation:** Scheduled automation (Recipe 7 variant, running weekly — Sunday evening or Monday morning).
 
 **Automation steps:**
+
 1. Read current `financial_summary` for this month and prior month
 2. Read outstanding invoices (overdue, due this week, due next week)
 3. Read recent payments received (this week)
@@ -705,6 +720,7 @@ Generate a 4-6 sentence briefing highlighting: key numbers, action items (overdu
 **Implementation:** Report Builder agent type (defined in `agent-architecture.md`) with financial data sources in its tool set.
 
 **Agent configuration:**
+
 - Agent type: `report_builder`
 - Default scope: workspace-level (reads across all workspaces)
 - Available data sources: `financial_summary`, `financial_snapshots`, Invoices table, Expenses table, Time Entries, Projects, Pipeline/Proposals, Resource Profiles, Billing Rates
@@ -794,6 +810,7 @@ EveryStack stores and displays amounts in the transaction currency (the currency
 ### Retainer Billing Automation
 
 Scheduled automation running on billing cycle day for each active retainer:
+
 1. Query time_entries for the retainer's client, billable = true, within the current billing period
 2. Compute total hours used, overage if any
 3. Create invoice: flat retainer line item (monthly_amount) + overage line item (overage_hours × overage_rate) if applicable
@@ -811,17 +828,17 @@ Client App portal page (post-MVP) showing: current period hours used vs. include
 
 ### Dependencies
 
-| Dependency | Phase | Required For |
-|------------|-------|-------------|
-| Automation engine | Post-MVP — Automations | Invoice creation recipes, accounting push actions, overdue reminders |
-| Portal + Stripe | Post-MVP — Portals & Apps | Client invoice portal, payment collection |
-| Document Templates | Post-MVP — Documents | Invoice PDF generation |
-| Time tracking | Post-MVP — Agency Features | Billable hours → line items, rate resolution |
-| Cross-linking | MVP — Core UX | Invoice ↔ Line Items ↔ Tasks ↔ Projects ↔ Clients |
-| App Designer (post-MVP) | MVP — Core UX | Financial Command Center dashboard |
-| Inline Sub-Table | MVP — Core UX | Line item editing UX (see `tables-and-views.md`) |
-| AI actions | Post-MVP — Automations | Weekly briefing generation |
-| Agent runtime | Post-MVP — AI Agents | Monthly strategy sessions, scenario analysis |
+| Dependency              | Phase                      | Required For                                                         |
+| ----------------------- | -------------------------- | -------------------------------------------------------------------- |
+| Automation engine       | Post-MVP — Automations     | Invoice creation recipes, accounting push actions, overdue reminders |
+| Portal + Stripe         | Post-MVP — Portals & Apps  | Client invoice portal, payment collection                            |
+| Document Templates      | Post-MVP — Documents       | Invoice PDF generation                                               |
+| Time tracking           | Post-MVP — Agency Features | Billable hours → line items, rate resolution                         |
+| Cross-linking           | MVP — Core UX              | Invoice ↔ Line Items ↔ Tasks ↔ Projects ↔ Clients                    |
+| App Designer (post-MVP) | MVP — Core UX              | Financial Command Center dashboard                                   |
+| Inline Sub-Table        | MVP — Core UX              | Line item editing UX (see `tables-and-views.md`)                     |
+| AI actions              | Post-MVP — Automations     | Weekly briefing generation                                           |
+| Agent runtime           | Post-MVP — AI Agents       | Monthly strategy sessions, scenario analysis                         |
 
 ### Post-MVP — Accounting Integration Work Stream
 
@@ -829,10 +846,10 @@ Accounting Integration ships as Post-MVP — Accounting Integration, after time 
 
 ### Layered Delivery
 
-| Layer | Contents | Ships With |
-|-------|----------|-----------|
-| **Layer 1: Connector + Actions** | Unified API integration, OAuth connect, CoA/Tax Rate inbound sync, Actions #31-37, invoice push, payment status sync | Post-MVP — Accounting Integration core |
-| **Layer 2: Lifecycle + Recipes** | Invoice creation recipes, expense workflow, overdue automation, portal invoice page, Stripe→accounting sync | Post-MVP — Accounting Integration core |
-| **Layer 3: Financial Command Center** | financial_snapshots inbound sync, financial_summary materialization, 4-tab dashboard App (post-MVP App Designer) | Post-MVP — Accounting Integration (may extend into 8f) |
-| **Layer 4: AI Intelligence** | Weekly briefing automation, scenario calculators | Post-MVP — Accounting Integration (briefing) + Post-MVP — AI Agents (interactive sessions) |
-| **Layer 5: Advanced** | Retainer management, PO workflow, revenue recognition, multi-currency Approach B | Post-MVP, demand-driven |
+| Layer                                 | Contents                                                                                                             | Ships With                                                                                 |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Layer 1: Connector + Actions**      | Unified API integration, OAuth connect, CoA/Tax Rate inbound sync, Actions #31-37, invoice push, payment status sync | Post-MVP — Accounting Integration core                                                     |
+| **Layer 2: Lifecycle + Recipes**      | Invoice creation recipes, expense workflow, overdue automation, portal invoice page, Stripe→accounting sync          | Post-MVP — Accounting Integration core                                                     |
+| **Layer 3: Financial Command Center** | financial_snapshots inbound sync, financial_summary materialization, 4-tab dashboard App (post-MVP App Designer)     | Post-MVP — Accounting Integration (may extend into 8f)                                     |
+| **Layer 4: AI Intelligence**          | Weekly briefing automation, scenario calculators                                                                     | Post-MVP — Accounting Integration (briefing) + Post-MVP — AI Agents (interactive sessions) |
+| **Layer 5: Advanced**                 | Retainer management, PO workflow, revenue recognition, multi-currency Approach B                                     | Post-MVP, demand-driven                                                                    |

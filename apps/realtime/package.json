@@ -1,0 +1,23 @@
+{
+  "name": "@everystack/realtime",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "check:i18n": "echo 'No i18n strings yet' && exit 0",
+    "test": "echo 'No tests yet' && exit 0",
+    "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0"
+  },
+  "dependencies": {
+    "@everystack/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

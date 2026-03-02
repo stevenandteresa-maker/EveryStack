@@ -18,15 +18,15 @@ As tenants grow to 30+ tables with 200+ fields, the AI Context Builder cannot in
 
 ## What Gets Embedded
 
-| Entity | Source Text | Table | Updated When |
-|--------|-----------|-------|-------------|
-| Table schema | Name + description + all field names/types/descriptions | `table_embeddings` | Table or field created/renamed/deleted |
-| Field definitions | Name + type + description + sample values | `field_embeddings` | Field created/renamed/reconfigured |
-| Record summaries | Primary field + display fields (first 500 tokens) | `record_embeddings` | Record created/updated, inbound sync |
-| Portal content **(post-MVP — App Designer portals only; MVP Quick Portals are Record View shares without page/block structure)** | Page title + block labels + static text | `portal_embeddings` | App published/updated |
-| Prompt templates | Description + system instruction summary | `prompt_template_embeddings` | Template version updated |
-| Knowledge base articles | Article title + heading path + section content (chunked, 400–500 tokens) | `knowledge_embeddings` | Smart Doc content field saved (published articles only). See `gaps/knowledge-base-live-chat-ai.md`. |
-| Personal notes (long) | Note title + heading path + section content (chunked, 400–500 tokens) | `knowledge_embeddings` | Personal note saved (when content > 500 tokens). Same chunking strategy as KB articles, scoped by `table_id` to personal tables. See `personal-notes-capture.md` > Full-Content Embedding. |
+| Entity                                                                                                                           | Source Text                                                              | Table                        | Updated When                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Table schema                                                                                                                     | Name + description + all field names/types/descriptions                  | `table_embeddings`           | Table or field created/renamed/deleted                                                                                                                                                     |
+| Field definitions                                                                                                                | Name + type + description + sample values                                | `field_embeddings`           | Field created/renamed/reconfigured                                                                                                                                                         |
+| Record summaries                                                                                                                 | Primary field + display fields (first 500 tokens)                        | `record_embeddings`          | Record created/updated, inbound sync                                                                                                                                                       |
+| Portal content **(post-MVP — App Designer portals only; MVP Quick Portals are Record View shares without page/block structure)** | Page title + block labels + static text                                  | `portal_embeddings`          | App published/updated                                                                                                                                                                      |
+| Prompt templates                                                                                                                 | Description + system instruction summary                                 | `prompt_template_embeddings` | Template version updated                                                                                                                                                                   |
+| Knowledge base articles                                                                                                          | Article title + heading path + section content (chunked, 400–500 tokens) | `knowledge_embeddings`       | Smart Doc content field saved (published articles only). See `gaps/knowledge-base-live-chat-ai.md`.                                                                                        |
+| Personal notes (long)                                                                                                            | Note title + heading path + section content (chunked, 400–500 tokens)    | `knowledge_embeddings`       | Personal note saved (when content > 500 tokens). Same chunking strategy as KB articles, scoped by `table_id` to personal tables. See `personal-notes-capture.md` > Full-Content Embedding. |
 
 **NOT embedded:** Raw JSONB cell values, full rich text bodies (except knowledge base articles and long personal notes, which are chunked and embedded via `knowledge_embeddings`), audit logs, conversation history.
 
@@ -66,13 +66,13 @@ CREATE INDEX idx_record_embeddings_vector ON record_embeddings
 
 **Never in the request path.** All embedding generation runs asynchronously via BullMQ:
 
-| Trigger | Job | Priority |
-|---------|-----|----------|
-| Record created/updated | `embedding.record.upsert` | Low |
-| Inbound sync batch completes | `embedding.records.batch` | Low |
-| Table/field schema changed | `embedding.schema.upsert` | Medium |
-| App published (post-MVP) | `embedding.portal.upsert` | Low |
-| Embedding model changed | `embedding.recompute.all` | Background (throttled) |
+| Trigger                      | Job                       | Priority               |
+| ---------------------------- | ------------------------- | ---------------------- |
+| Record created/updated       | `embedding.record.upsert` | Low                    |
+| Inbound sync batch completes | `embedding.records.batch` | Low                    |
+| Table/field schema changed   | `embedding.schema.upsert` | Medium                 |
+| App published (post-MVP)     | `embedding.portal.upsert` | Low                    |
+| Embedding model changed      | `embedding.recompute.all` | Background (throttled) |
 
 **Content hash deduplication:** SHA-256 of source text computed before generating. If hash matches existing `content_hash`, embedding is skipped. Prevents redundant API calls when non-display fields change.
 
@@ -85,8 +85,8 @@ CREATE INDEX idx_record_embeddings_vector ON record_embeddings
 ```typescript
 // packages/shared/ai/embeddings/provider.ts
 interface EmbeddingProvider {
-  readonly providerId: string;      // 'anthropic', 'openai', 'self-hosted'
-  readonly modelId: string;         // 'text-embedding-3-small', 'voyage-3', etc.
+  readonly providerId: string; // 'anthropic', 'openai', 'self-hosted'
+  readonly modelId: string; // 'text-embedding-3-small', 'voyage-3', etc.
   readonly dimensions: number;
 
   embed(texts: string[]): Promise<number[][]>;
@@ -134,12 +134,12 @@ The Command Bar is the primary search surface. When a user types a query, four s
 
 ### Search Channels
 
-| Channel | Source | Method | Latency Budget | Max Results |
-|---------|--------|--------|---------------|-------------|
-| **1. Commands & Navigation** | Static command registry + recently visited pages | In-memory prefix match (client-side, no server call) | <5ms | 5 |
-| **2. Entity Search** | Table names, view names, field names, automation names, portal names | ILIKE query per entity type (5 parallel queries) | <10ms | 5 per type (25 total) |
-| **3. Record Keyword Search** | `records.search_vector` (tsvector) | `to_tsquery` with prefix matching across all tenant tables | <50ms | 20 |
-| **4. Record Semantic Search** | `record_embeddings` (pgvector) | Cosine similarity on query embedding | <100ms | 20 |
+| Channel                       | Source                                                               | Method                                                     | Latency Budget | Max Results           |
+| ----------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- | -------------- | --------------------- |
+| **1. Commands & Navigation**  | Static command registry + recently visited pages                     | In-memory prefix match (client-side, no server call)       | <5ms           | 5                     |
+| **2. Entity Search**          | Table names, view names, field names, automation names, portal names | ILIKE query per entity type (5 parallel queries)           | <10ms          | 5 per type (25 total) |
+| **3. Record Keyword Search**  | `records.search_vector` (tsvector)                                   | `to_tsquery` with prefix matching across all tenant tables | <50ms          | 20                    |
+| **4. Record Semantic Search** | `record_embeddings` (pgvector)                                       | Cosine similarity on query embedding                       | <100ms         | 20                    |
 
 **Knowledge base articles in search:** Channel 4 also queries `knowledge_embeddings` — KB articles surface in Command Bar search for internal workspace users, alongside regular record results. See `gaps/knowledge-base-live-chat-ai.md`.
 
@@ -194,21 +194,21 @@ Results are displayed in groups, not a flat list:
 
 ### Graceful Degradation
 
-| Condition | Behavior |
-|-----------|----------|
+| Condition                                             | Behavior                                                                           |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Embeddings not yet generated (new tenant, processing) | Skip channel 4 (semantic). Return only keyword + entity results. No visible error. |
-| Query too short (<2 characters) | Show recent items + top commands only. No search executed. |
-| pgvector query timeout (>200ms) | Return results from channels 1–3. Semantic results omitted silently. |
-| Empty results across all channels | Show "No results" + AI suggestion: "Ask AI about {query}" |
+| Query too short (<2 characters)                       | Show recent items + top commands only. No search executed.                         |
+| pgvector query timeout (>200ms)                       | Return results from channels 1–3. Semantic results omitted silently.               |
+| Empty results across all channels                     | Show "No results" + AI suggestion: "Ask AI about {query}"                          |
 
 ### Performance at Scale
 
-| Tenant Size | Record Keyword (ch 3) | Record Semantic (ch 4) | Total |
-|-------------|----------------------|----------------------|-------|
-| 10K records | <10ms | <30ms | <50ms |
-| 100K records | <25ms | <60ms | <100ms |
-| 500K records | <50ms | <100ms | <150ms |
-| 1M+ records | <80ms | <150ms | <200ms |
+| Tenant Size  | Record Keyword (ch 3) | Record Semantic (ch 4) | Total  |
+| ------------ | --------------------- | ---------------------- | ------ |
+| 10K records  | <10ms                 | <30ms                  | <50ms  |
+| 100K records | <25ms                 | <60ms                  | <100ms |
+| 500K records | <50ms                 | <100ms                 | <150ms |
+| 1M+ records  | <80ms                 | <150ms                 | <200ms |
 
 Partition pruning (by `tenant_id`) ensures these times hold regardless of total platform size. A tenant with 100K records in a 100M-record database still gets <100ms search.
 
@@ -219,6 +219,7 @@ Partition pruning (by `tenant_id`) ensures these times hold regardless of total 
 Embedding generation does **not** consume workspace AI credits — it's platform infrastructure. Costs absorbed by EveryStack, tracked internally.
 
 **Estimated costs (OpenAI text-embedding-3-small):**
+
 - ~$0.02 per 1M tokens
 - Average record: ~50 tokens → $0.001 per 1,000 records
 - 50K-record tenant: ~$1 total — negligible
@@ -231,8 +232,8 @@ Embedding generation does **not** consume workspace AI credits — it's platform
 
 > **Note:** All phases below are post-MVP per GLOSSARY.md. MVP — Foundation work (installing pgvector, creating empty tables) is a clean extension point — no active embedding generation until post-MVP activation.
 
-| Phase | Embedding Work |
-|-------|---------------|
+| Phase                                  | Embedding Work                                                                                                                                           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | MVP — Foundation (MVP extension point) | Install pgvector extension. Create embedding tables (empty). `EmbeddingProvider` interface. Embedding job definitions (no-op until post-MVP activation). |
-| Post-MVP MVP — Core UX | Activate: schema + record embedding generation, Context Builder semantic retrieval, Command Bar hybrid search with RRF. |
-| Post-MVP Post-MVP — Documents+ | App content embeddings. Prompt template embeddings. Self-hosted evaluation. |
+| Post-MVP MVP — Core UX                 | Activate: schema + record embedding generation, Context Builder semantic retrieval, Command Bar hybrid search with RRF.                                  |
+| Post-MVP Post-MVP — Documents+         | App content embeddings. Prompt template embeddings. Self-hosted evaluation.                                                                              |

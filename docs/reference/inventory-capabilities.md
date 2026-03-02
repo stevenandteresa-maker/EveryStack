@@ -58,7 +58,7 @@ export async function adjustFieldValue(input: AdjustFieldInput) {
     SET canonical_data = jsonb_set(
       canonical_data,
       ${`{${fieldId}}`}::text[],
-      to_jsonb((canonical_data->>${{fieldId}})::numeric + ${delta})
+      to_jsonb((canonical_data->>${{ fieldId }})::numeric + ${delta})
     ),
     updated_at = now()
     WHERE id = ${recordId}
@@ -71,14 +71,14 @@ Implemented as an opt-in behavior on number fields via `config.allow_atomic_adju
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Project Management | Multiple team members logging hours against the same task simultaneously |
-| Finance / Budgets | Concurrent expense submissions reducing a shared budget pool |
-| Event Management | Ticket sales decrementing available capacity from multiple sales channels |
-| Voting / Scoring | Team members simultaneously voting or scoring records |
-| Credit Systems | AI credit balances, loyalty points, internal currency adjusted by multiple processes |
-| Resource Pools | Shared equipment, meeting rooms, vehicle fleets with concurrent checkout/return |
+| Domain             | Use Case                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| Project Management | Multiple team members logging hours against the same task simultaneously             |
+| Finance / Budgets  | Concurrent expense submissions reducing a shared budget pool                         |
+| Event Management   | Ticket sales decrementing available capacity from multiple sales channels            |
+| Voting / Scoring   | Team members simultaneously voting or scoring records                                |
+| Credit Systems     | AI credit balances, loyalty points, internal currency adjusted by multiple processes |
+| Resource Pools     | Shared equipment, meeting rooms, vehicle fleets with concurrent checkout/return      |
 
 ### Implementation Notes
 
@@ -101,14 +101,14 @@ Implemented as an opt-in behavior on number fields via `config.allow_atomic_adju
 
 Added to the field type taxonomy as type #41 in Category 2 (Number) — or arguably its own category, but storage is string-based. See `data-model.md` for the canonical entry.
 
-| Property | Value |
-|----------|-------|
-| **Key** | `barcode` |
-| **Storage** | string |
-| **Config** | `format` (auto \| upc \| ean \| code128 \| qr \| code39), `allow_manual_entry` (boolean, default: true), `unique` (boolean, default: true — enforced per table) |
-| **Display** | Rendered as text value + small barcode icon. Hover/click shows visual barcode rendering (via client-side library). QR codes render as thumbnail in grid cell. |
-| **Default column width** | 140px (already specified in `tables-and-views.md`) |
-| **Searchable** | Yes — tsvector weight B |
+| Property                 | Value                                                                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Key**                  | `barcode`                                                                                                                                                       |
+| **Storage**              | string                                                                                                                                                          |
+| **Config**               | `format` (auto \| upc \| ean \| code128 \| qr \| code39), `allow_manual_entry` (boolean, default: true), `unique` (boolean, default: true — enforced per table) |
+| **Display**              | Rendered as text value + small barcode icon. Hover/click shows visual barcode rendering (via client-side library). QR codes render as thumbnail in grid cell.   |
+| **Default column width** | 140px (already specified in `tables-and-views.md`)                                                                                                              |
+| **Searchable**           | Yes — tsvector weight B                                                                                                                                         |
 
 ### Scan-to-Find-Record
 
@@ -122,14 +122,14 @@ The critical UX is a **scan-to-find-record mode**: scan a barcode, and the syste
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Asset Tracking | IT departments scanning laptop/equipment asset tags for check-in/check-out |
-| Event Check-In | Conference/event registration scanning attendee QR badges |
-| Package / Mail | Mailrooms or logistics teams scanning packages for tracking |
-| Equipment Checkout | Libraries, tool cribs, AV departments scanning items for lending/return |
-| Field Inspections | Scanning equipment tags during safety inspections to pull up maintenance history |
-| Document Tracking | Law firms or medical offices scanning barcoded file folders |
+| Domain             | Use Case                                                                         |
+| ------------------ | -------------------------------------------------------------------------------- |
+| Asset Tracking     | IT departments scanning laptop/equipment asset tags for check-in/check-out       |
+| Event Check-In     | Conference/event registration scanning attendee QR badges                        |
+| Package / Mail     | Mailrooms or logistics teams scanning packages for tracking                      |
+| Equipment Checkout | Libraries, tool cribs, AV departments scanning items for lending/return          |
+| Field Inspections  | Scanning equipment tags during safety inspections to pull up maintenance history |
+| Document Tracking  | Law firms or medical offices scanning barcoded file folders                      |
 
 ### Implementation Notes
 
@@ -174,17 +174,17 @@ This is the core inventory pattern: a new record in a **Stock Movements** table 
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Running Balances | Invoice payments adjusting an outstanding balance |
-| Budget Drawdown | Expense records reducing a department's remaining budget |
-| Capacity Management | Booking confirmations decrementing available spots |
-| Point / Loyalty Systems | Customer actions adjusting loyalty point balances |
-| Hour Tracking | Time entries incrementing logged hours on a project record |
+| Domain                  | Use Case                                                   |
+| ----------------------- | ---------------------------------------------------------- |
+| Running Balances        | Invoice payments adjusting an outstanding balance          |
+| Budget Drawdown         | Expense records reducing a department's remaining budget   |
+| Capacity Management     | Booking confirmations decrementing available spots         |
+| Point / Loyalty Systems | Customer actions adjusting loyalty point balances          |
+| Hour Tracking           | Time entries incrementing logged hours on a project record |
 
 ---
 
-## Primitive 4: Quick Entry / Rapid Scan App *(Post-MVP)*
+## Primitive 4: Quick Entry / Rapid Scan App _(Post-MVP)_
 
 **Priority:** High — essential UX for physical counting and receiving workflows
 **Scope:** Post-MVP — Automations / Comms & Polish (depends on Barcode field + App Designer)
@@ -211,17 +211,17 @@ Quick Entry is a **post-MVP App type** built in the App Designer — a stripped-
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Time Logging | Field workers rapidly logging time entries against projects |
-| Inspection Checklists | Safety inspectors scanning equipment tags and recording pass/fail |
-| Attendance Tracking | Scanning employee/student badges for fast check-in |
+| Domain                | Use Case                                                                   |
+| --------------------- | -------------------------------------------------------------------------- |
+| Time Logging          | Field workers rapidly logging time entries against projects                |
+| Inspection Checklists | Safety inspectors scanning equipment tags and recording pass/fail          |
+| Attendance Tracking   | Scanning employee/student badges for fast check-in                         |
 | Field Data Collection | Agriculture, environmental, or construction workers capturing measurements |
-| Order Fulfillment | Warehouse pickers scanning items as they pull them for orders |
+| Order Fulfillment     | Warehouse pickers scanning items as they pull them for orders              |
 
 ---
 
-## Primitive 5: Snapshot / Freeze Automation Action *(Post-MVP)*
+## Primitive 5: Snapshot / Freeze Automation Action _(Post-MVP)_
 
 **Priority:** Medium — enables stocktake reconciliation and baseline use cases
 **Scope:** Post-MVP — Automations (automation engine)
@@ -254,17 +254,17 @@ The `pm_baselines` system in `project-management.md` already captures planned st
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Project Baselines | Snapshot planned dates/durations at project kick-off |
-| Invoice Line Items | Freeze current price/rate/terms when generating an invoice |
-| Audit Checkpoints | Capture record state at the time an approval is granted |
-| Contract Terms | Freeze negotiated rates at contract signing |
-| Performance Reviews | Capture metric values at start of review period |
+| Domain              | Use Case                                                   |
+| ------------------- | ---------------------------------------------------------- |
+| Project Baselines   | Snapshot planned dates/durations at project kick-off       |
+| Invoice Line Items  | Freeze current price/rate/terms when generating an invoice |
+| Audit Checkpoints   | Capture record state at the time an approval is granted    |
+| Contract Terms      | Freeze negotiated rates at contract signing                |
+| Performance Reviews | Capture metric values at start of review period            |
 
 ---
 
-## Primitive 6: Threshold-Based Triggers *(Post-MVP)*
+## Primitive 6: Threshold-Based Triggers _(Post-MVP)_
 
 **Priority:** Medium — enables proactive alerts without manual monitoring
 **Scope:** Post-MVP — Automations (automation trigger system)
@@ -295,13 +295,13 @@ The `pm_baselines` system in `project-management.md` already captures planned st
 
 ### Cross-Domain Value
 
-| Domain | Use Case |
-|--------|----------|
-| Budget Alerts | Notify when spending reaches 80% of quarterly allocation |
-| SLA Monitoring | Escalation when open ticket count exceeds team capacity |
-| Sales Pipeline | Alert when deal value crosses threshold requiring executive approval |
-| Capacity Warnings | Notify when registration hits 90% of venue capacity |
-| Project Health | Trigger review workflow when burn rate exceeds planned budget |
+| Domain            | Use Case                                                             |
+| ----------------- | -------------------------------------------------------------------- |
+| Budget Alerts     | Notify when spending reaches 80% of quarterly allocation             |
+| SLA Monitoring    | Escalation when open ticket count exceeds team capacity              |
+| Sales Pipeline    | Alert when deal value crosses threshold requiring executive approval |
+| Capacity Warnings | Notify when registration hits 90% of venue capacity                  |
+| Project Health    | Trigger review workflow when burn rate exceeds planned budget        |
 
 ---
 
@@ -323,11 +323,11 @@ A critical composed workflow that demonstrates how the 6 primitives work togethe
 
 Three interconnected tables, all built using standard EveryStack table and field types:
 
-| Table | Key Fields | Purpose |
-|-------|-----------|---------|
-| **Products** | Name, Barcode, Category, Quantity, Reorder Point, Unit Cost, Supplier Link | Master catalog. Quantity maintained by movement automation, never direct edits. |
-| **Stock Movements** | Product Link, Type (received / used / sold / damaged / adjusted / counted), Quantity, Date, User, Notes | The ledger. Every quantity change is a record. Automations drive all product quantity updates via atomic adjust. |
-| **Inventory Counts** | Status (in progress / reviewing / finalized), Date, Counter, Scope, Count Lines (linked table: Product Link, Expected Qty, Actual Qty, Variance formula) | Stocktake sessions. Finalizing creates adjustment movements for every line with non-zero variance. |
+| Table                | Key Fields                                                                                                                                               | Purpose                                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Products**         | Name, Barcode, Category, Quantity, Reorder Point, Unit Cost, Supplier Link                                                                               | Master catalog. Quantity maintained by movement automation, never direct edits.                                  |
+| **Stock Movements**  | Product Link, Type (received / used / sold / damaged / adjusted / counted), Quantity, Date, User, Notes                                                  | The ledger. Every quantity change is a record. Automations drive all product quantity updates via atomic adjust. |
+| **Inventory Counts** | Status (in progress / reviewing / finalized), Date, Counter, Scope, Count Lines (linked table: Product Link, Expected Qty, Actual Qty, Variance formula) | Stocktake sessions. Finalizing creates adjustment movements for every line with non-zero variance.               |
 
 The reconciliation step is an automation: when a count's status changes to "finalized," for every count line where actual ≠ expected, create an adjustment movement in Stock Movements. That movement triggers the standard quantity-adjust automation on the product.
 
@@ -358,22 +358,21 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 
 ## Implementation Priority & Phase Mapping
 
-| # | Primitive | Priority | Target Phase | MVP Scope | Dependency |
-|---|-----------|----------|-------------|-----------|------------|
-| 1 | Atomic Quantity Operations | Critical | MVP — Core UX | ✅ MVP | None — foundational |
-| 2 | Barcode Field Type + Scan-to-Lookup | Critical | MVP — Core UX | ⏳ Post-MVP | Field type registry |
-| 3 | Adjust Field Value Action (#38) | High | Post-MVP — Automations | ✅ MVP | Atomic ops + automation engine |
-| 4 | Quick Entry / Rapid Scan App | High | Post-MVP — Automations–7 | ⏳ Post-MVP | Barcode + App Designer |
-| 5 | Snapshot / Freeze Action (#39) | Medium | Post-MVP — Automations | ⏳ Post-MVP | Automation engine |
-| 6 | Threshold-Based Triggers (#16) | Medium | Post-MVP — Automations | ⏳ Post-MVP | Automation trigger system |
-| 7 | Unit of Measure Support | Low | Post-MVP | ⏳ Post-MVP | Formula engine |
+| #   | Primitive                           | Priority | Target Phase             | MVP Scope   | Dependency                     |
+| --- | ----------------------------------- | -------- | ------------------------ | ----------- | ------------------------------ |
+| 1   | Atomic Quantity Operations          | Critical | MVP — Core UX            | ✅ MVP      | None — foundational            |
+| 2   | Barcode Field Type + Scan-to-Lookup | Critical | MVP — Core UX            | ⏳ Post-MVP | Field type registry            |
+| 3   | Adjust Field Value Action (#38)     | High     | Post-MVP — Automations   | ✅ MVP      | Atomic ops + automation engine |
+| 4   | Quick Entry / Rapid Scan App        | High     | Post-MVP — Automations–7 | ⏳ Post-MVP | Barcode + App Designer         |
+| 5   | Snapshot / Freeze Action (#39)      | Medium   | Post-MVP — Automations   | ⏳ Post-MVP | Automation engine              |
+| 6   | Threshold-Based Triggers (#16)      | Medium   | Post-MVP — Automations   | ⏳ Post-MVP | Automation trigger system      |
+| 7   | Unit of Measure Support             | Low      | Post-MVP                 | ⏳ Post-MVP | Formula engine                 |
 
 **Template delivery:** The Inventory Starter Template ships as soon as all primitives are in place, targeting late Post-MVP — Comms & Polish or immediately post-MVP. The template is a pre-built base containing Products, Stock Movements, and Inventory Counts tables with automations pre-wired for quantity adjustments, low-stock alerts, and count reconciliation.
 
 ---
 
 ## Claude Code Prompt Roadmap
-
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
@@ -382,6 +381,7 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `data-model.md` (number field config), `apps/web/src/actions/CLAUDE.md` (mutation pattern), `packages/shared/db/CLAUDE.md` (query patterns), `inventory-capabilities.md` (this doc, Primitive 1)
 
 **Deliverables:**
+
 1. Add `allow_atomic_adjust: boolean` to number field config in `data-model.md` field type registry.
 2. Create `adjustFieldValue()` Server Action in `apps/web/src/actions/records.ts` following standard mutation pattern but with atomic JSONB delta SQL.
 3. Create `/data` helper `atomicAdjustField()` in data layer with Drizzle + raw SQL escape hatch.
@@ -394,6 +394,7 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `data-model.md` (field type taxonomy, FieldTypeRegistry), `tables-and-views.md` (column widths, cell rendering), `ai-data-contract.md` (AI translation functions), `mobile.md` (Camera Scanning & OCR), `inventory-capabilities.md` (this doc, Primitive 2)
 
 **Deliverables:**
+
 1. Register `barcode` in FieldTypeRegistry with storage, config, validation, renderers.
 2. Cell renderer: text value + barcode icon. Hover/click renders visual barcode. QR thumbnail in grid.
 3. Unique index creation when `config.unique: true`.
@@ -407,8 +408,9 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `automations.md` (action system, execution model, template resolution), `inventory-capabilities.md` (this doc, Primitives 3 + 5)
 
 **Deliverables:**
-1. Action #38 (Adjust Field Value): config schema, execution handler calling `atomicAdjustField()`, template resolution for dynamic delta. *(MVP)*
-2. Action #39 (Snapshot Linked Record Values): config schema, execution handler reading linked records and copying field values. *(Post-MVP)*
+
+1. Action #38 (Adjust Field Value): config schema, execution handler calling `atomicAdjustField()`, template resolution for dynamic delta. _(MVP)_
+2. Action #39 (Snapshot Linked Record Values): config schema, execution handler reading linked records and copying field values. _(Post-MVP)_
 3. Register both in action catalog with config UI components.
 4. Tests: adjust action with template resolution, snapshot with multi-link fields, error handling for non-number target fields.
 
@@ -417,6 +419,7 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `automations.md` (trigger system, TriggerRegistry, deduplication), `inventory-capabilities.md` (this doc, Primitive 6)
 
 **Deliverables:**
+
 1. Trigger #16 (Threshold Crossed): config schema, detection logic piggybacking on `field_value_changed` events.
 2. Crossing detection: compare old value vs threshold and new value vs threshold — fire only on the crossing event.
 3. Direction filtering (falling/rising/both) and cooldown enforcement.
@@ -429,6 +432,7 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `tables-and-views.md` (Table Views, view config), `app-designer.md` (App types, App block system), `mobile.md` (mobile input optimization), `inventory-capabilities.md` (this doc, Primitive 4)
 
 **Deliverables:**
+
 1. Quick Entry App type schema in the App Designer.
 2. Quick Entry UI component: scan/select → quantity → confirm → running tally.
 3. Mobile layout: full-screen with large scan button + numeric keypad.
@@ -442,6 +446,7 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 **Context to load:** `inventory-capabilities.md` (this doc — full spec), `automations.md` (recipe system), `tables-and-views.md` (template patterns)
 
 **Deliverables:**
+
 1. Template definition: Products, Stock Movements, Inventory Counts tables with field definitions.
 2. Pre-wired automations: movement → quantity adjust, low-stock threshold → notification, count finalization → adjustment movements.
 3. Quick Entry App pre-configured for receiving workflow.
@@ -452,13 +457,13 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 
 ## Key Architectural Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **Primitives, not features** | Every primitive is broadly useful. Inventory is the forcing function, not the product. |
-| **Template as delivery vehicle** | Progressive disclosure: the plumber does not need to understand atomic operations. They add products, log usage, and press "Count Inventory." |
-| **Atomic adjust as JSONB delta** | Server-side computation eliminates race conditions. The raw SQL exception is isolated and documented. |
-| **Barcode as field type, not app feature** | Integrates naturally with existing field system, formula engine, AI, sync, and permissions. |
-| **Threshold triggers vs formula conditions** | Threshold triggers fire once on crossing. Formula conditions evaluate on every edit — too noisy for high-volume operations. |
-| **Quick Entry as App type** | Built in the App Designer (post-MVP) rather than creating a parallel UX architecture. Reuses App block system and is Portal-compatible by default. |
-| **Snapshot as automation action** | Generalizes the pm_baselines pattern. Any record can snapshot linked values at any trigger point. |
-| **UOM deferred** | Most SMBs track in single units. Formula engine handles conversion math when needed. |
+| Decision                                     | Rationale                                                                                                                                          |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Primitives, not features**                 | Every primitive is broadly useful. Inventory is the forcing function, not the product.                                                             |
+| **Template as delivery vehicle**             | Progressive disclosure: the plumber does not need to understand atomic operations. They add products, log usage, and press "Count Inventory."      |
+| **Atomic adjust as JSONB delta**             | Server-side computation eliminates race conditions. The raw SQL exception is isolated and documented.                                              |
+| **Barcode as field type, not app feature**   | Integrates naturally with existing field system, formula engine, AI, sync, and permissions.                                                        |
+| **Threshold triggers vs formula conditions** | Threshold triggers fire once on crossing. Formula conditions evaluate on every edit — too noisy for high-volume operations.                        |
+| **Quick Entry as App type**                  | Built in the App Designer (post-MVP) rather than creating a parallel UX architecture. Reuses App block system and is Portal-compatible by default. |
+| **Snapshot as automation action**            | Generalizes the pm_baselines pattern. Any record can snapshot linked values at any trigger point.                                                  |
+| **UOM deferred**                             | Most SMBs track in single units. Formula engine handles conversion math when needed.                                                               |

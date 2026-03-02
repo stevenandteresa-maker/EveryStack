@@ -89,7 +89,7 @@ The platform-level tools (Chat/DMs, Tasks, Calendar) accessible via sidebar icon
 **Behavior:** Push-style (not overlay). The Quick Panel coexists with whatever the user is working on. Clicking the same icon again collapses the panel (workspace) or returns to default grid (My Office).
 
 **What they are:** Ambient access to personal tools without leaving your current context.
-**What they are NOT:** Record-level communication. Quick Panels show *your* DMs, *your* tasks, *your* calendar. They do not show record-scoped comments or threads. See: Record Thread.
+**What they are NOT:** Record-level communication. Quick Panels show _your_ DMs, _your_ tasks, _your_ calendar. They do not show record-scoped comments or threads. See: Record Thread.
 
 ### Sidebar
 
@@ -104,6 +104,7 @@ A persistent left-edge navigation column. **Collapsed by default (48px icon rail
 **My Office icon (🏠):** On My Office page — expands sidebar (same as toggle). On any other page — navigates to My Office.
 
 **Quick Panel icons (Chat, Tasks, Calendar) — context-dependent:**
+
 - On My Office: rearranges widget grid (selected widget to 2/3, others stack in 1/3).
 - In a workspace: opens 25% side panel to the right of the sidebar, pushing main content right.
 
@@ -128,13 +129,13 @@ A structured dataset — rows (records) and columns (fields). Tables are either 
 
 Every table has a `table_type` that determines its default behavior:
 
-| Type | Default View | Purpose |
-|------|-------------|---------|
-| `table` | Grid | Standard rows and columns |
-| `projects` | List (post-MVP; Grid for MVP) | Project/task management |
-| `calendar` | Calendar (post-MVP; Grid for MVP) | Events, appointments, bookings |
-| `documents` | Gallery (post-MVP; Grid for MVP) | File storage, generated docs |
-| `wiki` | Smart Doc (post-MVP; Grid for MVP) | Knowledge base, internal docs |
+| Type        | Default View                       | Purpose                        |
+| ----------- | ---------------------------------- | ------------------------------ |
+| `table`     | Grid                               | Standard rows and columns      |
+| `projects`  | List (post-MVP; Grid for MVP)      | Project/task management        |
+| `calendar`  | Calendar (post-MVP; Grid for MVP)  | Events, appointments, bookings |
+| `documents` | Gallery (post-MVP; Grid for MVP)   | File storage, generated docs   |
+| `wiki`      | Smart Doc (post-MVP; Grid for MVP) | Knowledge base, internal docs  |
 
 The `table_type` controls presentation defaults. All types store data the same way (`records.canonical_data` JSONB). Any view type is available on any table type.
 
@@ -171,6 +172,7 @@ A configured way of looking at a table's records. Table Views define which recor
 A configurable canvas for viewing and editing a single record. When a user clicks a row in a Table View, the Record View expands as an overlay from the right side of the screen.
 
 **Layout:**
+
 - **Header:** Record name, colored by workspace/platform theme.
 - **Body:** White canvas displaying selected fields arranged in columns.
 - **Columns:** Up to 4 on desktop, up to 2 on mobile. Fields are rearrangeable and adjustable in width (spanning 1–4 columns) and height.
@@ -178,6 +180,7 @@ A configurable canvas for viewing and editing a single record. When a user click
 - **Mobile:** Single column (possibly double on large screens). Full-screen sheet.
 
 **Screen dimensions:**
+
 - "Main panel" = everything to the right of the icon rail (full viewport minus 48px rail). Record View overlay dimensions are always relative to this full main panel width, regardless of Quick Panel state — opening a Record View collapses or covers the Quick Panel.
 - Record View alone: 60% of main panel width, overlay from right.
 - Record View + Record Thread: 80% total (55% Record View + 25% Record Thread).
@@ -196,7 +199,7 @@ A contextual communication panel tied to a specific record. Opens alongside the 
 
 **Mobile:** When a record is expanded, the bottom tab bar contextually swaps from Quick Panel tabs to Record Thread tabs (Comments, Activity, Files, etc.).
 
-**What Record Thread is:** Communication *about* a specific record.
+**What Record Thread is:** Communication _about_ a specific record.
 **What Record Thread is NOT:** Personal DMs or team chat. Those live in Quick Panels. Record Thread is always scoped to one record.
 
 ---
@@ -229,6 +232,7 @@ A client-facing view of workspace data, shared externally with its own auth and 
 **Optional conversion:** Manager can upgrade a Quick Portal to an App Portal. Both types coexist permanently — conversion is optional, not inevitable.
 
 **Conversion mechanics (post-MVP):** When upgrading a Quick Portal to an App Portal:
+
 1. Manager selects a "client identity table" (e.g., Contacts) — this becomes the `portal_clients.linked_record_id` target.
 2. For each `portal_access` row, the system matches the email to a record in the identity table. Matched → creates a `portal_clients` row with `linked_record_id` pointing to that contact. Unmatched → Manager prompted to create a contact record, manually map, or skip.
 3. The App Portal's per-table scoping config determines which additional records the client can see based on data relationships to their contact record.
@@ -239,7 +243,7 @@ A client-facing view of workspace data, shared externally with its own auth and 
 
 A data-input view that creates new records in a target table. Two types coexist:
 
-**Quick Form (MVP):** A Record View layout configured for data *input* rather than data *display*. Fields are empty, validation rules apply, and submission creates a new record. Uses the same field canvas layout system as Record View (columns, widths, heights, field arrangement). Setup from the table toolbar in under 2 minutes. DB: `forms` table.
+**Quick Form (MVP):** A Record View layout configured for data _input_ rather than data _display_. Fields are empty, validation rules apply, and submission creates a new record. Uses the same field canvas layout system as Record View (columns, widths, heights, field arrangement). Setup from the table toolbar in under 2 minutes. DB: `forms` table.
 
 **App Form (post-MVP):** A multi-step, conditional-logic form built in the App Designer. Branching paths, custom spatial layouts, block-based design, multi-page steps. DB: `apps` table.
 
@@ -271,6 +275,7 @@ A relationship between two tables — even if those tables are in different work
 **Example:** An Airtable "Clients" table linked to a SmartSuite "Projects" table. The link exists only in EveryStack — neither platform knows about it.
 
 **MVP scope:**
+
 - Create cross-links between any tables (same or different platforms).
 - Display linked record data in grid cells (compact summary) and Record View (full linked fields).
 - Single-hop lookups: show fields from the linked record.
@@ -290,6 +295,7 @@ A relationship between two tables — even if those tables are in different work
 A reusable layout for generating PDFs from record data. Uses a Rich Text editor with merge tags — placeholders that pull field values from a specific record at generation time.
 
 **MVP scope:**
+
 - Rich Text editor with merge tag picker (select fields from the record's table and linked tables).
 - PDF output via Gotenberg.
 - "Generate Document" button on Record View.
@@ -345,21 +351,21 @@ A trigger → action flow that executes automatically when conditions are met. M
 
 The abstraction layer through which all AI features operate. Feature code never references providers or models directly. Instead, features request a capability tier:
 
-| Tier | Use Case | Cost |
-|------|----------|------|
-| `fast` | Field suggestions, categorization, quick completions | Low (1 credit) |
+| Tier       | Use Case                                                  | Cost                 |
+| ---------- | --------------------------------------------------------- | -------------------- |
+| `fast`     | Field suggestions, categorization, quick completions      | Low (1 credit)       |
 | `standard` | Natural language search, record summarization, Smart Fill | Medium (1–2 credits) |
-| `advanced` | Document AI drafts, complex analysis | Higher (2–5 credits) |
+| `advanced` | Document AI drafts, complex analysis                      | Higher (2–5 credits) |
 
 The AIService resolves tiers to specific models based on configuration. Provider swaps never touch feature code.
 
-*Approximate ranges above are for plan communication. Actual credits computed dynamically from API cost (1 credit = $0.01 of Anthropic API spend, rounded up). See ai-metering.md for computation details.*
+_Approximate ranges above are for plan communication. Actual credits computed dynamically from API cost (1 credit = $0.01 of Anthropic API spend, rounded up). See ai-metering.md for computation details._
 
 ### Schema Descriptor Service (SDS)
 
 A service that produces structured descriptions of a tenant's schema — tables, fields, field types, cross-links, relationships across all workspaces — in a format optimized for AI consumption. Every AI feature consumes SDS output as context so the AI understands the user's data model without re-discovering it each time. SDS operates at the tenant level to support cross-workspace cross-link suggestions.
 
-**Why it matters:** SDS is what makes EveryStack's AI *contextual*. Instead of a generic chatbot, every AI call knows: "This workspace has a Clients table linked to Projects linked to Invoices, and the user is looking at Project #47 for Acme Corp." That context is what produces useful results.
+**Why it matters:** SDS is what makes EveryStack's AI _contextual_. Instead of a generic chatbot, every AI call knows: "This workspace has a Clients table linked to Projects linked to Invoices, and the user is looking at Project #47 for Acme Corp." That context is what produces useful results.
 
 ### AI Credit System
 
@@ -411,15 +417,15 @@ The external programmatic interface to EveryStack. A versioned, authenticated, r
 
 **API groups:**
 
-| Group | Purpose | Required Scope |
-|-------|---------|---------------|
-| **Data API** | Record CRUD, Table queries with filters/sorts | `data:read`, `data:write` |
-| **Schema API** | Read Table/Field/Cross-Link structure, SDS endpoint | `schema:read` |
+| Group                | Purpose                                                                                                     | Required Scope                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Data API**         | Record CRUD, Table queries with filters/sorts                                                               | `data:read`, `data:write`                                            |
+| **Schema API**       | Read Table/Field/Cross-Link structure, SDS endpoint                                                         | `schema:read`                                                        |
 | **Provisioning API** | Create Workspaces, Tables, Fields, Cross-Links, Automations, Quick Portals, Quick Forms, Document Templates | `schema:write`, `automation:write`, `portal:write`, `document:write` |
-| **AI API** | Consume AIService — capability-routed completions, prompt template registration | `ai:use` |
-| **Automation API** | Trigger Automations, query run status, manage webhooks | `automation:trigger`, `automation:read` |
-| **File API** | Presigned upload URLs for S3/R2 storage | `data:write` |
-| **Tenant API** | Create Tenants (platform-level keys only) | Platform key |
+| **AI API**           | Consume AIService — capability-routed completions, prompt template registration                             | `ai:use`                                                             |
+| **Automation API**   | Trigger Automations, query run status, manage webhooks                                                      | `automation:trigger`, `automation:read`                              |
+| **File API**         | Presigned upload URLs for S3/R2 storage                                                                     | `data:write`                                                         |
+| **Tenant API**       | Create Tenants (platform-level keys only)                                                                   | Platform key                                                         |
 
 **Auth:** Service-level API keys. See: API Key.
 
@@ -487,6 +493,7 @@ A custom application built in the App Designer. Apps can be internal-facing (tea
 The system that connects EveryStack to external platforms (Airtable, SmartSuite, Notion) and keeps data synchronized. Each platform has a dedicated adapter that translates between the platform's native data format and EveryStack's canonical JSONB format.
 
 **Sync direction:**
+
 - **Inbound only:** Pull data from platform. Fields are read-only in EveryStack.
 - **Bidirectional:** Pull and push. Edits in EveryStack write back to the source platform.
 
@@ -526,19 +533,19 @@ Five roles across two levels. Presented as a single flat hierarchy in the UI —
 
 **Tenant-level** (`tenant_memberships.role`):
 
-| Role | Access Level |
-|------|-------------|
-| **Owner** | Everything. Billing, deletion, tenant settings, role assignment. All workspaces. |
-| **Admin** | Everything except billing/deletion. All workspaces. |
-| **Member** | Default. Workspace access determined by workspace-level roles below. |
+| Role       | Access Level                                                                     |
+| ---------- | -------------------------------------------------------------------------------- |
+| **Owner**  | Everything. Billing, deletion, tenant settings, role assignment. All workspaces. |
+| **Admin**  | Everything except billing/deletion. All workspaces.                              |
+| **Member** | Default. Workspace access determined by workspace-level roles below.             |
 
 **Workspace-level** (`workspace_memberships.role` — for Members only):
 
-| Role | Access Level |
-|------|-------------|
-| **Manager** | Manages tables, views, portals, automations. Sees raw data. |
+| Role            | Access Level                                                    |
+| --------------- | --------------------------------------------------------------- |
+| **Manager**     | Manages tables, views, portals, automations. Sees raw data.     |
 | **Team Member** | Day-to-day data work through Table Views. No structural access. |
-| **Viewer** | Read-only access through Table Views. No edits. |
+| **Viewer**      | Read-only access through Table Views. No edits.                 |
 
 **Key principle:** Table Views are the access boundary for Team Members and Viewers. They see only the views they've been given access to, with only the fields that have been made visible to their role. Owners and Admins bypass Table View scoping entirely.
 
@@ -555,6 +562,7 @@ Every field resolves to one of three states per user: **read-write**, **read-onl
 The top-level organizational entity — the company/account. The billing boundary, identity boundary, and RLS isolation unit. All data queries include `tenant_id` for isolation. Multi-tenancy is enforced at every layer. One tenant contains many workspaces.
 
 **Corrected hierarchy:**
+
 ```
 Tenant (organization — billing, identity, RLS boundary)
 ├── Board: "Client Work" (optional grouping — MVP scope)
@@ -586,31 +594,31 @@ A keyboard-triggered (⌘K / Ctrl+K) universal search and command interface. Sup
 
 ### Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Monorepo** | Turborepo + pnpm | Build orchestration, workspace management |
-| **Frontend** | Next.js (App Router) | Web application framework |
-| **UI Components** | shadcn/ui + Tailwind CSS | Component library + utility-first styling |
-| **Fonts** | DM Sans, JetBrains Mono | UI/headings, code/technical |
-| **State** | Zustand (client), TanStack Query (server) | Client state, server cache/sync |
-| **Rich Text** | TipTap | Record Thread messages, document templates, notes |
-| **Grid Virtualization** | TanStack Virtual | Large table rendering performance |
-| **Validation** | Zod | Runtime schema validation (API, forms, AI output) |
-| **Backend** | Next.js Route Handlers + Server Actions | API routes and mutations within the Next.js App Router |
-| **ORM** | Drizzle ORM | Type-safe PostgreSQL queries |
-| **Database** | PostgreSQL (JSONB) | Primary data store, canonical format |
-| **Cache / Pub-Sub** | Redis | Caching, real-time pub/sub, field locks, sessions |
-| **Job Queue** | BullMQ | Background jobs (sync, automations, notifications) |
-| **Real-Time** | Socket.io | WebSocket connections for live updates |
-| **Auth** | Clerk | Authentication, user management, SSO |
-| **Email** | Resend | Transactional email delivery |
-| **PDF Generation** | Gotenberg | HTML → PDF via headless Chromium |
-| **Spam Protection** | Cloudflare Turnstile | Form and portal spam prevention |
-| **File Storage** | Cloudflare R2 (S3-compatible; MinIO for local dev) | File uploads, generated documents. Presigned URLs for direct upload/download. |
-| **File Processing** | sharp (images), ClamAV (virus scan) | Image optimization, security scanning |
-| **AI Provider** | Anthropic (Claude) | All AI features via AIService abstraction |
-| **Testing** | Vitest (unit), Playwright (E2E) | Test framework |
-| **Analytics (post-MVP)** | DuckDB | Analytical queries, cross-base analysis |
+| Layer                    | Technology                                         | Purpose                                                                       |
+| ------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Monorepo**             | Turborepo + pnpm                                   | Build orchestration, workspace management                                     |
+| **Frontend**             | Next.js (App Router)                               | Web application framework                                                     |
+| **UI Components**        | shadcn/ui + Tailwind CSS                           | Component library + utility-first styling                                     |
+| **Fonts**                | DM Sans, JetBrains Mono                            | UI/headings, code/technical                                                   |
+| **State**                | Zustand (client), TanStack Query (server)          | Client state, server cache/sync                                               |
+| **Rich Text**            | TipTap                                             | Record Thread messages, document templates, notes                             |
+| **Grid Virtualization**  | TanStack Virtual                                   | Large table rendering performance                                             |
+| **Validation**           | Zod                                                | Runtime schema validation (API, forms, AI output)                             |
+| **Backend**              | Next.js Route Handlers + Server Actions            | API routes and mutations within the Next.js App Router                        |
+| **ORM**                  | Drizzle ORM                                        | Type-safe PostgreSQL queries                                                  |
+| **Database**             | PostgreSQL (JSONB)                                 | Primary data store, canonical format                                          |
+| **Cache / Pub-Sub**      | Redis                                              | Caching, real-time pub/sub, field locks, sessions                             |
+| **Job Queue**            | BullMQ                                             | Background jobs (sync, automations, notifications)                            |
+| **Real-Time**            | Socket.io                                          | WebSocket connections for live updates                                        |
+| **Auth**                 | Clerk                                              | Authentication, user management, SSO                                          |
+| **Email**                | Resend                                             | Transactional email delivery                                                  |
+| **PDF Generation**       | Gotenberg                                          | HTML → PDF via headless Chromium                                              |
+| **Spam Protection**      | Cloudflare Turnstile                               | Form and portal spam prevention                                               |
+| **File Storage**         | Cloudflare R2 (S3-compatible; MinIO for local dev) | File uploads, generated documents. Presigned URLs for direct upload/download. |
+| **File Processing**      | sharp (images), ClamAV (virus scan)                | Image optimization, security scanning                                         |
+| **AI Provider**          | Anthropic (Claude)                                 | All AI features via AIService abstraction                                     |
+| **Testing**              | Vitest (unit), Playwright (E2E)                    | Test framework                                                                |
+| **Analytics (post-MVP)** | DuckDB                                             | Analytical queries, cross-base analysis                                       |
 
 ---
 
@@ -620,27 +628,27 @@ A keyboard-triggered (⌘K / Ctrl+K) universal search and command interface. Sup
 
 Five plan tiers, stored as `tenants.plan`:
 
-| Plan | Target |
-|------|--------|
-| **Freelancer** | Solo operators, small client rosters |
-| **Starter** | Small teams getting started |
+| Plan             | Target                                      |
+| ---------------- | ------------------------------------------- |
+| **Freelancer**   | Solo operators, small client rosters        |
+| **Starter**      | Small teams getting started                 |
 | **Professional** | Growing businesses with cross-platform data |
-| **Business** | Larger teams with high-volume needs |
-| **Enterprise** | Custom contracts, dedicated support |
+| **Business**     | Larger teams with high-volume needs         |
+| **Enterprise**   | Custom contracts, dedicated support         |
 
 **Quota dimensions** (numbers defined in domain docs, cross-referenced here). When plan pricing is finalized, consolidate all numeric quotas into the Plan Tiers table above and have domain docs reference it — single source of truth for numbers:
 
-| Dimension | Defined in |
-|-----------|-----------|
-| Record quota (cached records) | `sync-engine.md` §Record Quota Enforcement |
-| Base connections & tables per base | `sync-engine.md` §Record Quota Enforcement |
-| AI credits (monthly included) | `ai-metering.md` §Monthly Credit Budgets by Tier |
-| AI concurrent requests & batch limits | `ai-metering.md` §AIService Wrapper Implementation + §Plan Limits for Agents |
-| Portal count | `portals.md` §Portal Client Limits — MVP |
-| Portal access rows & record quota | `portals.md` §Portal Client Limits — MVP |
-| Automation count, executions/month, max steps | `automations.md` §Plan Limits |
-| Webhook delivery rate limits | `automations.md` §Rate Limiting |
-| API rate limit tiers | `platform-api.md` §Rate Limiting |
+| Dimension                                     | Defined in                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| Record quota (cached records)                 | `sync-engine.md` §Record Quota Enforcement                                   |
+| Base connections & tables per base            | `sync-engine.md` §Record Quota Enforcement                                   |
+| AI credits (monthly included)                 | `ai-metering.md` §Monthly Credit Budgets by Tier                             |
+| AI concurrent requests & batch limits         | `ai-metering.md` §AIService Wrapper Implementation + §Plan Limits for Agents |
+| Portal count                                  | `portals.md` §Portal Client Limits — MVP                                     |
+| Portal access rows & record quota             | `portals.md` §Portal Client Limits — MVP                                     |
+| Automation count, executions/month, max steps | `automations.md` §Plan Limits                                                |
+| Webhook delivery rate limits                  | `automations.md` §Rate Limiting                                              |
+| API rate limit tiers                          | `platform-api.md` §Rate Limiting                                             |
 
 When pricing is finalized, consolidate all quota numbers into this table and have domain docs reference it rather than maintaining independent copies. **For build purposes:** Use the placeholder numbers in each domain doc (e.g., `sync-engine.md` record quotas, `ai-metering.md` credit budgets). These are reasonable defaults that can be tuned via environment config without code changes. Every quota is stored as a plan-level config value, not hardcoded.
 
@@ -650,61 +658,61 @@ When pricing is finalized, consolidate all quota numbers into this table and hav
 
 ### MVP Includes
 
-| Area | What Ships |
-|------|-----------|
-| **Foundation** | Monorepo, auth (Clerk), PostgreSQL, Redis, design system (shadcn/ui), AIService + SDS + credit system |
-| **Organization** | Boards (optional workspace grouping), workspace/table CRUD, sidebar navigation |
-| **Sync Engine** | Airtable, SmartSuite, Notion adapters. Bidirectional sync. Canonical JSONB. |
-| **Core UX** | Table Views (Grid + Card), Record View (configurable field canvas), My Views / Shared Views, Command Bar |
-| **Cross-Linking** | Create links across any tables/platforms. Display linked data. Single-hop lookups. |
-| **Quick Portals** | Externally-shared Record View. Single record. Magic link / password auth. Read-only default, selectively editable. |
-| **Quick Forms** | Record View layout for creating new records. Public or link-gated. Turnstile spam protection. |
-| **Document Gen** | Merge-tag templates. Rich text editor. PDF output. AI draft option. |
-| **Automations** | Linear trigger → action flows. 6 triggers, 7 actions. Step-by-step list builder. |
-| **AI** | Natural language search, Smart Fill, record summarization, document AI draft, field/link suggestions. |
-| **Platform API** | API key auth, Data API (Record CRUD, queries), Schema API, Provisioning API, Automation triggers, webhook management. Phased: foundation in MVP — Foundation, Data API MVP — Core UX, full surface by Post-MVP — Automations. |
-| **Mobile** | Workspace tiles home. Grid + Card views. Single-column Record View. Bottom tab Quick Panels with contextual Record Thread tabs. |
+| Area              | What Ships                                                                                                                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Foundation**    | Monorepo, auth (Clerk), PostgreSQL, Redis, design system (shadcn/ui), AIService + SDS + credit system                                                                                                                         |
+| **Organization**  | Boards (optional workspace grouping), workspace/table CRUD, sidebar navigation                                                                                                                                                |
+| **Sync Engine**   | Airtable, SmartSuite, Notion adapters. Bidirectional sync. Canonical JSONB.                                                                                                                                                   |
+| **Core UX**       | Table Views (Grid + Card), Record View (configurable field canvas), My Views / Shared Views, Command Bar                                                                                                                      |
+| **Cross-Linking** | Create links across any tables/platforms. Display linked data. Single-hop lookups.                                                                                                                                            |
+| **Quick Portals** | Externally-shared Record View. Single record. Magic link / password auth. Read-only default, selectively editable.                                                                                                            |
+| **Quick Forms**   | Record View layout for creating new records. Public or link-gated. Turnstile spam protection.                                                                                                                                 |
+| **Document Gen**  | Merge-tag templates. Rich text editor. PDF output. AI draft option.                                                                                                                                                           |
+| **Automations**   | Linear trigger → action flows. 6 triggers, 7 actions. Step-by-step list builder.                                                                                                                                              |
+| **AI**            | Natural language search, Smart Fill, record summarization, document AI draft, field/link suggestions.                                                                                                                         |
+| **Platform API**  | API key auth, Data API (Record CRUD, queries), Schema API, Provisioning API, Automation triggers, webhook management. Phased: foundation in MVP — Foundation, Data API MVP — Core UX, full surface by Post-MVP — Automations. |
+| **Mobile**        | Workspace tiles home. Grid + Card views. Single-column Record View. Bottom tab Quick Panels with contextual Record Thread tabs.                                                                                               |
 
 ### MVP Explicitly Excludes
 
-| Area | Deferred To |
-|------|-------------|
-| App Designer (visual page builder) | Post-MVP |
-| Custom Apps (POS, websites, internal apps) | Post-MVP |
-| Full-featured Portals (multi-page, multi-record, custom layout) | Post-MVP |
-| Visual automation canvas (branching, conditions, loops) | Post-MVP |
-| Formula engine | Post-MVP |
-| Rollups and aggregations | Post-MVP |
-| Kanban, Gantt, Calendar, List, Gallery views | Post-MVP (Kanban soon after MVP) |
-| Wiki / Knowledge Base | Post-MVP |
-| Full communications hub (base/table threads, omnichannel) | Post-MVP |
-| Booking / Scheduling | Post-MVP |
-| Approval workflows | Post-MVP |
-| AI Agents (autonomous multi-step) | Post-MVP |
-| DuckDB analytical layer | Post-MVP |
-| Vector embeddings / semantic search | Post-MVP (file content embedding generation ships MVP — Core UX via `file.embed_content` job; semantic search UX is post-MVP) |
-| Personal Notes / Evernote competitor | Post-MVP |
-| Workspace Map | Post-MVP |
-| Time tracking, asset library, ad platforms | Post-MVP |
-| Commerce embeds, live chat widget | Post-MVP |
-| Document App type (App Designer canvas → PDF) | Post-MVP |
-| Self-hosted AI, data residency | Post-MVP |
+| Area                                                            | Deferred To                                                                                                                   |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| App Designer (visual page builder)                              | Post-MVP                                                                                                                      |
+| Custom Apps (POS, websites, internal apps)                      | Post-MVP                                                                                                                      |
+| Full-featured Portals (multi-page, multi-record, custom layout) | Post-MVP                                                                                                                      |
+| Visual automation canvas (branching, conditions, loops)         | Post-MVP                                                                                                                      |
+| Formula engine                                                  | Post-MVP                                                                                                                      |
+| Rollups and aggregations                                        | Post-MVP                                                                                                                      |
+| Kanban, Gantt, Calendar, List, Gallery views                    | Post-MVP (Kanban soon after MVP)                                                                                              |
+| Wiki / Knowledge Base                                           | Post-MVP                                                                                                                      |
+| Full communications hub (base/table threads, omnichannel)       | Post-MVP                                                                                                                      |
+| Booking / Scheduling                                            | Post-MVP                                                                                                                      |
+| Approval workflows                                              | Post-MVP                                                                                                                      |
+| AI Agents (autonomous multi-step)                               | Post-MVP                                                                                                                      |
+| DuckDB analytical layer                                         | Post-MVP                                                                                                                      |
+| Vector embeddings / semantic search                             | Post-MVP (file content embedding generation ships MVP — Core UX via `file.embed_content` job; semantic search UX is post-MVP) |
+| Personal Notes / Evernote competitor                            | Post-MVP                                                                                                                      |
+| Workspace Map                                                   | Post-MVP                                                                                                                      |
+| Time tracking, asset library, ad platforms                      | Post-MVP                                                                                                                      |
+| Commerce embeds, live chat widget                               | Post-MVP                                                                                                                      |
+| Document App type (App Designer canvas → PDF)                   | Post-MVP                                                                                                                      |
+| Self-hosted AI, data residency                                  | Post-MVP                                                                                                                      |
 
 ---
 
 ## Naming Discipline — Terms That Were Confused
 
-| ❌ Do NOT Use | ✅ Use Instead | Why |
-|---|---|---|
-| "Interface" (as a Table View) | **Table View** | "Interface" is overloaded. Table Views are views. |
-| "Interface" (as an App Designer output) | **App** | Apps are custom things built in the App Designer. |
-| "Interface Designer" | **App Designer** | It designs Apps, not "interfaces." |
-| "Portal Designer" | **App Designer** | One tool, one name. |
-| "Interface types" | **App types** | Portal, Internal App, Website, Form, Document, etc. |
-| "Portals table" (for non-portal entities) | Rename post-MVP | DB table is still `portals` for now, but we never call non-portal things "portals" in user-facing language or documentation. |
-| "Communications Hub" | **Record Thread** (record-level) or **Chat** (personal) | Distinguish the two surfaces clearly. |
-| "My Office panels" | **Quick Panels** | Consistent name everywhere. |
-| "base" (as synonym for workspace) | **Workspace** | "Base" refers to an external platform container (e.g., Airtable base). EveryStack's container is a Workspace. |
+| ❌ Do NOT Use                             | ✅ Use Instead                                          | Why                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| "Interface" (as a Table View)             | **Table View**                                          | "Interface" is overloaded. Table Views are views.                                                                            |
+| "Interface" (as an App Designer output)   | **App**                                                 | Apps are custom things built in the App Designer.                                                                            |
+| "Interface Designer"                      | **App Designer**                                        | It designs Apps, not "interfaces."                                                                                           |
+| "Portal Designer"                         | **App Designer**                                        | One tool, one name.                                                                                                          |
+| "Interface types"                         | **App types**                                           | Portal, Internal App, Website, Form, Document, etc.                                                                          |
+| "Portals table" (for non-portal entities) | Rename post-MVP                                         | DB table is still `portals` for now, but we never call non-portal things "portals" in user-facing language or documentation. |
+| "Communications Hub"                      | **Record Thread** (record-level) or **Chat** (personal) | Distinguish the two surfaces clearly.                                                                                        |
+| "My Office panels"                        | **Quick Panels**                                        | Consistent name everywhere.                                                                                                  |
+| "base" (as synonym for workspace)         | **Workspace**                                           | "Base" refers to an external platform container (e.g., Airtable base). EveryStack's container is a Workspace.                |
 
 ---
 
@@ -712,56 +720,56 @@ When pricing is finalized, consolidate all quota numbers into this table and hav
 
 This maps user-facing concepts to their database tables. Full schema in `data-model.md`.
 
-| Concept | Primary DB Table(s) | Key Columns |
-|---------|---------------------|-------------|
-| Tenant (Organization) | `tenants` | id, name, slug, plan |
-| Board | `boards` | id, tenant_id, name, sort_order |
-| Board Membership | `board_memberships` | id, board_id, user_id, default_workspace_role |
-| Workspace | `workspaces` | id, tenant_id, board_id (nullable), name, slug |
-| User | `users` | id, clerk_id, email, name |
-| Tenant Membership | `tenant_memberships` | id, tenant_id, user_id, role (owner\|admin\|member), status (active\|invited\|suspended) |
-| Workspace Membership | `workspace_memberships` | user_id, tenant_id, workspace_id, role (manager\|team_member\|viewer) |
-| Table | `tables` | id, tenant_id, workspace_id, name, table_type, tab_color, environment (synced\|native), created_by, created_at, updated_at |
-| Field | `fields` | id, tenant_id, table_id, name, field_type, config (JSONB) |
-| Record | `records` | id, tenant_id, table_id, canonical_data (JSONB) |
-| Table View | `views` | id, tenant_id, table_id, view_type, config (JSONB), permissions (JSONB) |
-| Record View Config | `record_view_configs` | id, tenant_id, table_id, name, layout (JSONB) |
-| Cross-Link | `cross_links` + `fields` (type=linked_record) | source/target table, link config, card_fields (JSONB) |
-| Portal | `portals` | id, tenant_id, table_id, record_view_config_id, name, slug, auth_type, status |
-| Portal Access | `portal_access` | id, tenant_id, portal_id, record_id, email, auth_hash, token, token_expires_at, last_accessed_at |
-| Portal Session | `portal_sessions` | id, auth_type ('quick'\|'app'), auth_id, portal_id, expires_at |
-| Form | `forms` | id, tenant_id, table_id, record_view_config_id, name, slug, status |
-| Document Template | `document_templates` | id, tenant_id, table_id, name, content (JSONB — TipTap JSON with merge tags), settings (JSONB), version, created_by, created_at, updated_at |
-| Automation | `automations` | id, tenant_id, workspace_id, name, trigger (JSONB), steps (JSONB[]), status |
-| Automation Run | `automation_runs` | id, automation_id, status, started_at, step_log |
-| Webhook Endpoint | `webhook_endpoints` | id, tenant_id, workspace_id, url, signing_secret, subscribed_events (TEXT[]), status (active\|disabled), consecutive_failures, created_by |
-| Webhook Delivery Log | `webhook_delivery_log` | id, tenant_id, webhook_endpoint_id, event, delivery_id, payload (JSONB), status_code, status (pending\|success\|failed), retry_count, created_at |
-| Base Connection | `base_connections` | id, tenant_id, platform, external_base_id, external_base_name, oauth_tokens, sync_config (JSONB), sync_direction, conflict_resolution, sync_status, last_sync_at, health (JSONB) |
-| Sync Failure | `sync_failures` | id, tenant_id, base_connection_id, error_code, status |
-| Sync Schema Change | `sync_schema_changes` | id, tenant_id, base_connection_id, change_type, status |
-| Record Template | `record_templates` | id, tenant_id, table_id, name, canonical_data (JSONB), publish_state |
-| Record Thread | `threads` + `thread_messages` | scope_type=record, scope_id=record_id |
-| DM / Chat | `threads` + `thread_messages` | scope_type=dm or group_dm |
-| Saved Message | `user_saved_messages` | id, user_id, message_id, tenant_id, note (nullable), saved_at |
-| Personal Task | `user_tasks` | id, user_id, title, completed, due_date |
-| Personal Event | `user_events` | id, user_id, title, start_time, end_time |
-| AI Usage | `ai_usage_log` | tenant_id, feature, credits_charged |
-| AI Credit Budget | `ai_credit_ledger` | tenant_id, credits_total, credits_used |
-| API Key | `api_keys` | id, tenant_id, name, key_hash, key_prefix, scopes (TEXT[]), rate_limit_tier, status (active\|revoked) |
-| API Request Log | `api_request_log` | id, tenant_id, api_key_id, method, path, status_code, duration_ms. Monthly partitioned, 30-day retention |
-| App (post-MVP) | `apps` | id, tenant_id, type, name, theme, status |
-| App Page (post-MVP) | `app_pages` | id, app_id, slug, layout (JSONB) |
-| App Block (post-MVP) | `app_blocks` | id, page_id, block_type, config (JSONB) |
-| Audit Log | `audit_log` | id, tenant_id, actor_type, actor_id, actor_label, action, entity_type, entity_id, details (JSONB) |
-| Form Submission | `form_submissions` | id, form_id, tenant_id, record_id, submitted_at, ip_address, user_agent |
-| Generated Document | `generated_documents` | id, tenant_id, template_id, source_record_id, file_url (S3/R2), file_type (pdf), generated_by, generated_at, automation_run_id (nullable), ai_drafted (boolean) |
-| Sync Conflict | `sync_conflicts` | id, tenant_id, base_connection_id, record_id, field_id, local_value, remote_value, resolution |
-| Synced Field Mapping | `synced_field_mappings` | id, tenant_id, base_connection_id, table_id, field_id, external_field_id, status |
-| Notification | `notifications` | id, user_id, tenant_id, type, source_thread_id, source_message_id, read, created_at |
-| Section (sidebar grouping) | `sections` | id, tenant_id, workspace_id, name, sort_order |
-| Command Bar Session | `command_bar_sessions` | id, tenant_id, user_id, query, selected_action, context |
-| Cross-Link Index | `cross_link_index` | source_record_id, target_record_id, cross_link_id (denormalized lookup) |
-| Platform Key (post-MVP) | `platform_keys` | id, name, key_hash, prefix, permissions (JSONB), issued_to |
+| Concept                    | Primary DB Table(s)                           | Key Columns                                                                                                                                                                      |
+| -------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tenant (Organization)      | `tenants`                                     | id, name, slug, plan                                                                                                                                                             |
+| Board                      | `boards`                                      | id, tenant_id, name, sort_order                                                                                                                                                  |
+| Board Membership           | `board_memberships`                           | id, board_id, user_id, default_workspace_role                                                                                                                                    |
+| Workspace                  | `workspaces`                                  | id, tenant_id, board_id (nullable), name, slug                                                                                                                                   |
+| User                       | `users`                                       | id, clerk_id, email, name                                                                                                                                                        |
+| Tenant Membership          | `tenant_memberships`                          | id, tenant_id, user_id, role (owner\|admin\|member), status (active\|invited\|suspended)                                                                                         |
+| Workspace Membership       | `workspace_memberships`                       | user_id, tenant_id, workspace_id, role (manager\|team_member\|viewer)                                                                                                            |
+| Table                      | `tables`                                      | id, tenant_id, workspace_id, name, table_type, tab_color, environment (synced\|native), created_by, created_at, updated_at                                                       |
+| Field                      | `fields`                                      | id, tenant_id, table_id, name, field_type, config (JSONB)                                                                                                                        |
+| Record                     | `records`                                     | id, tenant_id, table_id, canonical_data (JSONB)                                                                                                                                  |
+| Table View                 | `views`                                       | id, tenant_id, table_id, view_type, config (JSONB), permissions (JSONB)                                                                                                          |
+| Record View Config         | `record_view_configs`                         | id, tenant_id, table_id, name, layout (JSONB)                                                                                                                                    |
+| Cross-Link                 | `cross_links` + `fields` (type=linked_record) | source/target table, link config, card_fields (JSONB)                                                                                                                            |
+| Portal                     | `portals`                                     | id, tenant_id, table_id, record_view_config_id, name, slug, auth_type, status                                                                                                    |
+| Portal Access              | `portal_access`                               | id, tenant_id, portal_id, record_id, email, auth_hash, token, token_expires_at, last_accessed_at                                                                                 |
+| Portal Session             | `portal_sessions`                             | id, auth_type ('quick'\|'app'), auth_id, portal_id, expires_at                                                                                                                   |
+| Form                       | `forms`                                       | id, tenant_id, table_id, record_view_config_id, name, slug, status                                                                                                               |
+| Document Template          | `document_templates`                          | id, tenant_id, table_id, name, content (JSONB — TipTap JSON with merge tags), settings (JSONB), version, created_by, created_at, updated_at                                      |
+| Automation                 | `automations`                                 | id, tenant_id, workspace_id, name, trigger (JSONB), steps (JSONB[]), status                                                                                                      |
+| Automation Run             | `automation_runs`                             | id, automation_id, status, started_at, step_log                                                                                                                                  |
+| Webhook Endpoint           | `webhook_endpoints`                           | id, tenant_id, workspace_id, url, signing_secret, subscribed_events (TEXT[]), status (active\|disabled), consecutive_failures, created_by                                        |
+| Webhook Delivery Log       | `webhook_delivery_log`                        | id, tenant_id, webhook_endpoint_id, event, delivery_id, payload (JSONB), status_code, status (pending\|success\|failed), retry_count, created_at                                 |
+| Base Connection            | `base_connections`                            | id, tenant_id, platform, external_base_id, external_base_name, oauth_tokens, sync_config (JSONB), sync_direction, conflict_resolution, sync_status, last_sync_at, health (JSONB) |
+| Sync Failure               | `sync_failures`                               | id, tenant_id, base_connection_id, error_code, status                                                                                                                            |
+| Sync Schema Change         | `sync_schema_changes`                         | id, tenant_id, base_connection_id, change_type, status                                                                                                                           |
+| Record Template            | `record_templates`                            | id, tenant_id, table_id, name, canonical_data (JSONB), publish_state                                                                                                             |
+| Record Thread              | `threads` + `thread_messages`                 | scope_type=record, scope_id=record_id                                                                                                                                            |
+| DM / Chat                  | `threads` + `thread_messages`                 | scope_type=dm or group_dm                                                                                                                                                        |
+| Saved Message              | `user_saved_messages`                         | id, user_id, message_id, tenant_id, note (nullable), saved_at                                                                                                                    |
+| Personal Task              | `user_tasks`                                  | id, user_id, title, completed, due_date                                                                                                                                          |
+| Personal Event             | `user_events`                                 | id, user_id, title, start_time, end_time                                                                                                                                         |
+| AI Usage                   | `ai_usage_log`                                | tenant_id, feature, credits_charged                                                                                                                                              |
+| AI Credit Budget           | `ai_credit_ledger`                            | tenant_id, credits_total, credits_used                                                                                                                                           |
+| API Key                    | `api_keys`                                    | id, tenant_id, name, key_hash, key_prefix, scopes (TEXT[]), rate_limit_tier, status (active\|revoked)                                                                            |
+| API Request Log            | `api_request_log`                             | id, tenant_id, api_key_id, method, path, status_code, duration_ms. Monthly partitioned, 30-day retention                                                                         |
+| App (post-MVP)             | `apps`                                        | id, tenant_id, type, name, theme, status                                                                                                                                         |
+| App Page (post-MVP)        | `app_pages`                                   | id, app_id, slug, layout (JSONB)                                                                                                                                                 |
+| App Block (post-MVP)       | `app_blocks`                                  | id, page_id, block_type, config (JSONB)                                                                                                                                          |
+| Audit Log                  | `audit_log`                                   | id, tenant_id, actor_type, actor_id, actor_label, action, entity_type, entity_id, details (JSONB)                                                                                |
+| Form Submission            | `form_submissions`                            | id, form_id, tenant_id, record_id, submitted_at, ip_address, user_agent                                                                                                          |
+| Generated Document         | `generated_documents`                         | id, tenant_id, template_id, source_record_id, file_url (S3/R2), file_type (pdf), generated_by, generated_at, automation_run_id (nullable), ai_drafted (boolean)                  |
+| Sync Conflict              | `sync_conflicts`                              | id, tenant_id, base_connection_id, record_id, field_id, local_value, remote_value, resolution                                                                                    |
+| Synced Field Mapping       | `synced_field_mappings`                       | id, tenant_id, base_connection_id, table_id, field_id, external_field_id, status                                                                                                 |
+| Notification               | `notifications`                               | id, user_id, tenant_id, type, source_thread_id, source_message_id, read, created_at                                                                                              |
+| Section (sidebar grouping) | `sections`                                    | id, tenant_id, workspace_id, name, sort_order                                                                                                                                    |
+| Command Bar Session        | `command_bar_sessions`                        | id, tenant_id, user_id, query, selected_action, context                                                                                                                          |
+| Cross-Link Index           | `cross_link_index`                            | source_record_id, target_record_id, cross_link_id (denormalized lookup)                                                                                                          |
+| Platform Key (post-MVP)    | `platform_keys`                               | id, name, key_hash, prefix, permissions (JSONB), issued_to                                                                                                                       |
 
 **Note:** The old docs used the `portals` table to store all App Designer outputs (portals, apps, forms, websites, widgets, documents) via a `type` column. For MVP, Portals and Forms are **not** App Designer outputs — they're Record View configurations with auth wrappers. The `portals` DB table from old docs should be split: `portals` for simple record-sharing, `forms` for record-creation forms, and (post-MVP) `apps` for App Designer outputs.
 

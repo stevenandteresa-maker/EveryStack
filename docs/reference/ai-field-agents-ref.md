@@ -2,6 +2,7 @@
 
 > **⚠️ GLOSSARY RECONCILIATION — 2026-02-27**
 > Reconciled against `GLOSSARY.md` (source of truth). Changes:
+>
 > - **Scope tagged as Post-MVP.** The glossary's MVP Scope Summary explicitly excludes "AI Agents (autonomous multi-step)" and "DuckDB analytical layer." AI Field Agents depend on DuckDB and go well beyond the MVP AI features (Smart Fill, record summarization, NL search, field/link suggestions). The entire feature is post-MVP.
 > - **Naming: "cross-base links/linked data" → "Cross-Links/Cross-Link data"** where used as a formal concept name. Kept "cross-base" as a descriptive adjective in comparison tables and capability descriptions where it adds clarity.
 > - **Naming: JSONB `data` column → `canonical_data` column** per glossary definition: "Records store their data in the `canonical_data` JSONB column."
@@ -20,24 +21,24 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Purpose of This Document | 44–53 | Document scope and audience |
-| What AI Field Agents Are | 54–75 | LLM-powered computed fields, cross-base awareness, how they differ from formulas |
-| Where This Module Sits in the Architecture | 76–106 | Dependency diagram, relationship to SDS/DuckDB/AIService |
-| Agent Configuration Model | 107–368 | 10 output types, 3 field reference source types, config schema, examples |
-| Prompt Assembly Pipeline | 369–544 | 7-step pipeline, context building, token budgeting |
-| LLM Router | 545–609 | Tier selection, model routing, fallback chains |
-| Output Validation | 610–686 | aiToCanonical mapping, type coercion, error handling |
-| Execution Engine | 687–783 | Caching, batch execution, concurrency, retry logic |
-| Trigger System Integration | 784–816 | 4 trigger modes (on-demand, on-change, scheduled, cascade) |
-| Storage Model | 817–889 | Result caching in canonical_data, staleness tracking |
-| Cost Management | 890–926 | Credit estimation, budget caps, cost optimization |
-| Security Considerations | 927–971 | Prompt injection mitigations, data isolation, output sanitization |
-| Claude Code Prompt Roadmap | 972–1340 | 8-prompt implementation roadmap |
-| Implementation Order | 1341–1360 | Dependency-ordered build sequence |
-| Appendix: Example Agent Configurations | 1361–1510 | Concrete agent config examples for common use cases |
-| Appendix: Future Extensions (Do Not Build Yet) | 1511–1523 | Deferred features |
+| Section                                        | Lines     | Covers                                                                           |
+| ---------------------------------------------- | --------- | -------------------------------------------------------------------------------- |
+| Purpose of This Document                       | 44–53     | Document scope and audience                                                      |
+| What AI Field Agents Are                       | 54–75     | LLM-powered computed fields, cross-base awareness, how they differ from formulas |
+| Where This Module Sits in the Architecture     | 76–106    | Dependency diagram, relationship to SDS/DuckDB/AIService                         |
+| Agent Configuration Model                      | 107–368   | 10 output types, 3 field reference source types, config schema, examples         |
+| Prompt Assembly Pipeline                       | 369–544   | 7-step pipeline, context building, token budgeting                               |
+| LLM Router                                     | 545–609   | Tier selection, model routing, fallback chains                                   |
+| Output Validation                              | 610–686   | aiToCanonical mapping, type coercion, error handling                             |
+| Execution Engine                               | 687–783   | Caching, batch execution, concurrency, retry logic                               |
+| Trigger System Integration                     | 784–816   | 4 trigger modes (on-demand, on-change, scheduled, cascade)                       |
+| Storage Model                                  | 817–889   | Result caching in canonical_data, staleness tracking                             |
+| Cost Management                                | 890–926   | Credit estimation, budget caps, cost optimization                                |
+| Security Considerations                        | 927–971   | Prompt injection mitigations, data isolation, output sanitization                |
+| Claude Code Prompt Roadmap                     | 972–1340  | 8-prompt implementation roadmap                                                  |
+| Implementation Order                           | 1341–1360 | Dependency-ordered build sequence                                                |
+| Appendix: Example Agent Configurations         | 1361–1510 | Concrete agent config examples for common use cases                              |
+| Appendix: Future Extensions (Do Not Build Yet) | 1511–1523 | Deferred features                                                                |
 
 ---
 
@@ -46,6 +47,7 @@
 This document provides the architectural context, design decisions, interfaces, constraints, and implementation guidance that Claude Code needs to build AI Field Agents for EveryStack. Read this document fully before writing any implementation code.
 
 **Prerequisites:** This module depends on two other modules that must be built first. Read their reference documents before this one:
+
 1. **Schema Descriptor Service (SDS)** — provides schema introspection and permission-scoped metadata (`schema-descriptor-service.md`)
 2. **DuckDB Context Layer** — provides cross-platform analytical query execution (`duckdb-context-layer-ref.md`)
 
@@ -59,15 +61,15 @@ Think of it as a computed field, like a formula or rollup, except the computatio
 
 **What makes EveryStack's AI Field Agents different from competitors:**
 
-| Capability | Airtable | SmartSuite | EveryStack |
-|---|---|---|---|
-| Reference fields in same record | ✓ | ✓ | ✓ |
-| Reference linked records (same base) | ✓ (one hop) | ✗ | ✓ |
-| Reference linked records (cross-base) | ✗ | ✗ | ✓ |
-| Aggregate context (multi-record analysis) | ✗ | ✗ | ✓ |
-| Multi-hop link traversal | ✗ | ✗ | ✓ (up to 3 hops) |
-| Multiple LLM provider support | ✓ (Enterprise) | ✓ | ✓ |
-| Self-hosted / open-weight model support | ✗ | ✗ | ✓ |
+| Capability                                | Airtable       | SmartSuite | EveryStack       |
+| ----------------------------------------- | -------------- | ---------- | ---------------- |
+| Reference fields in same record           | ✓              | ✓          | ✓                |
+| Reference linked records (same base)      | ✓ (one hop)    | ✗          | ✓                |
+| Reference linked records (cross-base)     | ✗              | ✗          | ✓                |
+| Aggregate context (multi-record analysis) | ✗              | ✗          | ✓                |
+| Multi-hop link traversal                  | ✗              | ✗          | ✓ (up to 3 hops) |
+| Multiple LLM provider support             | ✓ (Enterprise) | ✓          | ✓                |
+| Self-hosted / open-weight model support   | ✗              | ✗          | ✓                |
 
 The core differentiator is **scope of awareness**. Competitor agents see one record at a time. EveryStack's agents can see anything the user is allowed to see — Cross-Link data, aggregated metrics across related records, and multi-hop relationship chains — all permission-scoped.
 
@@ -111,19 +113,19 @@ When a user creates an AI Field Agent, they configure the following. This config
 ```typescript
 interface AIFieldAgentConfig {
   // --- Identity ---
-  field_id: string;                    // Assigned by system
-  field_name: string;                  // User-provided display name
+  field_id: string; // Assigned by system
+  field_name: string; // User-provided display name
 
   // --- Output Type ---
   output_type: AgentOutputType;
-  output_config?: OutputTypeConfig;    // Type-specific configuration
+  output_config?: OutputTypeConfig; // Type-specific configuration
 
   // --- Prompt ---
-  prompt_template: string;             // The prompt with {{field_ref}} placeholders
-  system_instructions?: string;        // Optional system prompt prepended to every run
-  
+  prompt_template: string; // The prompt with {{field_ref}} placeholders
+  system_instructions?: string; // Optional system prompt prepended to every run
+
   // --- Field References ---
-  field_refs: FieldReference[];        // Resolved list of all fields referenced in the prompt
+  field_refs: FieldReference[]; // Resolved list of all fields referenced in the prompt
 
   // --- Aggregate Context (optional) ---
   aggregate_context?: AggregateContextConfig;
@@ -135,9 +137,9 @@ interface AIFieldAgentConfig {
   trigger: TriggerConfig;
 
   // --- Behavioral Settings ---
-  cache_result: boolean;               // If true, don't re-run if inputs haven't changed
-  retry_on_failure: boolean;           // Auto-retry once on LLM errors
-  max_input_tokens?: number;           // Limit prompt size (guard against huge linked datasets)
+  cache_result: boolean; // If true, don't re-run if inputs haven't changed
+  retry_on_failure: boolean; // Auto-retry once on LLM errors
+  max_input_tokens?: number; // Limit prompt size (guard against huge linked datasets)
 }
 ```
 
@@ -147,36 +149,36 @@ AI Field Agents produce typed output that maps to EveryStack's existing field st
 
 ```typescript
 type AgentOutputType =
-  | 'text'              // Free-form text → stored as text JSONB value
-  | 'rich_text'         // Markdown/HTML text → stored as rich_text JSONB value
-  | 'single_select'     // Pick one from defined options → stored as single_select value
-  | 'multi_select'      // Pick multiple from defined options → stored as multi_select array
-  | 'number'            // Numeric output → stored as number
-  | 'currency'          // Monetary value → stored as currency with code
-  | 'checkbox'          // Boolean decision → stored as boolean
-  | 'date'              // Date extraction/inference → stored as ISO 8601 string
-  | 'link_suggestion'   // Suggest records to link → stored as array of record IDs
-  | 'json'              // Structured data → stored as JSONB object
+  | 'text' // Free-form text → stored as text JSONB value
+  | 'rich_text' // Markdown/HTML text → stored as rich_text JSONB value
+  | 'single_select' // Pick one from defined options → stored as single_select value
+  | 'multi_select' // Pick multiple from defined options → stored as multi_select array
+  | 'number' // Numeric output → stored as number
+  | 'currency' // Monetary value → stored as currency with code
+  | 'checkbox' // Boolean decision → stored as boolean
+  | 'date' // Date extraction/inference → stored as ISO 8601 string
+  | 'link_suggestion' // Suggest records to link → stored as array of record IDs
+  | 'json'; // Structured data → stored as JSONB object
 
 interface OutputTypeConfig {
   // For single_select and multi_select:
-  options?: string[];                  // Allowed values — LLM must pick from these
+  options?: string[]; // Allowed values — LLM must pick from these
 
   // For currency:
-  currency_code?: string;              // e.g., "USD"
+  currency_code?: string; // e.g., "USD"
 
   // For number:
-  decimal_places?: number;             // Rounding precision
+  decimal_places?: number; // Rounding precision
 
   // For link_suggestion:
-  target_table_id?: string;            // Which table to suggest records from
-  max_suggestions?: number;            // Maximum number of suggestions (default: 5)
+  target_table_id?: string; // Which table to suggest records from
+  max_suggestions?: number; // Maximum number of suggestions (default: 5)
 
   // For json:
-  json_schema?: object;                // JSON Schema the output must conform to
+  json_schema?: object; // JSON Schema the output must conform to
 
   // For text and rich_text:
-  max_length?: number;                 // Maximum character length
+  max_length?: number; // Maximum character length
 }
 ```
 
@@ -186,24 +188,21 @@ The prompt template uses `{{ref_name}}` placeholders. Each placeholder maps to a
 
 ```typescript
 interface FieldReference {
-  ref_name: string;                    // The placeholder name used in the prompt template
+  ref_name: string; // The placeholder name used in the prompt template
   source: FieldReferenceSource;
 }
 
-type FieldReferenceSource =
-  | LocalFieldRef
-  | LinkedFieldRef
-  | MultiHopFieldRef;
+type FieldReferenceSource = LocalFieldRef | LinkedFieldRef | MultiHopFieldRef;
 
 interface LocalFieldRef {
   type: 'local';
-  field_id: string;                    // Field in the same table as the agent
+  field_id: string; // Field in the same table as the agent
 }
 
 interface LinkedFieldRef {
   type: 'linked';
-  link_field_id: string;              // The Cross-Link field on the current record
-  target_field_id: string;            // The field to read from the linked record(s)
+  link_field_id: string; // The Cross-Link field on the current record
+  target_field_id: string; // The field to read from the linked record(s)
   // If the link is one-to-many, multiple values are returned
   // The assembler joins them as a comma-separated list or structured list
   multi_value_format: 'comma_list' | 'numbered_list' | 'json_array';
@@ -211,13 +210,13 @@ interface LinkedFieldRef {
 
 interface MultiHopFieldRef {
   type: 'multi_hop';
-  hops: HopDefinition[];              // Chain of link traversals (max 3 hops)
-  target_field_id: string;            // The field to read at the final hop
+  hops: HopDefinition[]; // Chain of link traversals (max 3 hops)
+  target_field_id: string; // The field to read at the final hop
   multi_value_format: 'comma_list' | 'numbered_list' | 'json_array';
 }
 
 interface HopDefinition {
-  link_field_id: string;              // Link field to traverse at this hop
+  link_field_id: string; // Link field to traverse at this hop
 }
 ```
 
@@ -259,7 +258,7 @@ interface AggregateContextConfig {
   result_format: 'markdown_table' | 'narrative' | 'json';
 
   // Maximum tokens to allocate to aggregate context in the prompt
-  max_context_tokens?: number;         // default: 500
+  max_context_tokens?: number; // default: 500
 }
 
 interface QueryPlanTemplate {
@@ -275,6 +274,7 @@ interface QueryPlanTemplate {
 **Example: Company health agent with aggregate context**
 
 Prompt template:
+
 ```
 Assess the health of this company based on the following data:
 
@@ -290,6 +290,7 @@ Provide a health score (1-10) and a brief explanation.
 ```
 
 Where `deal_metrics` is an aggregate context that runs:
+
 ```sql
 SELECT
   COUNT(*) AS total_deals,
@@ -301,6 +302,7 @@ WHERE company_link = ANY(ARRAY['{{current_record_id}}'])
 ```
 
 And `support_metrics` is another aggregate context that runs:
+
 ```sql
 SELECT
   COUNT(*) AS open_tickets,
@@ -318,12 +320,12 @@ The DuckDB results are formatted and injected into the prompt before it goes to 
 interface ModelConfig {
   // Provider routing
   provider: 'anthropic' | 'openai' | 'self_hosted' | 'workspace_default';
-  model_id?: string;                   // e.g., 'claude-sonnet-4-5-20250929', 'gpt-4o'
-                                       // If not specified, uses workspace default model
+  model_id?: string; // e.g., 'claude-sonnet-4-5-20250929', 'gpt-4o'
+  // If not specified, uses workspace default model
 
   // Generation parameters
-  temperature?: number;                // 0.0 - 1.0, default varies by output type
-  max_output_tokens?: number;          // Default varies by output type
+  temperature?: number; // 0.0 - 1.0, default varies by output type
+  max_output_tokens?: number; // Default varies by output type
 
   // Cost control
   // The provider and model determine token costs.
@@ -333,15 +335,15 @@ interface ModelConfig {
 
 **Default temperature by output type:**
 
-| Output Type | Default Temperature | Rationale |
-|---|---|---|
-| text, rich_text | 0.7 | Creative output benefits from variety |
-| single_select, multi_select | 0.0 | Classification should be deterministic |
-| number, currency | 0.0 | Numerical output should be deterministic |
-| checkbox | 0.0 | Binary decision should be deterministic |
-| date | 0.0 | Date extraction should be deterministic |
-| link_suggestion | 0.2 | Slight variety in ranking, but mostly deterministic |
-| json | 0.0 | Structured output should be deterministic |
+| Output Type                 | Default Temperature | Rationale                                           |
+| --------------------------- | ------------------- | --------------------------------------------------- |
+| text, rich_text             | 0.7                 | Creative output benefits from variety               |
+| single_select, multi_select | 0.0                 | Classification should be deterministic              |
+| number, currency            | 0.0                 | Numerical output should be deterministic            |
+| checkbox                    | 0.0                 | Binary decision should be deterministic             |
+| date                        | 0.0                 | Date extraction should be deterministic             |
+| link_suggestion             | 0.2                 | Slight variety in ranking, but mostly deterministic |
+| json                        | 0.0                 | Structured output should be deterministic           |
 
 ### Trigger Configuration
 
@@ -350,17 +352,17 @@ interface TriggerConfig {
   mode: 'manual' | 'on_create' | 'on_field_change' | 'scheduled';
 
   // For on_field_change: which fields trigger a re-run
-  watch_fields?: string[];             // Field IDs — agent re-runs when any of these change
+  watch_fields?: string[]; // Field IDs — agent re-runs when any of these change
 
   // For scheduled: cron-like schedule
-  schedule?: string;                   // e.g., "daily", "weekly", "hourly"
+  schedule?: string; // e.g., "daily", "weekly", "hourly"
 
   // Universal: should the agent run on existing records when first created?
-  backfill_existing: boolean;          // default: false (can be expensive)
+  backfill_existing: boolean; // default: false (can be expensive)
 
   // Batch settings for backfill and scheduled runs
-  batch_size?: number;                 // Records per batch (default: 50)
-  batch_delay_ms?: number;             // Delay between batches (default: 1000)
+  batch_size?: number; // Records per batch (default: 50)
+  batch_delay_ms?: number; // Delay between batches (default: 1000)
 }
 ```
 
@@ -491,6 +493,7 @@ If after all truncation the prompt still exceeds budget, mark the run as failed 
 The system message includes auto-generated instructions that tell the LLM how to format its response based on the output type. These are appended to the user's `system_instructions` (if any).
 
 **For `single_select`:**
+
 ```
 You must respond with exactly one of the following options, and nothing else:
 - Option A
@@ -500,6 +503,7 @@ Do not include any explanation or additional text.
 ```
 
 **For `multi_select`:**
+
 ```
 Respond with one or more of the following options, separated by commas, and nothing else:
 - Option A
@@ -509,21 +513,25 @@ Do not include any explanation or additional text.
 ```
 
 **For `number` / `currency`:**
+
 ```
 Respond with only a number (digits and optional decimal point). Do not include currency symbols, commas, units, or any other text.
 ```
 
 **For `checkbox`:**
+
 ```
 Respond with only "true" or "false". Do not include any explanation.
 ```
 
 **For `date`:**
+
 ```
 Respond with only a date in YYYY-MM-DD format. Do not include any explanation.
 ```
 
 **For `json`:**
+
 ```
 Respond with only a valid JSON object conforming to this schema:
 {schema}
@@ -531,6 +539,7 @@ Do not include any explanation, markdown formatting, or code fences.
 ```
 
 **For `link_suggestion`:**
+
 ```
 You will be given a list of candidate records. Respond with a JSON array of record IDs, ranked by relevance, most relevant first. Include at most {max_suggestions} records.
 Example: ["rec_001", "rec_005", "rec_012"]
@@ -548,15 +557,15 @@ The LLM Router dispatches the assembled prompt to the configured model provider.
 
 ```typescript
 interface LLMMessage {
-  system: string;             // System instructions + output format instructions
-  user: string;               // Assembled user prompt
-  model_config: ModelConfig;  // Provider, model, temperature, max_output_tokens
+  system: string; // System instructions + output format instructions
+  user: string; // Assembled user prompt
+  model_config: ModelConfig; // Provider, model, temperature, max_output_tokens
 }
 
 interface LLMResponse {
-  content: string;            // Raw LLM response text
-  model_used: string;         // Actual model string used
-  input_tokens: number;       // Token usage
+  content: string; // Raw LLM response text
+  model_used: string; // Actual model string used
+  input_tokens: number; // Token usage
   output_tokens: number;
   latency_ms: number;
   provider: string;
@@ -572,13 +581,13 @@ provider = agent.model_config.provider
 
 if provider == 'workspace_default':
     look up workspace's default AI provider/model configuration
-    
+
 if provider == 'anthropic':
     call Anthropic API (Messages endpoint)
-    
+
 if provider == 'openai':
     call OpenAI API (Chat Completions endpoint)
-    
+
 if provider == 'self_hosted':
     call the workspace's configured self-hosted endpoint
     (OpenAI-compatible API format — most open-weight model servers use this)
@@ -616,52 +625,61 @@ The LLM's response must be validated against the expected output type before sto
 ```typescript
 interface ValidationResult {
   valid: boolean;
-  parsed_value: any;           // The value to store in JSONB, correctly typed
-  raw_response: string;        // Original LLM response (stored for debugging)
-  validation_error?: string;   // Human-readable error if invalid
+  parsed_value: any; // The value to store in JSONB, correctly typed
+  raw_response: string; // Original LLM response (stored for debugging)
+  validation_error?: string; // Human-readable error if invalid
 }
 ```
 
 ### Validation Rules by Output Type
 
 **text:**
+
 - Always valid. Store as-is.
 - If `max_length` is configured, truncate (don't reject).
 
 **rich_text:**
+
 - Always valid. Store as-is.
 - If the response contains Markdown, store as Markdown (EveryStack's rich text field should handle rendering).
 
 **single_select:**
+
 - The response must exactly match one of the configured `options[]`.
 - If not exact match: try case-insensitive matching. Try trimming whitespace.
 - If the LLM returned an explanation along with the option (e.g., "Based on the data, I would classify this as Option A because..."), extract just the option name using pattern matching.
 - If still no match: validation fails. Store null, log the raw response.
 
 **multi_select:**
+
 - Split response by commas (or newlines).
 - Each value must match a configured option (case-insensitive, trimmed).
 - Ignore unrecognized values. If zero valid values remain, validation fails.
 
 **number:**
+
 - Extract the first number from the response. Strip currency symbols, commas, percent signs.
 - Apply `decimal_places` rounding if configured.
 - If no number found: validation fails.
 
 **currency:**
+
 - Same as number extraction. Store with the configured `currency_code`.
 
 **checkbox:**
+
 - Accept: "true", "false", "yes", "no", "1", "0" (case-insensitive).
 - Map to boolean.
 - If not recognized: validation fails.
 
 **date:**
+
 - Parse using standard date parsing (ISO 8601 first, then common formats).
 - Store as ISO 8601 string.
 - If not parseable: validation fails.
 
 **link_suggestion:**
+
 - Parse as JSON array of strings.
 - Validate that each string is a valid record ID in the target table.
 - Filter out invalid IDs (don't reject the whole response).
@@ -669,14 +687,16 @@ interface ValidationResult {
 - If zero valid IDs remain: validation fails.
 
 **json:**
+
 - Parse as JSON.
 - If `json_schema` is configured, validate against it.
-- If parsing fails: try to extract JSON from markdown code fences (LLMs often wrap JSON in ```json ... ```).
+- If parsing fails: try to extract JSON from markdown code fences (LLMs often wrap JSON in `json ... `).
 - If still invalid: validation fails.
 
 ### Validation Failure Handling
 
 When validation fails:
+
 1. Store `null` as the field value (don't leave stale data).
 2. Store the validation error and raw response in a metadata field on the record: `_ai_agent_errors: { [field_id]: { error, raw_response, timestamp } }`.
 3. If `retry_on_failure` is enabled: retry once with a modified prompt that includes the validation error and the original response, asking the LLM to correct its output.
@@ -692,10 +712,10 @@ The Execution Engine orchestrates the full lifecycle of an agent run: trigger de
 
 ```typescript
 interface AgentRunRequest {
-  agent_field_id: string;      // Which AI field agent to run
-  record_id: string;           // Which record to process
+  agent_field_id: string; // Which AI field agent to run
+  record_id: string; // Which record to process
   workspace_id: string;
-  user_id: string;             // The user whose permissions scope the data
+  user_id: string; // The user whose permissions scope the data
   trigger_source: 'manual' | 'on_create' | 'on_field_change' | 'scheduled' | 'backfill';
 }
 
@@ -703,13 +723,13 @@ interface AgentRunResult {
   success: boolean;
   record_id: string;
   field_id: string;
-  value: any;                  // The validated, typed value to store (or null)
-  raw_response?: string;       // LLM's raw response
+  value: any; // The validated, typed value to store (or null)
+  raw_response?: string; // LLM's raw response
   token_usage: {
     input_tokens: number;
     output_tokens: number;
   };
-  latency_ms: number;          // Total wall clock time
+  latency_ms: number; // Total wall clock time
   error?: {
     stage: 'assembly' | 'llm' | 'validation' | 'storage';
     message: string;
@@ -754,6 +774,7 @@ interface AgentRunResult {
 ### Input Hashing for Cache
 
 The input hash is a SHA-256 of the concatenation of all resolved input values:
+
 - All local field values referenced in the prompt
 - All resolved linked field values (the actual text, not the record IDs — because linked record content can change)
 - The aggregate context QueryPlan template (the plan is static, but the results depend on the data)
@@ -792,6 +813,7 @@ User clicks a "Run" button on the field or record. Executes immediately for that
 ### On Create Trigger
 
 When a new record is created in the agent's table, the agent runs. Integration:
+
 1. Listen for `record.created` events on the agent's table.
 2. After the record is fully persisted (all field values saved), enqueue an agent run.
 3. **Delay:** Wait 500ms after create to allow any rapid subsequent field updates to settle. This prevents running the agent on a half-populated record.
@@ -799,6 +821,7 @@ When a new record is created in the agent's table, the agent runs. Integration:
 ### On Field Change Trigger
 
 When any of the `watch_fields` change on a record, the agent re-runs. Integration:
+
 1. Listen for `record.updated` events on the agent's table.
 2. Check if any of the changed fields are in `watch_fields[]`.
 3. If yes, enqueue an agent run.
@@ -808,6 +831,7 @@ When any of the `watch_fields` change on a record, the agent re-runs. Integratio
 ### Scheduled Trigger
 
 For agents that should re-run periodically (e.g., to pick up changes in aggregated linked data):
+
 1. Register a recurring job with EveryStack's job scheduler.
 2. On each scheduled tick, initiate a batch execution across all records in the table.
 3. Use the input hash cache to skip records whose inputs haven't changed.
@@ -824,14 +848,14 @@ The AI agent's output is stored in the record's `canonical_data` JSONB column, j
 {
   "fld_001": "Acme Corp",
   "fld_002": 150000,
-  "fld_agent_health": "7",          // ← AI agent output (number type)
-  "fld_agent_summary": "Strong pipeline with 12 active deals..."  // ← AI agent output (text type)
+  "fld_agent_health": "7", // ← AI agent output (number type)
+  "fld_agent_summary": "Strong pipeline with 12 active deals..." // ← AI agent output (text type)
 }
 ```
 
 ### Agent Metadata Storage
 
-Agent run metadata is stored separately from the field value to keep the data column clean. Store in a dedicated `ai_agent_meta` column on the records table (JSONB), or in a separate `ai_agent_runs` table if you prefer normalized storage. 
+Agent run metadata is stored separately from the field value to keep the data column clean. Store in a dedicated `ai_agent_meta` column on the records table (JSONB), or in a separate `ai_agent_runs` table if you prefer normalized storage.
 
 Recommended: JSONB column on the records table for simplicity:
 
@@ -892,6 +916,7 @@ CREATE INDEX idx_agent_runs_field ON ai_agent_runs(agent_field_id, created_at);
 ### Token Tracking
 
 Every LLM call records input and output tokens. These roll up to:
+
 - Per-agent totals (how much does this specific agent cost?)
 - Per-workspace totals (workspace billing)
 - Per-model totals (which models are being used most?)
@@ -907,6 +932,7 @@ EveryStack should implement a credit system similar to Airtable's but more trans
 5. BYOK workspaces bypass the credit system for their own API keys — they pay the provider directly.
 
 **Credit calculation formula (simplified):**
+
 ```
 credits = (input_tokens * input_cost_per_1k) + (output_tokens * output_cost_per_1k)
 ```
@@ -937,11 +963,13 @@ Field values referenced in the prompt could contain adversarial content designed
 1. **Structural separation:** The system instructions and output format instructions are in the system message. The assembled prompt with field values is in the user message. Most models give higher weight to system instructions.
 
 2. **Value escaping:** When injecting field values into the prompt, wrap them in clear delimiters:
+
    ```
    <field name="Deal Name">
    {value}
    </field>
    ```
+
    This makes it structurally clear to the LLM that the content is data, not instructions.
 
 3. **Output validation:** Even if the LLM is hijacked, the output validator enforces type constraints. A single_select agent that returns a paragraph of text instead of an option label will fail validation. This limits the blast radius.
@@ -1340,16 +1368,16 @@ Add integration tests for all endpoints including permission checks and validati
 
 ## Implementation Order
 
-| Order | Prompt | Depends On | Deliverable |
-|-------|--------|------------|-------------|
-| 1     | Prompt 1 | SDS types, DuckDB types | Type definitions |
-| 2     | Prompt 2 | Prompt 1 | Output validation (self-contained, testable early) |
-| 3     | Prompt 3 | Prompt 1, SDS, existing DB | Local + linked field resolution |
-| 4     | Prompt 4 | Prompt 3, DuckDB Context Service | Multi-hop + aggregate + full assembly |
-| 5     | Prompt 5 | Prompt 1 | LLM provider dispatch |
-| 6     | Prompt 6 | Prompts 2-5 | Core execution pipeline |
-| 7     | Prompt 7 | Prompt 6, existing event system | Trigger integration |
-| 8     | Prompt 8 | All above, FieldTypeRegistry | Field type + API (integration point) |
+| Order | Prompt   | Depends On                       | Deliverable                                        |
+| ----- | -------- | -------------------------------- | -------------------------------------------------- |
+| 1     | Prompt 1 | SDS types, DuckDB types          | Type definitions                                   |
+| 2     | Prompt 2 | Prompt 1                         | Output validation (self-contained, testable early) |
+| 3     | Prompt 3 | Prompt 1, SDS, existing DB       | Local + linked field resolution                    |
+| 4     | Prompt 4 | Prompt 3, DuckDB Context Service | Multi-hop + aggregate + full assembly              |
+| 5     | Prompt 5 | Prompt 1                         | LLM provider dispatch                              |
+| 6     | Prompt 6 | Prompts 2-5                      | Core execution pipeline                            |
+| 7     | Prompt 7 | Prompt 6, existing event system  | Trigger integration                                |
+| 8     | Prompt 8 | All above, FieldTypeRegistry     | Field type + API (integration point)               |
 
 Prompts 2 and 5 are independent of each other and can be built in parallel.
 Prompts 3 and 5 are also independent and can be built in parallel.
@@ -1377,7 +1405,11 @@ Single-record, local fields only. This is the baseline that matches what competi
     { "ref_name": "notes", "source": { "type": "local", "field_id": "fld_010" } }
   ],
   "model_config": { "provider": "workspace_default", "temperature": 0.5, "max_output_tokens": 300 },
-  "trigger": { "mode": "on_field_change", "watch_fields": ["fld_003", "fld_010"], "backfill_existing": false },
+  "trigger": {
+    "mode": "on_field_change",
+    "watch_fields": ["fld_003", "fld_010"],
+    "backfill_existing": false
+  },
   "cache_result": true,
   "retry_on_failure": false
 }
@@ -1398,13 +1430,54 @@ Classifies a deal's risk level based on data from the deal itself AND the linked
     { "ref_name": "deal_value", "source": { "type": "local", "field_id": "fld_002" } },
     { "ref_name": "stage", "source": { "type": "local", "field_id": "fld_003" } },
     { "ref_name": "days_in_stage", "source": { "type": "local", "field_id": "fld_011" } },
-    { "ref_name": "contact_name", "source": { "type": "linked", "link_field_id": "fld_004", "target_field_id": "fld_100", "multi_value_format": "comma_list" } },
-    { "ref_name": "contact_segment", "source": { "type": "linked", "link_field_id": "fld_004", "target_field_id": "fld_102", "multi_value_format": "comma_list" } },
-    { "ref_name": "contact_last_interaction", "source": { "type": "linked", "link_field_id": "fld_004", "target_field_id": "fld_105", "multi_value_format": "comma_list" } },
-    { "ref_name": "contact_response_rate", "source": { "type": "linked", "link_field_id": "fld_004", "target_field_id": "fld_106", "multi_value_format": "comma_list" } }
+    {
+      "ref_name": "contact_name",
+      "source": {
+        "type": "linked",
+        "link_field_id": "fld_004",
+        "target_field_id": "fld_100",
+        "multi_value_format": "comma_list"
+      }
+    },
+    {
+      "ref_name": "contact_segment",
+      "source": {
+        "type": "linked",
+        "link_field_id": "fld_004",
+        "target_field_id": "fld_102",
+        "multi_value_format": "comma_list"
+      }
+    },
+    {
+      "ref_name": "contact_last_interaction",
+      "source": {
+        "type": "linked",
+        "link_field_id": "fld_004",
+        "target_field_id": "fld_105",
+        "multi_value_format": "comma_list"
+      }
+    },
+    {
+      "ref_name": "contact_response_rate",
+      "source": {
+        "type": "linked",
+        "link_field_id": "fld_004",
+        "target_field_id": "fld_106",
+        "multi_value_format": "comma_list"
+      }
+    }
   ],
-  "model_config": { "provider": "anthropic", "model_id": "claude-sonnet-4-5-20250929", "temperature": 0.0 },
-  "trigger": { "mode": "on_field_change", "watch_fields": ["fld_003"], "backfill_existing": true, "batch_size": 25 },
+  "model_config": {
+    "provider": "anthropic",
+    "model_id": "claude-sonnet-4-5-20250929",
+    "temperature": 0.0
+  },
+  "trigger": {
+    "mode": "on_field_change",
+    "watch_fields": ["fld_003"],
+    "backfill_existing": true,
+    "batch_size": 25
+  },
   "cache_result": true,
   "retry_on_failure": true
 }
@@ -1430,20 +1503,24 @@ Scores a company's health based on aggregated metrics across linked deals, conta
     {
       "description": "deal_metrics",
       "query_plan_template": {
-        "sources": [{
-          "table_id": "tbl_deals",
-          "alias": "deals",
-          "fields": [
-            { "field_id": "fld_002", "alias": "value", "field_type": "currency" },
-            { "field_id": "fld_003", "alias": "stage", "field_type": "single_select" },
-            { "field_id": "fld_012", "alias": "created_date", "field_type": "date" }
-          ],
-          "pg_filters": [{
-            "field_id": "fld_013",
-            "operator": "contains",
-            "value": "{{current_record_id}}"
-          }]
-        }],
+        "sources": [
+          {
+            "table_id": "tbl_deals",
+            "alias": "deals",
+            "fields": [
+              { "field_id": "fld_002", "alias": "value", "field_type": "currency" },
+              { "field_id": "fld_003", "alias": "stage", "field_type": "single_select" },
+              { "field_id": "fld_012", "alias": "created_date", "field_type": "date" }
+            ],
+            "pg_filters": [
+              {
+                "field_id": "fld_013",
+                "operator": "contains",
+                "value": "{{current_record_id}}"
+              }
+            ]
+          }
+        ],
         "joins": [],
         "analytical_sql": "SELECT COUNT(*) AS total_deals, SUM(CASE WHEN stage = 'Closed Won' THEN 1 ELSE 0 END) AS won, SUM(CASE WHEN stage = 'Closed Lost' THEN 1 ELSE 0 END) AS lost, SUM(value) AS total_pipeline, AVG(value) AS avg_deal_size, ROUND(SUM(CASE WHEN stage = 'Closed Won' THEN 1 ELSE 0 END)::DOUBLE / NULLIF(COUNT(*), 0) * 100, 1) AS win_rate_pct FROM deals"
       },
@@ -1453,20 +1530,24 @@ Scores a company's health based on aggregated metrics across linked deals, conta
     {
       "description": "support_metrics",
       "query_plan_template": {
-        "sources": [{
-          "table_id": "tbl_tickets",
-          "alias": "tickets",
-          "fields": [
-            { "field_id": "fld_300", "alias": "status", "field_type": "single_select" },
-            { "field_id": "fld_301", "alias": "priority", "field_type": "single_select" },
-            { "field_id": "fld_302", "alias": "created_at", "field_type": "date" }
-          ],
-          "pg_filters": [{
-            "field_id": "fld_303",
-            "operator": "contains",
-            "value": "{{current_record_id}}"
-          }]
-        }],
+        "sources": [
+          {
+            "table_id": "tbl_tickets",
+            "alias": "tickets",
+            "fields": [
+              { "field_id": "fld_300", "alias": "status", "field_type": "single_select" },
+              { "field_id": "fld_301", "alias": "priority", "field_type": "single_select" },
+              { "field_id": "fld_302", "alias": "created_at", "field_type": "date" }
+            ],
+            "pg_filters": [
+              {
+                "field_id": "fld_303",
+                "operator": "contains",
+                "value": "{{current_record_id}}"
+              }
+            ]
+          }
+        ],
         "joins": [],
         "analytical_sql": "SELECT COUNT(*) AS total_tickets, COUNT(CASE WHEN status = 'Open' THEN 1 END) AS open_tickets, COUNT(CASE WHEN priority = 'P1' AND status = 'Open' THEN 1 END) AS critical_open FROM tickets"
       },
@@ -1476,20 +1557,24 @@ Scores a company's health based on aggregated metrics across linked deals, conta
     {
       "description": "contact_engagement",
       "query_plan_template": {
-        "sources": [{
-          "table_id": "tbl_contacts",
-          "alias": "contacts",
-          "fields": [
-            { "field_id": "fld_105", "alias": "last_interaction", "field_type": "date" },
-            { "field_id": "fld_106", "alias": "response_rate", "field_type": "percent" },
-            { "field_id": "fld_107", "alias": "meetings_last_90d", "field_type": "number" }
-          ],
-          "pg_filters": [{
-            "field_id": "fld_108",
-            "operator": "contains",
-            "value": "{{current_record_id}}"
-          }]
-        }],
+        "sources": [
+          {
+            "table_id": "tbl_contacts",
+            "alias": "contacts",
+            "fields": [
+              { "field_id": "fld_105", "alias": "last_interaction", "field_type": "date" },
+              { "field_id": "fld_106", "alias": "response_rate", "field_type": "percent" },
+              { "field_id": "fld_107", "alias": "meetings_last_90d", "field_type": "number" }
+            ],
+            "pg_filters": [
+              {
+                "field_id": "fld_108",
+                "operator": "contains",
+                "value": "{{current_record_id}}"
+              }
+            ]
+          }
+        ],
         "joins": [],
         "analytical_sql": "SELECT COUNT(*) AS total_contacts, AVG(response_rate) AS avg_response_rate, SUM(meetings_last_90d) AS total_recent_meetings, MIN(last_interaction) AS oldest_interaction FROM contacts"
       },
@@ -1497,8 +1582,18 @@ Scores a company's health based on aggregated metrics across linked deals, conta
       "max_context_tokens": 150
     }
   ],
-  "model_config": { "provider": "anthropic", "model_id": "claude-sonnet-4-5-20250929", "temperature": 0.0, "max_output_tokens": 50 },
-  "trigger": { "mode": "scheduled", "schedule": "daily", "backfill_existing": false, "batch_size": 50 },
+  "model_config": {
+    "provider": "anthropic",
+    "model_id": "claude-sonnet-4-5-20250929",
+    "temperature": 0.0,
+    "max_output_tokens": 50
+  },
+  "trigger": {
+    "mode": "scheduled",
+    "schedule": "daily",
+    "backfill_existing": false,
+    "batch_size": 50
+  },
   "cache_result": false,
   "retry_on_failure": true
 }

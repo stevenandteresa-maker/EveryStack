@@ -1,0 +1,257 @@
+# EveryStack — CI Pipeline
+# Runs on push to main and pull requests targeting main.
+# See CLAUDE.md § Pre-Merge Gates for the 9 gates this enforces.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Job 1: Lint, Typecheck, i18n ──────────────────────────────────────────
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm turbo lint
+
+      - name: TypeScript (strict)
+        run: pnpm turbo typecheck
+
+      - name: i18n completeness
+        run: pnpm turbo check:i18n
+
+  # ─── Job 2: Unit & Integration Tests ───────────────────────────────────────
+  unit-test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: everystack_test
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: everystack_test
+        ports:
+          - 5433:5432
+        options: >-
+          --tmpfs /var/lib/postgresql/data
+          --health-cmd "pg_isready -U everystack_test -d everystack_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://everystack_test:test_password@localhost:6433/everystack_test
+      DATABASE_URL_DIRECT: postgresql://everystack_test:test_password@localhost:5433/everystack_test
+      REDIS_URL: redis://localhost:6380
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: pnpm turbo db:migrate
+
+      - name: Run tests with coverage
+        run: pnpm turbo test -- --coverage
+
+      - name: Check coverage thresholds
+        run: pnpm turbo test:coverage-check
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'pull_request'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # ─── Job 3: E2E Tests (main branch only) ──────────────────────────────────
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: unit-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm turbo test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.STAGING_URL }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  # ─── Job 4: AI Eval (conditional on AI changes) ────────────────────────────
+  ai-eval:
+    name: AI Eval Suite
+    runs-on: ubuntu-latest
+    needs: lint
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       contains(join(github.event.pull_request.changed_files.*.filename, ','), 'packages/shared/ai/'))
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for AI changes
+        id: ai-changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- packages/shared/ai/)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 -- packages/shared/ai/)
+          fi
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.ai-changes.outputs.skip != 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.ai-changes.outputs.skip != 'true'
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.ai-changes.outputs.skip != 'true'
+
+      - name: Run AI eval suite
+        if: steps.ai-changes.outputs.skip != 'true'
+        run: pnpm turbo test:ai-eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  # ─── Job 5: Migration Check (conditional on migration changes) ─────────────
+  migration-check:
+    name: Migration Timing Check
+    runs-on: ubuntu-latest
+    needs: lint
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       contains(join(github.event.pull_request.changed_files.*.filename, ','), 'packages/shared/db/migrations/'))
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: everystack_test
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: everystack_migration_check
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U everystack_test -d everystack_migration_check"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for migration changes
+        id: migration-changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- packages/shared/db/migrations/)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 -- packages/shared/db/migrations/)
+          fi
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.migration-changes.outputs.skip != 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.migration-changes.outputs.skip != 'true'
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.migration-changes.outputs.skip != 'true'
+
+      - name: Seed staging data
+        if: steps.migration-changes.outputs.skip != 'true'
+        run: pnpm turbo db:seed-staging
+        env:
+          DATABASE_URL_DIRECT: postgresql://everystack_test:test_password@localhost:5434/everystack_migration_check
+
+      - name: Run migration timing check
+        if: steps.migration-changes.outputs.skip != 'true'
+        run: pnpm turbo db:migrate:check
+        env:
+          DATABASE_URL_DIRECT: postgresql://everystack_test:test_password@localhost:5434/everystack_migration_check

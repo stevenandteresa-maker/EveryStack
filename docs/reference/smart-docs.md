@@ -12,14 +12,14 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Wiki Architecture | 26–47 | Wiki table_type config, wiki rendering, URL routes, nesting via self-referential parent |
-| TipTap Editor Architecture | 49–229 | Environment 2 (full-featured Smart Doc editor), React component structure, JSONB document schema, custom EveryStack node definitions, rendering pipelines (screen, PDF, portal) |
-| Smart Doc as a Field Type | 231–294 | Two sub-types (authored vs generated), field configuration, storage, data model (smart_doc_content, versions, snapshots, backlinks) |
-| Smart Doc View (Table-Level) | 296–329 | Wiki mode (two-panel page tree + editor), template mode, contextual access points |
+| Section                          | Lines   | Covers                                                                                                                                                                             |
+| -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wiki Architecture                | 26–47   | Wiki table_type config, wiki rendering, URL routes, nesting via self-referential parent                                                                                            |
+| TipTap Editor Architecture       | 49–229  | Environment 2 (full-featured Smart Doc editor), React component structure, JSONB document schema, custom EveryStack node definitions, rendering pipelines (screen, PDF, portal)    |
+| Smart Doc as a Field Type        | 231–294 | Two sub-types (authored vs generated), field configuration, storage, data model (smart_doc_content, versions, snapshots, backlinks)                                                |
+| Smart Doc View (Table-Level)     | 296–329 | Wiki mode (two-panel page tree + editor), template mode, contextual access points                                                                                                  |
 | Document Generation — Two Prongs | 331–414 | Prong 1: TipTap merge-tag templates → Gotenberg → PDF (MVP), Prong 2: upload template generation (post-MVP), template mapper UI, backend requirements, generation flow, data model |
-| Post-MVP Smart Doc Features | 416–421 | AI content blocks, chart embeds, knowledge base mode, export |
+| Post-MVP Smart Doc Features      | 416–421 | AI content blocks, chart embeds, knowledge base mode, export                                                                                                                       |
 
 ---
 
@@ -38,6 +38,7 @@ One `wiki_table_config` per wiki-type table. Required: title_field_id, content_f
 ### Wiki Rendering
 
 Two-panel layout:
+
 - **Left panel:** Page tree sidebar. Collapsible nested list from parent traversal. Icon + title. Drag-and-drop re-parent/reorder. [+ New Page]. Right-click: rename, delete, add child, move.
 - **Right panel:** Content area. Editable title + Smart Doc Editor (wiki mode). Full formatting: headings, lists, code blocks, tables, images, callouts, embeds, backlinks (`[[page]]`), auto-generated table of contents.
 - **Footer:** "Last edited by [author] · [timestamp] · [status badge]"
@@ -55,6 +56,7 @@ EveryStack uses TipTap (ProseMirror-based) for two distinct rich-text environmen
 True document/content editor. Powers two contexts — wiki/doc editing (record fields) and template authoring (Smart Doc views) — by enabling/disabling extensions per context.
 
 **UX Pattern:**
+
 - **Full toolbar** at top (not floating). Contents vary by context.
 - **Slash command menu** (`/`) for block insertion.
 - **Floating bubble menu** on text selection for inline formatting.
@@ -62,6 +64,7 @@ True document/content editor. Powers two contexts — wiki/doc editing (record f
 - **Breadcrumb navigation** for wiki contexts.
 
 **Core Extensions (all contexts):**
+
 - StarterKit (bold, italic, strike, code, headings H1–H4, bullet/ordered lists, blockquote, horizontal rule, hard break, history)
 - Underline, Highlight, Subscript, Superscript
 - Link (preview popup on hover)
@@ -80,21 +83,22 @@ True document/content editor. Powers two contexts — wiki/doc editing (record f
 
 **Context-Specific Extensions:**
 
-| Feature | Wiki Field | Doc Field | Template Authoring |
-|---------|-----------|-----------|-------------------|
-| Backlinks (`[[page]]`) | ✅ | ❌ | ❌ |
-| Table of Contents | ✅ | ✅ | ✅ |
-| Nested Page Links | ✅ | ❌ | ❌ |
-| Page status (Draft/Published) | ✅ | ❌ | ❌ |
-| Version History | ✅ | ✅ | ✅ |
-| Collaboration (Yjs/Hocuspocus) | ✅ | ✅ | ✅ |
-| Placeholder Toolbar (`{field}`) | ❌ | ❌ | ✅ |
-| Field Picker sidebar | ❌ | ❌ | ✅ |
-| Preview with Sample Data | ❌ | ❌ | ✅ |
-| Embed blocks (video, iframe) | ✅ | ✅ | ❌ |
+| Feature                         | Wiki Field | Doc Field | Template Authoring |
+| ------------------------------- | ---------- | --------- | ------------------ |
+| Backlinks (`[[page]]`)          | ✅         | ❌        | ❌                 |
+| Table of Contents               | ✅         | ✅        | ✅                 |
+| Nested Page Links               | ✅         | ❌        | ❌                 |
+| Page status (Draft/Published)   | ✅         | ❌        | ❌                 |
+| Version History                 | ✅         | ✅        | ✅                 |
+| Collaboration (Yjs/Hocuspocus)  | ✅         | ✅        | ✅                 |
+| Placeholder Toolbar (`{field}`) | ❌         | ❌        | ✅                 |
+| Field Picker sidebar            | ❌         | ❌        | ✅                 |
+| Preview with Sample Data        | ❌         | ❌        | ✅                 |
+| Embed blocks (video, iframe)    | ✅         | ✅        | ❌                 |
 
 **Template Authoring Mode (Smart Doc view level):**
 Additional toolbar/sidebar shows available fields from table schema and cross-linked tables. Clicking inserts `{field_name}` as styled teal pill node. Distinguishes:
+
 - **Simple fields:** `{field_name}` — text, number, date, etc.
 - **Loop fields:** `{#line_items}...{/line_items}` — from linked records.
 - **Conditional fields:** `{#if status == "Active"}...{/if}` — conditional blocks.
@@ -192,39 +196,39 @@ TipTap's native output is JSON — stored directly in canonical JSONB:
 
 ### Custom EveryStack Node Definitions
 
-| Node Type | JSONB `attrs` | Behavior |
-|-----------|--------------|----------|
-| `recordRef` | `{ tableId, recordId, displayText }` | Inline chip linking to record. Auto-updates displayText on change. |
-| `mergeTag` | `{ tableId, fieldId, fallback }` | Template placeholder pill. Resolved at render time. `fallback` for empty fields. |
-| `callout` | `{ emoji, color }` | Colored callout (blue/yellow/green/red). |
-| `toggle` | `{ open }` | Collapsible block (Notion-style). |
-| `embed` | `{ src, width, height }` | YouTube/Loom/URL via sandboxed iframe. |
-| `fileAttachment` | `{ fileUrl, fileName, fileType, fileSize }` | Download card with icon + name + size. |
-| `databaseViewEmbed` | `{ viewId, tableId, mode }` | Inline table/kanban. `mode`: live \| snapshot. |
-| `signature` | `{ dataUrl, width, height }` | Canvas signature capture. Base64 for PDF contracts. |
+| Node Type           | JSONB `attrs`                               | Behavior                                                                         |
+| ------------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `recordRef`         | `{ tableId, recordId, displayText }`        | Inline chip linking to record. Auto-updates displayText on change.               |
+| `mergeTag`          | `{ tableId, fieldId, fallback }`            | Template placeholder pill. Resolved at render time. `fallback` for empty fields. |
+| `callout`           | `{ emoji, color }`                          | Colored callout (blue/yellow/green/red).                                         |
+| `toggle`            | `{ open }`                                  | Collapsible block (Notion-style).                                                |
+| `embed`             | `{ src, width, height }`                    | YouTube/Loom/URL via sandboxed iframe.                                           |
+| `fileAttachment`    | `{ fileUrl, fileName, fileType, fileSize }` | Download card with icon + name + size.                                           |
+| `databaseViewEmbed` | `{ viewId, tableId, mode }`                 | Inline table/kanban. `mode`: live \| snapshot.                                   |
+| `signature`         | `{ dataUrl, width, height }`                | Canvas signature capture. Base64 for PDF contracts.                              |
 
 ### Rendering Pipelines
 
 Same JSONB renders across four targets:
 
-| Target | Pipeline | Notes |
-|--------|----------|-------|
-| **Interactive editor** | JSONB → TipTap (full React) | Full editing, context-dependent extensions |
-| **Portal (read-only)** | JSONB → `generateHTML()` → styled HTML | Lightweight — no TipTap bundle |
-| **PDF** | JSONB → `generateHTML()` → Gotenberg → PDF | Gotenberg uses headless Chromium for HTML→PDF (MVP). LibreOffice endpoint used only for post-MVP DOCX→PDF conversion. |
-| **Email** | JSONB → `EmailRenderer` → inline HTML | Email-safe, inline styles |
+| Target                 | Pipeline                                   | Notes                                                                                                                 |
+| ---------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| **Interactive editor** | JSONB → TipTap (full React)                | Full editing, context-dependent extensions                                                                            |
+| **Portal (read-only)** | JSONB → `generateHTML()` → styled HTML     | Lightweight — no TipTap bundle                                                                                        |
+| **PDF**                | JSONB → `generateHTML()` → Gotenberg → PDF | Gotenberg uses headless Chromium for HTML→PDF (MVP). LibreOffice endpoint used only for post-MVP DOCX→PDF conversion. |
+| **Email**              | JSONB → `EmailRenderer` → inline HTML      | Email-safe, inline styles                                                                                             |
 
 **Node → output mapping:**
 
-| Node | HTML | PDF Notes |
-|------|------|-----------|
-| `heading` | `<hN>` | Native |
-| `table` | `<table>` | Chromium renders natively |
-| `image` | `<img>` | Absolute S3/R2 URL |
-| `callout` | `<div>` colored | Custom CSS |
-| `recordRef` | `<a>` link (plain text in PDF) | |
-| `mergeTag` | Resolved to field value | Replaced before HTML |
-| `signature` | `<img>` base64 | Embedded |
+| Node        | HTML                           | PDF Notes                 |
+| ----------- | ------------------------------ | ------------------------- |
+| `heading`   | `<hN>`                         | Native                    |
+| `table`     | `<table>`                      | Chromium renders natively |
+| `image`     | `<img>`                        | Absolute S3/R2 URL        |
+| `callout`   | `<div>` colored                | Custom CSS                |
+| `recordRef` | `<a>` link (plain text in PDF) |                           |
+| `mergeTag`  | Resolved to field value        | Replaced before HTML      |
+| `signature` | `<img>` base64                 | Embedded                  |
 
 ---
 
@@ -234,10 +238,10 @@ First-class field type alongside text, number, date, select, etc. Any record can
 
 ### Two Sub-types
 
-| Sub-type | Authoring | Editability | Purpose |
-|----------|-----------|-------------|---------|
-| **Wiki** | User-authored | Fully editable (collaboration, versioning) | Meeting notes, briefs, documentation |
-| **Template Output** | Generated from Smart Doc view template | **Read-only** — reflects current data | Invoices, proposals, contracts, reports |
+| Sub-type            | Authoring                              | Editability                                | Purpose                                 |
+| ------------------- | -------------------------------------- | ------------------------------------------ | --------------------------------------- |
+| **Wiki**            | User-authored                          | Fully editable (collaboration, versioning) | Meeting notes, briefs, documentation    |
+| **Template Output** | Generated from Smart Doc view template | **Read-only** — reflects current data      | Invoices, proposals, contracts, reports |
 
 **Wiki fields:** Unlimited per record. Full Smart Doc Editor with Yjs collaboration and version history.
 
@@ -245,13 +249,13 @@ First-class field type alongside text, number, date, select, etc. Any record can
 
 **Output Actions (template-output fields):**
 
-| Action | Behavior |
-|--------|----------|
-| **Print** | Browser print dialog |
-| **Send in email** | Compose with PDF attachment. **Creates snapshot.** |
-| **Share link** | Permission-gated or public token URL. **Creates snapshot.** |
-| **Copy** | Rich text to clipboard |
-| **Export** | DOCX or PDF download. **Creates snapshot.** |
+| Action            | Behavior                                                    |
+| ----------------- | ----------------------------------------------------------- |
+| **Print**         | Browser print dialog                                        |
+| **Send in email** | Compose with PDF attachment. **Creates snapshot.**          |
+| **Share link**    | Permission-gated or public token URL. **Creates snapshot.** |
+| **Copy**          | Rich text to clipboard                                      |
+| **Export**        | DOCX or PDF download. **Creates snapshot.**                 |
 
 **Snapshot on send:** Email/Share/Export freezes version in `smart_doc_snapshots`. Live doc continues updating. Snapshots kept forever (audit trail).
 
@@ -265,6 +269,7 @@ First-class field type alongside text, number, date, select, etc. Any record can
 
 **Smart Doc in Forms (simplified):**
 When wiki Smart Doc appears in portal/embeddable form:
+
 - **Allowed:** Bold, italic, underline, bullet/numbered lists, links
 - **Not allowed:** Headings, images, tables, code blocks, embeds, slash commands
 - **Implementation:** Restricted TipTap extension set
@@ -284,12 +289,12 @@ When wiki Smart Doc appears in portal/embeddable form:
 
 ### Data Model
 
-| Entity | Key Columns | Purpose |
-|--------|-------------|---------|
-| `smart_doc_content` | id, tenant_id, record_id, field_id, content (JSONB), source_view_id (nullable), version | Content storage. Overflow + template outputs. |
-| `smart_doc_versions` | id, smart_doc_content_id, version, content (JSONB), created_by, created_at | Version history for wiki fields. |
-| `smart_doc_snapshots` | id, smart_doc_content_id, content (JSONB), rendered_html, rendered_pdf_url, action_type, action_metadata, created_by, created_at | Frozen versions on Email/Share/Export. |
-| `smart_doc_backlinks` | source_record_id, source_field_id, target_record_id, target_field_id | Backlink index for `[[page]]` refs. |
+| Entity                | Key Columns                                                                                                                      | Purpose                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `smart_doc_content`   | id, tenant_id, record_id, field_id, content (JSONB), source_view_id (nullable), version                                          | Content storage. Overflow + template outputs. |
+| `smart_doc_versions`  | id, smart_doc_content_id, version, content (JSONB), created_by, created_at                                                       | Version history for wiki fields.              |
+| `smart_doc_snapshots` | id, smart_doc_content_id, content (JSONB), rendered_html, rendered_pdf_url, action_type, action_metadata, created_by, created_at | Frozen versions on Email/Share/Export.        |
+| `smart_doc_backlinks` | source_record_id, source_field_id, target_record_id, target_field_id                                                             | Backlink index for `[[page]]` refs.           |
 
 ---
 
@@ -310,21 +315,22 @@ Smart Doc field "Invoice" (record level, template_output, read-only)
 ```
 
 **Automation integration:**
+
 - **Generate Smart Doc** action: use template view → generate for filtered records
 - **Smart Doc → DOCX/PDF** action: render field to file for email/attachment
 - **Trigger:** "When Smart Doc field updated" (wiki), "When template output regenerated"
 
 ### Contextual Access Points
 
-| Surface | How Smart Docs Appear |
-|---------|----------------------|
-| **Wiki table type** | Default view. Every record is a page. |
-| **Smart Doc view on any table** | Wiki or template mode. |
-| **Record View** | Inline preview (wiki) or rendered doc (template output) with action buttons. |
-| **Interface tabs** | Wiki for documentation alongside data tabs. |
-| **Portals** | Smart Doc Block — read-only for outputs, optionally editable for wiki. |
-| **Automations** | Generate, render to file, field change triggers. |
-| **Forms** | Read-only blocks for instructions. Simplified editor for rich text input. |
+| Surface                         | How Smart Docs Appear                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| **Wiki table type**             | Default view. Every record is a page.                                        |
+| **Smart Doc view on any table** | Wiki or template mode.                                                       |
+| **Record View**                 | Inline preview (wiki) or rendered doc (template output) with action buttons. |
+| **Interface tabs**              | Wiki for documentation alongside data tabs.                                  |
+| **Portals**                     | Smart Doc Block — read-only for outputs, optionally editable for wiki.       |
+| **Automations**                 | Generate, render to file, field change triggers.                             |
+| **Forms**                       | Read-only blocks for instructions. Simplified editor for rich text input.    |
 
 ---
 
@@ -333,6 +339,7 @@ Smart Doc field "Invoice" (record level, template_output, read-only)
 ### Prong 1: TipTap — Smart Doc Templates
 
 TipTap handles all in-platform rich text. Two roles in doc gen:
+
 - **Smart Doc view (template mode):** Manager designs templates at table level. Auto-populates read-only fields. Live computed — auto-syncs on data change.
 - **Smart Doc field (wiki):** User-authored, exportable to DOCX/PDF on demand.
 
@@ -351,6 +358,7 @@ Handles structured document output: invoices, contracts, proposals, letters.
 **Why this approach:** No layout engine to build. Templates preserve formatting (fonts, logos, columns, headers/footers). Docxtemplater supports loops, conditionals, images, HTML injection. Users know Word. Cost: ~$1,500 one-time PRO modules.
 
 **Docxtemplater capabilities:**
+
 - `{placeholder}` text replacement
 - `{#loop}...{/loop}` repeating sections
 - `{#condition}...{/condition}` conditional content
@@ -363,6 +371,7 @@ Handles structured document output: invoices, contracts, proposals, letters.
 Interface for converting user-designed DOCX into Docxtemplater-ready template. **Not a doc editor — a field mapping tool.**
 
 **Workflow:**
+
 1. Upload DOCX from Word/Google Docs
 2. Platform shows high-fidelity preview (docx-preview)
 3. Select text → sidebar shows selection
@@ -372,6 +381,7 @@ Interface for converting user-designed DOCX into Docxtemplater-ready template. *
 **DOCX-only for MVP.** Helper tip for Google Docs users: "Download as .docx first."
 
 **UI Design:**
+
 - Two-panel: document preview (left ~62%) + mapping sidebar (right ~38%)
 - Field picker: categorized, searchable, collapsible accordions
 - Mapping interaction: select text → pick field → add mapping. Removable chips.
@@ -398,18 +408,18 @@ Interface for converting user-designed DOCX into Docxtemplater-ready template. *
 
 ### Three Doc Gen Paths
 
-| Path | Authoring | Engine | Output | Best For |
-|------|-----------|--------|--------|----------|
-| **Upload DOCX** | Word/Docs → Template Mapper | Docxtemplater (backend) | DOCX/PDF file | Complex layouts: invoices, contracts, letterheads |
-| **Smart Doc Template** | TipTap (template mode) | TipTap re-render (live) + export | Live field + DOCX/PDF | Flowing content: proposals, SOWs, reports |
-| **Wiki Export** | User-authored rich text | HTML-to-PDF | DOCX/PDF on demand | Ad-hoc: export any wiki doc |
+| Path                   | Authoring                   | Engine                           | Output                | Best For                                          |
+| ---------------------- | --------------------------- | -------------------------------- | --------------------- | ------------------------------------------------- |
+| **Upload DOCX**        | Word/Docs → Template Mapper | Docxtemplater (backend)          | DOCX/PDF file         | Complex layouts: invoices, contracts, letterheads |
+| **Smart Doc Template** | TipTap (template mode)      | TipTap re-render (live) + export | Live field + DOCX/PDF | Flowing content: proposals, SOWs, reports         |
+| **Wiki Export**        | User-authored rich text     | HTML-to-PDF                      | DOCX/PDF on demand    | Ad-hoc: export any wiki doc                       |
 
 ### Data Model
 
-| Entity | Key Columns | Purpose |
-|--------|-------------|---------|
+| Entity                 | Key Columns                                                                                                                         | Purpose           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | `template_definitions` | id, tenant_id, name, template_type (tiptap \| docxtemplater), file_url, field_mappings (JSONB), source_tables, version, environment | Template registry |
-| `generated_documents` | id, tenant_id, template_id, source_record_id, file_url, file_type, generated_by, generated_at, automation_run_id | Output tracking |
+| `generated_documents`  | id, tenant_id, template_id, source_record_id, file_url, file_type, generated_by, generated_at, automation_run_id                    | Output tracking   |
 
 ---
 

@@ -1,0 +1,30 @@
+{
+  "name": "@everystack/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "check:i18n": "tsx ../../scripts/check-i18n.ts",
+    "test": "echo 'No tests yet' && exit 0",
+    "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0",
+    "test:e2e": "echo 'No E2E tests yet' && exit 0"
+  },
+  "dependencies": {
+    "@everystack/shared": "workspace:*",
+    "next": "^15.3.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "eslint-config-next": "^16.1.6",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

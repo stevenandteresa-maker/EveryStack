@@ -18,36 +18,36 @@ Time tracking is a capability layer on top of any projects-type table, following
 
 **`time_entries`** — Central table for all logged time:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| record_id | UUID → records.id | Which task/record this time is logged against |
-| user_id | UUID → users.id | Who logged the time |
-| start_time | TIMESTAMP | When work began |
-| end_time | TIMESTAMP (nullable) | When work ended. Null while timer running. |
-| duration_minutes | INTEGER | Total minutes (calculated or manual) |
-| billable | BOOLEAN | Whether billable to client. Default: true. |
-| billing_rate_snapshot | DECIMAL | Rate at time of entry (snapshot, not live reference) |
-| description | TEXT (nullable) | What was worked on |
-| entry_type | ENUM: timer \| manual | How time was logged |
-| invoiced | BOOLEAN | Whether included in an invoice. Default: false. |
-| invoice_id | UUID (nullable) | Links to invoice record if invoiced |
+| Column                | Type                  | Purpose                                              |
+| --------------------- | --------------------- | ---------------------------------------------------- |
+| id                    | UUID                  | Primary key                                          |
+| tenant_id             | UUID                  | Workspace scoping                                    |
+| record_id             | UUID → records.id     | Which task/record this time is logged against        |
+| user_id               | UUID → users.id       | Who logged the time                                  |
+| start_time            | TIMESTAMP             | When work began                                      |
+| end_time              | TIMESTAMP (nullable)  | When work ended. Null while timer running.           |
+| duration_minutes      | INTEGER               | Total minutes (calculated or manual)                 |
+| billable              | BOOLEAN               | Whether billable to client. Default: true.           |
+| billing_rate_snapshot | DECIMAL               | Rate at time of entry (snapshot, not live reference) |
+| description           | TEXT (nullable)       | What was worked on                                   |
+| entry_type            | ENUM: timer \| manual | How time was logged                                  |
+| invoiced              | BOOLEAN               | Whether included in an invoice. Default: false.      |
+| invoice_id            | UUID (nullable)       | Links to invoice record if invoiced                  |
 
 Indexes: (tenant_id, record_id), (tenant_id, user_id, start_time), (tenant_id, billable, invoiced).
 
 **`billing_rates`** — Hourly rate definitions with priority hierarchy:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| user_id | UUID (nullable) | Rate for specific user. Null for default. |
-| client_record_id | UUID (nullable) | Rate for specific client. Null for non-client-specific. |
-| activity_type | VARCHAR (nullable) | Rate for activity category (strategy, design, dev). |
-| rate_per_hour | DECIMAL | Hourly rate |
-| effective_from | DATE | When rate takes effect |
-| effective_to | DATE (nullable) | When rate expires. Null for active. |
+| Column           | Type               | Purpose                                                 |
+| ---------------- | ------------------ | ------------------------------------------------------- |
+| id               | UUID               | Primary key                                             |
+| tenant_id        | UUID               | Workspace scoping                                       |
+| user_id          | UUID (nullable)    | Rate for specific user. Null for default.               |
+| client_record_id | UUID (nullable)    | Rate for specific client. Null for non-client-specific. |
+| activity_type    | VARCHAR (nullable) | Rate for activity category (strategy, design, dev).     |
+| rate_per_hour    | DECIMAL            | Hourly rate                                             |
+| effective_from   | DATE               | When rate takes effect                                  |
+| effective_to     | DATE (nullable)    | When rate expires. Null for active.                     |
 
 Rate resolution hierarchy (first match wins): user+client+activity → user+client → user+activity → client+activity → user → client → activity → workspace default. Resolved rate is snapshotted on `time_entries.billing_rate_snapshot`.
 
@@ -57,6 +57,7 @@ Required: table_id, billable_default, require_description.
 Optional: estimated_hours_field_id, actual_hours_field_id (computed rollup), activity_type_field_id, client_link_field_id (cross-link for rate lookup), rounding_increment (minutes), rounding_method (up/nearest/down).
 
 **Rounding rules. Decided 2026-02-10:**
+
 - **Workspace-level default** in Settings > Time Tracking: Round to nearest 1min (no rounding), 5min, 6min (1/10th hour — most common for billing), 15min, 30min. Default: no rounding. Direction: round up (standard billing practice), configurable to nearest.
 - **Per-table override:** `time_tracking_config.rounding_override` (nullable). When set, overrides workspace default for that table's entries. Useful when a specific client contract requires different rounding.
 
@@ -64,12 +65,12 @@ Optional: estimated_hours_field_id, actual_hours_field_id (computed rollup), act
 
 **Simple two-stage: Submit → Approve. Decided 2026-02-10.**
 
-| Status | Who Can Set | Editable By | Meaning |
-|--------|-------------|-------------|---------|
-| **Draft** (default) | Auto on create | Entry owner + Manager+ | Work in progress. Visible to owner and Manager+. |
-| **Submitted** | Entry owner | Manager+ only | "Please review." Owner loses edit access. Manager notified. |
-| **Approved** | Manager+ | Nobody (locked) | Billable, ready for invoicing. Manager can unlock to return to Draft. |
-| **Rejected** | Manager+ | Entry owner | Returned with optional note. User fixes and resubmits. |
+| Status              | Who Can Set    | Editable By            | Meaning                                                               |
+| ------------------- | -------------- | ---------------------- | --------------------------------------------------------------------- |
+| **Draft** (default) | Auto on create | Entry owner + Manager+ | Work in progress. Visible to owner and Manager+.                      |
+| **Submitted**       | Entry owner    | Manager+ only          | "Please review." Owner loses edit access. Manager notified.           |
+| **Approved**        | Manager+       | Nobody (locked)        | Billable, ready for invoicing. Manager can unlock to return to Draft. |
+| **Rejected**        | Manager+       | Entry owner            | Returned with optional note. User fixes and resubmits.                |
 
 - `time_entries` gains `status` column: `draft | submitted | approved | rejected` (default: draft) and `reviewer_id`, `reviewed_at`, `review_note` (all nullable).
 - **Bulk actions:** Manager can approve/reject entire weekly timesheet in one click.
@@ -133,20 +134,20 @@ Optional: description_field_id, tags_field_id, status_field_id (Draft/Approved/A
 
 **`asset_versions`** — Version history per asset:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| record_id | UUID → records.id | Which asset record |
-| version_number | INTEGER | Sequential (auto-incremented) |
-| file_url | TEXT | S3/R2 URL for this version |
-| file_size | BIGINT | Bytes |
-| file_type | VARCHAR | MIME type |
-| dimensions | JSONB (nullable) | { width, height } for images/video |
-| thumbnail_urls | JSONB (nullable) | { small, medium, large } |
-| uploaded_by | UUID → users.id | Who uploaded |
-| uploaded_at | TIMESTAMP | When uploaded |
-| change_notes | TEXT (nullable) | What changed |
+| Column         | Type              | Purpose                            |
+| -------------- | ----------------- | ---------------------------------- |
+| id             | UUID              | Primary key                        |
+| tenant_id      | UUID              | Workspace scoping                  |
+| record_id      | UUID → records.id | Which asset record                 |
+| version_number | INTEGER           | Sequential (auto-incremented)      |
+| file_url       | TEXT              | S3/R2 URL for this version         |
+| file_size      | BIGINT            | Bytes                              |
+| file_type      | VARCHAR           | MIME type                          |
+| dimensions     | JSONB (nullable)  | { width, height } for images/video |
+| thumbnail_urls | JSONB (nullable)  | { small, medium, large }           |
+| uploaded_by    | UUID → users.id   | Who uploaded                       |
+| uploaded_at    | TIMESTAMP         | When uploaded                      |
+| change_notes   | TEXT (nullable)   | What changed                       |
 
 Indexes: (tenant_id, record_id, version_number), (tenant_id, record_id).
 
@@ -154,14 +155,14 @@ Indexes: (tenant_id, record_id, version_number), (tenant_id, record_id).
 
 BullMQ job on upload. Three sizes: small (150px), medium (400px), large (800px). Stored in S3/R2.
 
-| File Type | Preview Method |
-|-----------|---------------|
-| Images (PNG, JPG, WebP, GIF, SVG) | Sharp resize — full thumbnail support |
-| PDF | pdftoppm first page render |
-| Video (MP4, MOV, WebM) | ffmpeg frame extraction at 1s |
-| Documents (DOCX, XLSX, PPTX) | LibreOffice headless → PDF → pdftoppm |
-| Design files (AI, PSD, Sketch) | Generic icon + metadata (future: Filestack/CloudConvert) |
-| Audio (MP3, WAV) | Waveform visualization |
+| File Type                         | Preview Method                                           |
+| --------------------------------- | -------------------------------------------------------- |
+| Images (PNG, JPG, WebP, GIF, SVG) | Sharp resize — full thumbnail support                    |
+| PDF                               | pdftoppm first page render                               |
+| Video (MP4, MOV, WebM)            | ffmpeg frame extraction at 1s                            |
+| Documents (DOCX, XLSX, PPTX)      | LibreOffice headless → PDF → pdftoppm                    |
+| Design files (AI, PSD, Sketch)    | Generic icon + metadata (future: Filestack/CloudConvert) |
+| Audio (MP3, WAV)                  | Waveform visualization                                   |
 
 Async — UI shows spinner until thumbnails ready.
 
@@ -210,6 +211,7 @@ Storage is workspace-level, shared across asset library, record attachments, Sma
 **Defer native preview. Thumbnail generation + external open. Decided 2026-02-10.**
 
 Native preview of Figma/Sketch/PSD requires embedded rendering engines — massive scope. Instead:
+
 - **Thumbnails on upload:** Extract embedded preview (PSD, AI have embedded JPEGs). Common formats (PNG, JPG, SVG, PDF, MP4) via Sharp/FFmpeg server-side.
 - **Preview modal:** Large thumbnail, filename, format, dimensions, file size, uploaded by, date, tags, linked records. "Download" and "Open Original" buttons.
 - **Design files:** Figma URLs open in new tab. Sketch/PSD download to open locally. Generic icon + metadata in gallery.
@@ -233,26 +235,26 @@ Database platforms (Airtable, SmartSuite) return structured records. Ad platform
 
 **Pattern B: Time-Series Metric Storage.** `metric_snapshots` table for trend data:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace scoping |
-| record_id | UUID → records.id | Which campaign/ad record |
-| field_id | VARCHAR | Which metric (impressions, clicks, spend) |
-| date | DATE | Date this value represents |
-| value | DECIMAL | Metric value |
+| Column    | Type              | Purpose                                   |
+| --------- | ----------------- | ----------------------------------------- |
+| id        | UUID              | Primary key                               |
+| tenant_id | UUID              | Workspace scoping                         |
+| record_id | UUID → records.id | Which campaign/ad record                  |
+| field_id  | VARCHAR           | Which metric (impressions, clicks, spend) |
+| date      | DATE              | Date this value represents                |
+| value     | DECIMAL           | Metric value                              |
 
 Unique index: (tenant_id, record_id, field_id, date). Each sync appends/upserts per-day per-metric rows. Records table stores current values in canonical_data; metric_snapshots stores history for charts.
 
 ### Supported Platforms
 
-| Platform | Entities | Key Metrics |
-|----------|----------|-------------|
-| Google Ads | Campaigns, Ad Groups, Ads, Keywords | Impressions, Clicks, CTR, CPC, Cost, Conversions, ROAS |
-| Meta Ads | Campaigns, Ad Sets, Ads | Impressions, Reach, Clicks, CTR, Spend, Conversions, ROAS, Frequency |
-| Google Analytics 4 | Metrics only (no entity sync) | Sessions, Users, Pageviews, Bounce Rate, Conversions, Revenue |
-| LinkedIn Ads | Campaign Groups, Campaigns, Creatives | Impressions, Clicks, CTR, Spend, Conversions, Leads |
-| TikTok Ads (future) | Campaigns, Ad Groups, Ads | Impressions, Clicks, Spend, Conversions, Video Views |
+| Platform            | Entities                              | Key Metrics                                                          |
+| ------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| Google Ads          | Campaigns, Ad Groups, Ads, Keywords   | Impressions, Clicks, CTR, CPC, Cost, Conversions, ROAS               |
+| Meta Ads            | Campaigns, Ad Sets, Ads               | Impressions, Reach, Clicks, CTR, Spend, Conversions, ROAS, Frequency |
+| Google Analytics 4  | Metrics only (no entity sync)         | Sessions, Users, Pageviews, Bounce Rate, Conversions, Revenue        |
+| LinkedIn Ads        | Campaign Groups, Campaigns, Creatives | Impressions, Clicks, CTR, Spend, Conversions, Leads                  |
+| TikTok Ads (future) | Campaigns, Ad Groups, Ads             | Impressions, Clicks, Spend, Conversions, Video Views                 |
 
 ### Connection Flow
 
@@ -294,13 +296,13 @@ Post-MVP — Verticals & Advanced (post-MVP). Depends on mature portals/doc gen/
 
 **Decided 2026-02-10.** Google + Meta cover 80%+ of agency ad spend. Ship those first, validate pattern, add per demand.
 
-| Priority | Platform | Phase | Rationale |
-|----------|----------|-------|-----------|
-| 1 | **Google Ads** | 8a | Largest ad platform. Every agency uses it. |
-| 1 | **Meta Ads** (Facebook + Instagram) | 8b | Second largest. Single API covers both. |
-| 2 | **LinkedIn Ads** | 8c | B2B agencies. Smaller but high-value. |
-| 3 | **TikTok Ads** | 9+ | Growing but smaller agency adoption. Newer API. |
-| 4 | **Twitter/X Ads** | 9+ | Declining agency spend. Low priority. |
+| Priority | Platform                            | Phase | Rationale                                       |
+| -------- | ----------------------------------- | ----- | ----------------------------------------------- |
+| 1        | **Google Ads**                      | 8a    | Largest ad platform. Every agency uses it.      |
+| 1        | **Meta Ads** (Facebook + Instagram) | 8b    | Second largest. Single API covers both.         |
+| 2        | **LinkedIn Ads**                    | 8c    | B2B agencies. Smaller but high-value.           |
+| 3        | **TikTok Ads**                      | 9+    | Growing but smaller agency adoption. Newer API. |
+| 4        | **Twitter/X Ads**                   | 9+    | Declining agency spend. Low priority.           |
 
 ### Developer Token Acquisition
 
@@ -315,14 +317,13 @@ Post-MVP — Verticals & Advanced (post-MVP). Depends on mature portals/doc gen/
 
 **Raw 90 days, daily aggregates forever. Decided 2026-02-10.**
 
-| Tier | Granularity | Retention | Purpose |
-|------|-------------|-----------|---------|
-| Raw snapshots | Per-sync (hourly/6h) | 90 days | Debugging, recent detailed analysis |
-| Daily aggregates | Per-day | Forever | Historical reporting, trend analysis |
-| Monthly aggregates | Per-month | Forever | Long-range, year-over-year |
+| Tier               | Granularity          | Retention | Purpose                              |
+| ------------------ | -------------------- | --------- | ------------------------------------ |
+| Raw snapshots      | Per-sync (hourly/6h) | 90 days   | Debugging, recent detailed analysis  |
+| Daily aggregates   | Per-day              | Forever   | Historical reporting, trend analysis |
+| Monthly aggregates | Per-month            | Forever   | Long-range, year-over-year           |
 
 - Nightly BullMQ job aggregates raw data older than 90 days into daily records, then deletes raw.
 - Storage impact: minimal — ~10 numeric columns per row. 3 years of daily aggregates for 100 campaigns ≈ ~100K rows.
 
 ---
-

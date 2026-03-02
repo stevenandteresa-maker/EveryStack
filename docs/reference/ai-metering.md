@@ -2,6 +2,7 @@
 
 > **Glossary Reconciliation — 2026-02-27**
 > Aligned with `GLOSSARY.md` (source of truth). Changes:
+>
 > - "Portal Builder | Block designer, drag-drop, data binding" → split into MVP (Portal = externally-shared Record View) and post-MVP (App Designer). Block designer/drag-drop is App Designer (post-MVP).
 > - "Communications Hub" → "Record Thread & Chat" (glossary naming discipline — "Communications Hub" is a banned term)
 > - "Visual builder" for Automations → "Step-by-step list builder" (glossary: MVP automations are linear, no visual canvas)
@@ -23,20 +24,20 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| AI Independence Guarantee | 43–82 | Zero-AI core workflows (14 categories), AI feature degradation behavior |
-| Anthropic API Pricing Reference | 84–115 | Model cost table, 5 cost reduction mechanisms (caching, Haiku routing, batching) |
-| AI Usage Logging Infrastructure | 117–165 | `ai_usage_log` schema, cost calculation formula |
-| Credit Budget & Metering System | 167–212 | Credit definition ($0.01 = 1 credit), tier budgets, `ai_credit_ledger`, metering flow |
-| Workspace Admin AI Dashboard | 214–242 | Settings → AI Usage, overview panel, per-user/feature breakdowns, admin controls |
-| User-Facing AI Usage View | 244–256 | Personal usage view, daily cap indicator |
-| Pre-Launch Usage Testing Framework | 258–281 | 13-feature test matrix (small/medium/large context), test procedure |
-| Internal Cost Monitoring | 283–302 | Per-tenant margin dashboard, platform-wide economics, anomaly alerts |
-| AIService Wrapper Implementation | 304–337 | Interface contract, 6-step execution flow, single entry point for all AI calls |
-| Reconciliation & Integrity | 339–357 | Daily reconciliation job, Anthropic invoice reconciliation, data retention policy |
-| Agent Session Metering | 359–421 | Credit integration, session cost estimates, plan limits, self-hosted cost model, dashboard |
-| Implementation Phasing & AIFeature Enum | 423–438 | MVP/post-MVP phase table, 13 AIFeature enum values |
+| Section                                 | Lines   | Covers                                                                                     |
+| --------------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| AI Independence Guarantee               | 43–82   | Zero-AI core workflows (14 categories), AI feature degradation behavior                    |
+| Anthropic API Pricing Reference         | 84–115  | Model cost table, 5 cost reduction mechanisms (caching, Haiku routing, batching)           |
+| AI Usage Logging Infrastructure         | 117–165 | `ai_usage_log` schema, cost calculation formula                                            |
+| Credit Budget & Metering System         | 167–212 | Credit definition ($0.01 = 1 credit), tier budgets, `ai_credit_ledger`, metering flow      |
+| Workspace Admin AI Dashboard            | 214–242 | Settings → AI Usage, overview panel, per-user/feature breakdowns, admin controls           |
+| User-Facing AI Usage View               | 244–256 | Personal usage view, daily cap indicator                                                   |
+| Pre-Launch Usage Testing Framework      | 258–281 | 13-feature test matrix (small/medium/large context), test procedure                        |
+| Internal Cost Monitoring                | 283–302 | Per-tenant margin dashboard, platform-wide economics, anomaly alerts                       |
+| AIService Wrapper Implementation        | 304–337 | Interface contract, 6-step execution flow, single entry point for all AI calls             |
+| Reconciliation & Integrity              | 339–357 | Daily reconciliation job, Anthropic invoice reconciliation, data retention policy          |
+| Agent Session Metering                  | 359–421 | Credit integration, session cost estimates, plan limits, self-hosted cost model, dashboard |
+| Implementation Phasing & AIFeature Enum | 423–438 | MVP/post-MVP phase table, 13 AIFeature enum values                                         |
 
 ---
 
@@ -50,21 +51,21 @@ Every feature in EveryStack falls into one of two categories: core workflow func
 
 The following features function identically whether AI credits are available or exhausted:
 
-| Feature Area | Core Function | AI Enhancement (Optional) | MVP Status |
-|---|---|---|---|
-| Cross-Base Linking | Postgres FK joins, manual link creation | AI suggests likely link fields based on naming | **MVP** |
-| Sync Engine | API adapters, diff/upsert, scheduled sync | None — fully deterministic | **MVP** |
-| Table Grid & Views | CRUD, filtering, sorting, grouping | Natural language filter builder | **MVP** |
-| Portals (Quick) | Externally-shared Record View, single record, auth | AI suggests field layout from schema | **MVP** (Quick Portal = Record View with auth) |
-| App Designer | Block designer, drag-drop, data binding | AI suggests layout from schema | **Post-MVP** (App Designer is post-MVP per glossary) |
-| Doc Generation | Merge-tag templates + Gotenberg, PDF output | AI drafts template placeholder suggestions | **MVP** |
-| Smart Doc | TipTap editor, wiki pages, manual authoring | AI writing assist, summarization | **Post-MVP** (Wiki / Knowledge Base is post-MVP per glossary) |
-| Automations | Step-by-step list builder: trigger → action config | "Describe what you want" → AI drafts automation | **MVP** (linear flows, no visual canvas) |
-| Record Thread & Chat | Record-scoped comments, DMs, @mentions, assignments | AI thread summarization | **MVP** (Record Thread) / **Post-MVP** (full thread & chat features) |
-| Outbound Email | Compose UI, templates, merge fields | AI drafts email body from context | **MVP** |
-| Formula Engine | User writes formulas, deterministic eval | AI suggests formulas from description | **Post-MVP** (formula engine is post-MVP per glossary) |
-| Permissions & Roles | Role matrix, field-level access control | None — fully deterministic | **MVP** |
-| Search / Command Bar | Fuzzy text search across records and entities | Natural language queries, AI answers | **MVP** |
+| Feature Area         | Core Function                                       | AI Enhancement (Optional)                       | MVP Status                                                           |
+| -------------------- | --------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------- |
+| Cross-Base Linking   | Postgres FK joins, manual link creation             | AI suggests likely link fields based on naming  | **MVP**                                                              |
+| Sync Engine          | API adapters, diff/upsert, scheduled sync           | None — fully deterministic                      | **MVP**                                                              |
+| Table Grid & Views   | CRUD, filtering, sorting, grouping                  | Natural language filter builder                 | **MVP**                                                              |
+| Portals (Quick)      | Externally-shared Record View, single record, auth  | AI suggests field layout from schema            | **MVP** (Quick Portal = Record View with auth)                       |
+| App Designer         | Block designer, drag-drop, data binding             | AI suggests layout from schema                  | **Post-MVP** (App Designer is post-MVP per glossary)                 |
+| Doc Generation       | Merge-tag templates + Gotenberg, PDF output         | AI drafts template placeholder suggestions      | **MVP**                                                              |
+| Smart Doc            | TipTap editor, wiki pages, manual authoring         | AI writing assist, summarization                | **Post-MVP** (Wiki / Knowledge Base is post-MVP per glossary)        |
+| Automations          | Step-by-step list builder: trigger → action config  | "Describe what you want" → AI drafts automation | **MVP** (linear flows, no visual canvas)                             |
+| Record Thread & Chat | Record-scoped comments, DMs, @mentions, assignments | AI thread summarization                         | **MVP** (Record Thread) / **Post-MVP** (full thread & chat features) |
+| Outbound Email       | Compose UI, templates, merge fields                 | AI drafts email body from context               | **MVP**                                                              |
+| Formula Engine       | User writes formulas, deterministic eval            | AI suggests formulas from description           | **Post-MVP** (formula engine is post-MVP per glossary)               |
+| Permissions & Roles  | Role matrix, field-level access control             | None — fully deterministic                      | **MVP**                                                              |
+| Search / Command Bar | Fuzzy text search across records and entities       | Natural language queries, AI answers            | **MVP**                                                              |
 
 > **Implementation Rule: No feature may be shipped where the primary workflow requires AI to function. AI is always the enhancement layer.**
 
@@ -76,7 +77,7 @@ When a workspace exhausts its AI credit budget:
 - AI-enhanced controls show a subtle disabled state with tooltip: "AI credits exhausted — resets [date]. Manual controls available."
 - Command Bar search falls back to fuzzy text search only. The search bar itself never disappears.
 - Automation builder reverts to manual-only mode. The "Describe what you want" input is disabled; the step-by-step list builder works normally.
-- Smart Doc editor disables AI slash commands (/summarize, /draft, /expand). Manual editing and all formatting tools remain active. *(Smart Doc is post-MVP — wiki / knowledge base deferred per glossary.)*
+- Smart Doc editor disables AI slash commands (/summarize, /draft, /expand). Manual editing and all formatting tools remain active. _(Smart Doc is post-MVP — wiki / knowledge base deferred per glossary.)_
 - No pop-ups, modals, or blocking upgrade prompts. Degradation is quiet and non-disruptive.
 
 ---
@@ -85,11 +86,11 @@ When a workspace exhausts its AI credit budget:
 
 Current Claude API pricing as of February 2026. All rates are pay-as-you-go per million tokens (MTok).
 
-| Model | Input (per MTok) | Output (per MTok) | Cache Write | Cache Read |
-|-------|------|--------|-------------|------------|
-| Haiku 4.5 | $1.00 | $5.00 | $1.25 | $0.10 |
-| Sonnet 4.5 | $3.00 | $15.00 | $3.75 | $0.30 |
-| Opus 4.5 | $5.00 | $25.00 | $6.25 | $0.50 |
+| Model      | Input (per MTok) | Output (per MTok) | Cache Write | Cache Read |
+| ---------- | ---------------- | ----------------- | ----------- | ---------- |
+| Haiku 4.5  | $1.00            | $5.00             | $1.25       | $0.10      |
+| Sonnet 4.5 | $3.00            | $15.00            | $3.75       | $0.30      |
+| Opus 4.5   | $5.00            | $25.00            | $6.25       | $0.50      |
 
 ### 2.1 Cost Reduction Mechanisms
 
@@ -99,16 +100,16 @@ Current Claude API pricing as of February 2026. All rates are pay-as-you-go per 
 
 **Intelligent Model Routing:** Users never choose a model. EveryStack routes internally based on task complexity. This is the single most important cost control lever.
 
-| Task Category | Routed Model | Rationale | MVP Status |
-|---|---|---|---|
-| Command Bar quick lookup | Haiku 4.5 | Low token volume, speed-critical, simple pattern matching | **MVP** |
-| Formula suggestion | Haiku 4.5 | Small context window, structured output | **Post-MVP** (formula engine deferred) |
-| Record summarization | Haiku 4.5 | Moderate context, standardized output format | **MVP** |
-| Email draft from context | Sonnet 4.5 | Needs nuance and tone awareness | **MVP** |
-| Automation builder from description | Sonnet 4.5 | Multi-step reasoning, structured JSON output | **MVP** |
-| Cross-base analysis | Sonnet 4.5 | Large context window, relational reasoning | **Post-MVP** (DuckDB analytical layer deferred) |
-| Guide Mode (multi-step) | Sonnet 4.5 | Conversational, iterative, needs planning | **Post-MVP** |
-| Complex data modeling advice | Opus 4.5 | Deep reasoning, architectural decisions (rare) | **Post-MVP** |
+| Task Category                       | Routed Model | Rationale                                                 | MVP Status                                      |
+| ----------------------------------- | ------------ | --------------------------------------------------------- | ----------------------------------------------- |
+| Command Bar quick lookup            | Haiku 4.5    | Low token volume, speed-critical, simple pattern matching | **MVP**                                         |
+| Formula suggestion                  | Haiku 4.5    | Small context window, structured output                   | **Post-MVP** (formula engine deferred)          |
+| Record summarization                | Haiku 4.5    | Moderate context, standardized output format              | **MVP**                                         |
+| Email draft from context            | Sonnet 4.5   | Needs nuance and tone awareness                           | **MVP**                                         |
+| Automation builder from description | Sonnet 4.5   | Multi-step reasoning, structured JSON output              | **MVP**                                         |
+| Cross-base analysis                 | Sonnet 4.5   | Large context window, relational reasoning                | **Post-MVP** (DuckDB analytical layer deferred) |
+| Guide Mode (multi-step)             | Sonnet 4.5   | Conversational, iterative, needs planning                 | **Post-MVP**                                    |
+| Complex data modeling advice        | Opus 4.5     | Deep reasoning, architectural decisions (rare)            | **Post-MVP**                                    |
 
 Expected model mix: approximately 50–60% Haiku, 35–45% Sonnet, and 2–5% Opus by call volume.
 
@@ -120,25 +121,25 @@ Expected model mix: approximately 50–60% Haiku, 35–45% Sonnet, and 2–5% Op
 
 Every AI API call is logged to a dedicated table immediately after the Anthropic API response is received. This is the single source of truth for all metering, billing, and admin reporting.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID PK | |
-| tenant_id | UUID FK → tenants | Workspace that owns this usage |
-| user_id | UUID FK → users | Individual user who triggered the AI call |
-| feature | VARCHAR(64) | Enum: command_bar, formula_suggest, email_draft, automation_build, etc. |
-| model | VARCHAR(32) | Actual model used: haiku-4.5, sonnet-4.5, opus-4.5 |
-| input_tokens | INTEGER | Total input tokens billed (excluding cached) |
-| output_tokens | INTEGER | Total output tokens billed |
-| cached_input | INTEGER (default 0) | Input tokens served from prompt cache (billed at 10% rate) |
-| cost_usd | NUMERIC(10,6) | Exact dollar cost computed from rate card formula |
-| credits_charged | NUMERIC(10,2) | Credits deducted from workspace budget. 1 credit = $0.01 |
-| request_id | VARCHAR(128) nullable | Anthropic API request ID for debugging and reconciliation |
-| duration_ms | INTEGER nullable | End-to-end latency of the API call |
-| status | VARCHAR(16) (default 'success') | success, error, timeout, rate_limited |
-| error_code | VARCHAR(64) nullable | Anthropic error code if status != success. No credits charged for errors. |
-| metadata | JSONB (default {}) | Flexible context: { table_ids, record_count, prompt_template, ... } |
+| Column           | Type                                | Description                                                                                                |
+| ---------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| id               | UUID PK                             |                                                                                                            |
+| tenant_id        | UUID FK → tenants                   | Workspace that owns this usage                                                                             |
+| user_id          | UUID FK → users                     | Individual user who triggered the AI call                                                                  |
+| feature          | VARCHAR(64)                         | Enum: command_bar, formula_suggest, email_draft, automation_build, etc.                                    |
+| model            | VARCHAR(32)                         | Actual model used: haiku-4.5, sonnet-4.5, opus-4.5                                                         |
+| input_tokens     | INTEGER                             | Total input tokens billed (excluding cached)                                                               |
+| output_tokens    | INTEGER                             | Total output tokens billed                                                                                 |
+| cached_input     | INTEGER (default 0)                 | Input tokens served from prompt cache (billed at 10% rate)                                                 |
+| cost_usd         | NUMERIC(10,6)                       | Exact dollar cost computed from rate card formula                                                          |
+| credits_charged  | NUMERIC(10,2)                       | Credits deducted from workspace budget. 1 credit = $0.01                                                   |
+| request_id       | VARCHAR(128) nullable               | Anthropic API request ID for debugging and reconciliation                                                  |
+| duration_ms      | INTEGER nullable                    | End-to-end latency of the API call                                                                         |
+| status           | VARCHAR(16) (default 'success')     | success, error, timeout, rate_limited                                                                      |
+| error_code       | VARCHAR(64) nullable                | Anthropic error code if status != success. No credits charged for errors.                                  |
+| metadata         | JSONB (default {})                  | Flexible context: { table_ids, record_count, prompt_template, ... }                                        |
 | agent_session_id | UUID FK → agent_sessions (nullable) | Links AI calls to agent sessions (post-MVP). Enables per-session cost tracking. See agent-architecture.md. |
-| created_at | TIMESTAMPTZ | |
+| created_at       | TIMESTAMPTZ                         |                                                                                                            |
 
 **Indexes:** `(tenant_id, created_at)`, `(user_id, created_at)`, `(tenant_id, feature, created_at)`. Time-partitioned monthly.
 
@@ -148,14 +149,14 @@ Every AI API call is logged to a dedicated table immediately after the Anthropic
 
 ```typescript
 const RATES = {
-  'haiku-4.5':  { input: 0.000001, output: 0.000005, cache_read: 0.0000001 },
+  'haiku-4.5': { input: 0.000001, output: 0.000005, cache_read: 0.0000001 },
   'sonnet-4.5': { input: 0.000003, output: 0.000015, cache_read: 0.0000003 },
-  'opus-4.5':   { input: 0.000005, output: 0.000025, cache_read: 0.0000005 },
+  'opus-4.5': { input: 0.000005, output: 0.000025, cache_read: 0.0000005 },
 };
 
 function calculateCost(model, inputTokens, outputTokens, cachedInput) {
   const r = RATES[model];
-  return (inputTokens * r.input) + (cachedInput * r.cache_read) + (outputTokens * r.output);
+  return inputTokens * r.input + cachedInput * r.cache_read + outputTokens * r.output;
 }
 
 // Credits: 1 credit = $0.01
@@ -172,29 +173,29 @@ const credits = Math.ceil(costUsd * 100);
 
 ### 4.2 Monthly Credit Budgets by Tier
 
-| Tier | Price | Monthly AI Credits | Equivalent USD | AI as % of Sub |
-|------|-------|--------------------|---------------|----------------|
-| Freelancer | $29 | 200 | $2.00 | 6.9% |
-| Starter | $79 | 800 | $8.00 | 10.1% |
-| Professional | $149 | 2,500 | $25.00 | 16.8% |
-| Business | $299 | 7,500 | $75.00 | 25.1% |
-| Enterprise | $499+ | 20,000 | $200.00 | 40.1% |
+| Tier         | Price | Monthly AI Credits | Equivalent USD | AI as % of Sub |
+| ------------ | ----- | ------------------ | -------------- | -------------- |
+| Freelancer   | $29   | 200                | $2.00          | 6.9%           |
+| Starter      | $79   | 800                | $8.00          | 10.1%          |
+| Professional | $149  | 2,500              | $25.00         | 16.8%          |
+| Business     | $299  | 7,500              | $75.00         | 25.1%          |
+| Enterprise   | $499+ | 20,000             | $200.00        | 40.1%          |
 
 AI budget as a percentage of subscription intentionally increases at higher tiers. Larger workspaces have more users and more data surface area for AI features.
 
 ### 4.3 Credit Tracking Table — `ai_credit_ledger`
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID PK | |
-| tenant_id | UUID FK → tenants | |
-| period_start | DATE | Billing period start |
-| period_end | DATE | Billing period end |
-| credits_total | INTEGER | From plan tier |
-| credits_used | NUMERIC(10,2) (default 0) | Running total |
-| credits_remaining | GENERATED (credits_total - credits_used) | Computed column |
-| usage_pct | GENERATED (ROUND(credits_used / credits_total * 100, 1)) | Computed column |
-| updated_at | TIMESTAMPTZ | |
+| Column            | Type                                                      | Purpose              |
+| ----------------- | --------------------------------------------------------- | -------------------- |
+| id                | UUID PK                                                   |                      |
+| tenant_id         | UUID FK → tenants                                         |                      |
+| period_start      | DATE                                                      | Billing period start |
+| period_end        | DATE                                                      | Billing period end   |
+| credits_total     | INTEGER                                                   | From plan tier       |
+| credits_used      | NUMERIC(10,2) (default 0)                                 | Running total        |
+| credits_remaining | GENERATED (credits_total - credits_used)                  | Computed column      |
+| usage_pct         | GENERATED (ROUND(credits_used / credits_total \* 100, 1)) | Computed column      |
+| updated_at        | TIMESTAMPTZ                                               |                      |
 
 **Unique index:** `(tenant_id, period_start)`. One row per tenant per billing period.
 
@@ -257,16 +258,16 @@ Before setting final credit budgets, run systematic tests to establish real per-
 
 ### 7.1 Test Matrix
 
-| Feature | Small Context | Medium Context | Large Context | MVP Status |
-|---|---|---|---|---|
-| command_bar | 1 table, 5 fields | 5 tables, 30 fields | 15 tables, 100 fields | **MVP** |
-| formula_suggest | Single table, 3 fields | Single table, 15 fields | Cross-base, 30 fields | **Post-MVP** |
-| email_draft | 1 record context | 5 records + thread history | 20 records + attachments | **MVP** |
-| automation_build | Simple 1-trigger/1-action | 3-step linear flow | Complex multi-step | **MVP** (linear only; branching post-MVP) |
-| cross_base_analysis | 2 bases, 1K records | 5 bases, 10K records | 10 bases, 50K records | **Post-MVP** (DuckDB analytical layer deferred) |
-| guide_mode | Single question | 3-turn conversation | 10-turn with context | **Post-MVP** |
-| doc_assist | Short paragraph | Full page draft | Multi-section document | **MVP** (Document AI Draft) |
-| record_summary | 5 fields | 15 fields + linked records | 30 fields + history | **MVP** |
+| Feature             | Small Context             | Medium Context             | Large Context            | MVP Status                                      |
+| ------------------- | ------------------------- | -------------------------- | ------------------------ | ----------------------------------------------- |
+| command_bar         | 1 table, 5 fields         | 5 tables, 30 fields        | 15 tables, 100 fields    | **MVP**                                         |
+| formula_suggest     | Single table, 3 fields    | Single table, 15 fields    | Cross-base, 30 fields    | **Post-MVP**                                    |
+| email_draft         | 1 record context          | 5 records + thread history | 20 records + attachments | **MVP**                                         |
+| automation_build    | Simple 1-trigger/1-action | 3-step linear flow         | Complex multi-step       | **MVP** (linear only; branching post-MVP)       |
+| cross_base_analysis | 2 bases, 1K records       | 5 bases, 10K records       | 10 bases, 50K records    | **Post-MVP** (DuckDB analytical layer deferred) |
+| guide_mode          | Single question           | 3-turn conversation        | 10-turn with context     | **Post-MVP**                                    |
+| doc_assist          | Short paragraph           | Full page draft            | Multi-section document   | **MVP** (Document AI Draft)                     |
+| record_summary      | 5 fields                  | 15 fields + linked records | 30 fields + history      | **MVP**                                         |
 
 ### 7.2 Test Procedure
 
@@ -375,13 +376,13 @@ Agent sessions are meta-tasks that generate many individual AI API calls. The me
 
 Typical agent session costs (with prompt caching enabled):
 
-| Session Type | Estimated AI Calls | Estimated Credits | Notes |
-|-------------|-------------------|------------------|-------|
-| Simple query/analysis (2–3 calls) | 2–3 | 4–6 | Workspace Assistant, read-only |
-| Data cleanup batch (10–15 calls) | 10–15 | 15–25 | Data Steward, medium writes |
-| Automation building (8–12 calls) | 8–12 | 20–35 | Automation Builder, plan + generate |
-| App generation (15–20 calls) | 15–20 | 30–45 | App Designer AI, full layout |
-| Workspace onboarding (20–25 calls) | 20–25 | 40–60 | Onboarding Agent, high write volume |
+| Session Type                       | Estimated AI Calls | Estimated Credits | Notes                               |
+| ---------------------------------- | ------------------ | ----------------- | ----------------------------------- |
+| Simple query/analysis (2–3 calls)  | 2–3                | 4–6               | Workspace Assistant, read-only      |
+| Data cleanup batch (10–15 calls)   | 10–15              | 15–25             | Data Steward, medium writes         |
+| Automation building (8–12 calls)   | 8–12               | 20–35             | Automation Builder, plan + generate |
+| App generation (15–20 calls)       | 15–20              | 30–45             | App Designer AI, full layout        |
+| Workspace onboarding (20–25 calls) | 20–25              | 40–60             | Onboarding Agent, high write volume |
 
 **Agents cost 5–50x a single AI call** depending on complexity. However, value-per-credit is dramatically higher — an agent session that builds a complete automation in 5 minutes replaces 45 minutes of manual work.
 
@@ -389,13 +390,13 @@ Typical agent session costs (with prompt caching enabled):
 
 ### 11.3 Plan Limits for Agents
 
-| Plan | Max Concurrent Agents | Max Sessions/Month | Max Session Duration |
-|------|----------------------|-------------------|---------------------|
-| Freelancer | 1 | 20 | 10 min |
-| Starter | 2 | 100 | 15 min |
-| Professional | 3 | 500 | 30 min |
-| Business | 5 | 2,000 | 60 min |
-| Enterprise | 10 | Custom | Custom |
+| Plan         | Max Concurrent Agents | Max Sessions/Month | Max Session Duration |
+| ------------ | --------------------- | ------------------ | -------------------- |
+| Freelancer   | 1                     | 20                 | 10 min               |
+| Starter      | 2                     | 100                | 15 min               |
+| Professional | 3                     | 500                | 30 min               |
+| Business     | 5                     | 2,000              | 60 min               |
+| Enterprise   | 10                    | Custom             | Custom               |
 
 Concurrent agent limit prevents runaway resource consumption. Monthly session limit prevents cost surprises. Agents consume credits from the same workspace AI credit pool (no separate agent pool).
 
@@ -422,17 +423,17 @@ The Admin AI Dashboard (Section 5) extends with agent-specific views:
 
 ## Implementation Phasing
 
-| Phase | What Ships |
-|-------|-----------|
-| **MVP — Foundation (Foundation)** | `ai_usage_log` + `ai_credit_ledger` schema (incl. `agent_session_id` nullable FK on `ai_usage_log`), AIFeature enum, rate card (`rates.ts`), cost calculator, AIService metering wrapper (6-step flow), `agent_sessions` table (empty schema) |
-| **Post-MVP — Comms & Polish (Record Thread & Chat + Polish)** | Admin AI dashboard (Settings → AI Usage), user personal usage view, daily caps (`ai_daily_caps`), alerts, CSV export, reconciliation job, retention job |
-| **Post-MVP (Post-MVP — AI Agents)** | Agent session metering flow (budget ceiling, Redis fast-read tally, pause-on-exhaust), agent dashboard tab, per-session cost tracking, weekly agent digest |
-| **Post-MVP (Post-MVP — Self-Hosted AI)** | Self-hosted cost model (`calculateCost()` for GPU-seconds), hybrid routing metering (different rates per provider) |
+| Phase                                                         | What Ships                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation (Foundation)**                             | `ai_usage_log` + `ai_credit_ledger` schema (incl. `agent_session_id` nullable FK on `ai_usage_log`), AIFeature enum, rate card (`rates.ts`), cost calculator, AIService metering wrapper (6-step flow), `agent_sessions` table (empty schema) |
+| **Post-MVP — Comms & Polish (Record Thread & Chat + Polish)** | Admin AI dashboard (Settings → AI Usage), user personal usage view, daily caps (`ai_daily_caps`), alerts, CSV export, reconciliation job, retention job                                                                                       |
+| **Post-MVP (Post-MVP — AI Agents)**                           | Agent session metering flow (budget ceiling, Redis fast-read tally, pause-on-exhaust), agent dashboard tab, per-session cost tracking, weekly agent digest                                                                                    |
+| **Post-MVP (Post-MVP — Self-Hosted AI)**                      | Self-hosted cost model (`calculateCost()` for GPU-seconds), hybrid routing metering (different rates per provider)                                                                                                                            |
 
 ---
 
 ## AIFeature Enum (13 values)
 
-`command_bar`, `formula_suggest` *(post-MVP)*, `email_draft`, `automation_build`, `cross_base_analysis` *(post-MVP)*, `guide_mode` *(post-MVP)*, `doc_assist`, `record_summary`, `app_suggest` *(post-MVP — App Designer AI)*, `thread_summary`, `agent_planning` *(post-MVP)*, `agent_tool_selection` *(post-MVP)*, `agent_observation` *(post-MVP)*
+`command_bar`, `formula_suggest` _(post-MVP)_, `email_draft`, `automation_build`, `cross_base_analysis` _(post-MVP)_, `guide_mode` _(post-MVP)_, `doc_assist`, `record_summary`, `app_suggest` _(post-MVP — App Designer AI)_, `thread_summary`, `agent_planning` _(post-MVP)_, `agent_tool_selection` _(post-MVP)_, `agent_observation` _(post-MVP)_
 
 Defined in `packages/shared/src/types/ai-features.ts`. Extensible — new features add enum values and routing entries. Agent-prefixed features are used for AI calls within agent sessions (always paired with `agent_session_id` on `ai_usage_log`).

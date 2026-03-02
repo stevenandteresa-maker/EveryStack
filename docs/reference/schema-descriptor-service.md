@@ -4,6 +4,7 @@
 > **Changes (pass 2):** No naming drift or scope issues found. All terms, post-MVP tags, and cross-references confirmed aligned with glossary. Prior pass was thorough.
 >
 > **Changes (pass 1, 2026-02-27):**
+>
 > - Replaced "interface-level permission model" → "workspace role and Table View-scoped permission model" throughout (glossary naming discipline: "Interface" as a Table View → "Table View")
 > - Replaced "assigned interfaces" → "assigned Table Views and workspace role"
 > - Replaced `cross_base_link` field type in SDS output → `linked_record` (glossary DB entity reference: fields type=linked_record; concept name is "Cross-Link")
@@ -26,19 +27,19 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Overview | 45–52 | SDS purpose, relationship to AI features |
-| Architecture Position | 53–78 | Where SDS sits in the stack, dependencies |
-| Output Schema | 79–193 | WorkspaceDescriptor JSON structure, field descriptions, cross-link mapping |
-| Permissions Integration | 194–208 | Per-user filtered schema output based on role |
-| API Surface | 209–223 | 3 endpoints, request/response formats |
-| Caching Strategy | 224–237 | 2-tier cache, schema_version_hash invalidation |
-| DuckDB Context Layer — Companion Module (Post-MVP) | 238–272 | How SDS feeds DuckDB for analytical queries |
-| Claude Code Prompt Roadmap | 273–499 | 8-prompt implementation roadmap |
-| Implementation Order | 500–516 | Dependency-ordered build sequence |
-| What This Unlocks (Next Modules) | 517–530 | Features that depend on SDS being complete |
-| Notes | 531–536 | Implementation notes and caveats |
+| Section                                            | Lines   | Covers                                                                     |
+| -------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
+| Overview                                           | 45–52   | SDS purpose, relationship to AI features                                   |
+| Architecture Position                              | 53–78   | Where SDS sits in the stack, dependencies                                  |
+| Output Schema                                      | 79–193  | WorkspaceDescriptor JSON structure, field descriptions, cross-link mapping |
+| Permissions Integration                            | 194–208 | Per-user filtered schema output based on role                              |
+| API Surface                                        | 209–223 | 3 endpoints, request/response formats                                      |
+| Caching Strategy                                   | 224–237 | 2-tier cache, schema_version_hash invalidation                             |
+| DuckDB Context Layer — Companion Module (Post-MVP) | 238–272 | How SDS feeds DuckDB for analytical queries                                |
+| Claude Code Prompt Roadmap                         | 273–499 | 8-prompt implementation roadmap                                            |
+| Implementation Order                               | 500–516 | Dependency-ordered build sequence                                          |
+| What This Unlocks (Next Modules)                   | 517–530 | Features that depend on SDS being complete                                 |
+| Notes                                              | 531–536 | Implementation notes and caveats                                           |
 
 ---
 
@@ -211,12 +212,15 @@ This is a critical security boundary. The AI receives a permission-scoped schema
 Three endpoints/functions, all read-only:
 
 ### `describe_workspace(workspace_id, user_id)`
+
 Returns the full condensed schema for all tables/fields the user can access across all Base Connections in the workspace. This is the primary entry point for AI sessions. Cached aggressively (see Caching section).
 
 ### `describe_table(table_id, user_id)`
+
 Returns detailed schema for a single table including all field metadata, linked field targets, and **(post-MVP)** lookup/rollup definitions. Used when the AI needs to drill into a specific table after initial workspace discovery.
 
 ### `describe_links(workspace_id, user_id)`
+
 Returns only the Cross-Link graph. Lightweight call for when the AI is specifically planning a Cross-Link JOIN and doesn't need full field details.
 
 ---
@@ -275,7 +279,6 @@ The DuckDB module is a separate implementation effort. This spec focuses on the 
 Below are the bite-sized prompts for implementing the Schema Descriptor Service, ordered for incremental build-up. Each prompt is scoped to a single, testable deliverable.
 
 ---
-
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
@@ -462,7 +465,7 @@ File: `src/routes/internal/schema-descriptor.ts`
 
 Create internal API routes (not exposed to end users — these are for the AI layer):
 - `GET /internal/schema/workspace/{workspaceId}` — calls describeWorkspace
-- `GET /internal/schema/table/{tableId}` — calls describeTable  
+- `GET /internal/schema/table/{tableId}` — calls describeTable
 - `GET /internal/schema/links/{workspaceId}` — calls describeLinks
 
 All routes require authentication and pass the authenticated userId. Standard error handling.
@@ -502,16 +505,16 @@ Add tests verifying each condensation level triggers at the right thresholds.
 
 ## Implementation Order
 
-| Order | Prompt | Depends On | Deliverable |
-|-------|--------|------------|-------------|
-| 1     | Prompt 1 | Nothing | Types only — zero risk |
-| 2     | Prompt 2 | Prompt 1, existing FieldTypeRegistry | Field mapping logic |
-| 3     | Prompt 3 | Prompt 2 | Single table descriptor |
-| 4     | Prompt 4 | Prompt 3 | Full workspace descriptor |
-| 5     | Prompt 5 | Prompt 4, existing permissions | Security boundary |
-| 6     | Prompt 6 | Prompt 4, Prompt 5 | Performance layer |
-| 7     | Prompt 7 | All above | Service facade + API |
-| 8     | Prompt 8 | Prompt 4 | LLM context optimization |
+| Order | Prompt   | Depends On                           | Deliverable               |
+| ----- | -------- | ------------------------------------ | ------------------------- |
+| 1     | Prompt 1 | Nothing                              | Types only — zero risk    |
+| 2     | Prompt 2 | Prompt 1, existing FieldTypeRegistry | Field mapping logic       |
+| 3     | Prompt 3 | Prompt 2                             | Single table descriptor   |
+| 4     | Prompt 4 | Prompt 3                             | Full workspace descriptor |
+| 5     | Prompt 5 | Prompt 4, existing permissions       | Security boundary         |
+| 6     | Prompt 6 | Prompt 4, Prompt 5                   | Performance layer         |
+| 7     | Prompt 7 | All above                            | Service facade + API      |
+| 8     | Prompt 8 | Prompt 4                             | LLM context optimization  |
 
 Prompts 1–5 are the core path. Prompt 6 (caching) and Prompt 8 (token budget) can be deferred if needed — the service works without them, just slower and potentially context-heavy for large workspaces. Prompt 7 is the integration point.
 

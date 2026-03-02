@@ -13,16 +13,17 @@ Single persistent input in the toolbar handling four intent paths through one in
 
 **Compact state layout:** `🔍 Ask or do anything...  🔔●  ⌘K  ──  ⏱  📅  👤` — always visible in toolbar. Persists across navigation (lives in application shell, never unmounts).
 
-| Input | Mode | Behavior |
-|-------|------|----------|
-| Just type | **Search / AI** | Hybrid search + conversational AI. Results in modal. |
-| Question | **Guide Mode** | "How do I...?" → persistent guide overlay. |
-| `@` | **Communication** | Contextual messaging. Routes to threads. |
-| `/` | **Commands** | Slash command dropdown. Permission-aware. Fuzzy-filtered. |
-| 🔔 click | **Notifications** | Opens notification feed. |
-| `⌘K` | **Activate** | Expands compact bar to full power mode. |
+| Input     | Mode              | Behavior                                                  |
+| --------- | ----------------- | --------------------------------------------------------- |
+| Just type | **Search / AI**   | Hybrid search + conversational AI. Results in modal.      |
+| Question  | **Guide Mode**    | "How do I...?" → persistent guide overlay.                |
+| `@`       | **Communication** | Contextual messaging. Routes to threads.                  |
+| `/`       | **Commands**      | Slash command dropdown. Permission-aware. Fuzzy-filtered. |
+| 🔔 click  | **Notifications** | Opens notification feed.                                  |
+| `⌘K`      | **Activate**      | Expands compact bar to full power mode.                   |
 
 **Permission-Scoped AI (non-negotiable):**
+
 - AI calls same API endpoints as frontend — every query/action goes through RBAC middleware
 - Context provider pre-filtered by user permissions — AI doesn't know about inaccessible entities
 - Permission envelope with every AI request: user_id, workspace_id, role, base_permissions[], table_permissions[]
@@ -30,6 +31,7 @@ Single persistent input in the toolbar handling four intent paths through one in
 - Schema Descriptor Service provides permission-filtered workspace schema for AI sessions
 
 **Confirmation Architecture:**
+
 - **Actions — always confirm:** AI shows preview card, user clicks Confirm/Cancel. Never executes without click.
 - **Guide Mode — show, don't do:** AI highlights UI elements, tells user what to click. Pre-filling allowed but user must confirm/save.
 - **Search/Read — no confirmation:** Results display immediately.
@@ -67,17 +69,17 @@ Triggered by `/command prompt setup`. Large modal, three tabs:
 
 `user_tasks` table belongs to the **user**, not the tenant.
 
-| Column | Purpose |
-|--------|---------|
-| id | Primary key |
-| user_id | Owner (private) |
-| title | Task description |
-| completed | Boolean |
-| due_date | Optional deadline |
-| sort_order | Manual reorder |
-| parent_task_id | Nullable — subtasks |
+| Column           | Purpose                            |
+| ---------------- | ---------------------------------- |
+| id               | Primary key                        |
+| user_id          | Owner (private)                    |
+| title            | Task description                   |
+| completed        | Boolean                            |
+| due_date         | Optional deadline                  |
+| sort_order       | Manual reorder                     |
+| parent_task_id   | Nullable — subtasks                |
 | linked_record_id | Nullable — ties to assigned record |
-| linked_tenant_id | Nullable — workspace association |
+| linked_tenant_id | Nullable — workspace association   |
 
 - Private: only visible to owning user
 - Subtasks via parent_task_id tree
@@ -90,19 +92,19 @@ Triggered by `/command prompt setup`. Large modal, three tabs:
 
 Extensible slash command system. Managers+ register automations as commands.
 
-| Column | Purpose |
-|--------|---------|
-| id | Primary key |
-| tenant_id | Nullable (null = system command) |
-| command_key | Slash trigger (e.g., `todo`) |
-| label | Display name |
-| description | Help text |
-| category | Navigation, Create, Automate, Communication, Custom |
-| source | `system` \| `automation` \| `custom` |
-| automation_id | Nullable — links to automation if source=automation |
-| context_scopes | JSONB — where it appears: global, table_view, record_detail, chat |
-| permission_required | Minimum role |
-| sort_order | Display priority |
+| Column              | Purpose                                                           |
+| ------------------- | ----------------------------------------------------------------- |
+| id                  | Primary key                                                       |
+| tenant_id           | Nullable (null = system command)                                  |
+| command_key         | Slash trigger (e.g., `todo`)                                      |
+| label               | Display name                                                      |
+| description         | Help text                                                         |
+| category            | Navigation, Create, Automate, Communication, Custom               |
+| source              | `system` \| `automation` \| `custom`                              |
+| automation_id       | Nullable — links to automation if source=automation               |
+| context_scopes      | JSONB — where it appears: global, table_view, record_detail, chat |
+| permission_required | Minimum role                                                      |
+| sort_order          | Display priority                                                  |
 
 ---
 
@@ -112,17 +114,17 @@ Type `/` → dropdown with top contextual suggestions, then all commands with fu
 
 **Parameter input:** Simple commands inline (`/todo Buy groceries` + Enter). Complex commands open modal.
 
-| Category | Commands |
-|---|---|
-| **Navigation** | `/goto [entity]` (fuzzy search any base/table/record), `/office` (My Office) |
-| **Record Creation** | `/new record` (current table), `/todo [text]` (personal to-do), `/event [text]` (personal calendar event) |
-| **Data Operations** | `/print` (print/PDF current view) |
-| **Communication** | `/dm @[user] [text]` (direct message), `/thread [text]` (start thread on context), `/status [emoji] [text]` (presence), `/mute` (mute current thread) |
-| **Document Generation** | `/generate doc [template]` (from template for current record), `/templates` (browse templates) |
-| **Automation** | `/create automation` (open wizard), `/automations` (go to list) |
-| **Settings** | `/settings` (workspace), `/command prompt setup` (customize), `/invite [email]` (invite to workspace) |
-| **Utility** | `/timer` (start/stop tracker), `/remind [time] [text]` (personal reminder), `/saved` (bookmarked messages), `/suggest a feature`, `/vote on feature` |
-| **AI Actions** | `/summarize` (current/selected records), `/draft [type]` (email/message), `/ask [question]` (about your data) |
+| Category                | Commands                                                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Navigation**          | `/goto [entity]` (fuzzy search any base/table/record), `/office` (My Office)                                                                          |
+| **Record Creation**     | `/new record` (current table), `/todo [text]` (personal to-do), `/event [text]` (personal calendar event)                                             |
+| **Data Operations**     | `/print` (print/PDF current view)                                                                                                                     |
+| **Communication**       | `/dm @[user] [text]` (direct message), `/thread [text]` (start thread on context), `/status [emoji] [text]` (presence), `/mute` (mute current thread) |
+| **Document Generation** | `/generate doc [template]` (from template for current record), `/templates` (browse templates)                                                        |
+| **Automation**          | `/create automation` (open wizard), `/automations` (go to list)                                                                                       |
+| **Settings**            | `/settings` (workspace), `/command prompt setup` (customize), `/invite [email]` (invite to workspace)                                                 |
+| **Utility**             | `/timer` (start/stop tracker), `/remind [time] [text]` (personal reminder), `/saved` (bookmarked messages), `/suggest a feature`, `/vote on feature`  |
+| **AI Actions**          | `/summarize` (current/selected records), `/draft [type]` (email/message), `/ask [question]` (about your data)                                         |
 
 **Post-MVP commands:** `/translate`, `/analyze`, `/classify`, `/approval`, `/note`, `/voice-note`, `/clip-file`, `/notebook`, `/search-notes`, workspace map navigation commands, field group navigation.
 
@@ -131,10 +133,12 @@ Type `/` → dropdown with top contextual suggestions, then all commands with fu
 ## AI Prompt Template Model
 
 **Prompt templates vs automations — clear distinction:**
+
 - **Prompt template:** User-initiated, on-demand. AI runs → user reviews → accept/edit/reject. Always human-in-the-loop.
 - **Automation:** System-initiated on trigger. Runs without involvement.
 
 **Primary interaction — natural language:**
+
 1. User types naturally (not just slash commands)
 2. AI rephrases request to verify understanding
 3. User confirms → AI executes → output previewed with accept/edit/reject
@@ -142,6 +146,7 @@ Type `/` → dropdown with top contextual suggestions, then all commands with fu
 5. User accepts → becomes personal slash command
 
 **Template access levels:**
+
 - **Personal:** Default. Saved to user's command list, only visible to them.
 - **Manager-created:** Visible to workspace members (scoped by role).
 
@@ -151,8 +156,8 @@ Type `/` → dropdown with top contextual suggestions, then all commands with fu
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|---|---|
+| Shortcut        | Action           |
+| --------------- | ---------------- |
 | `⌘K` / `Ctrl+K` | Open Command Bar |
 
 ---

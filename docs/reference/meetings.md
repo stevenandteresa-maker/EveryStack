@@ -14,31 +14,31 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Overview | 45–57 | Meeting management as table_type config overlay |
-| Architecture: Config Overlay Pattern | 58–118 | meeting_table_config overlay, required fields, Smart Doc integration |
-| Meeting Smart Doc Templates | 119–125 | Template structure for meeting notes |
-| Attendees | 126–128 | Attendee field, people picker, external attendees |
-| Agenda | 129–131 | Agenda items, ordering, time allocation |
-| Carried Forward from Last Meeting | 132–134 | Auto-carry forward logic for recurring meetings |
-| Discussion Notes | 135–137 | Collaborative note-taking during meetings |
-| Decisions Made | 138–140 | Decision log, attribution, linking to records |
-| Action Items | 141–143 | Action item extraction, task creation, assignment |
-| Next Steps | 144–146 | Follow-up tracking, deadline assignment |
-| Next Meeting | 147–153 | Recurring meeting scheduling, next occurrence |
-| {meeting_date} — Team Standup | 154–171 | Standup meeting template example |
-| 1:1: {attendees} | 172–205 | 1:1 meeting template example |
-| Scheduling Flows | 206–269 | Meeting creation, calendar integration, availability check |
-| Meeting Views Layout | 270–331 | Meeting list, calendar, agenda views |
-| Action Item Lifecycle | 332–374 | Creation → assignment → tracking → completion flow |
-| Recurring Meetings | 375–428 | Recurrence rules, series management, exception handling |
-| Audio Recording | 429–468 | Meeting recording, transcription, AI summary |
-| Video Integration Roadmap | 469–539 | Zoom/Meet/Teams integration plan |
-| Portal Integration for External Meetings | 540–564 | External attendee access via portals |
-| Notification & Reminder System | 565–595 | Meeting reminders, notification timing |
-| Phase Integration | 596–619 | Post-MVP delivery timeline |
-| Data Model Impact | 620–641 | meeting_table_config, new columns and tables |
+| Section                                  | Lines   | Covers                                                               |
+| ---------------------------------------- | ------- | -------------------------------------------------------------------- |
+| Overview                                 | 45–57   | Meeting management as table_type config overlay                      |
+| Architecture: Config Overlay Pattern     | 58–118  | meeting_table_config overlay, required fields, Smart Doc integration |
+| Meeting Smart Doc Templates              | 119–125 | Template structure for meeting notes                                 |
+| Attendees                                | 126–128 | Attendee field, people picker, external attendees                    |
+| Agenda                                   | 129–131 | Agenda items, ordering, time allocation                              |
+| Carried Forward from Last Meeting        | 132–134 | Auto-carry forward logic for recurring meetings                      |
+| Discussion Notes                         | 135–137 | Collaborative note-taking during meetings                            |
+| Decisions Made                           | 138–140 | Decision log, attribution, linking to records                        |
+| Action Items                             | 141–143 | Action item extraction, task creation, assignment                    |
+| Next Steps                               | 144–146 | Follow-up tracking, deadline assignment                              |
+| Next Meeting                             | 147–153 | Recurring meeting scheduling, next occurrence                        |
+| {meeting_date} — Team Standup            | 154–171 | Standup meeting template example                                     |
+| 1:1: {attendees}                         | 172–205 | 1:1 meeting template example                                         |
+| Scheduling Flows                         | 206–269 | Meeting creation, calendar integration, availability check           |
+| Meeting Views Layout                     | 270–331 | Meeting list, calendar, agenda views                                 |
+| Action Item Lifecycle                    | 332–374 | Creation → assignment → tracking → completion flow                   |
+| Recurring Meetings                       | 375–428 | Recurrence rules, series management, exception handling              |
+| Audio Recording                          | 429–468 | Meeting recording, transcription, AI summary                         |
+| Video Integration Roadmap                | 469–539 | Zoom/Meet/Teams integration plan                                     |
+| Portal Integration for External Meetings | 540–564 | External attendee access via portals                                 |
+| Notification & Reminder System           | 565–595 | Meeting reminders, notification timing                               |
+| Phase Integration                        | 596–619 | Post-MVP delivery timeline                                           |
+| Data Model Impact                        | 620–641 | meeting_table_config, new columns and tables                         |
 
 ---
 
@@ -61,35 +61,35 @@ Same pattern as `pm_table_config` and `calendar_table_config`. A meeting table i
 
 ### `meeting_table_config`
 
-| Column | Type | Description |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope |
-| `table_id` | UUID | → tables.id |
-| `title_field_id` | UUID | Meeting title (primary field) |
-| `meeting_type_field_id` | UUID | Single Select — meeting category (1:1, standup, client check-in, sprint retro, discovery call, etc.) |
-| `start_time_field_id` | UUID | Date-Time — scheduled start |
-| `end_time_field_id` | UUID | Date-Time — scheduled end |
-| `duration_field_id` | UUID | Duration — computed or manual |
-| `status_field_id` | UUID | Status — lifecycle state (Scheduled, In Progress, Completed, Cancelled, No-Show) |
-| `attendees_field_id` | UUID | People/Assignee — internal attendees |
-| `external_attendees_field_id` | UUID (nullable) | Cross-link to clients/contacts table — external attendees. Null for internal-only meeting tables. |
-| `agenda_field_id` | UUID | Smart Doc or Checklist — pre-meeting agenda |
-| `notes_field_id` | UUID | Smart Doc — meeting notes (living document) |
-| `action_items_field_id` | UUID | Cross-link to tasks/PM table — inline sub-table display |
-| `recording_field_id` | UUID (nullable) | Attachment — audio/video recording |
-| `transcript_field_id` | UUID (nullable) | Smart Doc — AI-generated transcript (Post-MVP — Comms & Polish) |
-| `summary_field_id` | UUID (nullable) | Smart Doc — AI-generated summary (Post-MVP — Comms & Polish) |
-| `recurrence_field_id` | UUID (nullable) | Recurrence config — for recurring meeting series |
-| `previous_meeting_field_id` | UUID (nullable) | Self-referential Linked Record — chain to previous meeting in series |
-| `call_link_field_id` | UUID (nullable) | URL — Zoom/Meet/Teams link (MVP — Core UX) or internal room ID (Post-MVP — Documents+) |
-| `client_field_id` | UUID (nullable) | Cross-link to clients table — the account this meeting is about |
-| `project_field_id` | UUID (nullable) | Cross-link to projects table — the project this meeting is about |
-| `location_field_id` | UUID (nullable) | Text or Address — physical location or "Virtual" |
-| `notification_config` | JSONB | Default reminder settings: `{ reminders: [15, 60, 1440] }` (minutes before, default: 15min + 1hr) |
-| `auto_record` | BOOLEAN | Default false. When true, recording starts automatically when call begins. |
-| `portal_visible` | BOOLEAN | Default false. When true, meeting summaries and action items visible in client portal. |
-| `carry_forward_enabled` | BOOLEAN | Default true for recurring meetings. Unresolved action items auto-linked to next meeting. |
+| Column                        | Type            | Description                                                                                          |
+| ----------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
+| `id`                          | UUID            | Primary key                                                                                          |
+| `tenant_id`                   | UUID            | Tenant scope                                                                                         |
+| `table_id`                    | UUID            | → tables.id                                                                                          |
+| `title_field_id`              | UUID            | Meeting title (primary field)                                                                        |
+| `meeting_type_field_id`       | UUID            | Single Select — meeting category (1:1, standup, client check-in, sprint retro, discovery call, etc.) |
+| `start_time_field_id`         | UUID            | Date-Time — scheduled start                                                                          |
+| `end_time_field_id`           | UUID            | Date-Time — scheduled end                                                                            |
+| `duration_field_id`           | UUID            | Duration — computed or manual                                                                        |
+| `status_field_id`             | UUID            | Status — lifecycle state (Scheduled, In Progress, Completed, Cancelled, No-Show)                     |
+| `attendees_field_id`          | UUID            | People/Assignee — internal attendees                                                                 |
+| `external_attendees_field_id` | UUID (nullable) | Cross-link to clients/contacts table — external attendees. Null for internal-only meeting tables.    |
+| `agenda_field_id`             | UUID            | Smart Doc or Checklist — pre-meeting agenda                                                          |
+| `notes_field_id`              | UUID            | Smart Doc — meeting notes (living document)                                                          |
+| `action_items_field_id`       | UUID            | Cross-link to tasks/PM table — inline sub-table display                                              |
+| `recording_field_id`          | UUID (nullable) | Attachment — audio/video recording                                                                   |
+| `transcript_field_id`         | UUID (nullable) | Smart Doc — AI-generated transcript (Post-MVP — Comms & Polish)                                      |
+| `summary_field_id`            | UUID (nullable) | Smart Doc — AI-generated summary (Post-MVP — Comms & Polish)                                         |
+| `recurrence_field_id`         | UUID (nullable) | Recurrence config — for recurring meeting series                                                     |
+| `previous_meeting_field_id`   | UUID (nullable) | Self-referential Linked Record — chain to previous meeting in series                                 |
+| `call_link_field_id`          | UUID (nullable) | URL — Zoom/Meet/Teams link (MVP — Core UX) or internal room ID (Post-MVP — Documents+)               |
+| `client_field_id`             | UUID (nullable) | Cross-link to clients table — the account this meeting is about                                      |
+| `project_field_id`            | UUID (nullable) | Cross-link to projects table — the project this meeting is about                                     |
+| `location_field_id`           | UUID (nullable) | Text or Address — physical location or "Virtual"                                                     |
+| `notification_config`         | JSONB           | Default reminder settings: `{ reminders: [15, 60, 1440] }` (minutes before, default: 15min + 1hr)    |
+| `auto_record`                 | BOOLEAN         | Default false. When true, recording starts automatically when call begins.                           |
+| `portal_visible`              | BOOLEAN         | Default false. When true, meeting summaries and action items visible in client portal.               |
+| `carry_forward_enabled`       | BOOLEAN         | Default true for recurring meetings. Unresolved action items auto-linked to next meeting.            |
 
 ### Auto-Created Fields on Meeting Table
 
@@ -189,15 +189,15 @@ Each meeting type can have an associated Smart Doc template that auto-populates 
 
 **Merge fields in templates:**
 
-| Merge Field | Source |
-|---|---|
-| `{attendees}` | Attendees People field — names, avatars |
-| `{external_attendees}` | External Attendees cross-link — names from client/contact records |
-| `{agenda}` | Agenda field content (checklist or Smart Doc) |
+| Merge Field                   | Source                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `{attendees}`                 | Attendees People field — names, avatars                                                                |
+| `{external_attendees}`        | External Attendees cross-link — names from client/contact records                                      |
+| `{agenda}`                    | Agenda field content (checklist or Smart Doc)                                                          |
 | `{previous_unresolved_items}` | Action items from `previous_meeting_field_id` where status ≠ Complete. Rendered as a linked checklist. |
-| `{action_items_widget}` | Live inline sub-table widget for the Action Items cross-link field |
-| `{meeting_date}` | Start Time field, formatted |
-| `{next_meeting_date}` | Next occurrence from recurrence config, or blank if not recurring |
+| `{action_items_widget}`       | Live inline sub-table widget for the Action Items cross-link field                                     |
+| `{meeting_date}`              | Start Time field, formatted                                                                            |
+| `{next_meeting_date}`         | Next occurrence from recurrence config, or blank if not recurring                                      |
 
 Templates applied automatically on meeting creation based on meeting type. On phone, template applied silently (no picker). On tablet/desktop, template selected via the record template picker (see `record-templates.md`).
 
@@ -237,6 +237,7 @@ The most common way internal meetings are created. Happens inside any chat threa
 5. **When all (or required) attendees accept:** Meeting record auto-created, cross-linked to the originating record (if from a record thread), attendees populated, agenda seeded from template, calendar events created for all attendees.
 
 **Permission gating for scheduling:**
+
 - Managers+ can always schedule meetings
 - Team Members require `can_schedule_meetings: true` on their role (configurable per base or workspace-level). Default: true.
 - Viewers cannot schedule meetings.
@@ -273,12 +274,12 @@ The Meeting Views are a purpose-built set of Table Views (workspace-level scope)
 
 ### Default View Tabs
 
-| Tab | View Type | Source | Purpose |
-|---|---|---|---|
-| **Upcoming** | Calendar View (post-MVP; Schedule mode on phone) | Meetings table, filter: status = Scheduled, start_time ≥ now | What's coming up |
-| **This Week** | Card View | Meetings table, filter: start_time within current week | Weekly overview |
-| **All Meetings** | Table View | Meetings table, no filter | Full archive |
-| **Action Items** | Table View or Kanban (post-MVP) | Tasks table, filter: linked to any meeting record | Cross-meeting task tracking |
+| Tab              | View Type                                        | Source                                                       | Purpose                     |
+| ---------------- | ------------------------------------------------ | ------------------------------------------------------------ | --------------------------- |
+| **Upcoming**     | Calendar View (post-MVP; Schedule mode on phone) | Meetings table, filter: status = Scheduled, start_time ≥ now | What's coming up            |
+| **This Week**    | Card View                                        | Meetings table, filter: start_time within current week       | Weekly overview             |
+| **All Meetings** | Table View                                       | Meetings table, no filter                                    | Full archive                |
+| **Action Items** | Table View or Kanban (post-MVP)                  | Tasks table, filter: linked to any meeting record            | Cross-meeting task tracking |
 
 ### Meeting Record Layout (Expand Record / Full-Screen Sheet)
 
@@ -338,6 +339,7 @@ Action items are the most important output of any meeting. The flow from "mentio
 The Action Items field renders as an inline sub-table (see `tables-and-views.md` > Inline Sub-Table Display) with the compact 5-row widget. The target table is the workspace's PM/tasks table.
 
 **During-meeting workflow:**
+
 1. Something actionable comes up in discussion
 2. User clicks into the action items creation row at the bottom of the inline sub-table
 3. Types: task title, tabs to assignee (picks from attendees), tabs to due date
@@ -345,6 +347,7 @@ The Action Items field renders as an inline sub-table (see `tables-and-views.md`
 5. The task now appears in the assignee's Tasks Quick Panel, in My Office, and in the meeting record
 
 **Fields shown in the inline sub-table** (from `card_fields` on the cross-link):
+
 - Title, Assignee, Due Date, Status, Priority
 
 ### Carry-Forward for Recurring Meetings
@@ -433,6 +436,7 @@ Auto-creation happens on meeting completion, not on a schedule. This prevents or
 Before embedded video (Post-MVP — Documents+), audio recording is available as a standalone feature for in-person meetings or meetings held on external video platforms.
 
 **Recording flow:**
+
 1. User opens the meeting record during/after the meeting
 2. Taps "Record" button (microphone icon) in the recording section or Layer 2 action bar on mobile
 3. Browser's MediaRecorder API captures microphone audio
@@ -478,18 +482,19 @@ Meeting records have a `call_link_field_id` (URL field). User manually pastes Zo
 
 **Integration scope:**
 
-| EveryStack Builds | SDK Provides |
-|---|---|
-| "Start Call" button → creates Daily room via API | Video/audio transmission, WebRTC |
-| Room URL stored on meeting record `call_link_field_id` | Screen sharing (browser native picker) |
-| `<DailyProvider>` React component embedded in meeting main panel | Server-side recording |
-| Attendee auth — pass EveryStack user JWT to Daily for participant identity | Echo cancellation, noise suppression |
-| Recording webhook handler → download → store as Attachment | Bandwidth adaptation, quality management |
-| UI layout — video panel + notes panel side-by-side | Participant grid layout (speaker view, gallery) |
-| Permission gating — who can start/join/record calls | Connection quality indicators |
-| External guest access — time-limited token URL for portal clients | Guest participant support |
+| EveryStack Builds                                                          | SDK Provides                                    |
+| -------------------------------------------------------------------------- | ----------------------------------------------- |
+| "Start Call" button → creates Daily room via API                           | Video/audio transmission, WebRTC                |
+| Room URL stored on meeting record `call_link_field_id`                     | Screen sharing (browser native picker)          |
+| `<DailyProvider>` React component embedded in meeting main panel           | Server-side recording                           |
+| Attendee auth — pass EveryStack user JWT to Daily for participant identity | Echo cancellation, noise suppression            |
+| Recording webhook handler → download → store as Attachment                 | Bandwidth adaptation, quality management        |
+| UI layout — video panel + notes panel side-by-side                         | Participant grid layout (speaker view, gallery) |
+| Permission gating — who can start/join/record calls                        | Connection quality indicators                   |
+| External guest access — time-limited token URL for portal clients          | Guest participant support                       |
 
 **Call controls embedded in meeting record:**
+
 - Mute/unmute microphone
 - Camera on/off
 - Screen share
@@ -502,6 +507,7 @@ Meeting records have a `call_link_field_id` (URL field). User manually pastes Zo
 **Mobile layout during call:** Full-width video top half. Bottom half scrollable: notes field focused for typing. Swipe down to minimize video to picture-in-picture (PiP) and see full meeting record. Layer 2 action bar: mute, camera, share, record.
 
 **External participant (portal client) experience:**
+
 1. Client receives meeting link via portal notification / email / SMS
 2. Clicks link → opens in browser (no download, no account needed)
 3. Enters name → joins call
@@ -510,22 +516,22 @@ Meeting records have a `call_link_field_id` (URL field). User manually pastes Zo
 
 **Cost model:**
 
-| Plan | Included Video Minutes/Month | Overage |
-|---|---|---|
-| Starter | Not included (external link only) | — |
-| Professional | 2,000 participant-minutes | $0.01/min/participant |
-| Business | 10,000 participant-minutes | $0.008/min/participant |
-| Enterprise | 25,000 participant-minutes | $0.005/min/participant |
+| Plan         | Included Video Minutes/Month      | Overage                |
+| ------------ | --------------------------------- | ---------------------- |
+| Starter      | Not included (external link only) | —                      |
+| Professional | 2,000 participant-minutes         | $0.01/min/participant  |
+| Business     | 10,000 participant-minutes        | $0.008/min/participant |
+| Enterprise   | 25,000 participant-minutes        | $0.005/min/participant |
 
-*Participant-minutes = number of participants × duration. A 30-minute meeting with 4 people = 120 participant-minutes.*
+_Participant-minutes = number of participants × duration. A 30-minute meeting with 4 people = 120 participant-minutes._
 
 **Typical monthly cost at Daily's rates (~$0.004/min/participant):**
 
-| Usage Pattern | Participant-Minutes | Daily Cost to EveryStack | Revenue at $0.01/min |
-|---|---|---|---|
-| Small team, 5 meetings/week, 30min, 4 people | 2,400/mo | ~$10/mo | $24/mo |
-| Medium team, 15 meetings/week, 45min, 5 people | 13,500/mo | ~$54/mo | $135/mo |
-| Heavy usage, 30 meetings/week, 60min, 6 people | 43,200/mo | ~$173/mo | $432/mo |
+| Usage Pattern                                  | Participant-Minutes | Daily Cost to EveryStack | Revenue at $0.01/min |
+| ---------------------------------------------- | ------------------- | ------------------------ | -------------------- |
+| Small team, 5 meetings/week, 30min, 4 people   | 2,400/mo            | ~$10/mo                  | $24/mo               |
+| Medium team, 15 meetings/week, 45min, 5 people | 13,500/mo           | ~$54/mo                  | $135/mo              |
+| Heavy usage, 30 meetings/week, 60min, 6 people | 43,200/mo           | ~$173/mo                 | $432/mo              |
 
 Margins are healthy. Include enough in each plan tier that most users never hit overage.
 
@@ -543,11 +549,11 @@ When `portal_visible: true` on a meeting table config, external attendees see me
 
 ### What the Client Sees in Their Portal
 
-| Meeting State | Portal Visibility |
-|---|---|
-| **Scheduled** | Meeting title, date/time, attendees, agenda, location/call link, [Accept] [Decline] [Suggest] buttons |
-| **In Progress** | "Meeting in progress" indicator. Join Call button if video enabled. |
-| **Completed** | Meeting title, date/time, attendees, summary (if generated), action items assigned to the client |
+| Meeting State    | Portal Visibility                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| **Scheduled**    | Meeting title, date/time, attendees, agenda, location/call link, [Accept] [Decline] [Suggest] buttons   |
+| **In Progress**  | "Meeting in progress" indicator. Join Call button if video enabled.                                     |
+| **Completed**    | Meeting title, date/time, attendees, summary (if generated), action items assigned to the client        |
 | **Action items** | Items where the client is the assignee. Status visible. Client can mark items complete from the portal. |
 
 ### What the Client Does NOT See
@@ -568,22 +574,23 @@ Meeting notifications use the existing notification routing from `mobile.md` > N
 
 ### Notification Events
 
-| Event | Recipients | Channels | Tier |
-|---|---|---|---|
-| Meeting scheduled | All attendees | In-app, push, email | Standard |
-| Meeting reminder (15min, 1hr — configurable) | All attendees | In-app, push | Standard |
-| Meeting starting now | All attendees | In-app, push | High |
-| Meeting cancelled | All attendees | In-app, push, email | Standard |
-| Meeting rescheduled | All attendees | In-app, push, email | Standard |
-| Meeting proposal (chat) | Proposed attendees | In-app (chat card) | Standard |
-| Meeting proposal response | Organizer | In-app (chat card update) | Standard |
-| Action item assigned | Assignee | In-app, push | Standard |
-| Action item due soon (1 day before) | Assignee | In-app, push | Standard |
-| Summary available | All attendees + portal clients (if portal_visible) | In-app, push, email (portal), SMS (portal) | Standard |
+| Event                                        | Recipients                                         | Channels                                   | Tier     |
+| -------------------------------------------- | -------------------------------------------------- | ------------------------------------------ | -------- |
+| Meeting scheduled                            | All attendees                                      | In-app, push, email                        | Standard |
+| Meeting reminder (15min, 1hr — configurable) | All attendees                                      | In-app, push                               | Standard |
+| Meeting starting now                         | All attendees                                      | In-app, push                               | High     |
+| Meeting cancelled                            | All attendees                                      | In-app, push, email                        | Standard |
+| Meeting rescheduled                          | All attendees                                      | In-app, push, email                        | Standard |
+| Meeting proposal (chat)                      | Proposed attendees                                 | In-app (chat card)                         | Standard |
+| Meeting proposal response                    | Organizer                                          | In-app (chat card update)                  | Standard |
+| Action item assigned                         | Assignee                                           | In-app, push                               | Standard |
+| Action item due soon (1 day before)          | Assignee                                           | In-app, push                               | Standard |
+| Summary available                            | All attendees + portal clients (if portal_visible) | In-app, push, email (portal), SMS (portal) | Standard |
 
 ### External Attendee Notifications
 
 External attendees (portal clients) receive meeting notifications through their configured portal notification channels:
+
 - Portal in-app notification
 - Email (via Resend)
 - SMS (via Twilio, Business+ plans)
@@ -595,11 +602,11 @@ The meeting invitation email includes: meeting title, date/time (in client's tim
 
 ## Phase Integration
 
-| Phase | Meeting Capabilities |
-|---|---|
+| Phase                                               | Meeting Capabilities                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Post-MVP — Portals & Apps (Meetings Foundation)** | `meeting_table_config` overlay. Auto-created fields. Meeting type templates (Smart Doc). Recurring series with self-referential chain. Action items inline sub-table. Carry-forward of unresolved items. Chat-initiated scheduling (`/meet` command). External scheduling via portal + notifications. Calendar View with Schedule mode. Audio recording (browser MediaRecorder). Agenda field. Manual call link (URL). |
-| **Post-MVP — Documents** | Embedded video via Daily.co/LiveKit SDK. Server-side recording. Screen sharing. In-call notes + action items panel. External guest access via token URL. Video minute metering per plan tier. |
-| **Post-MVP — Comms & Polish** | AI transcription (Whisper/Deepgram). Speaker diarization. AI summary generation. AI action item extraction with review UI. Real-time transcription overlay during calls. Voice recording → notes field transcription. AI topic grouping for long meetings. |
+| **Post-MVP — Documents**                            | Embedded video via Daily.co/LiveKit SDK. Server-side recording. Screen sharing. In-call notes + action items panel. External guest access via token URL. Video minute metering per plan tier.                                                                                                                                                                                                                          |
+| **Post-MVP — Comms & Polish**                       | AI transcription (Whisper/Deepgram). Speaker diarization. AI summary generation. AI action item extraction with review UI. Real-time transcription overlay during calls. Voice recording → notes field transcription. AI topic grouping for long meetings.                                                                                                                                                             |
 
 ### Meetings Foundation Build Scope (Post-MVP)
 
@@ -621,16 +628,16 @@ This gives teams a complete meeting workflow — scheduling through follow-up �
 
 ### New Table
 
-| Table | Columns | Purpose |
-|---|---|---|
+| Table                  | Columns          | Purpose                                                               |
+| ---------------------- | ---------------- | --------------------------------------------------------------------- |
 | `meeting_table_config` | See schema above | Maps meeting semantic fields to table fields. Config overlay pattern. |
 
 ### Modified Tables
 
-| Table | Change |
-|---|---|
-| `tables` | `table_type` enum gains `'meetings'` value |
-| `records` | No change — meeting records are standard records |
+| Table              | Change                                                   |
+| ------------------ | -------------------------------------------------------- |
+| `tables`           | `table_type` enum gains `'meetings'` value               |
+| `records`          | No change — meeting records are standard records         |
 | `record_templates` | Meeting type templates stored here (no change to schema) |
 
 ### New `table_type` Value
@@ -638,4 +645,3 @@ This gives teams a complete meeting workflow — scheduling through follow-up �
 `'meetings'` joins existing types: `'table'`, `'projects'`, `'calendar'`, `'documents'`, `'wiki'`.
 
 Table creation type picker updated: Table, Projects, Calendar, **Meetings**, Documents, Wiki.
-

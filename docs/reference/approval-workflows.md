@@ -15,23 +15,23 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Core Design Principles | 38–51 | Progressive complexity, status field as foundation, non-blocking UX |
-| Status Field Operating Modes | 52–71 | 3 modes: simple select → gated transitions → approval chains |
-| Status Field Config Enhancement | 72–144 | TransitionPrecondition (5 types), allowed transitions, auto-advance |
-| Approval Rules | 145–236 | 3 approver types, escalation, parallel/sequential approvals |
-| Approval Requests (Runtime) | 237–329 | Request lifecycle, assignment, notification, expiration |
-| Approval Activity Log | 330–370 | Approval history, comments, audit trail |
-| Enforcement Layer | 371–453 | <50ms enforcement, middleware integration, bypass rules |
-| Real-Time Events | 454–467 | Socket.io events for approval status changes |
-| Redis Key Patterns | 468–479 | Caching for transition rules, pending approvals |
-| UI Surfaces | 480–628 | 7 UI surfaces: field config, record view, sidebar badge, my tasks, grid, portal, mobile |
-| Override Policy | 629–648 | Admin override rules, emergency bypass, audit logging |
-| Relationship to Existing Domain-Specific Approvals | 649–664 | How this replaces ad-hoc approval patterns |
-| Audit Log Integration | 665–680 | Approval events in audit log, actor attribution |
-| Phase Implementation | 681–690 | Mode 1+2 MVP — Core UX, Mode 3 Post-MVP — Automations |
-| Key Architectural Decisions | 691–706 | ADR-style decisions with rationale |
+| Section                                            | Lines   | Covers                                                                                  |
+| -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| Core Design Principles                             | 38–51   | Progressive complexity, status field as foundation, non-blocking UX                     |
+| Status Field Operating Modes                       | 52–71   | 3 modes: simple select → gated transitions → approval chains                            |
+| Status Field Config Enhancement                    | 72–144  | TransitionPrecondition (5 types), allowed transitions, auto-advance                     |
+| Approval Rules                                     | 145–236 | 3 approver types, escalation, parallel/sequential approvals                             |
+| Approval Requests (Runtime)                        | 237–329 | Request lifecycle, assignment, notification, expiration                                 |
+| Approval Activity Log                              | 330–370 | Approval history, comments, audit trail                                                 |
+| Enforcement Layer                                  | 371–453 | <50ms enforcement, middleware integration, bypass rules                                 |
+| Real-Time Events                                   | 454–467 | Socket.io events for approval status changes                                            |
+| Redis Key Patterns                                 | 468–479 | Caching for transition rules, pending approvals                                         |
+| UI Surfaces                                        | 480–628 | 7 UI surfaces: field config, record view, sidebar badge, my tasks, grid, portal, mobile |
+| Override Policy                                    | 629–648 | Admin override rules, emergency bypass, audit logging                                   |
+| Relationship to Existing Domain-Specific Approvals | 649–664 | How this replaces ad-hoc approval patterns                                              |
+| Audit Log Integration                              | 665–680 | Approval events in audit log, actor attribution                                         |
+| Phase Implementation                               | 681–690 | Mode 1+2 MVP — Core UX, Mode 3 Post-MVP — Automations                                   |
+| Key Architectural Decisions                        | 691–706 | ADR-style decisions with rationale                                                      |
 
 ---
 
@@ -78,56 +78,60 @@ The Status field's `config` JSONB in `fields` is extended with a `transitions` k
 interface StatusFieldConfig {
   // Existing — unchanged
   options: { id: string; label: string; color: string; category: string }[];
-  categories: string[];  // not_started | in_progress | done | closed
+  categories: string[]; // not_started | in_progress | done | closed
   done_values: string[];
   default_option_id: string;
 
   // NEW — transition enforcement
   transitions?: {
-    enabled: boolean;                 // false = unrestricted (Mode 1, backward compatible)
-    mode: 'open' | 'defined_only';   // open = all allowed unless explicitly restricted
-                                      // defined_only = only explicitly defined transitions permitted
+    enabled: boolean; // false = unrestricted (Mode 1, backward compatible)
+    mode: 'open' | 'defined_only'; // open = all allowed unless explicitly restricted
+    // defined_only = only explicitly defined transitions permitted
     rules: StatusTransitionRule[];
   };
 }
 
 interface StatusTransitionRule {
-  id: string;                                // stable UUID
-  from_status_id: string | '__any__';        // source status (or wildcard)
-  to_status_id: string;                      // target status
-  allowed_roles: ('owner'|'admin'|'manager'|'team_member'|'viewer')[];
-  allowed_user_field_id?: string;            // person field — "only the assigned user can transition"
+  id: string; // stable UUID
+  from_status_id: string | '__any__'; // source status (or wildcard)
+  to_status_id: string; // target status
+  allowed_roles: ('owner' | 'admin' | 'manager' | 'team_member' | 'viewer')[];
+  allowed_user_field_id?: string; // person field — "only the assigned user can transition"
   preconditions: TransitionPrecondition[];
-  requires_approval: boolean;                // if true, links to approval_rule
-  approval_rule_id?: string;                 // FK to approval_rules.id
+  requires_approval: boolean; // if true, links to approval_rule
+  approval_rule_id?: string; // FK to approval_rules.id
 }
 
 interface TransitionPrecondition {
   id: string;
-  type: 'required_fields' | 'linked_record_status' | 'checklist_complete'
-      | 'formula' | 'approval_cleared';
-  config: Record<string, unknown>;           // type-specific (see Precondition Types)
+  type:
+    | 'required_fields'
+    | 'linked_record_status'
+    | 'checklist_complete'
+    | 'formula'
+    | 'approval_cleared';
+  config: Record<string, unknown>; // type-specific (see Precondition Types)
   severity: 'hard_block' | 'warning';
-  message_template: string;                  // user-facing: "All subtasks must be complete"
+  message_template: string; // user-facing: "All subtasks must be complete"
 }
 ```
 
 ### Precondition Types
 
-| Type | Config Shape | Evaluation |
-|------|-------------|------------|
-| `required_fields` | `{ field_ids: string[] }` | All listed fields have non-null, non-empty values on the record |
-| `checklist_complete` | `{ field_id: string }` | The checklist field has all items `completed: true` |
-| `linked_record_status` | `{ link_field_id: string, target_status_field_id: string, required_category: string }` | All linked records have their status in the required category |
-| `formula` | `{ expression: string }` | Formula evaluates to truthy against current record values (uses formula engine parser + evaluator) |
-| `approval_cleared` | `{ approval_rule_id: string }` | An approved `approval_request` exists for this record matching the rule |
+| Type                   | Config Shape                                                                           | Evaluation                                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `required_fields`      | `{ field_ids: string[] }`                                                              | All listed fields have non-null, non-empty values on the record                                    |
+| `checklist_complete`   | `{ field_id: string }`                                                                 | The checklist field has all items `completed: true`                                                |
+| `linked_record_status` | `{ link_field_id: string, target_status_field_id: string, required_category: string }` | All linked records have their status in the required category                                      |
+| `formula`              | `{ expression: string }`                                                               | Formula evaluates to truthy against current record values (uses formula engine parser + evaluator) |
+| `approval_cleared`     | `{ approval_rule_id: string }`                                                         | An approved `approval_request` exists for this record matching the rule                            |
 
 ### Severity Levels
 
-| Severity | Behavior |
-|----------|----------|
-| `hard_block` | Transition is impossible. UI disables the option. API rejects the write. Only Admin/Owner force-clear with reason and audit trail can bypass. Default for `approval_cleared` preconditions. |
-| `warning` | Transition is allowed after user confirmation. Dialog explains what's unsatisfied. Decision is logged. Default starting point for `required_fields` — Managers can escalate to `hard_block`. |
+| Severity     | Behavior                                                                                                                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hard_block` | Transition is impossible. UI disables the option. API rejects the write. Only Admin/Owner force-clear with reason and audit trail can bypass. Default for `approval_cleared` preconditions.  |
+| `warning`    | Transition is allowed after user confirmation. Dialog explains what's unsatisfied. Decision is logged. Default starting point for `required_fields` — Managers can escalate to `hard_block`. |
 
 ### Auto-Advance (Mode 2)
 
@@ -148,25 +152,25 @@ This piggybacks on the same `record.updated` event listener that powers automati
 
 Config-overlay pattern, consistent with `pm_table_config`, `invoice_table_config`, and other EveryStack config tables. One rule per approval requirement, scoped to a table. Multiple rules per table allowed (different transitions can have different approval requirements).
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | PK |
-| `tenant_id` | UUID | FK → tenants |
-| `table_id` | UUID | FK → tables |
-| `name` | VARCHAR | User-facing label ("Design Review", "Budget Approval") |
-| `description` | TEXT (nullable) | Optional explanation |
-| `trigger_type` | VARCHAR | `'status_transition'` (v1 — extensible later) |
-| `trigger_config` | JSONB | `{ status_field_id, from_status_id, to_status_id }` |
-| `steps` | JSONB | Ordered array of ApprovalStepDefinition (max 3) |
-| `on_approved` | JSONB (nullable) | Side effects on full approval (e.g., status auto-transition) |
-| `on_rejected` | JSONB (nullable) | Side effects on rejection (e.g., return to draft status) |
-| `override_policy` | JSONB | `{ allowed_roles: ['owner','admin'], require_reason: true }` |
-| `sla_config` | JSONB (nullable) | `{ deadline_hours, escalation_user_field_id, reminder_hours[] }` |
-| `enabled` | BOOLEAN | Active/inactive toggle |
-| `publish_state` | VARCHAR | `'live'` or `'draft'` — same draft/live authoring workflow as automations (status) and apps (publish_state) |
-| `created_by` | UUID | |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column            | Type             | Purpose                                                                                                     |
+| ----------------- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`              | UUID             | PK                                                                                                          |
+| `tenant_id`       | UUID             | FK → tenants                                                                                                |
+| `table_id`        | UUID             | FK → tables                                                                                                 |
+| `name`            | VARCHAR          | User-facing label ("Design Review", "Budget Approval")                                                      |
+| `description`     | TEXT (nullable)  | Optional explanation                                                                                        |
+| `trigger_type`    | VARCHAR          | `'status_transition'` (v1 — extensible later)                                                               |
+| `trigger_config`  | JSONB            | `{ status_field_id, from_status_id, to_status_id }`                                                         |
+| `steps`           | JSONB            | Ordered array of ApprovalStepDefinition (max 3)                                                             |
+| `on_approved`     | JSONB (nullable) | Side effects on full approval (e.g., status auto-transition)                                                |
+| `on_rejected`     | JSONB (nullable) | Side effects on rejection (e.g., return to draft status)                                                    |
+| `override_policy` | JSONB            | `{ allowed_roles: ['owner','admin'], require_reason: true }`                                                |
+| `sla_config`      | JSONB (nullable) | `{ deadline_hours, escalation_user_field_id, reminder_hours[] }`                                            |
+| `enabled`         | BOOLEAN          | Active/inactive toggle                                                                                      |
+| `publish_state`   | VARCHAR          | `'live'` or `'draft'` — same draft/live authoring workflow as automations (status) and apps (publish_state) |
+| `created_by`      | UUID             |                                                                                                             |
+| `created_at`      | TIMESTAMPTZ      |                                                                                                             |
+| `updated_at`      | TIMESTAMPTZ      |                                                                                                             |
 
 **Why `steps` is JSONB, not a separate table:** Same reasoning as `automations.steps`. The step list is always read and written as a unit, always small (max 3 steps × max ~10 requirements each), and there is no query pattern that needs "find all step 2s across all approval rules." JSONB keeps it self-contained.
 
@@ -174,15 +178,15 @@ Config-overlay pattern, consistent with `pm_table_config`, `invoice_table_config
 
 ```typescript
 interface ApprovalStepDefinition {
-  id: string;                        // stable UUID per step
-  position: number;                  // 1, 2, or 3 — execution order
-  name: string;                      // "Team Lead Review", "Finance Sign-off"
+  id: string; // stable UUID per step
+  position: number; // 1, 2, or 3 — execution order
+  name: string; // "Team Lead Review", "Finance Sign-off"
 
   // Who approves
   approver_type: 'role' | 'user_field' | 'specific_user';
-  approver_role?: string;            // when type = 'role': any workspace role
-  approver_field_id?: string;        // when type = 'user_field': FK to a People field on the table
-  approver_user_id?: string;         // when type = 'specific_user': FK to users
+  approver_role?: string; // when type = 'role': any workspace role
+  approver_field_id?: string; // when type = 'user_field': FK to a People field on the table
+  approver_user_id?: string; // when type = 'specific_user': FK to users
 
   // What they verify
   requirements: ApprovalRequirement[];
@@ -197,13 +201,17 @@ interface ApprovalRequirement {
 
   // For auto_verify — system evaluates programmatically
   auto_config?: {
-    check_type: 'required_fields' | 'linked_record_status' | 'checklist_complete'
-              | 'numeric_threshold' | 'formula';
-    config: Record<string, unknown>;  // { field_ids: [...] }, { link_field_id, ... }, etc.
+    check_type:
+      | 'required_fields'
+      | 'linked_record_status'
+      | 'checklist_complete'
+      | 'numeric_threshold'
+      | 'formula';
+    config: Record<string, unknown>; // { field_ids: [...] }, { link_field_id, ... }, etc.
   };
 
   // For manual_attestation — approver checks manually
-  label?: string;                    // "Reviewed design for brand consistency"
+  label?: string; // "Reviewed design for brand consistency"
 
   // User-facing description
   description: string;
@@ -216,19 +224,19 @@ interface ApprovalRequirement {
 interface ApprovalOnApproved {
   auto_transition?: {
     status_field_id: string;
-    target_status_id: string;        // move status to this value
+    target_status_id: string; // move status to this value
   };
-  notify_submitter?: boolean;        // default: true
-  run_automation_id?: string;        // optionally trigger an automation
+  notify_submitter?: boolean; // default: true
+  run_automation_id?: string; // optionally trigger an automation
 }
 
 interface ApprovalOnRejected {
   auto_transition?: {
     status_field_id: string;
-    target_status_id: string;        // return to draft/revision status
+    target_status_id: string; // return to draft/revision status
   };
-  require_comment: boolean;          // default: true — rejections must explain why
-  notify_submitter?: boolean;        // default: true
+  require_comment: boolean; // default: true — rejections must explain why
+  notify_submitter?: boolean; // default: true
 }
 ```
 
@@ -240,29 +248,30 @@ interface ApprovalOnRejected {
 
 One row per approval request per record. System-managed — not a user field. This is the runtime instance of an approval rule applied to a specific record.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | PK |
-| `tenant_id` | UUID | FK → tenants |
-| `approval_rule_id` | UUID | FK → approval_rules |
-| `record_id` | UUID | FK → records |
-| `table_id` | UUID | FK → tables (denormalized for query performance) |
-| `status` | VARCHAR | `'pending'` \| `'approved'` \| `'rejected'` \| `'withdrawn'` \| `'overridden'` |
-| `current_step` | INTEGER (nullable) | Active step (1-indexed). Null when complete. |
-| `submitted_by` | UUID | FK → users or portal_clients |
-| `submitted_by_type` | VARCHAR | `'user'` \| `'portal_client'` \| `'automation'` |
-| `submitted_at` | TIMESTAMPTZ | |
-| `submitted_note` | TEXT (nullable) | Optional context from submitter |
-| `completed_at` | TIMESTAMPTZ (nullable) | |
-| `completed_status` | VARCHAR (nullable) | Final outcome: `'approved'` \| `'rejected'` \| `'overridden'` |
-| `override_by` | UUID (nullable) | FK → users (Admin/Owner who force-cleared) |
-| `override_reason` | TEXT (nullable) | Required when overridden |
-| `record_snapshot_hash` | VARCHAR (nullable) | SHA-256 of record state at completion |
-| `metadata` | JSONB | Extensible (portal context, automation context) |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                 | Type                   | Purpose                                                                        |
+| ---------------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `id`                   | UUID                   | PK                                                                             |
+| `tenant_id`            | UUID                   | FK → tenants                                                                   |
+| `approval_rule_id`     | UUID                   | FK → approval_rules                                                            |
+| `record_id`            | UUID                   | FK → records                                                                   |
+| `table_id`             | UUID                   | FK → tables (denormalized for query performance)                               |
+| `status`               | VARCHAR                | `'pending'` \| `'approved'` \| `'rejected'` \| `'withdrawn'` \| `'overridden'` |
+| `current_step`         | INTEGER (nullable)     | Active step (1-indexed). Null when complete.                                   |
+| `submitted_by`         | UUID                   | FK → users or portal_clients                                                   |
+| `submitted_by_type`    | VARCHAR                | `'user'` \| `'portal_client'` \| `'automation'`                                |
+| `submitted_at`         | TIMESTAMPTZ            |                                                                                |
+| `submitted_note`       | TEXT (nullable)        | Optional context from submitter                                                |
+| `completed_at`         | TIMESTAMPTZ (nullable) |                                                                                |
+| `completed_status`     | VARCHAR (nullable)     | Final outcome: `'approved'` \| `'rejected'` \| `'overridden'`                  |
+| `override_by`          | UUID (nullable)        | FK → users (Admin/Owner who force-cleared)                                     |
+| `override_reason`      | TEXT (nullable)        | Required when overridden                                                       |
+| `record_snapshot_hash` | VARCHAR (nullable)     | SHA-256 of record state at completion                                          |
+| `metadata`             | JSONB                  | Extensible (portal context, automation context)                                |
+| `created_at`           | TIMESTAMPTZ            |                                                                                |
+| `updated_at`           | TIMESTAMPTZ            |                                                                                |
 
 **Indexes:**
+
 - `(tenant_id, record_id, status)` — "does this record have a pending approval?" Hot path for precondition enforcement.
 - `(tenant_id, table_id, status, submitted_at)` — approval queue queries per table.
 - `(tenant_id, status, current_step)` — dashboard queries.
@@ -271,27 +280,28 @@ One row per approval request per record. System-managed — not a user field. Th
 
 Per-step state within an approval request. Separate table (not JSONB on `approval_requests`) because step state changes independently and frequently during the approval process, and direct queries like "show me everything waiting for my approval across all tables" require indexed access.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | PK |
-| `tenant_id` | UUID | FK → tenants |
-| `approval_request_id` | UUID | FK → approval_requests |
-| `step_definition_id` | VARCHAR | Matches ApprovalStepDefinition.id from the rule's steps JSONB |
-| `position` | INTEGER | 1, 2, or 3 |
-| `status` | VARCHAR | `'waiting'` \| `'active'` \| `'approved'` \| `'rejected'` \| `'skipped'` |
-| `assigned_to` | UUID (nullable) | Resolved approver user ID (resolved at activation time) |
-| `assigned_to_type` | VARCHAR | `'user'` \| `'portal_client'` |
-| `activated_at` | TIMESTAMPTZ (nullable) | When this step became actionable |
-| `deadline_at` | TIMESTAMPTZ (nullable) | SLA deadline |
-| `decided_at` | TIMESTAMPTZ (nullable) | |
-| `decision` | VARCHAR (nullable) | `'approved'` \| `'rejected'` \| `'revision_requested'` |
-| `decision_comment` | TEXT (nullable) | |
-| `requirements_state` | JSONB | Live state of each requirement (see below) |
-| `record_snapshot_hash` | VARCHAR (nullable) | SHA-256 at time of decision |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                 | Type                   | Purpose                                                                  |
+| ---------------------- | ---------------------- | ------------------------------------------------------------------------ |
+| `id`                   | UUID                   | PK                                                                       |
+| `tenant_id`            | UUID                   | FK → tenants                                                             |
+| `approval_request_id`  | UUID                   | FK → approval_requests                                                   |
+| `step_definition_id`   | VARCHAR                | Matches ApprovalStepDefinition.id from the rule's steps JSONB            |
+| `position`             | INTEGER                | 1, 2, or 3                                                               |
+| `status`               | VARCHAR                | `'waiting'` \| `'active'` \| `'approved'` \| `'rejected'` \| `'skipped'` |
+| `assigned_to`          | UUID (nullable)        | Resolved approver user ID (resolved at activation time)                  |
+| `assigned_to_type`     | VARCHAR                | `'user'` \| `'portal_client'`                                            |
+| `activated_at`         | TIMESTAMPTZ (nullable) | When this step became actionable                                         |
+| `deadline_at`          | TIMESTAMPTZ (nullable) | SLA deadline                                                             |
+| `decided_at`           | TIMESTAMPTZ (nullable) |                                                                          |
+| `decision`             | VARCHAR (nullable)     | `'approved'` \| `'rejected'` \| `'revision_requested'`                   |
+| `decision_comment`     | TEXT (nullable)        |                                                                          |
+| `requirements_state`   | JSONB                  | Live state of each requirement (see below)                               |
+| `record_snapshot_hash` | VARCHAR (nullable)     | SHA-256 at time of decision                                              |
+| `created_at`           | TIMESTAMPTZ            |                                                                          |
+| `updated_at`           | TIMESTAMPTZ            |                                                                          |
 
 **Indexes:**
+
 - `(assigned_to, status)` — "what's waiting for me to approve?" Most important query for the approver experience.
 - `(approval_request_id, position)` — step chain traversal.
 - `(tenant_id, deadline_at)` WHERE `status = 'active'` — SLA monitoring cron job.
@@ -302,23 +312,23 @@ The live-resolving checklist state. Auto-verify items update in real time as rel
 
 ```typescript
 interface RequirementState {
-  requirement_id: string;            // matches ApprovalRequirement.id from rule
+  requirement_id: string; // matches ApprovalRequirement.id from rule
   type: 'auto_verify' | 'manual_attestation';
   satisfied: boolean;
 
   // For auto_verify — system populates
   auto_result?: {
-    checked_at: string;              // ISO timestamp
+    checked_at: string; // ISO timestamp
     passed: boolean;
-    details: string;                 // "All 5 required fields populated" or "Description is empty"
-    canonical_data?: Record<string, unknown>;  // snapshot of checked values at evaluation time
+    details: string; // "All 5 required fields populated" or "Description is empty"
+    canonical_data?: Record<string, unknown>; // snapshot of checked values at evaluation time
   };
 
   // For manual_attestation — approver populates
   attestation?: {
     checked: boolean;
-    checked_by: string;              // user ID
-    checked_at: string;              // ISO timestamp
+    checked_by: string; // user ID
+    checked_at: string; // ISO timestamp
   };
 }
 ```
@@ -333,34 +343,34 @@ interface RequirementState {
 
 Append-only event log for approval-specific history. Separate from the general `audit_log` because approval activity needs its own query patterns, richer structure, and no retention pruning. The general audit log still captures status field changes.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | PK |
-| `tenant_id` | UUID | FK → tenants |
-| `approval_request_id` | UUID | FK → approval_requests |
-| `step_instance_id` | UUID (nullable) | FK → approval_step_instances (null for request-level events) |
-| `event_type` | VARCHAR | See event catalog below |
-| `actor_id` | UUID | |
-| `actor_type` | VARCHAR | `'user'` \| `'portal_client'` \| `'automation'` \| `'system'` |
-| `details` | JSONB | Event-specific data |
-| `created_at` | TIMESTAMPTZ | |
+| Column                | Type            | Purpose                                                       |
+| --------------------- | --------------- | ------------------------------------------------------------- |
+| `id`                  | UUID            | PK                                                            |
+| `tenant_id`           | UUID            | FK → tenants                                                  |
+| `approval_request_id` | UUID            | FK → approval_requests                                        |
+| `step_instance_id`    | UUID (nullable) | FK → approval_step_instances (null for request-level events)  |
+| `event_type`          | VARCHAR         | See event catalog below                                       |
+| `actor_id`            | UUID            |                                                               |
+| `actor_type`          | VARCHAR         | `'user'` \| `'portal_client'` \| `'automation'` \| `'system'` |
+| `details`             | JSONB           | Event-specific data                                           |
+| `created_at`          | TIMESTAMPTZ     |                                                               |
 
 **Event catalog:**
 
-| Event Type | Details JSONB | When |
-|---|---|---|
-| `submitted` | `{ from_status, to_status, note }` | Record submitted for approval |
-| `step_activated` | `{ step_position, assigned_to, deadline_at }` | Step becomes active, approver notified |
-| `requirement_auto_checked` | `{ requirement_id, passed, details }` | System re-evaluated an auto-verify item |
-| `requirement_attested` | `{ requirement_id, label }` | Approver checked a manual attestation |
-| `reminder_sent` | `{ reminder_number, channel }` | SLA reminder dispatched |
-| `escalated` | `{ escalated_to, reason }` | SLA breach triggered escalation |
-| `step_approved` | `{ comment, snapshot_hash }` | Approver approved this step |
-| `step_rejected` | `{ comment }` | Approver rejected this step |
-| `revision_requested` | `{ comment, fields_to_revise }` | Approver sent back for revision |
-| `withdrawn` | `{ reason }` | Submitter withdrew the request |
-| `overridden` | `{ reason, override_by }` | Admin/Owner force-cleared |
-| `resubmitted` | `{ previous_request_id }` | Resubmitted after rejection |
+| Event Type                 | Details JSONB                                 | When                                    |
+| -------------------------- | --------------------------------------------- | --------------------------------------- |
+| `submitted`                | `{ from_status, to_status, note }`            | Record submitted for approval           |
+| `step_activated`           | `{ step_position, assigned_to, deadline_at }` | Step becomes active, approver notified  |
+| `requirement_auto_checked` | `{ requirement_id, passed, details }`         | System re-evaluated an auto-verify item |
+| `requirement_attested`     | `{ requirement_id, label }`                   | Approver checked a manual attestation   |
+| `reminder_sent`            | `{ reminder_number, channel }`                | SLA reminder dispatched                 |
+| `escalated`                | `{ escalated_to, reason }`                    | SLA breach triggered escalation         |
+| `step_approved`            | `{ comment, snapshot_hash }`                  | Approver approved this step             |
+| `step_rejected`            | `{ comment }`                                 | Approver rejected this step             |
+| `revision_requested`       | `{ comment, fields_to_revise }`               | Approver sent back for revision         |
+| `withdrawn`                | `{ reason }`                                  | Submitter withdrew the request          |
+| `overridden`               | `{ reason, override_by }`                     | Admin/Owner force-cleared               |
+| `resubmitted`              | `{ previous_request_id }`                     | Resubmitted after rejection             |
 
 **Indexes:** `(approval_request_id, created_at)` — chronological timeline per request. `(tenant_id, actor_id, created_at)` — "my approval activity."
 
@@ -382,13 +392,13 @@ When a field update targets a Status field:
 
 **Step 3: Evaluate all preconditions.** Iterate through the rule's `preconditions` array. All preconditions are evaluated — not short-circuited — so the user sees everything that's blocking in a single response.
 
-| Precondition Type | Evaluation |
-|---|---|
-| `required_fields` | Check each listed field on the record for non-null, non-empty value |
-| `checklist_complete` | Load checklist field, verify all items `completed: true` |
-| `linked_record_status` | Query linked records via cross-link, check status categories |
-| `formula` | Evaluate expression via formula engine against current record values |
-| `approval_cleared` | Query `approval_requests` for record where rule matches and `status = 'approved'` |
+| Precondition Type      | Evaluation                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| `required_fields`      | Check each listed field on the record for non-null, non-empty value               |
+| `checklist_complete`   | Load checklist field, verify all items `completed: true`                          |
+| `linked_record_status` | Query linked records via cross-link, check status categories                      |
+| `formula`              | Evaluate expression via formula engine against current record values              |
+| `approval_cleared`     | Query `approval_requests` for record where rule matches and `status = 'approved'` |
 
 **Step 4: Collect results and decide.**
 
@@ -440,12 +450,12 @@ This piggybacks on the same `record.updated` event listener that powers automati
 
 ### Performance Characteristics
 
-| Operation | Added Latency | Notes |
-|---|---|---|
-| Status write on ungoverned field | 0ms | `transitions.enabled` check is a config property read |
-| Status write on governed field (pass) | <50ms | Precondition evaluation against record data |
-| Status write with `linked_record_status` | <100ms | Cross-link query is the most expensive check |
-| Auto-verify re-evaluation | <30ms | Triggered on related record change, indexed lookup |
+| Operation                                | Added Latency | Notes                                                 |
+| ---------------------------------------- | ------------- | ----------------------------------------------------- |
+| Status write on ungoverned field         | 0ms           | `transitions.enabled` check is a config property read |
+| Status write on governed field (pass)    | <50ms         | Precondition evaluation against record data           |
+| Status write with `linked_record_status` | <100ms        | Cross-link query is the most expensive check          |
+| Auto-verify re-evaluation                | <30ms         | Triggered on related record change, indexed lookup    |
 
 Redis cache `approval:record:{recordId}` (60s TTL) prevents repeated Postgres lookups for the same blocked transition.
 
@@ -453,13 +463,13 @@ Redis cache `approval:record:{recordId}` (60s TTL) prevents repeated Postgres lo
 
 ## Real-Time Events
 
-| Event | Channel | Payload | Subscribers |
-|---|---|---|---|
-| `approval.requested` | `tenant:{tenantId}` | `{ requestId, recordId, tableId, submittedBy, ruleName }` | Approver notification, queue refresh |
-| `approval.step_activated` | `tenant:{tenantId}` | `{ requestId, stepId, assignedTo, stepName }` | Next approver notification |
-| `approval.requirement_updated` | `record:{recordId}` | `{ requestId, stepId, requirementId, satisfied, details }` | Live-resolving checklist on approval panel |
-| `approval.decided` | `tenant:{tenantId}` | `{ requestId, recordId, decision, decidedBy }` | Submitter notification, status field gate refresh, cache invalidation |
-| `approval.overridden` | `tenant:{tenantId}` | `{ requestId, recordId, overrideBy, reason }` | Audit notification to rule owner |
+| Event                          | Channel             | Payload                                                    | Subscribers                                                           |
+| ------------------------------ | ------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| `approval.requested`           | `tenant:{tenantId}` | `{ requestId, recordId, tableId, submittedBy, ruleName }`  | Approver notification, queue refresh                                  |
+| `approval.step_activated`      | `tenant:{tenantId}` | `{ requestId, stepId, assignedTo, stepName }`              | Next approver notification                                            |
+| `approval.requirement_updated` | `record:{recordId}` | `{ requestId, stepId, requirementId, satisfied, details }` | Live-resolving checklist on approval panel                            |
+| `approval.decided`             | `tenant:{tenantId}` | `{ requestId, recordId, decision, decidedBy }`             | Submitter notification, status field gate refresh, cache invalidation |
+| `approval.overridden`          | `tenant:{tenantId}` | `{ requestId, recordId, overrideBy, reason }`              | Audit notification to rule owner                                      |
 
 The `approval.requirement_updated` event on the `record:{recordId}` channel powers the live-resolving UX — when someone fills in a required field while the approver has the approval panel open, the auto-verify item flips to green in real time without page refresh.
 
@@ -467,13 +477,13 @@ The `approval.requirement_updated` event on the `record:{recordId}` channel powe
 
 ## Redis Key Patterns
 
-| Prefix | Usage | TTL | Eviction |
-|---|---|---|---|
+| Prefix                                          | Usage                                                               | TTL           | Eviction      |
+| ----------------------------------------------- | ------------------------------------------------------------------- | ------------- | ------------- |
 | `cache:t:{tenantId}:approval:record:{recordId}` | Active approval state for a record (pending request + current step) | **Yes** (60s) | LRU evictable |
-| `cache:t:{tenantId}:approval:queue:{tableId}` | Approval queue for a table (pending count, recent items) | **Yes** (30s) | LRU evictable |
-| `cache:t:{tenantId}:approval:myqueue:{userId}` | "My pending approvals" count for notification badge | **Yes** (30s) | LRU evictable |
-| `rl:approval:reminder:{requestId}:{stepId}` | Rate limiter for reminder nudges (prevent spam) | **Yes** (1h) | Self-expiring |
-| `approval:confirm:{token}` | One-time warning confirmation token | **Yes** (60s) | Self-expiring |
+| `cache:t:{tenantId}:approval:queue:{tableId}`   | Approval queue for a table (pending count, recent items)            | **Yes** (30s) | LRU evictable |
+| `cache:t:{tenantId}:approval:myqueue:{userId}`  | "My pending approvals" count for notification badge                 | **Yes** (30s) | LRU evictable |
+| `rl:approval:reminder:{requestId}:{stepId}`     | Rate limiter for reminder nudges (prevent spam)                     | **Yes** (1h)  | Self-expiring |
+| `approval:confirm:{token}`                      | One-time warning confirmation token                                 | **Yes** (60s) | Self-expiring |
 
 ---
 
@@ -518,6 +528,7 @@ A dedicated section in the **Record View main panel**, positioned after regular 
 Section header: rule name, step progress (Step 1 of 2), submitted by whom and when.
 
 Requirements as a **mixed checklist:**
+
 - **Auto-verified items:** Green check or red X with evaluated value in parentheses (e.g., "Budget ≤ $5,000 ($4,200)"). Label `(auto)` in `textSecondary`. Update in real time via `approval.requirement_updated` events. Not interactive — the system handles these.
 - **Manual attestation items:** Interactive checkboxes. Approver checks as they complete review. Each check persists immediately to `requirements_state` JSONB (optimistic client update, server action write).
 
@@ -526,6 +537,7 @@ Submitter's note displayed if present.
 Comment field for the approver's decision rationale.
 
 Three action buttons:
+
 - **Request Revision:** Returns record to submitter. Status moves to configured revision state.
 - **Reject:** Requires a comment (comment field becomes required with red border if clicked without text). Ends the approval.
 - **Approve:** Disabled (dimmed, `textSecondary`, no pointer cursor) until all requirements — auto and manual — are satisfied. When the last item clears, the button transitions to active (`success`) with a subtle pulse animation.
@@ -548,8 +560,8 @@ Read-only: approval status, active step, assigned approver, time pending. "Send 
 
 New tab in the right panel tab architecture:
 
-| Tab | Icon | When Available | Phase |
-|---|---|---|---|
+| Tab       | Icon                    | When Available                  | Phase                  |
+| --------- | ----------------------- | ------------------------------- | ---------------------- |
 | Approvals | ✓ (checkmark in circle) | When user has pending approvals | Post-MVP — Automations |
 
 Tab only appears when the user has ≥1 active approval assigned to them. No empty tab for non-approvers.
@@ -568,17 +580,17 @@ Clicking a card opens Record View scrolled to the approval section.
 
 ### Surface 5: Notifications
 
-| Event | Tier | Channels | Content |
-|---|---|---|---|
-| Approval requested (you're the approver) | **Action Required** | Push + email | "[Record] needs your approval: [Rule Name]" |
-| Step activated (you're next in chain) | **Action Required** | Push + email | "Your turn: [Record] · [Rule Name] Step 2" |
-| Submission approved | **Informational** | Push | "[Record] approved by [Approver]" |
-| Submission rejected | **Action Required** | Push + email | "[Record] rejected by [Approver]: [comment preview]" |
-| Revision requested | **Action Required** | Push + email | "[Approver] requested changes on [Record]" |
-| SLA reminder | **Informational** | Push | "Reminder: [Record] awaiting your approval (2 days)" |
-| SLA escalation | **Action Required** | Push + email | "[Record] approval overdue · Escalated from [Original Approver]" |
-| Approval overridden | **Informational** | Push | "[Admin] overrode approval on [Record]: [reason]" |
-| Manual nudge from submitter | **Informational** | Push | "[Submitter] is waiting on your approval for [Record]" |
+| Event                                    | Tier                | Channels     | Content                                                          |
+| ---------------------------------------- | ------------------- | ------------ | ---------------------------------------------------------------- |
+| Approval requested (you're the approver) | **Action Required** | Push + email | "[Record] needs your approval: [Rule Name]"                      |
+| Step activated (you're next in chain)    | **Action Required** | Push + email | "Your turn: [Record] · [Rule Name] Step 2"                       |
+| Submission approved                      | **Informational**   | Push         | "[Record] approved by [Approver]"                                |
+| Submission rejected                      | **Action Required** | Push + email | "[Record] rejected by [Approver]: [comment preview]"             |
+| Revision requested                       | **Action Required** | Push + email | "[Approver] requested changes on [Record]"                       |
+| SLA reminder                             | **Informational**   | Push         | "Reminder: [Record] awaiting your approval (2 days)"             |
+| SLA escalation                           | **Action Required** | Push + email | "[Record] approval overdue · Escalated from [Original Approver]" |
+| Approval overridden                      | **Informational**   | Push         | "[Admin] overrode approval on [Record]: [reason]"                |
+| Manual nudge from submitter              | **Informational**   | Push         | "[Submitter] is waiting on your approval for [Record]"           |
 
 **Actionable push notifications:** "Approval requested" and "Step activated" include action buttons on mobile push. "View" opens the record. "Review & Approve" deep-links to the record scrolled to the approval section (only shown when all auto-verify requirements are already satisfied).
 
@@ -599,6 +611,7 @@ When a Manager edits a Status field and enables transitions, each transition rul
 Dedicated tab in table settings alongside Fields, Views, Permissions, Automations. Lists all approval rules on the table: name, trigger transition, step count, approver summary, SLA, active/draft status.
 
 Clicking Edit opens the **rule editor** — a vertical stepper showing the approval chain:
+
 - Trigger: which status transition initiates this approval.
 - Steps 1–3: each with approver type/assignment, deadline, and requirements list. Requirements list distinguishes auto-verify (bolt icon, configured by pointing at fields/conditions) from manual attestation (person icon, free-text labels). Drag to reorder.
 - On Completion: what happens when approved (auto-transition, notifications) and when rejected (return to status, require comment).
@@ -630,14 +643,15 @@ On portal client approval: `approval_step_instances` updated with `actor_type: '
 
 Approvals enforce hard gates, but authorized users can force-clear when business reality demands it. The override mechanism is deliberately inconvenient — it should be rare.
 
-| Role | Can Override | Requirements |
-|---|---|---|
-| Owner | Always | Reason required (free text, stored in `approval_activity`) |
-| Admin | Always | Reason required |
-| Manager | Only if explicitly added to `override_policy.allowed_roles` (not by default) | Reason required |
-| Team Member / Viewer | Never | — |
+| Role                 | Can Override                                                                 | Requirements                                               |
+| -------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Owner                | Always                                                                       | Reason required (free text, stored in `approval_activity`) |
+| Admin                | Always                                                                       | Reason required                                            |
+| Manager              | Only if explicitly added to `override_policy.allowed_roles` (not by default) | Reason required                                            |
+| Team Member / Viewer | Never                                                                        | —                                                          |
 
 Override actions:
+
 1. Admin/Owner opens the approval panel on the record.
 2. Clicks "Override" (red ghost button, not prominent).
 3. Required: free-text reason explaining why the approval is being bypassed.
@@ -650,13 +664,13 @@ Override actions:
 
 The generic approval system subsumes several existing domain-specific approval patterns:
 
-| Domain Pattern | Current Spec | Migration Path |
-|---|---|---|
-| Timesheet approval (agency-features.md) | Hardcoded Draft → Submit → Approve/Reject, "any Manager+" as approver, no multi-level routing | Expressible as a 1-step approval rule on the time entries status field. `approver_type: 'role'`, `approver_role: 'manager'`. Bulk approve via approval queue. |
-| Expense approval (accounting-integration.md) | Logging → submission → approval → push to accounting | 1-2 step approval rule with threshold-based routing. On-approved side effect: trigger accounting push automation. |
-| Asset status (agency-features.md) | Draft → Approved status on documents table | 1-step approval rule. `approver_type: 'user_field'` pointing at the author/owner field. |
-| Portal approval block (app-designer.md) | Standalone approve/revision widget | Now connected to the approval engine. Portal client can be resolved as approver for client-facing approval steps. |
-| Agent approval gates (agent-architecture.md) | Risk-tiered action approval for AI agents | Remains separate. Agent approvals are about action permissions (can the agent do X?), not record state transitions. Different system, different UX. |
+| Domain Pattern                               | Current Spec                                                                                  | Migration Path                                                                                                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Timesheet approval (agency-features.md)      | Hardcoded Draft → Submit → Approve/Reject, "any Manager+" as approver, no multi-level routing | Expressible as a 1-step approval rule on the time entries status field. `approver_type: 'role'`, `approver_role: 'manager'`. Bulk approve via approval queue. |
+| Expense approval (accounting-integration.md) | Logging → submission → approval → push to accounting                                          | 1-2 step approval rule with threshold-based routing. On-approved side effect: trigger accounting push automation.                                             |
+| Asset status (agency-features.md)            | Draft → Approved status on documents table                                                    | 1-step approval rule. `approver_type: 'user_field'` pointing at the author/owner field.                                                                       |
+| Portal approval block (app-designer.md)      | Standalone approve/revision widget                                                            | Now connected to the approval engine. Portal client can be resolved as approver for client-facing approval steps.                                             |
+| Agent approval gates (agent-architecture.md) | Risk-tiered action approval for AI agents                                                     | Remains separate. Agent approvals are about action permissions (can the agent do X?), not record state transitions. Different system, different UX.           |
 
 The generic system does not replace agent approval gates — those operate at a fundamentally different level (action permission vs. record lifecycle).
 
@@ -666,41 +680,41 @@ The generic system does not replace agent approval gates — those operate at a 
 
 Approval events extend the existing audit log with new action types:
 
-| Action | `actor_type` | When |
-|---|---|---|
-| `approval.submitted` | `user` \| `portal_client` \| `automation` | Approval request created |
-| `approval.step_decided` | `user` \| `portal_client` | Approver made a decision |
-| `approval.completed` | `system` | All steps done, status auto-transitioning |
-| `approval.overridden` | `user` | Admin/Owner force-cleared |
-| `approval.withdrawn` | `user` | Submitter withdrew request |
+| Action                  | `actor_type`                              | When                                      |
+| ----------------------- | ----------------------------------------- | ----------------------------------------- |
+| `approval.submitted`    | `user` \| `portal_client` \| `automation` | Approval request created                  |
+| `approval.step_decided` | `user` \| `portal_client`                 | Approver made a decision                  |
+| `approval.completed`    | `system`                                  | All steps done, status auto-transitioning |
+| `approval.overridden`   | `user`                                    | Admin/Owner force-cleared                 |
+| `approval.withdrawn`    | `user`                                    | Submitter withdrew request                |
 
-These supplement the general `record.updated` audit entries that capture the actual status field value changes. The approval audit entries capture the *process* context around those changes.
+These supplement the general `record.updated` audit entries that capture the actual status field value changes. The approval audit entries capture the _process_ context around those changes.
 
 ---
 
 ## Phase Implementation
 
-| Phase | Approval Work |
-|---|---|
-| **MVP — Core UX** | Status field `transitions` config enhancement (modes 1 + 2 only). Transition rules with `allowed_roles`, `allowed_user_field_id`, and preconditions (required_fields, checklist_complete, linked_record_status, formula). Auto-advance behavior. Precondition panel in Status field dropdown. No approval system yet — pure transition governance. |
-| **Post-MVP — Automations** | Full approval system. `approval_rules`, `approval_requests`, `approval_step_instances`, `approval_activity` tables. Mode 3 (approval chains, max 3 steps). Enforcement layer `approval_cleared` precondition. Auto-verify + manual attestation requirements with live-resolving state. Approval panel on Record View. Approval queue (right panel tab + My Office card). Notifications (all tiers). SLA monitoring + escalation. Override policy. Configuration UI (inline Level 1 + table Approvals tab Level 2). Portal approval block integration. AI-assisted rule creation (Level 3). Record thread system messages. |
-| **Post-MVP — Verticals & Advanced** | Timesheet approval migration to generic system. Expense approval migration. Asset status approval migration. |
+| Phase                               | Approval Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Core UX**                   | Status field `transitions` config enhancement (modes 1 + 2 only). Transition rules with `allowed_roles`, `allowed_user_field_id`, and preconditions (required_fields, checklist_complete, linked_record_status, formula). Auto-advance behavior. Precondition panel in Status field dropdown. No approval system yet — pure transition governance.                                                                                                                                                                                                                                                                        |
+| **Post-MVP — Automations**          | Full approval system. `approval_rules`, `approval_requests`, `approval_step_instances`, `approval_activity` tables. Mode 3 (approval chains, max 3 steps). Enforcement layer `approval_cleared` precondition. Auto-verify + manual attestation requirements with live-resolving state. Approval panel on Record View. Approval queue (right panel tab + My Office card). Notifications (all tiers). SLA monitoring + escalation. Override policy. Configuration UI (inline Level 1 + table Approvals tab Level 2). Portal approval block integration. AI-assisted rule creation (Level 3). Record thread system messages. |
+| **Post-MVP — Verticals & Advanced** | Timesheet approval migration to generic system. Expense approval migration. Asset status approval migration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
 ## Key Architectural Decisions
 
-| Decision | Resolution | Rationale |
-|---|---|---|
-| Status field operating modes | 3 modes (simple select → gated transitions → approval chain), no mode selector | Progressive disclosure. Complexity is optional. Behavior emerges from configuration. |
-| Approval state storage | System-managed tables (`approval_requests`, `approval_step_instances`), not a field type | Approval is metadata about the record's lifecycle, not a data value. Similar to record threads and audit log — platform capability that attaches to any table. |
-| Max approval steps | 3 sequential | Covers 95%+ of SMB patterns. Beyond 3 starts feeling enterprise and adds builder complexity that doesn't serve the 2-50 employee market. |
-| Precondition severity | Hard block (default for approvals) + Warning (with confirmation) | Enforcement is the default posture. Warnings available for softer requirements during process adoption. |
-| Override mechanism | Admin/Owner only, reason required, loudly logged | Business reality requires escape hatches. Override is deliberately inconvenient and fully audited. |
-| Auto-advance (Mode 2) | System writes status change when all preconditions are satisfied | Removes human ceremony where no human judgment is needed. The system handles the bookkeeping. |
-| Approval rule steps as JSONB | Same reasoning as `automations.steps` | Always read/written as unit, small data (max 3 steps), no cross-rule step queries needed. |
-| Separate `approval_step_instances` table | Not JSONB on `approval_requests` | Steps change independently and frequently. Direct queries needed ("what's waiting for me across all tables"). |
-| Portal client as approver | Resolved via portal record scoping identity | Enables client sign-off workflows (deliverable approval, contract review) through existing portal infrastructure. |
-| Agent approval gates remain separate | Different system from record approval workflows | Agent approvals concern action permissions (risk-tiered). Record approvals concern lifecycle state transitions. Different problem, different data model, different UX. |
-| Enforcement applies to automations | Automations cannot bypass transition rules | Business rules are universal. Automation steps fail per error strategy if preconditions unmet. |
-| Sync conflicts for precondition violations | Inbound sync creates conflict rather than silent reject/accept | Manager visibility and control via existing conflict resolution UI. |
+| Decision                                   | Resolution                                                                               | Rationale                                                                                                                                                              |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status field operating modes               | 3 modes (simple select → gated transitions → approval chain), no mode selector           | Progressive disclosure. Complexity is optional. Behavior emerges from configuration.                                                                                   |
+| Approval state storage                     | System-managed tables (`approval_requests`, `approval_step_instances`), not a field type | Approval is metadata about the record's lifecycle, not a data value. Similar to record threads and audit log — platform capability that attaches to any table.         |
+| Max approval steps                         | 3 sequential                                                                             | Covers 95%+ of SMB patterns. Beyond 3 starts feeling enterprise and adds builder complexity that doesn't serve the 2-50 employee market.                               |
+| Precondition severity                      | Hard block (default for approvals) + Warning (with confirmation)                         | Enforcement is the default posture. Warnings available for softer requirements during process adoption.                                                                |
+| Override mechanism                         | Admin/Owner only, reason required, loudly logged                                         | Business reality requires escape hatches. Override is deliberately inconvenient and fully audited.                                                                     |
+| Auto-advance (Mode 2)                      | System writes status change when all preconditions are satisfied                         | Removes human ceremony where no human judgment is needed. The system handles the bookkeeping.                                                                          |
+| Approval rule steps as JSONB               | Same reasoning as `automations.steps`                                                    | Always read/written as unit, small data (max 3 steps), no cross-rule step queries needed.                                                                              |
+| Separate `approval_step_instances` table   | Not JSONB on `approval_requests`                                                         | Steps change independently and frequently. Direct queries needed ("what's waiting for me across all tables").                                                          |
+| Portal client as approver                  | Resolved via portal record scoping identity                                              | Enables client sign-off workflows (deliverable approval, contract review) through existing portal infrastructure.                                                      |
+| Agent approval gates remain separate       | Different system from record approval workflows                                          | Agent approvals concern action permissions (risk-tiered). Record approvals concern lifecycle state transitions. Different problem, different data model, different UX. |
+| Enforcement applies to automations         | Automations cannot bypass transition rules                                               | Business rules are universal. Automation steps fail per error strategy if preconditions unmet.                                                                         |
+| Sync conflicts for precondition violations | Inbound sync creates conflict rather than silent reject/accept                           | Manager visibility and control via existing conflict resolution UI.                                                                                                    |

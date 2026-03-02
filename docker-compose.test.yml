@@ -1,0 +1,53 @@
+# EveryStack — Test Docker Compose Stack
+# Offset ports from dev stack so both can run simultaneously.
+# All storage is tmpfs-backed (RAM) — no persistence between runs.
+# Usage: pnpm test:services:up / pnpm test:services:down
+
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: everystack-postgres-test
+    environment:
+      POSTGRES_USER: everystack_test
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: everystack_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U everystack_test -d everystack_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+
+  pgbouncer-test:
+    image: bitnami/pgbouncer:latest
+    container_name: everystack-pgbouncer-test
+    environment:
+      POSTGRESQL_HOST: postgres-test
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_USERNAME: everystack_test
+      POSTGRESQL_PASSWORD: test_password
+      POSTGRESQL_DATABASE: everystack_test
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: "100"
+      PGBOUNCER_DEFAULT_POOL_SIZE: "10"
+    ports:
+      - "6433:6432"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: everystack-redis-test
+    ports:
+      - "6380:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 5

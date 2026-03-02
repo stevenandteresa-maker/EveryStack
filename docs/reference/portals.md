@@ -12,27 +12,27 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Portal Overview | 45–58 | Quick Portal concept — externally-shared Record View with auth, MVP scoping, what it is/isn't |
-| Data Model — MVP | 62–142 | `portals`, `portal_access`, `portal_sessions` table schemas, Settings JSONB shape, indexes |
-| Record Scoping — MVP | 146–161 | `portal_access.record_id` direct scoping, 5-step flow, linked record lookups, security invariant |
-| Client Authentication — MVP | 165–271 | Password (bcrypt) + magic link auth, session management, route architecture, rate limiting, token security, auth failure paths, password reset |
-| Client Management — MVP | 275–294 | Clients Tab CRUD, invite flow, bulk invite, Access Tab config |
-| Portal Write-Back Flow — MVP | 298–328 | Editable field validation via Server Action, security invariant, no-delete policy, file uploads via portal |
-| Caching Infrastructure (Three-Tier) — MVP | 332–357 | CDN edge cache, Redis record cache (TTL 60s/300s), Postgres fallback, event-driven invalidation |
-| Audit Trail for Portal Actions — MVP | 361–381 | `portal_client` actor type, `writeAuditLog` call shape, Activity tab display format |
-| Session Cleanup — MVP | 385–409 | Daily BullMQ job: expired session deletion, stale magic link token cleanup — full code |
-| GDPR for Portal Clients — MVP | 413–424 | Access/erasure/rectification/portability rights implementation, PII registry |
-| Portal Client Limits — MVP | 428–440 | Per-plan portal counts (1–unlimited), unlimited clients, page view quotas with Redis tracking, throttle at 120% |
-| Rendering Modes — MVP | 444–447 | Preview Mode (client picker, draft banner) vs Live Mode, draft-to-live publishing |
-| MVP Feature Summary | 451–461 | Quick reference checklist — all MVP Quick Portal capabilities in one block |
-| Post-MVP Overview | 465–479 | Quick Portal vs App Portal comparison table (layout, records, pages, customization, data binding, design tool) |
-| Post-MVP Database Tables | 483–495 | `apps`, `app_pages`, `app_blocks` tables — separate from MVP `portals`, naming notes |
-| Post-MVP Capabilities (See `app-designer.md` for Full Spec) | 499–515 | App Designer, block model, themes, data binding, identity scoping, analytics, Stripe, PWA, custom domains, SEO, embeds, i18n |
-| Quick Portal → App Portal Conversion (Post-MVP) | 519–539 | 6-step conversion flow, identity table matching, session migration, constraints (one-way only) |
-| Post-MVP Phase Summary | 543–551 | Phased delivery table — Portals & Apps Initial, Fast-Follow, Automations |
-| Booking/Scheduling System (Post-MVP) | 555–559 | Pointer to `booking-scheduling.md`, Scheduler block summary |
+| Section                                                     | Lines   | Covers                                                                                                                                         |
+| ----------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Portal Overview                                             | 45–58   | Quick Portal concept — externally-shared Record View with auth, MVP scoping, what it is/isn't                                                  |
+| Data Model — MVP                                            | 62–142  | `portals`, `portal_access`, `portal_sessions` table schemas, Settings JSONB shape, indexes                                                     |
+| Record Scoping — MVP                                        | 146–161 | `portal_access.record_id` direct scoping, 5-step flow, linked record lookups, security invariant                                               |
+| Client Authentication — MVP                                 | 165–271 | Password (bcrypt) + magic link auth, session management, route architecture, rate limiting, token security, auth failure paths, password reset |
+| Client Management — MVP                                     | 275–294 | Clients Tab CRUD, invite flow, bulk invite, Access Tab config                                                                                  |
+| Portal Write-Back Flow — MVP                                | 298–328 | Editable field validation via Server Action, security invariant, no-delete policy, file uploads via portal                                     |
+| Caching Infrastructure (Three-Tier) — MVP                   | 332–357 | CDN edge cache, Redis record cache (TTL 60s/300s), Postgres fallback, event-driven invalidation                                                |
+| Audit Trail for Portal Actions — MVP                        | 361–381 | `portal_client` actor type, `writeAuditLog` call shape, Activity tab display format                                                            |
+| Session Cleanup — MVP                                       | 385–409 | Daily BullMQ job: expired session deletion, stale magic link token cleanup — full code                                                         |
+| GDPR for Portal Clients — MVP                               | 413–424 | Access/erasure/rectification/portability rights implementation, PII registry                                                                   |
+| Portal Client Limits — MVP                                  | 428–440 | Per-plan portal counts (1–unlimited), unlimited clients, page view quotas with Redis tracking, throttle at 120%                                |
+| Rendering Modes — MVP                                       | 444–447 | Preview Mode (client picker, draft banner) vs Live Mode, draft-to-live publishing                                                              |
+| MVP Feature Summary                                         | 451–461 | Quick reference checklist — all MVP Quick Portal capabilities in one block                                                                     |
+| Post-MVP Overview                                           | 465–479 | Quick Portal vs App Portal comparison table (layout, records, pages, customization, data binding, design tool)                                 |
+| Post-MVP Database Tables                                    | 483–495 | `apps`, `app_pages`, `app_blocks` tables — separate from MVP `portals`, naming notes                                                           |
+| Post-MVP Capabilities (See `app-designer.md` for Full Spec) | 499–515 | App Designer, block model, themes, data binding, identity scoping, analytics, Stripe, PWA, custom domains, SEO, embeds, i18n                   |
+| Quick Portal → App Portal Conversion (Post-MVP)             | 519–539 | 6-step conversion flow, identity table matching, session migration, constraints (one-way only)                                                 |
+| Post-MVP Phase Summary                                      | 543–551 | Phased delivery table — Portals & Apps Initial, Fast-Follow, Automations                                                                       |
+| Booking/Scheduling System (Post-MVP)                        | 555–559 | Pointer to `booking-scheduling.md`, Scheduler block summary                                                                                    |
 
 ---
 
@@ -67,20 +67,20 @@ Quick Portals are the MVP portal implementation. A Quick Portal is an **external
 
 Per data-model.md: Quick Portals — externally-shared Record View of a single record. Auth via magic link or email+password. Default read-only, selectively editable fields configured in settings.
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Workspace that owns this portal |
-| `table_id` | UUID | FK to tables — which table this portal shows records from |
-| `record_view_config_id` | UUID | FK to `record_view_configs` — links to the shared Record View layout. Same layout primitive used by Record Views, Portals, and Forms. |
-| `name` | VARCHAR | Display name |
-| `slug` | VARCHAR (unique) | URL slug (`portal.everystack.app/{slug}`) |
-| `auth_type` | VARCHAR | `'magic_link'` or `'password'`. Manager's choice per portal. |
-| `status` | VARCHAR | `'draft'`, `'published'`, `'archived'` |
-| `settings` | JSONB | Branding (logo, colors), `editable_fields[]` (field IDs that clients can edit), `linked_record_display` config. See Settings JSONB below. |
-| `created_by` | UUID | FK to users — Manager who created the portal |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                  | Type             | Purpose                                                                                                                                   |
+| ----------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | UUID             | Primary key                                                                                                                               |
+| `tenant_id`             | UUID             | Workspace that owns this portal                                                                                                           |
+| `table_id`              | UUID             | FK to tables — which table this portal shows records from                                                                                 |
+| `record_view_config_id` | UUID             | FK to `record_view_configs` — links to the shared Record View layout. Same layout primitive used by Record Views, Portals, and Forms.     |
+| `name`                  | VARCHAR          | Display name                                                                                                                              |
+| `slug`                  | VARCHAR (unique) | URL slug (`portal.everystack.app/{slug}`)                                                                                                 |
+| `auth_type`             | VARCHAR          | `'magic_link'` or `'password'`. Manager's choice per portal.                                                                              |
+| `status`                | VARCHAR          | `'draft'`, `'published'`, `'archived'`                                                                                                    |
+| `settings`              | JSONB            | Branding (logo, colors), `editable_fields[]` (field IDs that clients can edit), `linked_record_display` config. See Settings JSONB below. |
+| `created_by`            | UUID             | FK to users — Manager who created the portal                                                                                              |
+| `created_at`            | TIMESTAMPTZ      |                                                                                                                                           |
+| `updated_at`            | TIMESTAMPTZ      |                                                                                                                                           |
 
 **Indexes:** `UNIQUE (slug)`, `(tenant_id, status)`, `(record_view_config_id)`.
 
@@ -90,13 +90,13 @@ Per data-model.md: Quick Portals — externally-shared Record View of a single r
 interface PortalSettings {
   branding: {
     logoUrl?: string;
-    primaryColor?: string;  // Hex color for header/accent
-    portalTitle?: string;   // Custom title (defaults to portal name)
+    primaryColor?: string; // Hex color for header/accent
+    portalTitle?: string; // Custom title (defaults to portal name)
   };
-  editableFields: string[];  // Field IDs that clients can edit (empty = fully read-only)
+  editableFields: string[]; // Field IDs that clients can edit (empty = fully read-only)
   linkedRecordDisplay: {
-    showLinkedFields: boolean;  // Whether to show single-hop lookup fields
-    linkedFieldIds?: string[];  // Which linked fields to display (null = all visible)
+    showLinkedFields: boolean; // Whether to show single-hop lookup fields
+    linkedFieldIds?: string[]; // Which linked fields to display (null = all visible)
   };
 }
 ```
@@ -105,18 +105,18 @@ interface PortalSettings {
 
 Per data-model.md: Per-record access credentials. One row per client per record. Magic link tokens are single-use, regenerable. **This is the auth table for Quick Portals.** App Portals (post-MVP) use `portal_clients` for identity-based scoping instead — see `app-designer.md`. Both portal types coexist permanently.
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope — denormalized for RLS (consistent with all tenant-scoped tables). |
-| `portal_id` | UUID | FK to portals |
-| `record_id` | UUID | FK to records — the specific record this client can access. **This IS the record scoping mechanism for MVP.** |
-| `email` | VARCHAR | Client's email address (PII — registered in compliance registry) |
-| `auth_hash` | VARCHAR (nullable) | bcrypt hash. Set when portal uses password auth (`auth_type = 'password'`). NULL for magic-link-only portals. |
-| `token` | VARCHAR (nullable) | Magic link token. Single-use, regenerable. Generated via `crypto.randomBytes(32).toString('base64url')`. |
-| `token_expires_at` | TIMESTAMPTZ (nullable) | Magic link token expiry (15 minutes from creation). |
-| `last_accessed_at` | TIMESTAMPTZ (nullable) | Updated on each successful access. |
-| `created_at` | TIMESTAMPTZ | |
+| Column             | Type                   | Purpose                                                                                                       |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `id`               | UUID                   | Primary key                                                                                                   |
+| `tenant_id`        | UUID                   | Tenant scope — denormalized for RLS (consistent with all tenant-scoped tables).                               |
+| `portal_id`        | UUID                   | FK to portals                                                                                                 |
+| `record_id`        | UUID                   | FK to records — the specific record this client can access. **This IS the record scoping mechanism for MVP.** |
+| `email`            | VARCHAR                | Client's email address (PII — registered in compliance registry)                                              |
+| `auth_hash`        | VARCHAR (nullable)     | bcrypt hash. Set when portal uses password auth (`auth_type = 'password'`). NULL for magic-link-only portals. |
+| `token`            | VARCHAR (nullable)     | Magic link token. Single-use, regenerable. Generated via `crypto.randomBytes(32).toString('base64url')`.      |
+| `token_expires_at` | TIMESTAMPTZ (nullable) | Magic link token expiry (15 minutes from creation).                                                           |
+| `last_accessed_at` | TIMESTAMPTZ (nullable) | Updated on each successful access.                                                                            |
+| `created_at`       | TIMESTAMPTZ            |                                                                                                               |
 
 **Indexes:** `UNIQUE (portal_id, email)`, `(portal_id, record_id)`.
 
@@ -128,16 +128,16 @@ Per data-model.md: Per-record access credentials. One row per client per record.
 
 Session management after successful authentication. Required by the auth flow (httpOnly cookies need a server-side session store). Shared by both Quick Portals and App Portals (post-MVP) via polymorphic auth.
 
-| Column | Type | Purpose |
-|---|---|---|
-| `id` | UUID | Session ID (stored in httpOnly cookie) |
-| `auth_type` | VARCHAR | `'quick'` (Quick Portal) or `'app'` (App Portal, post-MVP) |
-| `auth_id` | UUID | Polymorphic FK: → portal_access.id when auth_type='quick', → portal_clients.id when auth_type='app' |
-| `portal_id` | UUID | FK to portals (Quick) or apps (App Portal) |
-| `tenant_id` | UUID | Workspace context for tenant-scoped queries |
-| `created_at` | TIMESTAMPTZ | |
-| `expires_at` | TIMESTAMPTZ | 30 days from creation |
-| `revoked_at` | TIMESTAMPTZ (nullable) | Set when manually revoked by Manager |
+| Column       | Type                   | Purpose                                                                                             |
+| ------------ | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `id`         | UUID                   | Session ID (stored in httpOnly cookie)                                                              |
+| `auth_type`  | VARCHAR                | `'quick'` (Quick Portal) or `'app'` (App Portal, post-MVP)                                          |
+| `auth_id`    | UUID                   | Polymorphic FK: → portal_access.id when auth_type='quick', → portal_clients.id when auth_type='app' |
+| `portal_id`  | UUID                   | FK to portals (Quick) or apps (App Portal)                                                          |
+| `tenant_id`  | UUID                   | Workspace context for tenant-scoped queries                                                         |
+| `created_at` | TIMESTAMPTZ            |                                                                                                     |
+| `expires_at` | TIMESTAMPTZ            | 30 days from creation                                                                               |
+| `revoked_at` | TIMESTAMPTZ (nullable) | Set when manually revoked by Manager                                                                |
 
 **Indexes:** `(auth_type, auth_id)`, `(portal_id)`. For MVP, all rows have `auth_type='quick'`.
 
@@ -150,6 +150,7 @@ Record scoping for MVP is simple: **`portal_access.record_id` directly identifie
 When the Manager creates a portal and invites a client, the system creates a `portal_access` row linking the client's email to the specific record. No identity tables, no scoping fields, no cross-link chain resolution needed for the MVP one-portal-one-record model.
 
 **How it works:**
+
 1. Manager creates a portal on a table (e.g., Projects).
 2. Manager invites a client (email: jane@acme.com) and selects which record they can access (e.g., "Project Alpha", record ID `abc`).
 3. System creates `portal_access` row: `{ portal_id, record_id: 'abc', email: 'jane@acme.com' }`.
@@ -215,12 +216,12 @@ Clerk middleware config excludes `/portal/*` — portal routes use their own ses
 
 ### Rate Limiting
 
-| Target | Limit | Window |
-|---|---|---|
-| Magic link requests per email | 5 | 15 minutes |
-| Magic link requests per IP | 20 | 15 minutes |
-| Password login attempts per email | 10 | 15 minutes (then lockout) |
-| Password login attempts per IP | 50 | 15 minutes |
+| Target                            | Limit | Window                    |
+| --------------------------------- | ----- | ------------------------- |
+| Magic link requests per email     | 5     | 15 minutes                |
+| Magic link requests per IP        | 20    | 15 minutes                |
+| Password login attempts per email | 10    | 15 minutes (then lockout) |
+| Password login attempts per IP    | 50    | 15 minutes                |
 
 Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:{email}:{portalId}`, etc.
 
@@ -235,32 +236,32 @@ Every failure returns a generic, client-safe error message. Internal details are
 
 **Password login failures:**
 
-| Scenario | Client sees | Server action |
-|----------|-------------|---------------|
-| Email not found in `portal_access` | "Invalid email or password." (generic — same as wrong password) | Log `portal.auth.email_not_found` with email hash. Do NOT reveal whether the email exists. |
-| Wrong password | "Invalid email or password." | Increment rate limiter `rl:portal:login:{email}:{portalId}`. Log `portal.auth.password_fail`. |
-| Account locked (rate limit exceeded) | "Too many login attempts. Please try again in 15 minutes." | Return 429. Do not process auth check. Log `portal.auth.locked`. |
-| Portal status is `'draft'` or `'archived'` | "This portal is currently unavailable." | Return 404-style page. No login form rendered. |
-| Portal access row has `revoked_at` set | "Your access to this portal has been revoked. Contact the portal owner." | Log `portal.auth.revoked_access`. |
+| Scenario                                   | Client sees                                                              | Server action                                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Email not found in `portal_access`         | "Invalid email or password." (generic — same as wrong password)          | Log `portal.auth.email_not_found` with email hash. Do NOT reveal whether the email exists.    |
+| Wrong password                             | "Invalid email or password."                                             | Increment rate limiter `rl:portal:login:{email}:{portalId}`. Log `portal.auth.password_fail`. |
+| Account locked (rate limit exceeded)       | "Too many login attempts. Please try again in 15 minutes."               | Return 429. Do not process auth check. Log `portal.auth.locked`.                              |
+| Portal status is `'draft'` or `'archived'` | "This portal is currently unavailable."                                  | Return 404-style page. No login form rendered.                                                |
+| Portal access row has `revoked_at` set     | "Your access to this portal has been revoked. Contact the portal owner." | Log `portal.auth.revoked_access`.                                                             |
 
 **Magic link failures:**
 
-| Scenario | Client sees | Server action |
-|----------|-------------|---------------|
-| Email not found when requesting link | "If an account exists, we've sent a login link." (generic — same as success) | Log `portal.auth.magic_no_account`. Do NOT send email. Do NOT reveal account existence. |
-| Token expired (>15 min) | "This login link has expired. Please request a new one." + "Request New Link" button. | Log `portal.auth.magic_expired`. Token already consumed or nulled. |
-| Token already used (single-use consumed) | "This login link has already been used. Please request a new one." + "Request New Link" button. | `token` is already NULL. Log `portal.auth.magic_reused`. |
-| Token invalid (malformed or tampered) | "This login link is invalid. Please request a new one." | Log `portal.auth.magic_invalid`. Return 400. |
-| Magic link request rate limited | "Too many requests. Please try again in 15 minutes." | Return 429. Log `portal.auth.magic_rate_limit`. |
+| Scenario                                 | Client sees                                                                                     | Server action                                                                           |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Email not found when requesting link     | "If an account exists, we've sent a login link." (generic — same as success)                    | Log `portal.auth.magic_no_account`. Do NOT send email. Do NOT reveal account existence. |
+| Token expired (>15 min)                  | "This login link has expired. Please request a new one." + "Request New Link" button.           | Log `portal.auth.magic_expired`. Token already consumed or nulled.                      |
+| Token already used (single-use consumed) | "This login link has already been used. Please request a new one." + "Request New Link" button. | `token` is already NULL. Log `portal.auth.magic_reused`.                                |
+| Token invalid (malformed or tampered)    | "This login link is invalid. Please request a new one."                                         | Log `portal.auth.magic_invalid`. Return 400.                                            |
+| Magic link request rate limited          | "Too many requests. Please try again in 15 minutes."                                            | Return 429. Log `portal.auth.magic_rate_limit`.                                         |
 
 **Session failures:**
 
-| Scenario | Client sees | Server action |
-|----------|-------------|---------------|
-| Session cookie missing | Redirect to portal login page. | No log (normal flow — first visit or cookie cleared). |
-| Session expired (`expires_at` passed) | Redirect to login page with toast: "Your session has expired. Please log in again." | Delete expired session row. Log `portal.auth.session_expired`. |
-| Session revoked by Manager | Redirect to login page with toast: "Your access has been updated. Please log in again." | `revoked_at` is set. Log `portal.auth.session_revoked`. |
-| Session valid but portal deleted | "This portal is no longer available." | Return 404-style page. Session cleanup runs async. |
+| Scenario                              | Client sees                                                                             | Server action                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Session cookie missing                | Redirect to portal login page.                                                          | No log (normal flow — first visit or cookie cleared).          |
+| Session expired (`expires_at` passed) | Redirect to login page with toast: "Your session has expired. Please log in again."     | Delete expired session row. Log `portal.auth.session_expired`. |
+| Session revoked by Manager            | Redirect to login page with toast: "Your access has been updated. Please log in again." | `revoked_at` is set. Log `portal.auth.session_revoked`.        |
+| Session valid but portal deleted      | "This portal is no longer available."                                                   | Return 404-style page. Session cleanup runs async.             |
 
 **Password reset flow (password-auth portals only):**
 
@@ -279,6 +280,7 @@ Every failure returns a generic, client-safe error message. Internal details are
 List of `portal_access` rows for this portal. Columns: email, record name, last accessed, created date. Actions: Invite, Revoke, Delete.
 
 **Invite flow:**
+
 1. Manager enters client email.
 2. Manager selects which record this client can access (autocomplete search on the portal's table).
 3. System creates `portal_access` row with `record_id` set.
@@ -352,6 +354,7 @@ Portal pages are read-heavy and client-facing — caching is critical for perfor
 ### Cache Invalidation
 
 Event-driven: when a record is mutated, the system:
+
 1. Looks up which portals reference that record's table (via `portals.table_id`)
 2. Purges Redis keys for affected portal + record combinations
 3. Invalidation is fast because MVP portals are record-scoped (not table-scoped)
@@ -391,20 +394,26 @@ Background job cleans expired sessions and stale magic link tokens:
 // BullMQ repeatable job
 async function cleanupExpiredPortalSessions() {
   // Expired sessions
-  await db.delete(portalSessions)
-    .where(or(
-      lt(portalSessions.expiresAt, new Date()),
-      lt(portalSessions.revokedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-    ));
+  await db
+    .delete(portalSessions)
+    .where(
+      or(
+        lt(portalSessions.expiresAt, new Date()),
+        lt(portalSessions.revokedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+      ),
+    );
 
   // Stale magic link tokens (well past 15-minute expiry)
   // Null out tokens on portal_access rows where token_expires_at < 24h ago
-  await db.update(portalAccess)
+  await db
+    .update(portalAccess)
     .set({ token: null, tokenExpiresAt: null })
-    .where(and(
-      isNotNull(portalAccess.token),
-      lt(portalAccess.tokenExpiresAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
-    ));
+    .where(
+      and(
+        isNotNull(portalAccess.token),
+        lt(portalAccess.tokenExpiresAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
+      ),
+    );
 }
 ```
 
@@ -414,12 +423,12 @@ async function cleanupExpiredPortalSessions() {
 
 Portal clients are external individuals with PII (email). GDPR applies:
 
-| Right | Implementation |
-|-------|----------------|
-| **Access** | Portal client can request a data export from portal settings page (exports their profile + the record visible via their `portal_access.record_id`) |
-| **Erasure** | Manager can delete a portal client. Triggers: delete `portal_access` row, delete all `portal_sessions` where `auth_type='quick' AND auth_id` matches. The record visible via `record_id` is NOT deleted (it belongs to the workspace). |
-| **Rectification** | Portal client can request email update. Email change triggers re-verification (new invitation). |
-| **Portability** | Data export in JSON format from portal settings. |
+| Right             | Implementation                                                                                                                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Access**        | Portal client can request a data export from portal settings page (exports their profile + the record visible via their `portal_access.record_id`)                                                                                     |
+| **Erasure**       | Manager can delete a portal client. Triggers: delete `portal_access` row, delete all `portal_sessions` where `auth_type='quick' AND auth_id` matches. The record visible via `record_id` is NOT deleted (it belongs to the workspace). |
+| **Rectification** | Portal client can request email update. Email change triggers re-verification (new invitation).                                                                                                                                        |
+| **Portability**   | Data export in JSON format from portal settings.                                                                                                                                                                                       |
 
 Portal client emails are registered in the PII compliance registry (`packages/shared/compliance/`). Portal client deletion is separate from workspace user deletion.
 
@@ -429,13 +438,13 @@ Portal client emails are registered in the PII compliance registry (`packages/sh
 
 Portal clients are **unlimited on all plans** (pricing: "Unlimited Team Members, Viewers, and portal clients at every tier"). The constraint is on the number of portals:
 
-| Plan | Max Portals | Portal Clients | Portal Page Views/month |
-|------|-------------|----------------|------------------------|
-| Freelancer | 1 | Unlimited | 10,000 |
-| Starter | 5 | Unlimited | 50,000 |
-| Professional | 15 | Unlimited | 250,000 |
-| Business | Unlimited | Unlimited | 1,000,000 |
-| Enterprise | Unlimited | Unlimited | Custom |
+| Plan         | Max Portals | Portal Clients | Portal Page Views/month |
+| ------------ | ----------- | -------------- | ----------------------- |
+| Freelancer   | 1           | Unlimited      | 10,000                  |
+| Starter      | 5           | Unlimited      | 50,000                  |
+| Professional | 15          | Unlimited      | 250,000                 |
+| Business     | Unlimited   | Unlimited      | 1,000,000               |
+| Enterprise   | Unlimited   | Unlimited      | Custom                  |
 
 **Page view tracking:** Redis counter per portal per month: `portal:views:{portalId}:{YYYY-MM}`, TTL 35 days. Incremented on every non-cached portal page request (CDN cache hits don't count). When limit reached: portal continues serving but a banner appears in the Manager's portal admin panel ("Approaching page view limit — upgrade to avoid throttling"). At 120% of limit: new requests receive a "This portal is temporarily unavailable" static page. No data loss — the portal is throttled, not deleted.
 
@@ -468,15 +477,15 @@ App Portals built in the App Designer let Managers create branded, multi-page, m
 
 **What post-MVP adds over Quick Portals:**
 
-| Capability | Quick Portal (MVP) | App Portal (App Designer, Post-MVP) |
-|---|---|---|
-| Layout | Record View field canvas | 12-column grid with drag-and-drop blocks |
-| Records | One record per client | Multiple records, filtered lists, dashboards |
-| Pages | Single page | Multi-page with navigation |
-| Customization | Branding (logo, color) via settings JSONB | Full theme system (20 curated themes + custom) |
-| Data binding | Direct record fields + single-hop lookups | Context-bound, relationship-bound, query-bound |
-| Interactions | View + selectively edit fields | Forms, payments, approvals, comments, scheduling |
-| Design tool | Record View config | App Designer (4-zone visual builder) |
+| Capability    | Quick Portal (MVP)                        | App Portal (App Designer, Post-MVP)              |
+| ------------- | ----------------------------------------- | ------------------------------------------------ |
+| Layout        | Record View field canvas                  | 12-column grid with drag-and-drop blocks         |
+| Records       | One record per client                     | Multiple records, filtered lists, dashboards     |
+| Pages         | Single page                               | Multi-page with navigation                       |
+| Customization | Branding (logo, color) via settings JSONB | Full theme system (20 curated themes + custom)   |
+| Data binding  | Direct record fields + single-hop lookups | Context-bound, relationship-bound, query-bound   |
+| Interactions  | View + selectively edit fields            | Forms, payments, approvals, comments, scheduling |
+| Design tool   | Record View config                        | App Designer (4-zone visual builder)             |
 
 ---
 
@@ -484,11 +493,11 @@ App Portals built in the App Designer let Managers create branded, multi-page, m
 
 Per GLOSSARY.md DB entity quick reference, post-MVP App Designer outputs use **separate tables from MVP portals**:
 
-| Table | Purpose | Key Columns |
-|---|---|---|
-| `apps` | App Designer outputs (custom portals, websites, internal apps) | `id, tenant_id, type, name, theme, status` |
-| `app_pages` | Pages within an app | `id, app_id, slug, layout (JSONB)` |
-| `app_blocks` | Blocks within a page | `id, page_id, block_type, config (JSONB)` |
+| Table        | Purpose                                                        | Key Columns                                |
+| ------------ | -------------------------------------------------------------- | ------------------------------------------ |
+| `apps`       | App Designer outputs (custom portals, websites, internal apps) | `id, tenant_id, type, name, theme, status` |
+| `app_pages`  | Pages within an app                                            | `id, app_id, slug, layout (JSONB)`         |
+| `app_blocks` | Blocks within a page                                           | `id, page_id, block_type, config (JSONB)`  |
 
 **Important:** These are entirely separate from the MVP `portals` table. Quick Portals (MVP) and App Designer portals (post-MVP) coexist — the `portals` table handles simple record-sharing with `record_view_config_id`; the `apps` table handles App Designer outputs with spatial layouts and block trees.
 
@@ -534,6 +543,7 @@ Optional upgrade path. Both portal types coexist permanently — conversion is a
 6. **Cleanup:** Original `portal_access` rows are soft-deleted. The portal entry moves from `portals` table to `apps` table. The original `portals` row is archived (not deleted — preserves audit trail and URL redirects).
 
 **Constraints:**
+
 - A portal is one type or the other — `portal_access` and `portal_clients` never coexist on the same portal.
 - Conversion is one-way (App Portal → Quick Portal downgrade is not supported — too much data loss).
 - Unmatched clients receive an email notification: "Your portal has been upgraded. Click here to set up your new account."
@@ -544,11 +554,11 @@ Optional upgrade path. Both portal types coexist permanently — conversion is a
 
 > **Source of truth:** `app-designer.md` > Phase Implementation Summary. All phases below are post-MVP relative to the platform MVP defined in GLOSSARY.md.
 
-| Phase | Work |
-|-------|------|
-| Post-MVP — Portals & Apps (Initial) | `apps`, `app_pages`, `app_blocks`, `portal_clients`, `portal_magic_links`, `portal_events` tables. `portal_sessions` updated with polymorphic auth (already exists from MVP). App Portal creation wizard with identity-based scoping setup. App Designer (4-zone layout, block library, canvas, property panel Content+Style tabs). Template-first creation flow. 20-theme gallery. Three access modes. Password + magic link auth. Record scoping via `linked_record_id` + scoping config. Write-back flow. Session middleware. Rate limiting. Three-tier caching. PWA Tier 1+2. Embeddable forms. Page view tracking. Audit logging. GDPR endpoints. Optional Quick Portal → App Portal conversion wizard. |
-| Post-MVP — Portals & Apps (Fast-Follow) | Logic tab. Grid Container. Query-bound binding. Analytics dashboard. Stripe integration. AI-generated apps. Custom domains. Booking/scheduling. Offline Tier 3. |
-| Post-MVP — Automations | Automation triggers: Form Submitted, Client Portal Action (payment, approval, comment). Automation actions: Post to Portal, Create Report. Auto-create portal client accounts on CRM record creation. |
+| Phase                                   | Work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Post-MVP — Portals & Apps (Initial)     | `apps`, `app_pages`, `app_blocks`, `portal_clients`, `portal_magic_links`, `portal_events` tables. `portal_sessions` updated with polymorphic auth (already exists from MVP). App Portal creation wizard with identity-based scoping setup. App Designer (4-zone layout, block library, canvas, property panel Content+Style tabs). Template-first creation flow. 20-theme gallery. Three access modes. Password + magic link auth. Record scoping via `linked_record_id` + scoping config. Write-back flow. Session middleware. Rate limiting. Three-tier caching. PWA Tier 1+2. Embeddable forms. Page view tracking. Audit logging. GDPR endpoints. Optional Quick Portal → App Portal conversion wizard. |
+| Post-MVP — Portals & Apps (Fast-Follow) | Logic tab. Grid Container. Query-bound binding. Analytics dashboard. Stripe integration. AI-generated apps. Custom domains. Booking/scheduling. Offline Tier 3.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Post-MVP — Automations                  | Automation triggers: Form Submitted, Client Portal Action (payment, approval, comment). Automation actions: Post to Portal, Create Report. Auto-create portal client accounts on CRM record creation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ---
 
