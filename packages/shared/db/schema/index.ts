@@ -1,11 +1,21 @@
-// Schema barrel file — all Drizzle table definitions are re-exported from here.
-// Usage: import { users, tenants, workspaces } from '@everystack/shared/db';
+// ---------------------------------------------------------------------------
+// Schema barrel file — all 50 MVP Drizzle table definitions
+// Usage: import { users, tenants, workspaces } from '@everystack/shared/db/schema';
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Tier 1 — Foundation (no tenant_id — no RLS)
+// ---------------------------------------------------------------------------
 
 export { users } from './users';
 export type { User, NewUser } from './users';
 
 export { tenants } from './tenants';
 export type { Tenant, NewTenant } from './tenants';
+
+// ---------------------------------------------------------------------------
+// Tier 2 — Tenant Memberships & Boards
+// ---------------------------------------------------------------------------
 
 export { tenantMemberships, tenantMembershipsRelations } from './tenant-memberships';
 export type { TenantMembership, NewTenantMembership } from './tenant-memberships';
@@ -16,6 +26,10 @@ export type { Board, NewBoard } from './boards';
 export { boardMemberships, boardMembershipsRelations } from './board-memberships';
 export type { BoardMembership, NewBoardMembership } from './board-memberships';
 
+// ---------------------------------------------------------------------------
+// Tier 3 — Workspaces & Platform Connections
+// ---------------------------------------------------------------------------
+
 export { workspaces, workspacesRelations } from './workspaces';
 export type { Workspace, NewWorkspace } from './workspaces';
 
@@ -25,6 +39,10 @@ export type { WorkspaceMembership, NewWorkspaceMembership } from './workspace-me
 export { baseConnections, baseConnectionsRelations } from './base-connections';
 export type { BaseConnection, NewBaseConnection } from './base-connections';
 
+// ---------------------------------------------------------------------------
+// Tier 4 — Tables, Fields, Records
+// ---------------------------------------------------------------------------
+
 export { tables, tablesRelations } from './tables';
 export type { Table, NewTable } from './tables';
 
@@ -33,6 +51,10 @@ export type { Field, NewField } from './fields';
 
 export { records, recordsRelations } from './records';
 export type { DbRecord, NewDbRecord } from './records';
+
+// ---------------------------------------------------------------------------
+// Tier 5 — Views, Sections, Cross-Links
+// ---------------------------------------------------------------------------
 
 export { crossLinks, crossLinksRelations } from './cross-links';
 export type { CrossLink, NewCrossLink } from './cross-links';
@@ -55,6 +77,10 @@ export type { RecordViewConfig, NewRecordViewConfig } from './record-view-config
 export { recordTemplates, recordTemplatesRelations } from './record-templates';
 export type { RecordTemplate, NewRecordTemplate } from './record-templates';
 
+// ---------------------------------------------------------------------------
+// Tier 6A — Portals & Forms
+// ---------------------------------------------------------------------------
+
 export { portals, portalsRelations } from './portals';
 export type { Portal, NewPortal } from './portals';
 
@@ -70,6 +96,10 @@ export type { Form, NewForm } from './forms';
 export { formSubmissions, formSubmissionsRelations } from './form-submissions';
 export type { FormSubmission, NewFormSubmission } from './form-submissions';
 
+// ---------------------------------------------------------------------------
+// Tier 6B — Sync Infrastructure
+// ---------------------------------------------------------------------------
+
 export { syncedFieldMappings, syncedFieldMappingsRelations } from './synced-field-mappings';
 export type { SyncedFieldMapping, NewSyncedFieldMapping } from './synced-field-mappings';
 
@@ -81,6 +111,10 @@ export type { SyncFailure, NewSyncFailure } from './sync-failures';
 
 export { syncSchemaChanges, syncSchemaChangesRelations } from './sync-schema-changes';
 export type { SyncSchemaChange, NewSyncSchemaChange } from './sync-schema-changes';
+
+// ---------------------------------------------------------------------------
+// Tier 7 — Communications
+// ---------------------------------------------------------------------------
 
 export { threads, threadsRelations } from './threads';
 export type { Thread, NewThread } from './threads';
@@ -94,6 +128,10 @@ export type { ThreadMessage, NewThreadMessage } from './thread-messages';
 export { userSavedMessages, userSavedMessagesRelations } from './user-saved-messages';
 export type { UserSavedMessage, NewUserSavedMessage } from './user-saved-messages';
 
+// ---------------------------------------------------------------------------
+// Tier 8 — Notifications & Personal
+// ---------------------------------------------------------------------------
+
 export { userTasks, userTasksRelations } from './user-tasks';
 export type { UserTask, NewUserTask } from './user-tasks';
 
@@ -105,6 +143,10 @@ export type { Notification, NewNotification } from './notifications';
 
 export { userNotificationPreferences, userNotificationPreferencesRelations } from './user-notification-preferences';
 export type { UserNotificationPreference, NewUserNotificationPreference } from './user-notification-preferences';
+
+// ---------------------------------------------------------------------------
+// Tier 9 — Documents & Automations
+// ---------------------------------------------------------------------------
 
 export { documentTemplates, documentTemplatesRelations } from './document-templates';
 export type { DocumentTemplate, NewDocumentTemplate } from './document-templates';
@@ -118,17 +160,29 @@ export type { Automation, NewAutomation } from './automations';
 export { automationRuns, automationRunsRelations } from './automation-runs';
 export type { AutomationRun, NewAutomationRun } from './automation-runs';
 
+// ---------------------------------------------------------------------------
+// Tier 10 — Webhooks
+// ---------------------------------------------------------------------------
+
 export { webhookEndpoints, webhookEndpointsRelations } from './webhook-endpoints';
 export type { WebhookEndpoint, NewWebhookEndpoint } from './webhook-endpoints';
 
 export { webhookDeliveryLog, webhookDeliveryLogRelations } from './webhook-delivery-log';
 export type { WebhookDeliveryLog, NewWebhookDeliveryLog } from './webhook-delivery-log';
 
+// ---------------------------------------------------------------------------
+// Tier 11 — AI & Metering
+// ---------------------------------------------------------------------------
+
 export { aiUsageLog, aiUsageLogRelations } from './ai-usage-log';
 export type { AiUsageLog, NewAiUsageLog } from './ai-usage-log';
 
 export { aiCreditLedger, aiCreditLedgerRelations } from './ai-credit-ledger';
 export type { AiCreditLedger, NewAiCreditLedger } from './ai-credit-ledger';
+
+// ---------------------------------------------------------------------------
+// Tier 12 — Audit, API, Platform Utilities
+// ---------------------------------------------------------------------------
 
 export { auditLog, auditLogRelations } from './audit-log';
 export type { AuditLog, NewAuditLog } from './audit-log';
@@ -144,6 +198,10 @@ export type { UserRecentItem, NewUserRecentItem } from './user-recent-items';
 
 export { commandBarSessions, commandBarSessionsRelations } from './command-bar-sessions';
 export type { CommandBarSession, NewCommandBarSession } from './command-bar-sessions';
+
+// ---------------------------------------------------------------------------
+// Tier 13 — Feature Management
+// ---------------------------------------------------------------------------
 
 export { featureSuggestions, featureSuggestionsRelations } from './feature-suggestions';
 export type { FeatureSuggestion, NewFeatureSuggestion } from './feature-suggestions';
