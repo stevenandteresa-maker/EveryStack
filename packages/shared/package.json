@@ -16,11 +16,19 @@
     "test": "echo 'No tests yet' && exit 0",
     "test:coverage-check": "echo 'No coverage thresholds yet' && exit 0",
     "test:ai-eval": "echo 'No AI eval suite yet' && exit 0",
-    "db:migrate": "echo 'No migrations yet' && exit 0",
+    "db:migrate": "drizzle-kit migrate --config db/drizzle.config.ts",
     "db:migrate:check": "echo 'No migration check yet' && exit 0",
+    "db:generate": "drizzle-kit generate --config db/drizzle.config.ts",
     "db:seed-staging": "echo 'No staging seed yet' && exit 0"
   },
   "devDependencies": {
+    "@types/node": "^22.15.3",
+    "drizzle-kit": "^0.31.9",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "postgres": "^3.4.8",
+    "uuidv7": "^1.1.0"
   }
 }
