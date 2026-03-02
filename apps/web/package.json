@@ -17,7 +17,7 @@
     "@clerk/nextjs": "^6.39.0",
     "@everystack/shared": "workspace:*",
     "@sentry/nextjs": "^10.41.0",
-    "next": "^15.3.1",
+    "next": "^16.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "svix": "^1.86.0"
