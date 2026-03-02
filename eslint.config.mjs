@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import security from 'eslint-plugin-security';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -14,6 +15,18 @@ export default tseslint.config(
 
   // TypeScript recommended
   ...tseslint.configs.recommended,
+
+  // Security — SAST basics (eslint-plugin-security recommended ruleset)
+  // See: docs/reference/compliance.md § Vulnerability Management
+  security.configs.recommended,
+
+  // Disable detect-object-injection — extremely high false-positive rate
+  // on standard bracket notation (obj[key]). All other security rules remain active.
+  {
+    rules: {
+      'security/detect-object-injection': 'off',
+    },
+  },
 
   // Prettier (disables formatting rules)
   eslintConfigPrettier,

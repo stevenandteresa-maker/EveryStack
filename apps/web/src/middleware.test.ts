@@ -18,6 +18,7 @@ vi.mock('@clerk/nextjs/server', () => ({
         const escaped = pattern
           .replace(/[.+^${}|[\]\\]/g, '\\$&')
           .replace(/\(\.\*\)/g, '.*');
+        // eslint-disable-next-line security/detect-non-literal-regexp -- test helper with controlled input
         return new RegExp(`^${escaped}$`).test(pathname);
       });
     };

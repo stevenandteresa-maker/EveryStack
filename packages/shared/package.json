@@ -11,7 +11,8 @@
     "./logging": "./logging/index.ts",
     "./telemetry": "./telemetry/index.ts",
     "./errors": "./errors/index.ts",
-    "./webhooks": "./webhooks/index.ts"
+    "./webhooks": "./webhooks/index.ts",
+    "./compliance": "./compliance/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
