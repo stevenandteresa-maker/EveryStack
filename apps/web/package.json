@@ -23,7 +23,7 @@
     "svix": "^1.86.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
+    "@types/node": "^25.3.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitest/coverage-v8": "^4.0.18",
