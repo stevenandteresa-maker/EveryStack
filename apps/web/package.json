@@ -27,6 +27,7 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitest/coverage-v8": "^4.0.18",
+    "drizzle-orm": "^0.45.1",
     "eslint-config-next": "^16.1.6",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",

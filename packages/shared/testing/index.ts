@@ -1,1 +1,1 @@
-export {};
+export { getTestDb } from './factories';
