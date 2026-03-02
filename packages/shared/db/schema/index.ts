@@ -30,3 +30,12 @@ export type { Table, NewTable } from './tables';
 
 export { fields, fieldsRelations } from './fields';
 export type { Field, NewField } from './fields';
+
+export { records, recordsRelations } from './records';
+export type { DbRecord, NewDbRecord } from './records';
+
+export { crossLinks, crossLinksRelations } from './cross-links';
+export type { CrossLink, NewCrossLink } from './cross-links';
+
+export { crossLinkIndex, crossLinkIndexRelations } from './cross-link-index';
+export type { CrossLinkIndex, NewCrossLinkIndex } from './cross-link-index';

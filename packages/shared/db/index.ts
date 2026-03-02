@@ -20,6 +20,12 @@ export {
   tablesRelations,
   fields,
   fieldsRelations,
+  records,
+  recordsRelations,
+  crossLinks,
+  crossLinksRelations,
+  crossLinkIndex,
+  crossLinkIndexRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -32,4 +38,7 @@ export type {
   BaseConnection, NewBaseConnection,
   Table, NewTable,
   Field, NewField,
+  DbRecord, NewDbRecord,
+  CrossLink, NewCrossLink,
+  CrossLinkIndex, NewCrossLinkIndex,
 } from './schema';

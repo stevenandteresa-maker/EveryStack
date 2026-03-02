@@ -22,6 +22,13 @@
       "when": 1772459579810,
       "tag": "0002_round_mysterio",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772459834930,
+      "tag": "0003_white_firedrake",
+      "breakpoints": true
     }
   ]
 }
