@@ -123,3 +123,30 @@ export type { WebhookEndpoint, NewWebhookEndpoint } from './webhook-endpoints';
 
 export { webhookDeliveryLog, webhookDeliveryLogRelations } from './webhook-delivery-log';
 export type { WebhookDeliveryLog, NewWebhookDeliveryLog } from './webhook-delivery-log';
+
+export { aiUsageLog, aiUsageLogRelations } from './ai-usage-log';
+export type { AiUsageLog, NewAiUsageLog } from './ai-usage-log';
+
+export { aiCreditLedger, aiCreditLedgerRelations } from './ai-credit-ledger';
+export type { AiCreditLedger, NewAiCreditLedger } from './ai-credit-ledger';
+
+export { auditLog, auditLogRelations } from './audit-log';
+export type { AuditLog, NewAuditLog } from './audit-log';
+
+export { apiKeys, apiKeysRelations } from './api-keys';
+export type { ApiKey, NewApiKey } from './api-keys';
+
+export { apiRequestLog, apiRequestLogRelations } from './api-request-log';
+export type { ApiRequestLog, NewApiRequestLog } from './api-request-log';
+
+export { userRecentItems, userRecentItemsRelations } from './user-recent-items';
+export type { UserRecentItem, NewUserRecentItem } from './user-recent-items';
+
+export { commandBarSessions, commandBarSessionsRelations } from './command-bar-sessions';
+export type { CommandBarSession, NewCommandBarSession } from './command-bar-sessions';
+
+export { featureSuggestions, featureSuggestionsRelations } from './feature-suggestions';
+export type { FeatureSuggestion, NewFeatureSuggestion } from './feature-suggestions';
+
+export { featureVotes, featureVotesRelations } from './feature-votes';
+export type { FeatureVote, NewFeatureVote } from './feature-votes';
