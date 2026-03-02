@@ -54,3 +54,18 @@ export type { RecordViewConfig, NewRecordViewConfig } from './record-view-config
 
 export { recordTemplates, recordTemplatesRelations } from './record-templates';
 export type { RecordTemplate, NewRecordTemplate } from './record-templates';
+
+export { portals, portalsRelations } from './portals';
+export type { Portal, NewPortal } from './portals';
+
+export { portalAccess, portalAccessRelations } from './portal-access';
+export type { PortalAccess, NewPortalAccess } from './portal-access';
+
+export { portalSessions, portalSessionsRelations } from './portal-sessions';
+export type { PortalSession, NewPortalSession } from './portal-sessions';
+
+export { forms, formsRelations } from './forms';
+export type { Form, NewForm } from './forms';
+
+export { formSubmissions, formSubmissionsRelations } from './form-submissions';
+export type { FormSubmission, NewFormSubmission } from './form-submissions';
