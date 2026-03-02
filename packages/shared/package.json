@@ -7,7 +7,8 @@
     "./db": "./db/index.ts",
     "./sync": "./sync/index.ts",
     "./ai": "./ai/index.ts",
-    "./testing": "./testing/index.ts"
+    "./testing": "./testing/index.ts",
+    "./logging": "./logging/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -31,6 +32,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
+    "pino": "^10.3.1",
     "postgres": "^3.4.8",
     "uuidv7": "^1.1.0"
   }
