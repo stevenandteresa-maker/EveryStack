@@ -1,9 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: "standalone",
-  transpilePackages: ["@everystack/shared"],
+  output: 'standalone',
+  transpilePackages: ['@everystack/shared'],
 };
 
 export default nextConfig;

@@ -12,15 +12,15 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Purpose | 27–34 | Why this doc exists, active constraints on data layer code today |
-| Compatibility Audit | 35–233 | CockroachDB-ready features, migration-required: tsvector, pgvector, advisory locks, LISTEN/NOTIFY, partitioning, expression indexes |
-| getDbForTenant() — CockroachDB Regional Routing | 234–262 | Regional routing via CockroachDB localities, connection pool per region |
-| Enterprise Deployment Architecture | 263–290 | Multi-region topology, 3-region minimum, locality tiers, data residency |
-| Development Safeguards | 291–331 | Active MVP rules: no raw SQL, UUIDs only, no new extensions, tsvector isolation, serializable txns |
-| Migration Playbook | 332–350 | 8-step migration sequence from Postgres to CockroachDB |
-| Enterprise Sales Positioning | 351–355 | Enterprise pricing anchor, compliance differentiator |
+| Section                                         | Lines   | Covers                                                                                                                              |
+| ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Purpose                                         | 27–34   | Why this doc exists, active constraints on data layer code today                                                                    |
+| Compatibility Audit                             | 35–233  | CockroachDB-ready features, migration-required: tsvector, pgvector, advisory locks, LISTEN/NOTIFY, partitioning, expression indexes |
+| getDbForTenant() — CockroachDB Regional Routing | 234–262 | Regional routing via CockroachDB localities, connection pool per region                                                             |
+| Enterprise Deployment Architecture              | 263–290 | Multi-region topology, 3-region minimum, locality tiers, data residency                                                             |
+| Development Safeguards                          | 291–331 | Active MVP rules: no raw SQL, UUIDs only, no new extensions, tsvector isolation, serializable txns                                  |
+| Migration Playbook                              | 332–350 | 8-step migration sequence from Postgres to CockroachDB                                                                              |
+| Enterprise Sales Positioning                    | 351–355 | Enterprise pricing anchor, compliance differentiator                                                                                |
 
 ---
 
@@ -36,21 +36,21 @@ This document tracks EveryStack's readiness to deploy on CockroachDB as an enter
 
 ### ✅ CockroachDB-Ready (No Changes Needed)
 
-| Pattern | Where Documented | Why It Works |
-|---------|-----------------|--------------|
-| UUID primary keys (`gen_random_uuid()`) | `data-model.md` — every entity | CockroachDB prefers UUIDs. Sequential IDs create write hot-spots in distributed systems. |
-| `getDbForTenant(tenantId, intent)` abstraction | `database-scaling.md` > Read/Write Connection Routing | Single entry point for all tenant-scoped DB access. Regional routing = uncomment 3 lines. CockroachDB localities slot in directly. |
-| Drizzle ORM only (Rule #10) | Root `CLAUDE.md` | Generates standard SQL. No Postgres dialect leakage. |
-| `tenant_id` on every table | Root `CLAUDE.md` Rule #1, `packages/shared/db/CLAUDE.md` | Maps to CockroachDB geo-partitioning: `PARTITION BY LIST (data_region)` with locality constraints. |
-| No stored procedures or triggers | Root `CLAUDE.md` — all logic in Server Actions + BullMQ workers | CockroachDB has limited PL/pgSQL support. Application-layer logic avoids the biggest migration pain point. |
-| JSONB canonical storage | Root `CLAUDE.md` Rule #4–5, `data-model.md` | CockroachDB supports `->`, `->>`, `@>`, `?`, `jsonb_set`, GIN indexes on JSONB. |
-| Zero-downtime migration discipline | Root `CLAUDE.md` Rule #15, `database-scaling.md` | `ADD COLUMN` with defaults, online index creation. CockroachDB schema changes are online by default. |
-| `data_region` column on `tenants` | `compliance.md` > Data Residency Strategy | Already exists. Informational now, partition key for CockroachDB locality placement. |
-| Formula engine server-side only | `formula-engine.md` > Evaluation Model | No dependency on Postgres PL/pgSQL functions. |
-| DuckDB Context Layer is ephemeral | `duckdb-context-layer-ref.md` | Reads via Postgres wire protocol. CockroachDB speaks the same protocol. |
-| `EmbeddingProvider` abstraction | `vector-embeddings.md` > Embedding Provider Abstraction | Provider-agnostic. No coupling to pgvector internals. |
-| BullMQ worker retry logic | Root `CLAUDE.md` — worker architecture | Already handles transient failures. Adapts to CockroachDB transaction retries. |
-| `data_region` routing in `AIProviderAdapter` | `compliance.md` > Data Residency Strategy | AI calls already region-aware. |
+| Pattern                                        | Where Documented                                                | Why It Works                                                                                                                       |
+| ---------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| UUID primary keys (`gen_random_uuid()`)        | `data-model.md` — every entity                                  | CockroachDB prefers UUIDs. Sequential IDs create write hot-spots in distributed systems.                                           |
+| `getDbForTenant(tenantId, intent)` abstraction | `database-scaling.md` > Read/Write Connection Routing           | Single entry point for all tenant-scoped DB access. Regional routing = uncomment 3 lines. CockroachDB localities slot in directly. |
+| Drizzle ORM only (Rule #10)                    | Root `CLAUDE.md`                                                | Generates standard SQL. No Postgres dialect leakage.                                                                               |
+| `tenant_id` on every table                     | Root `CLAUDE.md` Rule #1, `packages/shared/db/CLAUDE.md`        | Maps to CockroachDB geo-partitioning: `PARTITION BY LIST (data_region)` with locality constraints.                                 |
+| No stored procedures or triggers               | Root `CLAUDE.md` — all logic in Server Actions + BullMQ workers | CockroachDB has limited PL/pgSQL support. Application-layer logic avoids the biggest migration pain point.                         |
+| JSONB canonical storage                        | Root `CLAUDE.md` Rule #4–5, `data-model.md`                     | CockroachDB supports `->`, `->>`, `@>`, `?`, `jsonb_set`, GIN indexes on JSONB.                                                    |
+| Zero-downtime migration discipline             | Root `CLAUDE.md` Rule #15, `database-scaling.md`                | `ADD COLUMN` with defaults, online index creation. CockroachDB schema changes are online by default.                               |
+| `data_region` column on `tenants`              | `compliance.md` > Data Residency Strategy                       | Already exists. Informational now, partition key for CockroachDB locality placement.                                               |
+| Formula engine server-side only                | `formula-engine.md` > Evaluation Model                          | No dependency on Postgres PL/pgSQL functions.                                                                                      |
+| DuckDB Context Layer is ephemeral              | `duckdb-context-layer-ref.md`                                   | Reads via Postgres wire protocol. CockroachDB speaks the same protocol.                                                            |
+| `EmbeddingProvider` abstraction                | `vector-embeddings.md` > Embedding Provider Abstraction         | Provider-agnostic. No coupling to pgvector internals.                                                                              |
+| BullMQ worker retry logic                      | Root `CLAUDE.md` — worker architecture                          | Already handles transient failures. Adapts to CockroachDB transaction retries.                                                     |
+| `data_region` routing in `AIProviderAdapter`   | `compliance.md` > Data Residency Strategy                       | AI calls already region-aware.                                                                                                     |
 
 ### ⚠️ Requires Migration Work (Contained)
 
@@ -61,6 +61,7 @@ This document tracks EveryStack's readiness to deploy on CockroachDB as an enter
 **CockroachDB:** Does not support Postgres declarative hash partitioning. CockroachDB automatically distributes data across ranges (64 MB default range size). For enterprise geo-distribution, use `PARTITION BY LIST (data_region)` with locality constraints.
 
 **Migration:**
+
 ```sql
 -- Postgres (current)
 CREATE TABLE records (...) PARTITION BY HASH (tenant_id);
@@ -90,11 +91,11 @@ ALTER PARTITION eu OF TABLE records CONFIGURE ZONE USING
 
 **Migration paths (choose one at deployment time):**
 
-| Option | Approach | Tradeoffs |
-|--------|----------|-----------|
-| **A. CockroachDB native FTS** | Use CockroachDB's tsvector support directly. Adjust ranking if needed. | Simplest. May have ranking quality differences. Test Command Bar search quality. |
+| Option                         | Approach                                                                                                             | Tradeoffs                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **A. CockroachDB native FTS**  | Use CockroachDB's tsvector support directly. Adjust ranking if needed.                                               | Simplest. May have ranking quality differences. Test Command Bar search quality.     |
 | **B. Lean on semantic search** | Reduce tsvector to simple keyword matching. Rely on pgvector semantic channel (Channel 4) as primary ranking signal. | Leverages existing hybrid pipeline. RRF already handles one weak channel gracefully. |
-| **C. External search service** | Meilisearch or Typesense as a dedicated search layer. | Best search quality. Adds infrastructure. Only if A/B are insufficient. |
+| **C. External search service** | Meilisearch or Typesense as a dedicated search layer.                                                                | Best search quality. Adds infrastructure. Only if A/B are insufficient.              |
 
 **Graceful degradation already designed:** The Command Bar pipeline (`vector-embeddings.md` > Command Bar Search Pipeline) handles channel failures silently. If tsvector ranking degrades, RRF fusion compensates via semantic results.
 
@@ -107,6 +108,7 @@ ALTER PARTITION eu OF TABLE records CONFIGURE ZONE USING
 **CockroachDB:** Native vector search via C-SPANN (v25.2+). pgvector SQL syntax (`<=>` cosine distance) is compatible. Index creation syntax differs.
 
 **Migration:**
+
 ```sql
 -- Postgres (current)
 CREATE INDEX idx_record_embeddings_vector ON record_embeddings
@@ -147,7 +149,7 @@ const RETRY_CODES = ['40001']; // serialization_failure
 
 export async function withRetry<T>(
   db: DrizzleClient,
-  fn: (tx: Transaction) => Promise<T>
+  fn: (tx: Transaction) => Promise<T>,
 ): Promise<T> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -206,6 +208,7 @@ WHERE id = $recordId AND tenant_id = $tenantId;
 **CockroachDB:** Supports `PARTITION BY RANGE` with different syntax. Preferred approach: CockroachDB row-level TTL.
 
 **Migration:**
+
 ```sql
 -- CockroachDB: row-level TTL replaces time partitioning
 ALTER TABLE audit_log SET (
@@ -279,6 +282,7 @@ export function getDbForTenant(tenantId: string, intent: DbIntent = 'write'): Dr
 ```
 
 **vs. Postgres multi-region** (from `compliance.md` > Data Residency Strategy):
+
 ```
   US Region: PostgreSQL + Redis + Web + Worker
   EU Region: PostgreSQL + Redis + Web + Worker  (separate instances)
@@ -295,13 +299,14 @@ Active rules that prevent Postgres-only drift. These are enforced now, not "some
 ### Rule: No New Raw SQL
 
 The `adjustFieldValue` atomic JSONB delta (`inventory-capabilities.md`) is the only permitted raw SQL exception. Any new raw SQL must:
+
 1. Be documented in this file with a CockroachDB compatibility note
 2. Be tested against CockroachDB in CI (when integration tests are added)
 3. Be isolated to a single function in `packages/shared/db/`
 
 ### Rule: UUIDs Only for Primary Keys
 
-Never use `SERIAL`, `BIGSERIAL`, or `SEQUENCE` for any ID column. All IDs are `UUID DEFAULT gen_random_uuid()`. This is already enforced by `packages/shared/db/CLAUDE.md` — this rule is a reminder of *why*.
+Never use `SERIAL`, `BIGSERIAL`, or `SEQUENCE` for any ID column. All IDs are `UUID DEFAULT gen_random_uuid()`. This is already enforced by `packages/shared/db/CLAUDE.md` — this rule is a reminder of _why_.
 
 ### Rule: No New Postgres Extensions
 
@@ -314,6 +319,7 @@ All tsvector query construction and execution lives in `packages/shared/db/searc
 ### Rule: Transactions Designed for Serializable
 
 When writing multi-statement transactions in Server Actions:
+
 - Minimize the read-write span (read what you need, then write)
 - Avoid long-running transactions that hold locks
 - Document contention expectations with a comment: `// Contention: low — single-tenant single-record`
@@ -331,18 +337,18 @@ Add a nightly test suite that runs core data layer tests against a CockroachDB i
 
 ## Migration Playbook (When an Enterprise Client Needs It)
 
-| Step | What Changes | Downtime | Application Code |
-|------|-------------|----------|-----------------|
-| 1. Provision CockroachDB cluster with regional nodes | Infrastructure | None | None |
-| 2. Schema migration: remove `PARTITION BY HASH`, add locality constraints | DDL scripts | None (new cluster) | None |
-| 3. Schema migration: adjust vector index syntax (HNSW → C-SPANN) | DDL scripts | None | None |
-| 4. Schema migration: replace time partitioning with row-level TTL | DDL scripts | None | None |
-| 5. Add `DB_ENGINE=cockroachdb` env var, configure `CRDB_*_URL` connection strings | Environment config | None | `getDbForTenant()` branching |
-| 6. Enable transaction retry wrapper | Feature flag | None | `withRetry()` wrapper |
-| 7. Remove PgBouncer from connection path | Infrastructure | Brief (connection drain) | None |
-| 8. Data migration: `pg_dump` → CockroachDB import per tenant | Data pipeline | Per-tenant, ~minutes | None |
-| 9. Validate: search quality, vector similarity, approval workflow enforcement | Integration tests | None | None |
-| 10. DNS cutover per tenant | Infrastructure | Per-tenant, seconds | None |
+| Step                                                                              | What Changes       | Downtime                 | Application Code             |
+| --------------------------------------------------------------------------------- | ------------------ | ------------------------ | ---------------------------- |
+| 1. Provision CockroachDB cluster with regional nodes                              | Infrastructure     | None                     | None                         |
+| 2. Schema migration: remove `PARTITION BY HASH`, add locality constraints         | DDL scripts        | None (new cluster)       | None                         |
+| 3. Schema migration: adjust vector index syntax (HNSW → C-SPANN)                  | DDL scripts        | None                     | None                         |
+| 4. Schema migration: replace time partitioning with row-level TTL                 | DDL scripts        | None                     | None                         |
+| 5. Add `DB_ENGINE=cockroachdb` env var, configure `CRDB_*_URL` connection strings | Environment config | None                     | `getDbForTenant()` branching |
+| 6. Enable transaction retry wrapper                                               | Feature flag       | None                     | `withRetry()` wrapper        |
+| 7. Remove PgBouncer from connection path                                          | Infrastructure     | Brief (connection drain) | None                         |
+| 8. Data migration: `pg_dump` → CockroachDB import per tenant                      | Data pipeline      | Per-tenant, ~minutes     | None                         |
+| 9. Validate: search quality, vector similarity, approval workflow enforcement     | Integration tests  | None                     | None                         |
+| 10. DNS cutover per tenant                                                        | Infrastructure     | Per-tenant, seconds      | None                         |
 
 **Total application code changes for CockroachDB deployment:** ~50 lines (transaction retry wrapper + `getDbForTenant()` branch + env var checks). Everything else is schema DDL and infrastructure config.
 

@@ -11,24 +11,25 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| MVP Scope | 29–57 | 6 triggers, 7 actions, linear flows only, no branching |
-| Builder Interface | 58–115 | Step-by-step list builder UI, trigger/action configuration |
-| Triggers (6 MVP Types) | 116–178 | Record Created, Updated, Field Changed, Form Submitted, Button Clicked, Scheduled |
-| Actions (7 MVP Types) | 179–208 | Send Email, Create/Update Record, Generate Document, Notify, Adjust Field, Webhook |
-| Execution Model | 209–293 | Sequential pipeline, BullMQ jobs, error handling, retry logic |
-| Template Resolution Engine | 294–318 | Merge tag resolution in automation actions, dynamic values |
-| Webhook Architecture | 319–422 | Inbound/outbound webhooks, signature verification, delivery retry |
-| Testing & Debugging | 423–447 | Automation test mode, execution log, step-by-step replay |
-| Data Model | 448–511 | automations, automation_runs tables, trigger/steps JSONB schemas |
-| Post-MVP Expansion Path | 512–526 | Visual canvas, branching, conditions, loops, 22+ triggers, 42+ actions |
+| Section                    | Lines   | Covers                                                                             |
+| -------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| MVP Scope                  | 29–57   | 6 triggers, 7 actions, linear flows only, no branching                             |
+| Builder Interface          | 58–115  | Step-by-step list builder UI, trigger/action configuration                         |
+| Triggers (6 MVP Types)     | 116–178 | Record Created, Updated, Field Changed, Form Submitted, Button Clicked, Scheduled  |
+| Actions (7 MVP Types)      | 179–208 | Send Email, Create/Update Record, Generate Document, Notify, Adjust Field, Webhook |
+| Execution Model            | 209–293 | Sequential pipeline, BullMQ jobs, error handling, retry logic                      |
+| Template Resolution Engine | 294–318 | Merge tag resolution in automation actions, dynamic values                         |
+| Webhook Architecture       | 319–422 | Inbound/outbound webhooks, signature verification, delivery retry                  |
+| Testing & Debugging        | 423–447 | Automation test mode, execution log, step-by-step replay                           |
+| Data Model                 | 448–511 | automations, automation_runs tables, trigger/steps JSONB schemas                   |
+| Post-MVP Expansion Path    | 512–526 | Visual canvas, branching, conditions, loops, 22+ triggers, 42+ actions             |
 
 ---
 
 ## MVP Scope
 
 **What ships:**
+
 - Linear trigger → action flows (no branching, no conditions)
 - 6 trigger types
 - 7 action types
@@ -41,6 +42,7 @@
 - Execution history / run log
 
 **What's post-MVP:**
+
 - Visual flow canvas with branching/conditions
 - Condition nodes (Branch by Field Value, Formula, View, etc.)
 - Lifecycle workflows (Wait for Event, global exit, re-entry prevention, sending windows)
@@ -62,6 +64,7 @@
 ### Layout
 
 Full-screen, two zones:
+
 - **Left sidebar (280px):** Automation list + run history
 - **Main panel:** Trigger config at top + ordered action list below
 
@@ -115,27 +118,27 @@ Full-screen, two zones:
 
 ## Triggers (6 MVP Types)
 
-| # | Trigger | Config | Context Provided |
-|---|---------|--------|------------------|
-| 1 | **Record Created** | `tableId`, optional filter on initial field values | `{ record, table, createdBy }` |
-| 2 | **Record Updated** | `tableId`, toggle specific fields to watch, "Ignore changes by automations" toggle | `{ record, changedFields[], table, updatedBy }` |
-| 3 | **Field Value Changed** | `tableId`, `fieldId`, optional "changed to" value filter | `{ record, fieldId, oldValue, newValue, table }` |
-| 4 | **Form Submitted** | `formId` (links to `forms` table) | `{ record, form, submitterEmail, submitterIp }` |
-| 5 | **Button Clicked** | `tableId`, button field config | `{ record, table, clickedBy }` |
-| 6 | **Scheduled** | Cron expression (daily/weekly/monthly/custom), timezone, optional record filter, per-record or batch mode | `{ schedule, matchedRecords[] }` |
+| #   | Trigger                 | Config                                                                                                    | Context Provided                                 |
+| --- | ----------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | **Record Created**      | `tableId`, optional filter on initial field values                                                        | `{ record, table, createdBy }`                   |
+| 2   | **Record Updated**      | `tableId`, toggle specific fields to watch, "Ignore changes by automations" toggle                        | `{ record, changedFields[], table, updatedBy }`  |
+| 3   | **Field Value Changed** | `tableId`, `fieldId`, optional "changed to" value filter                                                  | `{ record, fieldId, oldValue, newValue, table }` |
+| 4   | **Form Submitted**      | `formId` (links to `forms` table)                                                                         | `{ record, form, submitterEmail, submitterIp }`  |
+| 5   | **Button Clicked**      | `tableId`, button field config                                                                            | `{ record, table, clickedBy }`                   |
+| 6   | **Scheduled**           | Cron expression (daily/weekly/monthly/custom), timezone, optional record filter, per-record or batch mode | `{ schedule, matchedRecords[] }`                 |
 
 ### Trigger Detection
 
 Triggers are detected at the **application layer** — application hooks provide context (who, which feature, what intent) that DB-level triggers cannot.
 
-| Trigger Type | Detection Mechanism | Latency |
-|-------------|---------------------|---------|
-| Record Created | Server Action publishes `record.created` to Redis pub/sub after DB write | <1s |
-| Record Updated | Server Action publishes `record.updated` with changed field IDs | <1s |
-| Field Value Changed | Evaluated on `record.updated` — compares old vs new for watched field | <1s |
-| Form Submitted | Form submission handler publishes `form.submitted` | <1s |
-| Button Clicked | Button field handler publishes `button.clicked` | Immediate |
-| Scheduled | BullMQ repeatable job runs cron expression, queries matching records | Cron schedule |
+| Trigger Type        | Detection Mechanism                                                      | Latency       |
+| ------------------- | ------------------------------------------------------------------------ | ------------- |
+| Record Created      | Server Action publishes `record.created` to Redis pub/sub after DB write | <1s           |
+| Record Updated      | Server Action publishes `record.updated` with changed field IDs          | <1s           |
+| Field Value Changed | Evaluated on `record.updated` — compares old vs new for watched field    | <1s           |
+| Form Submitted      | Form submission handler publishes `form.submitted`                       | <1s           |
+| Button Clicked      | Button field handler publishes `button.clicked`                          | Immediate     |
+| Scheduled           | BullMQ repeatable job runs cron expression, queries matching records     | Cron schedule |
 
 ### Trigger Registry
 
@@ -178,15 +181,15 @@ Domain event (e.g., record.updated)
 
 ## Actions (7 MVP Types)
 
-| # | Action | Config | Output |
-|---|--------|--------|--------|
-| 1 | **Send Email** | `to` (template), `subject` (template), `body` (rich text template), `cc`, `bcc`, `attachments` (file field or step output) | `{ messageId, status }` |
-| 2 | **Create Record** | `tableId`, `fieldValues: { fieldId: template }` | `{ recordId, fields }` |
-| 3 | **Update Record** | `recordSelector` (trigger record or lookup by field), `fieldUpdates: { fieldId: template }` | `{ recordId, changes }` |
-| 4 | **Generate Document** | `templateId` (→ document_templates), `recordSelector`, `outputFormat` (PDF) | `{ fileId, fileUrl }` |
-| 5 | **Send Notification** | `recipientSelector` (record owner, specific users, people field), `title` (template), `body` (template), `link` (template), `urgency` (info\|action\|critical) | `{ notificationId }` |
-| 6 | **Adjust Field** | `recordSelector`, `fieldId` (number field), `delta` (template — positive adds, negative subtracts) | `{ previousValue, newValue, delta }` |
-| 7 | **Send Webhook** | `url`, `method` (POST\|PUT\|PATCH), `headers`, `bodyTemplate` | `{ statusCode, responseBody }` |
+| #   | Action                | Config                                                                                                                                                         | Output                               |
+| --- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | **Send Email**        | `to` (template), `subject` (template), `body` (rich text template), `cc`, `bcc`, `attachments` (file field or step output)                                     | `{ messageId, status }`              |
+| 2   | **Create Record**     | `tableId`, `fieldValues: { fieldId: template }`                                                                                                                | `{ recordId, fields }`               |
+| 3   | **Update Record**     | `recordSelector` (trigger record or lookup by field), `fieldUpdates: { fieldId: template }`                                                                    | `{ recordId, changes }`              |
+| 4   | **Generate Document** | `templateId` (→ document_templates), `recordSelector`, `outputFormat` (PDF)                                                                                    | `{ fileId, fileUrl }`                |
+| 5   | **Send Notification** | `recipientSelector` (record owner, specific users, people field), `title` (template), `body` (template), `link` (template), `urgency` (info\|action\|critical) | `{ notificationId }`                 |
+| 6   | **Adjust Field**      | `recordSelector`, `fieldId` (number field), `delta` (template — positive adds, negative subtracts)                                                             | `{ previousValue, newValue, delta }` |
+| 7   | **Send Webhook**      | `url`, `method` (POST\|PUT\|PATCH), `headers`, `bodyTemplate`                                                                                                  | `{ statusCode, responseBody }`       |
 
 ### Action Details
 
@@ -229,11 +232,11 @@ Every step receives and passes forward a context:
 interface AutomationExecutionContext {
   tenantId: string;
   automationId: string;
-  executionId: string;          // Unique per run
-  traceId: string;              // Correlates to triggering event
-  triggeringUserId: string | null;  // null for scheduled/webhook
+  executionId: string; // Unique per run
+  traceId: string; // Correlates to triggering event
+  triggeringUserId: string | null; // null for scheduled/webhook
   triggerEvent: TriggerEvent;
-  stepOutputs: Map<string, StepOutput>;  // Previous step outputs, keyed by stepId
+  stepOutputs: Map<string, StepOutput>; // Previous step outputs, keyed by stepId
   startedAt: Date;
   currentStepIndex: number;
 }
@@ -243,13 +246,14 @@ interface AutomationExecutionContext {
 
 ### Error Handling
 
-| Strategy | Config | Behavior |
-|----------|--------|----------|
-| **Stop** (default) | Per-step | Step fails → mark execution `failed`, stop, notify owner |
-| **Skip & Continue** | Per-step toggle | Step fails → log error, mark `skipped`, continue to next |
-| **Retry** | Per-step, max 3 | Retry with exponential backoff (1s, 4s, 16s). If all fail → Stop or Skip per config. |
+| Strategy            | Config          | Behavior                                                                             |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------ |
+| **Stop** (default)  | Per-step        | Step fails → mark execution `failed`, stop, notify owner                             |
+| **Skip & Continue** | Per-step toggle | Step fails → log error, mark `skipped`, continue to next                             |
+| **Retry**           | Per-step, max 3 | Retry with exponential backoff (1s, 4s, 16s). If all fail → Stop or Skip per config. |
 
 **Error types:**
+
 - **Validation error:** Config mismatch. Always stops.
 - **External API error:** Webhook/email fails. Retryable.
 - **Rate limit (429):** Retryable with backoff.
@@ -257,10 +261,10 @@ interface AutomationExecutionContext {
 
 ### Timeout Policy
 
-| Scope | Timeout |
-|-------|---------|
-| Single step | 30 seconds |
-| Full automation run | 5 minutes |
+| Scope               | Timeout    |
+| ------------------- | ---------- |
+| Single step         | 30 seconds |
+| Full automation run | 5 minutes  |
 
 ### Checkpointing
 
@@ -283,7 +287,8 @@ Automation actions can create/update records that fire triggers → potential in
 ```typescript
 if (event.sourceExecutionId) {
   const depth = await getExecutionChainDepth(event.sourceExecutionId);
-  if (depth >= MAX_CHAIN_DEPTH) { // Default: 5
+  if (depth >= MAX_CHAIN_DEPTH) {
+    // Default: 5
     return; // Do not enqueue — drop with warning
   }
 }
@@ -297,18 +302,18 @@ Action configs use `{{...}}` template syntax for dynamic values, resolved at exe
 
 ### Template Sources
 
-| Syntax | Resolves To |
-|--------|------------|
-| `{{trigger.record}}` | Full trigger record (canonical_data) |
-| `{{trigger.record.fields.{fieldId}}}` | Specific field value from trigger record |
-| `{{trigger.changedFields}}` | Array of changed field IDs (for record.updated) |
-| `{{trigger.webhookPayload}}` | Inbound webhook body (for webhook triggers) |
-| `{{trigger.webhookPayload.fieldName}}` | Specific field from webhook payload |
-| `{{step_{id}.output}}` | Full output of a previous step |
-| `{{step_{id}.output.recordId}}` | Specific field from step output |
-| `{{env.tenantId}}` | Workspace ID |
-| `{{env.executionId}}` | Execution ID |
-| `{{env.now}}` | Current ISO timestamp |
+| Syntax                                 | Resolves To                                     |
+| -------------------------------------- | ----------------------------------------------- |
+| `{{trigger.record}}`                   | Full trigger record (canonical_data)            |
+| `{{trigger.record.fields.{fieldId}}}`  | Specific field value from trigger record        |
+| `{{trigger.changedFields}}`            | Array of changed field IDs (for record.updated) |
+| `{{trigger.webhookPayload}}`           | Inbound webhook body (for webhook triggers)     |
+| `{{trigger.webhookPayload.fieldName}}` | Specific field from webhook payload             |
+| `{{step_{id}.output}}`                 | Full output of a previous step                  |
+| `{{step_{id}.output.recordId}}`        | Specific field from step output                 |
+| `{{env.tenantId}}`                     | Workspace ID                                    |
+| `{{env.executionId}}`                  | Execution ID                                    |
+| `{{env.now}}`                          | Current ISO timestamp                           |
 
 ### Type Preservation
 
@@ -326,21 +331,21 @@ Managers register endpoint URLs and subscribe to platform events. When events oc
 
 **Event catalog (MVP — 13 subscribable events):**
 
-| Event | When Fired |
-|-------|------------|
-| `record.created` | Record inserted (any source) |
-| `record.updated` | Record field(s) changed |
-| `record.deleted` | Record soft-deleted |
-| `table.created` | Table created |
-| `table.deleted` | Table deleted |
-| `field.created` | Field added |
-| `field.updated` | Field modified |
-| `portal.published` | Portal goes live |
-| `automation.triggered` | Automation starts |
-| `automation.completed` | Automation finishes |
-| `sync.batch_complete` | Sync batch completes |
-| `member.added` | User joins workspace |
-| `member.removed` | User removed |
+| Event                  | When Fired                   |
+| ---------------------- | ---------------------------- |
+| `record.created`       | Record inserted (any source) |
+| `record.updated`       | Record field(s) changed      |
+| `record.deleted`       | Record soft-deleted          |
+| `table.created`        | Table created                |
+| `table.deleted`        | Table deleted                |
+| `field.created`        | Field added                  |
+| `field.updated`        | Field modified               |
+| `portal.published`     | Portal goes live             |
+| `automation.triggered` | Automation starts            |
+| `automation.completed` | Automation finishes          |
+| `sync.batch_complete`  | Sync batch completes         |
+| `member.added`         | User joins workspace         |
+| `member.removed`       | User removed                 |
 
 **Payload envelope:**
 
@@ -352,7 +357,9 @@ Managers register endpoint URLs and subscribe to platform events. When events oc
   "delivery_id": "uuid",
   "workspace_id": "uuid",
   "api_version": "2026-02-01",
-  "data": { /* event-specific */ }
+  "data": {
+    /* event-specific */
+  }
 }
 ```
 
@@ -388,13 +395,13 @@ Event → Enqueue BullMQ: webhook.deliver → Worker:
 
 ### Retry Strategy
 
-| Attempt | Delay | Total Elapsed |
-|---------|-------|---------------|
-| 1st retry | 30 seconds | 30s |
-| 2nd retry | 2 minutes | 2.5 min |
-| 3rd retry | 10 minutes | 12.5 min |
-| 4th retry | 1 hour | ~1 hour |
-| 5th retry (final) | 4 hours | ~5 hours |
+| Attempt           | Delay      | Total Elapsed |
+| ----------------- | ---------- | ------------- |
+| 1st retry         | 30 seconds | 30s           |
+| 2nd retry         | 2 minutes  | 2.5 min       |
+| 3rd retry         | 10 minutes | 12.5 min      |
+| 4th retry         | 1 hour     | ~1 hour       |
+| 5th retry (final) | 4 hours    | ~5 hours      |
 
 After 5 failures, delivery marked `failed`. At 10 consecutive failures, endpoint auto-disabled + Manager notified.
 
@@ -411,6 +418,7 @@ DNS-resolve hostname, check against blocked private IP ranges before TCP connect
 ### Webhook Management UI
 
 Workspace Settings → Integrations → Webhooks:
+
 - Create endpoint (URL + events + description)
 - Signing secret (shown once, regenerable)
 - Test delivery
@@ -451,14 +459,14 @@ Name/description, status (active/paused/draft), error handling strategy, executi
 
 See `data-model.md` for the canonical schema. Key columns:
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `workspace_id` | UUID FK → workspaces | Denormalized for sidebar queries and permission checks |
-| `trigger` | JSONB | Trigger type + config + table_id |
-| `steps` | JSONB[] | Ordered action list. Always read/written as unit. Max 20 steps (MVP). |
-| `status` | VARCHAR | `active`, `paused`, `draft` |
-| `run_count` | INTEGER | Total executions |
-| `error_count` | INTEGER | Failed executions |
+| Column         | Type                 | Notes                                                                 |
+| -------------- | -------------------- | --------------------------------------------------------------------- |
+| `workspace_id` | UUID FK → workspaces | Denormalized for sidebar queries and permission checks                |
+| `trigger`      | JSONB                | Trigger type + config + table_id                                      |
+| `steps`        | JSONB[]              | Ordered action list. Always read/written as unit. Max 20 steps (MVP). |
+| `status`       | VARCHAR              | `active`, `paused`, `draft`                                           |
+| `run_count`    | INTEGER              | Total executions                                                      |
+| `error_count`  | INTEGER              | Failed executions                                                     |
 
 **Why `steps` is JSONB, not a separate table:** Step list always read/written as a unit. No cross-automation step queries needed. Single row fetch.
 
@@ -466,14 +474,14 @@ See `data-model.md` for the canonical schema. Key columns:
 
 ```typescript
 interface AutomationStep {
-  id: string;                       // Stable UUID per step
-  type: 'action';                   // MVP: actions only (conditions post-MVP)
-  position: number;                 // 0-indexed order
-  name: string;                     // User-facing label
-  actionType: string;               // e.g., 'send_email', 'create_record'
-  config: Record<string, unknown>;  // Action-specific configuration
+  id: string; // Stable UUID per step
+  type: 'action'; // MVP: actions only (conditions post-MVP)
+  position: number; // 0-indexed order
+  name: string; // User-facing label
+  actionType: string; // e.g., 'send_email', 'create_record'
+  config: Record<string, unknown>; // Action-specific configuration
   errorStrategy: 'stop' | 'skip_continue' | 'retry';
-  maxRetries?: number;              // Only when errorStrategy='retry' (max 3)
+  maxRetries?: number; // Only when errorStrategy='retry' (max 3)
 }
 ```
 
@@ -483,30 +491,30 @@ See `data-model.md`. Per-run execution log: status, timing, step_log (JSONB with
 
 ### Webhook Tables
 
-| Table | Purpose |
-|-------|---------|
-| `webhook_endpoints` | Registered URLs, signing secrets, subscribed events, status, failure count |
+| Table                  | Purpose                                                                             |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `webhook_endpoints`    | Registered URLs, signing secrets, subscribed events, status, failure count          |
 | `webhook_delivery_log` | Per-delivery record: payload, status code, duration, retry count. 30-day retention. |
 
 ### Plan Limits
 
-| Plan | Max Automations | Max Executions/Month | Max Steps |
-|------|----------------|---------------------|-----------|
-| Freelancer | 5 | 500 | 10 |
-| Starter | 15 | 5,000 | 15 |
-| Professional | 50 | 25,000 | 20 |
-| Business | 200 | 100,000 | 20 |
-| Enterprise | Unlimited | Custom | 20 |
+| Plan         | Max Automations | Max Executions/Month | Max Steps |
+| ------------ | --------------- | -------------------- | --------- |
+| Freelancer   | 5               | 500                  | 10        |
+| Starter      | 15              | 5,000                | 15        |
+| Professional | 50              | 25,000               | 20        |
+| Business     | 200             | 100,000              | 20        |
+| Enterprise   | Unlimited       | Custom               | 20        |
 
 Execution count tracked via Redis counter (`auto:exec:{tenantId}:{YYYY-MM}`, TTL 35 days). At limit, executions rejected with `quota_exceeded` + owner notified.
 
 ### Redis Key Patterns
 
-| Pattern | Usage | TTL |
-|---------|-------|-----|
-| `auto:exec:{tenantId}:{YYYY-MM}` | Monthly execution counter | 35 days |
-| `rl:webhook:outbound:t:{tenantId}` | Per-tenant outbound throttle | 60s |
-| `rl:webhook:inbound:{automationId}` | Inbound webhook rate counter | 60s |
+| Pattern                             | Usage                        | TTL     |
+| ----------------------------------- | ---------------------------- | ------- |
+| `auto:exec:{tenantId}:{YYYY-MM}`    | Monthly execution counter    | 35 days |
+| `rl:webhook:outbound:t:{tenantId}`  | Per-tenant outbound throttle | 60s     |
+| `rl:webhook:inbound:{automationId}` | Inbound webhook rate counter | 60s     |
 
 ---
 

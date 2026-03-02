@@ -2,6 +2,7 @@
 
 > **Glossary reconciliation: 2026-02-27 (rev 2)**
 > Changes made to align with `GLOSSARY.md` (source of truth):
+>
 > - **DB table `interface_views` → `views`** throughout. Glossary DB Entity Quick Reference defines `Table View | views | id, tenant_id, table_id, view_type, config (JSONB)`. All code/schema references now use `views` as the canonical DB table name. Prior reconciliation incorrectly retained `interface_views` with mapping notes; glossary wins.
 > - **"Interface" references** in permission context → "Table View" / "view" throughout.
 > - **Approval workflow references** tagged **[Post-MVP]** where they describe approval-gated behavior (glossary: Approval workflows = Post-MVP). Core bulk operations remain MVP; approval-related exclusion logic is defensive scaffolding that's harmless when approvals don't exist.
@@ -21,29 +22,29 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Rationale | 50–57 | Why bulk operations, user scenarios |
-| Core Design Principles | 58–71 | Binary gating, no partial success, undo-friendly |
-| Selection Model | 72–87 | Checkbox column, shift-click range, 5K cap, select-all |
-| Bulk Actions Toolbar | 88–109 | 7 actions, toolbar UX, permission gating |
-| Bulk Edit | 110–158 | Multi-field edit dialog, preview, confirmation |
-| Bulk Delete | 159–193 | Soft delete, confirmation dialog, undo window |
-| Bulk Duplicate | 194–206 | Duplicate with/without links, naming convention |
-| Bulk Assign | 207–214 | Assign people/status field to selected records |
-| Bulk Export Selection | 215–228 | Export selected records to CSV/Excel |
-| Bulk Trigger Automation | 229–254 | Run automation on selected records |
-| Bulk Checklist Item Update **[Post-MVP — depends on approval workflows, which are post-MVP per glossary]** | 255–269 | Batch update checklist fields |
-| Batch Server Action Pattern | 270–386 | Server-side bulk processing, transaction handling, error rollback |
-| Audit Log Extension | 387–422 | Condensed audit entries, record_ids_affected[], truncation flag |
-| Real-Time Event Batching | 423–466 | Batch Socket.io events, condensation matching sync pattern |
-| Formula Cascade Handling **[Post-MVP — formula engine is post-MVP per glossary]** | 467–485 | Throttled formula recalculation after bulk edits |
-| Automation Trigger Batching | 486–501 | Deduplication for automation triggers from bulk operations |
-| Undo Behavior | 502–518 | Undo for ≤50 records, undo window, limitations |
-| Mobile Behavior | 519–532 | Mobile bulk selection, action sheet, touch gestures |
-| Phase Implementation | 533–541 | MVP — Core UX delivery scope |
-| Key Architectural Decisions | 542–560 | ADR-style decisions with rationale |
-| Future Extensions | 561–571 | Deferred bulk operation features |
+| Section                                                                                                    | Lines   | Covers                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| Strategic Rationale                                                                                        | 50–57   | Why bulk operations, user scenarios                               |
+| Core Design Principles                                                                                     | 58–71   | Binary gating, no partial success, undo-friendly                  |
+| Selection Model                                                                                            | 72–87   | Checkbox column, shift-click range, 5K cap, select-all            |
+| Bulk Actions Toolbar                                                                                       | 88–109  | 7 actions, toolbar UX, permission gating                          |
+| Bulk Edit                                                                                                  | 110–158 | Multi-field edit dialog, preview, confirmation                    |
+| Bulk Delete                                                                                                | 159–193 | Soft delete, confirmation dialog, undo window                     |
+| Bulk Duplicate                                                                                             | 194–206 | Duplicate with/without links, naming convention                   |
+| Bulk Assign                                                                                                | 207–214 | Assign people/status field to selected records                    |
+| Bulk Export Selection                                                                                      | 215–228 | Export selected records to CSV/Excel                              |
+| Bulk Trigger Automation                                                                                    | 229–254 | Run automation on selected records                                |
+| Bulk Checklist Item Update **[Post-MVP — depends on approval workflows, which are post-MVP per glossary]** | 255–269 | Batch update checklist fields                                     |
+| Batch Server Action Pattern                                                                                | 270–386 | Server-side bulk processing, transaction handling, error rollback |
+| Audit Log Extension                                                                                        | 387–422 | Condensed audit entries, record_ids_affected[], truncation flag   |
+| Real-Time Event Batching                                                                                   | 423–466 | Batch Socket.io events, condensation matching sync pattern        |
+| Formula Cascade Handling **[Post-MVP — formula engine is post-MVP per glossary]**                          | 467–485 | Throttled formula recalculation after bulk edits                  |
+| Automation Trigger Batching                                                                                | 486–501 | Deduplication for automation triggers from bulk operations        |
+| Undo Behavior                                                                                              | 502–518 | Undo for ≤50 records, undo window, limitations                    |
+| Mobile Behavior                                                                                            | 519–532 | Mobile bulk selection, action sheet, touch gestures               |
+| Phase Implementation                                                                                       | 533–541 | MVP — Core UX delivery scope                                      |
+| Key Architectural Decisions                                                                                | 542–560 | ADR-style decisions with rationale                                |
+| Future Extensions                                                                                          | 561–571 | Deferred bulk operation features                                  |
 
 ---
 
@@ -91,15 +92,15 @@ The toolbar appears as a floating bar above the grid footer when 2+ records are 
 
 ### Toolbar Actions
 
-| Action | Permission Gate | Availability | Phase |
-|--------|----------------|--------------|-------|
-| **Delete selected** | `allow_delete` on Table View config (DB: `views`) | Table-level binary gate. Hidden if user lacks delete permission. | 3 |
-| **Edit field value** | `allow_edit` on Table View config (DB: `views`) + field-level write | Field picker excludes read-only fields and approval-gated Status fields [approval gating is post-MVP behavior]. | 3 |
-| **Duplicate selected** | `allow_create` on Table View config (DB: `views`) | Creates copies of selected records. Hidden if user lacks create permission. | 3 |
-| **Copy selected** | Always available when records selected | Copies to clipboard in tab-separated format (for pasting into spreadsheets). | 3 |
-| **Assign to user** | `allow_edit` on Table View config + write access on a People/Assignee field | Shortcut for bulk edit on People field. Hidden if no editable People field exists on the table. | 3 |
-| **Export selection** | Always available when records selected | Exports selected records to CSV or XLSX. Respects field-level visibility — hidden fields excluded from export. | 3 |
-| **Run automation** | `allow_edit` on Table View config + automation exists with Button/Manual trigger on this table | Opens picker filtered to eligible automations. | 6 |
+| Action                 | Permission Gate                                                                                | Availability                                                                                                    | Phase |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----- |
+| **Delete selected**    | `allow_delete` on Table View config (DB: `views`)                                              | Table-level binary gate. Hidden if user lacks delete permission.                                                | 3     |
+| **Edit field value**   | `allow_edit` on Table View config (DB: `views`) + field-level write                            | Field picker excludes read-only fields and approval-gated Status fields [approval gating is post-MVP behavior]. | 3     |
+| **Duplicate selected** | `allow_create` on Table View config (DB: `views`)                                              | Creates copies of selected records. Hidden if user lacks create permission.                                     | 3     |
+| **Copy selected**      | Always available when records selected                                                         | Copies to clipboard in tab-separated format (for pasting into spreadsheets).                                    | 3     |
+| **Assign to user**     | `allow_edit` on Table View config + write access on a People/Assignee field                    | Shortcut for bulk edit on People field. Hidden if no editable People field exists on the table.                 | 3     |
+| **Export selection**   | Always available when records selected                                                         | Exports selected records to CSV or XLSX. Respects field-level visibility — hidden fields excluded from export.  | 3     |
+| **Run automation**     | `allow_edit` on Table View config + automation exists with Button/Manual trigger on this table | Opens picker filtered to eligible automations.                                                                  | 6     |
 
 **Toolbar layout:** Left-aligned action buttons with icons + labels. Right-aligned: record count ("47 selected") and "×" deselect-all button. On mobile: the toolbar appears as a bottom sheet with the same actions in a vertical list.
 
@@ -118,6 +119,7 @@ The popover contains a searchable field list. Fields are filtered:
 **Included:** All fields where the user has read-write permission in the current Table View context.
 
 **Excluded:**
+
 - Fields the user has read-only or hidden permission on
 - Status fields with `transitions.enabled: true` (approval-gated) **[Post-MVP behavior — approval workflows are post-MVP. In MVP, no fields will have `transitions.enabled: true`, so this exclusion is dormant scaffolding]**
 - Formula fields (computed, not writable) **[Post-MVP — formula engine is post-MVP per glossary]**
@@ -132,22 +134,22 @@ After selecting a field, the popover shows a value editor appropriate to the fie
 
 **Two edit modes:**
 
-| Mode | Behavior | Available for |
-|------|----------|---------------|
+| Mode             | Behavior                                                                    | Available for            |
+| ---------------- | --------------------------------------------------------------------------- | ------------------------ |
 | **Set to value** | Replace the current value in all selected records with the specified value. | All editable field types |
-| **Clear value** | Set the field to null/empty in all selected records. | All nullable field types |
+| **Clear value**  | Set the field to null/empty in all selected records.                        | All nullable field types |
 
 For Multi-Select fields, an additional mode:
 
-| Mode | Behavior |
-|------|----------|
-| **Add options** | Append the selected options to each record's existing values (no duplicates). |
-| **Remove options** | Remove the selected options from each record's existing values. |
+| Mode               | Behavior                                                                      |
+| ------------------ | ----------------------------------------------------------------------------- |
+| **Add options**    | Append the selected options to each record's existing values (no duplicates). |
+| **Remove options** | Remove the selected options from each record's existing values.               |
 
 For Number fields with `allow_atomic_adjust: true` (inventory quantities), an additional mode:
 
-| Mode | Behavior |
-|------|----------|
+| Mode          | Behavior                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
 | **Adjust by** | Add or subtract a delta from each record's current value. Uses `adjustFieldValue()` for atomic operation. |
 
 ### Confirmation
@@ -169,11 +171,11 @@ When the user clicks "Delete selected," the system runs a lightweight impact que
 ```typescript
 interface BulkDeleteImpactSummary {
   recordCount: number;
-  crossLinkCount: number;       // Records in other tables linked to these records
-  childRecordCount: number;     // Records in sub-tables/child tables via parent link
+  crossLinkCount: number; // Records in other tables linked to these records
+  childRecordCount: number; // Records in sub-tables/child tables via parent link
   formulaDependentCount: number; // Records with formulas referencing these records
   automationTriggerCount: number; // Automations that will fire on deletion
-  pendingApprovalCount: number;  // Records with active approval requests
+  pendingApprovalCount: number; // Records with active approval requests
 }
 ```
 
@@ -290,12 +292,10 @@ const bulkUpdateSchema = z.object({
   mode: z.enum(['set', 'clear', 'add', 'remove', 'adjust']),
 });
 
-export async function bulkUpdateRecords(
-  input: z.infer<typeof bulkUpdateSchema>
-) {
-  const validated = bulkUpdateSchema.parse(input);    // 1. Zod validation
-  const tenantId = await getTenantId();               // 2. Tenant from Clerk
-  const userId = await getUserId();                   // 3. User from Clerk
+export async function bulkUpdateRecords(input: z.infer<typeof bulkUpdateSchema>) {
+  const validated = bulkUpdateSchema.parse(input); // 1. Zod validation
+  const tenantId = await getTenantId(); // 2. Tenant from Clerk
+  const userId = await getUserId(); // 3. User from Clerk
 
   // 4. Permission check — field-level write access
   //    (resolved once for the user × field, not per record)
@@ -364,15 +364,15 @@ export async function bulkUpdateRecords(
 
 ### Key Differences from Single-Record Pattern
 
-| Aspect | Single-Record Pattern | Batch Pattern |
-|--------|-----------------------|---------------|
-| Input validation | Single ID | Array of IDs, max 5,000 |
-| Permission check | Per-record (but no record-level perms, so effectively per-table) | Once per batch — same result |
-| DB operation | Single insert/update/delete | Batch Drizzle `WHERE id IN (...)` |
-| Audit log | One entry per record | One condensed entry per batch |
-| Real-time event | One event per mutation | One `*.batch` event per batch |
-| Automation trigger | One trigger per record | One batch-mode trigger |
-| Transaction scope | Single record + audit | All records + audit in one transaction |
+| Aspect             | Single-Record Pattern                                            | Batch Pattern                          |
+| ------------------ | ---------------------------------------------------------------- | -------------------------------------- |
+| Input validation   | Single ID                                                        | Array of IDs, max 5,000                |
+| Permission check   | Per-record (but no record-level perms, so effectively per-table) | Once per batch — same result           |
+| DB operation       | Single insert/update/delete                                      | Batch Drizzle `WHERE id IN (...)`      |
+| Audit log          | One entry per record                                             | One condensed entry per batch          |
+| Real-time event    | One event per mutation                                           | One `*.batch` event per batch          |
+| Automation trigger | One trigger per record                                           | One batch-mode trigger                 |
+| Transaction scope  | Single record + audit                                            | All records + audit in one transaction |
 
 ### Batch Delete Pattern
 
@@ -390,11 +390,11 @@ The audit log (`audit-log.md`) defines bulk operation condensation for sync batc
 
 ### New Audit Actions
 
-| Action | Entity Type | Details |
-|--------|-------------|---------|
-| `record.bulk_updated` | `table` | `{ fieldId, mode, value_summary, record_count, record_ids_affected[], truncated }` |
-| `record.bulk_deleted` | `table` | `{ record_count, record_ids_affected[], truncated, impact_summary }` |
-| `record.bulk_created` | `table` | `{ source: 'duplicate', record_count, record_ids_created[], source_record_ids[], truncated }` |
+| Action                | Entity Type | Details                                                                                       |
+| --------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| `record.bulk_updated` | `table`     | `{ fieldId, mode, value_summary, record_count, record_ids_affected[], truncated }`            |
+| `record.bulk_deleted` | `table`     | `{ record_count, record_ids_affected[], truncated, impact_summary }`                          |
+| `record.bulk_created` | `table`     | `{ source: 'duplicate', record_count, record_ids_created[], source_record_ids[], truncated }` |
 
 **Condensation rules (extending existing rules from `audit-log.md`):**
 
@@ -456,11 +456,11 @@ Clients subscribed to the table channel receive the batch event and must handle 
 
 ### Event Types
 
-| Event | Trigger |
-|-------|---------|
+| Event                  | Trigger                |
+| ---------------------- | ---------------------- |
 | `record.updated.batch` | Bulk edit, bulk assign |
-| `record.deleted.batch` | Bulk delete |
-| `record.created.batch` | Bulk duplicate |
+| `record.deleted.batch` | Bulk delete            |
+| `record.created.batch` | Bulk duplicate         |
 
 ---
 
@@ -501,14 +501,14 @@ Bulk operations fire automation triggers via the existing batch mode (defined in
 
 ## Undo Behavior
 
-| Action | ≤50 records | >50 records |
-|--------|-------------|-------------|
-| Bulk edit | Undo toast, 10-second window. Reverts all records to prior values. | No undo. Confirmation dialog is the safeguard. |
-| Bulk delete | Undo toast, 10-second window. Reverses soft delete. | No undo. Impact preview dialog + type "delete" to confirm. |
-| Bulk duplicate | Undo toast, 10-second window. Deletes the duplicated records. | No undo. Record quota check serves as safeguard. |
-| Bulk assign | Undo toast, 10-second window. Reverts assignee field. | No undo. Confirmation dialog. |
-| Bulk export | N/A — non-destructive. | N/A |
-| Bulk trigger automation | No undo — automation side effects may not be reversible. Toast links to automation execution log. | Same. |
+| Action                  | ≤50 records                                                                                       | >50 records                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Bulk edit               | Undo toast, 10-second window. Reverts all records to prior values.                                | No undo. Confirmation dialog is the safeguard.             |
+| Bulk delete             | Undo toast, 10-second window. Reverses soft delete.                                               | No undo. Impact preview dialog + type "delete" to confirm. |
+| Bulk duplicate          | Undo toast, 10-second window. Deletes the duplicated records.                                     | No undo. Record quota check serves as safeguard.           |
+| Bulk assign             | Undo toast, 10-second window. Reverts assignee field.                                             | No undo. Confirmation dialog.                              |
+| Bulk export             | N/A — non-destructive.                                                                            | N/A                                                        |
+| Bulk trigger automation | No undo — automation side effects may not be reversible. Toast links to automation execution log. | Same.                                                      |
 
 **Undo implementation:** For bulk operations with undo, the server action returns both the result and the prior values (a snapshot of the affected field for each record, taken within the same transaction before the update). The undo action replays these prior values in a new batch transaction. If the undo window expires, the prior values are discarded.
 
@@ -532,29 +532,29 @@ On mobile devices (phone form factor), bulk operations are available but adapted
 
 ## Phase Implementation
 
-| Phase | Scope |
-|-------|-------|
-| MVP — Core UX | Selection model (checkbox column, header select-all, selection cap 5,000). Bulk actions toolbar (appears on 2+ selection). **Delete selected** with impact preview dialog and `BulkDeleteImpactSummary`. **Edit field value** with field picker (approval-gated exclusion [post-MVP scaffolding — harmless when approvals don't exist], field type filtering), value editor, confirmation, undo toast. **Duplicate selected** with record quota check. **Copy selected** to clipboard. **Assign to user** shortcut. **Export selection** to CSV/XLSX. Batch server action pattern (`bulkUpdateRecords`, `bulkDeleteRecords`, `bulkDuplicateRecords`). Condensed audit log entries. Batch real-time events. Undo mechanism (Redis key with prior values). Mobile selection mode and bottom sheet toolbar. |
-| Post-MVP — Automations | **Run automation** toolbar action with automation picker. Bulk checklist item update for approval criteria advancement [post-MVP — depends on approval workflows]. Automation batch-mode trigger integration. |
+| Phase                  | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVP — Core UX          | Selection model (checkbox column, header select-all, selection cap 5,000). Bulk actions toolbar (appears on 2+ selection). **Delete selected** with impact preview dialog and `BulkDeleteImpactSummary`. **Edit field value** with field picker (approval-gated exclusion [post-MVP scaffolding — harmless when approvals don't exist], field type filtering), value editor, confirmation, undo toast. **Duplicate selected** with record quota check. **Copy selected** to clipboard. **Assign to user** shortcut. **Export selection** to CSV/XLSX. Batch server action pattern (`bulkUpdateRecords`, `bulkDeleteRecords`, `bulkDuplicateRecords`). Condensed audit log entries. Batch real-time events. Undo mechanism (Redis key with prior values). Mobile selection mode and bottom sheet toolbar. |
+| Post-MVP — Automations | **Run automation** toolbar action with automation picker. Bulk checklist item update for approval criteria advancement [post-MVP — depends on approval workflows]. Automation batch-mode trigger integration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ---
 
 ## Key Architectural Decisions
 
-| Decision | Resolution | Rationale |
-|----------|------------|-----------|
-| Partial success model | Eliminated entirely | Approval-gated fields excluded from bulk edit; delete is binary permission gate. No action can produce mixed results. |
-| Delete permission level | Table-level, per role, per Table View | `allow_delete` on Table View config (DB: `views`). Binary gate. If visible, applies to all selected records. |
-| Approval-gated field exclusion [post-MVP behavior] | Status fields with `transitions.enabled: true` hidden from bulk edit picker | Approval workflows exist for individual evaluation. Bulk override is an anti-pattern. Bulk checklist advancement is the legitimate accelerator. |
-| Selection cap | 5,000 records | Keeps batch transactions under ~10 seconds. Larger operations should use automations or scheduled jobs. |
-| Undo threshold | ≤50 records: undo toast. >50: confirmation dialog only | Small batches benefit from quick undo. Large batches need deliberate confirmation — undo of 5,000 records is itself a risky bulk operation. |
-| Audit condensation | One entry per bulk action, not per record | Consistent with sync batch condensation pattern. Record Activity tab queries both individual and bulk entries. |
-| Real-time batching | Single `*.batch` event per bulk action | Prevents event storms on connected clients. Client invalidation strategy scales with batch size. |
-| Formula cascade [post-MVP] | Debounce + single graph walk + batch recalculation | Reuses existing cascade infrastructure. No new mechanism needed. |
-| Batch server action location | `apps/web/src/actions/bulk.ts` | Mirrors single-record action files. Cross-references `actions/CLAUDE.md` for the pattern. |
-| Export at selection level | Enabled | Reverses the prior "No export at selection level" stance. Selection-scoped export is essential for workflows like "export these 50 invoices for the accountant." |
-| Linked Record fields in bulk edit | Excluded from MVP — Core UX | Editing link relationships in bulk requires record picker UX that handles multi-record context. Deferred to future extension. |
-| Automation rate cap accounting | One bulk trigger = one execution | Prevents a single bulk operation from consuming the full rate cap. The automation processes the batch internally. |
+| Decision                                           | Resolution                                                                  | Rationale                                                                                                                                                        |
+| -------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Partial success model                              | Eliminated entirely                                                         | Approval-gated fields excluded from bulk edit; delete is binary permission gate. No action can produce mixed results.                                            |
+| Delete permission level                            | Table-level, per role, per Table View                                       | `allow_delete` on Table View config (DB: `views`). Binary gate. If visible, applies to all selected records.                                                     |
+| Approval-gated field exclusion [post-MVP behavior] | Status fields with `transitions.enabled: true` hidden from bulk edit picker | Approval workflows exist for individual evaluation. Bulk override is an anti-pattern. Bulk checklist advancement is the legitimate accelerator.                  |
+| Selection cap                                      | 5,000 records                                                               | Keeps batch transactions under ~10 seconds. Larger operations should use automations or scheduled jobs.                                                          |
+| Undo threshold                                     | ≤50 records: undo toast. >50: confirmation dialog only                      | Small batches benefit from quick undo. Large batches need deliberate confirmation — undo of 5,000 records is itself a risky bulk operation.                      |
+| Audit condensation                                 | One entry per bulk action, not per record                                   | Consistent with sync batch condensation pattern. Record Activity tab queries both individual and bulk entries.                                                   |
+| Real-time batching                                 | Single `*.batch` event per bulk action                                      | Prevents event storms on connected clients. Client invalidation strategy scales with batch size.                                                                 |
+| Formula cascade [post-MVP]                         | Debounce + single graph walk + batch recalculation                          | Reuses existing cascade infrastructure. No new mechanism needed.                                                                                                 |
+| Batch server action location                       | `apps/web/src/actions/bulk.ts`                                              | Mirrors single-record action files. Cross-references `actions/CLAUDE.md` for the pattern.                                                                        |
+| Export at selection level                          | Enabled                                                                     | Reverses the prior "No export at selection level" stance. Selection-scoped export is essential for workflows like "export these 50 invoices for the accountant." |
+| Linked Record fields in bulk edit                  | Excluded from MVP — Core UX                                                 | Editing link relationships in bulk requires record picker UX that handles multi-record context. Deferred to future extension.                                    |
+| Automation rate cap accounting                     | One bulk trigger = one execution                                            | Prevents a single bulk operation from consuming the full rate cap. The automation processes the batch internally.                                                |
 
 ---
 

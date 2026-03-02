@@ -13,22 +13,22 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Purpose of This Document | 35–40 | Document scope and audience |
-| What This Module Does | 41–58 | Read-only ephemeral analytical queries, when to use vs Postgres |
-| Where This Module Sits in the Architecture | 59–98 | Dependency diagram, relationship to SDS/AI Field Agents |
-| Core Design Principles | 99–132 | Ephemeral, read-only, tenant-isolated, SQL-safe |
-| Data Flow: Step by Step | 133–374 | QueryPlan → Postgres fetch → DuckDB load → execute → ContextResult |
-| Handling Cross-Base JOINs | 375–422 | ANY/UNNEST patterns, multi-table analytical queries |
-| JSONB to DuckDB Type Coercion | 423–457 | Type mapping from canonical JSONB to DuckDB columns |
-| Performance Considerations | 458–492 | DuckDBPoolConfig, memory limits, concurrency, <2s target |
-| Security Considerations | 493–527 | SQL safety scanner, query allow-listing, injection prevention |
-| Error Handling Strategy | 528–550 | Error categories, fallback behavior, user-facing messages |
-| Node.js Implementation Notes | 551–640 | duckdb-node bindings, connection pooling, memory management |
-| Testing Strategy | 641–670 | Unit tests, integration tests, performance benchmarks |
-| Claude Code Prompt Roadmap | 671–922 | 8-prompt implementation roadmap |
-| Appendix: Future Extensions (Do Not Build Yet) | 923–935 | Deferred features |
+| Section                                        | Lines   | Covers                                                             |
+| ---------------------------------------------- | ------- | ------------------------------------------------------------------ |
+| Purpose of This Document                       | 35–40   | Document scope and audience                                        |
+| What This Module Does                          | 41–58   | Read-only ephemeral analytical queries, when to use vs Postgres    |
+| Where This Module Sits in the Architecture     | 59–98   | Dependency diagram, relationship to SDS/AI Field Agents            |
+| Core Design Principles                         | 99–132  | Ephemeral, read-only, tenant-isolated, SQL-safe                    |
+| Data Flow: Step by Step                        | 133–374 | QueryPlan → Postgres fetch → DuckDB load → execute → ContextResult |
+| Handling Cross-Base JOINs                      | 375–422 | ANY/UNNEST patterns, multi-table analytical queries                |
+| JSONB to DuckDB Type Coercion                  | 423–457 | Type mapping from canonical JSONB to DuckDB columns                |
+| Performance Considerations                     | 458–492 | DuckDBPoolConfig, memory limits, concurrency, <2s target           |
+| Security Considerations                        | 493–527 | SQL safety scanner, query allow-listing, injection prevention      |
+| Error Handling Strategy                        | 528–550 | Error categories, fallback behavior, user-facing messages          |
+| Node.js Implementation Notes                   | 551–640 | duckdb-node bindings, connection pooling, memory management        |
+| Testing Strategy                               | 641–670 | Unit tests, integration tests, performance benchmarks              |
+| Claude Code Prompt Roadmap                     | 671–922 | 8-prompt implementation roadmap                                    |
+| Appendix: Future Extensions (Do Not Build Yet) | 923–935 | Deferred features                                                  |
 
 ---
 
@@ -89,6 +89,7 @@ User asks a natural language question
 **Upstream dependency:** Schema Descriptor Service (SDS — see `schema-descriptor-service.md`). The DuckDB Context Layer uses SDS metadata for type-aware column creation when loading JSONB into DuckDB, and SDS permission filtering to scope queries to authorized data.
 
 **Downstream consumers:**
+
 - AI Query Planner (for natural language workspace queries)
 - AI Field Agents (for cross-base aggregate context in field prompts — see `ai-field-agents-ref.md` > Aggregate Context)
 - Smart Docs (post-MVP — for live data queries embedded in documents)
@@ -117,6 +118,7 @@ Before any records are fetched from Postgres, the query is filtered through the 
 ### 4. Resource-Bounded — Cannot Starve the System
 
 Every query has enforced limits on:
+
 - Maximum number of records hydrated from Postgres (configurable, default: 50,000)
 - Maximum DuckDB memory allocation (configurable, default: 256MB)
 - Query execution timeout (configurable, default: 30 seconds)
@@ -160,37 +162,47 @@ interface QueryPlan {
 
   // Resource limits (optional overrides)
   limits?: {
-    max_records_per_table?: number;  // default 50,000
-    max_memory_mb?: number;          // default 256
-    timeout_seconds?: number;        // default 30
-    max_result_rows?: number;        // default 1,000
+    max_records_per_table?: number; // default 50,000
+    max_memory_mb?: number; // default 256
+    timeout_seconds?: number; // default 30
+    max_result_rows?: number; // default 1,000
   };
 }
 
 interface TableSource {
   table_id: string;
-  alias: string;              // DuckDB table name, e.g. "deals", "contacts"
-  fields: FieldSelection[];   // Which fields to include
-  pg_filters?: PgFilter[];    // WHERE clauses to apply at Postgres level
+  alias: string; // DuckDB table name, e.g. "deals", "contacts"
+  fields: FieldSelection[]; // Which fields to include
+  pg_filters?: PgFilter[]; // WHERE clauses to apply at Postgres level
 }
 
 interface FieldSelection {
   field_id: string;
-  alias: string;              // DuckDB column name
-  field_type: string;         // From FieldTypeRegistry — needed for type mapping
+  alias: string; // DuckDB column name
+  field_type: string; // From FieldTypeRegistry — needed for type mapping
 }
 
 interface JoinDefinition {
-  left_alias: string;         // DuckDB table alias
-  left_field: string;         // DuckDB column alias (the link field)
-  right_alias: string;        // DuckDB table alias
-  right_field: string;        // DuckDB column alias (usually record_id)
+  left_alias: string; // DuckDB table alias
+  left_field: string; // DuckDB column alias (the link field)
+  right_alias: string; // DuckDB table alias
+  right_field: string; // DuckDB column alias (usually record_id)
   join_type: 'inner' | 'left' | 'right';
 }
 
 interface PgFilter {
   field_id: string;
-  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains' | 'is_null' | 'is_not_null';
+  operator:
+    | 'eq'
+    | 'neq'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
+    | 'in'
+    | 'contains'
+    | 'is_null'
+    | 'is_not_null';
   value: any;
 }
 ```
@@ -212,6 +224,7 @@ Before executing anything, validate:
 For each `TableSource` in the plan:
 
 1. Build a Postgres query against the records table:
+
    ```sql
    SELECT record_id, data
    FROM records
@@ -226,6 +239,7 @@ For each `TableSource` in the plan:
 2. **Permission filtering at the row level:** If EveryStack's permission model includes row-level access control (e.g., "user can only see records they own"), apply that filter in the Postgres WHERE clause. This is the second layer of defense — the first was table/field-level in Step 2.
 
 3. **Field projection:** Only extract the fields listed in `source.fields[]` from the JSONB `data` column. Do not pull the entire JSONB blob. This reduces memory usage and prevents unauthorized field data from entering DuckDB.
+
    ```sql
    SELECT
      record_id,
@@ -246,23 +260,23 @@ For each table source, create a DuckDB table and insert the fetched records.
 
 **Type mapping from EveryStack field types to DuckDB column types:**
 
-| EveryStack Field Type | DuckDB Column Type | Notes |
-|---|---|---|
-| text, rich_text, email, url, phone | VARCHAR | |
-| number | DOUBLE | |
-| integer, rating | INTEGER | |
-| currency | DOUBLE | Store raw numeric value; currency_code as separate VARCHAR column if needed |
-| percent | DOUBLE | Store as decimal (0.15 not 15) |
-| checkbox | BOOLEAN | |
-| date, created_time, last_modified_time | TIMESTAMP | Parse ISO 8601 strings |
-| duration | DOUBLE | Store as seconds |
-| single_select, status | VARCHAR | **Resolve option ID → option label using SDS field metadata.** Canonical JSONB stores option IDs (e.g., `"opt_003"`), but DuckDB must store human-readable labels (e.g., `"Closed Won"`) so analytical SQL can filter and group by them. |
-| multi_select | VARCHAR[] | **Resolve each option ID → option label.** DuckDB array of labels, not IDs. |
-| people, created_by, updated_by | VARCHAR | **Resolve user ID → display name using workspace membership data.** Canonical stores user IDs; DuckDB stores names for readable analytics. |
-| cross_base_link | VARCHAR[] | Array of linked record IDs. These stay as IDs — JOINs resolve them. |
-| attachment | VARCHAR | Store as JSON string (not queryable, but preserves metadata) |
-| autonumber | INTEGER | |
-| formula, rollup, lookup | Depends on output type | Map based on the computed field's result type |
+| EveryStack Field Type                  | DuckDB Column Type     | Notes                                                                                                                                                                                                                                    |
+| -------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text, rich_text, email, url, phone     | VARCHAR                |                                                                                                                                                                                                                                          |
+| number                                 | DOUBLE                 |                                                                                                                                                                                                                                          |
+| integer, rating                        | INTEGER                |                                                                                                                                                                                                                                          |
+| currency                               | DOUBLE                 | Store raw numeric value; currency_code as separate VARCHAR column if needed                                                                                                                                                              |
+| percent                                | DOUBLE                 | Store as decimal (0.15 not 15)                                                                                                                                                                                                           |
+| checkbox                               | BOOLEAN                |                                                                                                                                                                                                                                          |
+| date, created_time, last_modified_time | TIMESTAMP              | Parse ISO 8601 strings                                                                                                                                                                                                                   |
+| duration                               | DOUBLE                 | Store as seconds                                                                                                                                                                                                                         |
+| single_select, status                  | VARCHAR                | **Resolve option ID → option label using SDS field metadata.** Canonical JSONB stores option IDs (e.g., `"opt_003"`), but DuckDB must store human-readable labels (e.g., `"Closed Won"`) so analytical SQL can filter and group by them. |
+| multi_select                           | VARCHAR[]              | **Resolve each option ID → option label.** DuckDB array of labels, not IDs.                                                                                                                                                              |
+| people, created_by, updated_by         | VARCHAR                | **Resolve user ID → display name using workspace membership data.** Canonical stores user IDs; DuckDB stores names for readable analytics.                                                                                               |
+| cross_base_link                        | VARCHAR[]              | Array of linked record IDs. These stay as IDs — JOINs resolve them.                                                                                                                                                                      |
+| attachment                             | VARCHAR                | Store as JSON string (not queryable, but preserves metadata)                                                                                                                                                                             |
+| autonumber                             | INTEGER                |                                                                                                                                                                                                                                          |
+| formula, rollup, lookup                | Depends on output type | Map based on the computed field's result type                                                                                                                                                                                            |
 
 **DuckDB table creation pattern:**
 
@@ -315,6 +329,7 @@ GROUP BY c.segment;
 ```
 
 **Execution constraints:**
+
 - Set DuckDB's memory limit: `SET memory_limit='256MB';`
 - Set a query timeout at the application level (abort execution after `timeout_seconds`)
 - Wrap execution in a try/catch. DuckDB errors (type mismatches, syntax errors) should be captured and returned in the ContextResult so the AI agent can self-correct.
@@ -326,37 +341,37 @@ interface ContextResult {
   success: boolean;
 
   // The query results as structured data
-  columns: ColumnMeta[];       // column names and types
-  rows: any[][];               // row data
+  columns: ColumnMeta[]; // column names and types
+  rows: any[][]; // row data
 
   // Metadata for the LLM
   row_count: number;
-  truncated: boolean;          // true if max_result_rows was hit
-  truncation_reason?: string;  // human-readable explanation
+  truncated: boolean; // true if max_result_rows was hit
+  truncation_reason?: string; // human-readable explanation
 
   // Provenance — helps the LLM cite its answer
   sources: {
     table_id: string;
     table_name: string;
     record_count_loaded: number;
-    filters_applied: string[];   // human-readable filter descriptions
+    filters_applied: string[]; // human-readable filter descriptions
   }[];
 
   // Performance
   execution_time_ms: number;
-  records_hydrated: number;     // total records loaded across all tables
+  records_hydrated: number; // total records loaded across all tables
 
   // Error information (if success is false)
   error?: {
     stage: 'validation' | 'hydration' | 'execution';
     message: string;
-    sql_error?: string;         // DuckDB error message if applicable
+    sql_error?: string; // DuckDB error message if applicable
   };
 }
 
 interface ColumnMeta {
   name: string;
-  type: string;   // DuckDB type as string
+  type: string; // DuckDB type as string
 }
 ```
 
@@ -385,6 +400,7 @@ EveryStack stores cross-base links as arrays of record IDs in the linking field'
 DuckDB supports `UNNEST` and the `ANY` operator for array matching. Two patterns:
 
 **Pattern A: ANY operator (simpler, works for many-to-one or one-to-one)**
+
 ```sql
 SELECT d.deal_name, d.value, c.name AS contact_name, c.segment
 FROM deals d
@@ -392,6 +408,7 @@ LEFT JOIN contacts c ON c.record_id = ANY(d.primary_contact_link)
 ```
 
 **Pattern B: UNNEST (required for one-to-many links or when you need the link position)**
+
 ```sql
 SELECT d.deal_name, d.value, c.name AS contact_name, c.segment
 FROM deals d,
@@ -400,6 +417,7 @@ LEFT JOIN contacts c ON c.record_id = t.linked_id
 ```
 
 **Which pattern to use:**
+
 - If the link cardinality is `many_to_one` or `one_to_one` (the array always has 0 or 1 elements), use Pattern A. It's cleaner.
 - If the link cardinality is `one_to_many` (the array can have multiple elements), use Pattern B with UNNEST. Be aware this fans out rows — a deal linked to 3 contacts produces 3 rows. The analytical SQL should account for this (e.g., GROUP BY the deal to avoid double-counting).
 
@@ -447,6 +465,7 @@ EveryStack stores all field values as JSONB (see `data-model.md` > Field System 
 ### Coercion Error Handling
 
 The principle is **best-effort, never fail the query.** If a single cell value can't be coerced:
+
 - Insert NULL for that cell
 - Increment a `coercion_warnings` counter on the ContextResult
 - If `coercion_warnings` exceeds a threshold (e.g., >10% of cells in a column), add a warning to the result: "Column 'value' had 342 unparseable values out of 3,000 rows — results may be incomplete."
@@ -473,16 +492,17 @@ This lets the LLM know the data quality isn't perfect and it should caveat its a
 ### Concurrency
 
 Multiple users may trigger DuckDB queries simultaneously. Since each query gets its own in-process DuckDB instance:
+
 - There is no lock contention between queries
 - Memory usage is additive — 10 concurrent queries at 256MB each = 2.5GB
 - A global memory budget (configurable, default: 2GB) should cap the total number of concurrent DuckDB instances. Queue additional requests.
 
 ```typescript
 interface DuckDBPoolConfig {
-  max_concurrent_instances: number;  // default: 8
-  max_total_memory_mb: number;       // default: 2048
-  per_instance_memory_mb: number;    // default: 256
-  queue_timeout_ms: number;          // default: 10000 — how long to wait for a slot
+  max_concurrent_instances: number; // default: 8
+  max_total_memory_mb: number; // default: 2048
+  per_instance_memory_mb: number; // default: 256
+  queue_timeout_ms: number; // default: 10000 — how long to wait for a slot
 }
 ```
 
@@ -529,13 +549,13 @@ If permissions change between validation and execution (unlikely but possible in
 
 ### Error Categories
 
-| Category | Example | Response |
-|---|---|---|
-| **Validation error** | User doesn't have access to referenced table | Return error immediately, don't execute |
-| **Hydration error** | Postgres query fails, timeout | Return error with stage: 'hydration' |
-| **Execution error** | DuckDB SQL syntax error, type mismatch | Return error with stage: 'execution', include DuckDB error message |
-| **Resource limit hit** | Too many records, memory exceeded | Return partial result with truncated: true |
-| **Coercion warning** | Bad data in a column | Continue execution, include warning in result |
+| Category               | Example                                      | Response                                                           |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| **Validation error**   | User doesn't have access to referenced table | Return error immediately, don't execute                            |
+| **Hydration error**    | Postgres query fails, timeout                | Return error with stage: 'hydration'                               |
+| **Execution error**    | DuckDB SQL syntax error, type mismatch       | Return error with stage: 'execution', include DuckDB error message |
+| **Resource limit hit** | Too many records, memory exceeded            | Return partial result with truncated: true                         |
+| **Coercion warning**   | Bad data in a column                         | Continue execution, include warning in result                      |
 
 ### Error Messages for LLM Consumption
 
@@ -563,7 +583,7 @@ const conn = await db.connect();
 
 // Set resource limits
 await conn.run("SET memory_limit='256MB'");
-await conn.run("SET threads=2");  // limit CPU usage per instance
+await conn.run('SET threads=2'); // limit CPU usage per instance
 
 // Create table
 await conn.run(`CREATE TABLE deals (
@@ -575,9 +595,7 @@ await conn.run(`CREATE TABLE deals (
 )`);
 
 // Bulk insert (use prepared statements for safety)
-const stmt = await conn.prepare(
-  'INSERT INTO deals VALUES ($1, $2, $3, $4, $5)'
-);
+const stmt = await conn.prepare('INSERT INTO deals VALUES ($1, $2, $3, $4, $5)');
 for (const record of records) {
   await stmt.run(record.id, record.name, record.value, record.stage, record.links);
 }
@@ -596,12 +614,16 @@ await db.close();
 DuckDB doesn't have a native query timeout in all client libraries. Implement at the application level:
 
 ```typescript
-async function executeWithTimeout(conn: Connection, sql: string, timeoutMs: number): Promise<any[]> {
+async function executeWithTimeout(
+  conn: Connection,
+  sql: string,
+  timeoutMs: number,
+): Promise<any[]> {
   return Promise.race([
     conn.all(sql),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Query timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
+      setTimeout(() => reject(new Error(`Query timeout after ${timeoutMs}ms`)), timeoutMs),
+    ),
   ]);
 }
 ```
@@ -661,6 +683,7 @@ class DuckDBPool {
 ### Performance Benchmarks
 
 Establish baselines for:
+
 - Hydration time: 10k records from Postgres → DuckDB (target: <500ms)
 - Simple aggregation: COUNT/SUM/AVG over 50k records (target: <100ms)
 - Cross-base JOIN: 10k records × 5k records with link field (target: <200ms)

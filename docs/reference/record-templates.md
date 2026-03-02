@@ -2,10 +2,12 @@
 
 > **Glossary reconciliation: 2026-02-27 (batch 2)**
 > Changes in this pass:
+>
 > - **Fixed stale cross-reference**: `interface-designer.md` → `app-designer.md` in cross-references section and reconciliation notes (file was renamed; MANIFEST.md known issue resolved).
 > - **Replaced all `interface_tabs` DB references with `views`** per glossary. Code is built from scratch — no legacy naming to preserve. Affected: view `view_config` JSONB references (§Table View & Permission Layer, §Phase Implementation, §Claude Code Prompt 4), and `getTemplatesForView()` code sample (renamed accessor `getInterfaceTab()` → `getView()`).
 >
 > Changes from prior pass (2026-02-27 batch 1):
+>
 > - **"Interface" → "Table View"** throughout when referring to configured view contexts (glossary naming discipline: "Interface" as a Table View → **Table View**). DB table `interface_tabs` → `views` per glossary (code built from scratch — no legacy naming).
 > - **"Interface field_overrides" → "Table View field_overrides"**; **"Interface template scoping" → "Table View template scoping"**.
 > - **`available_in: 'interface'` → `'table_view'`** to match glossary naming.
@@ -28,22 +30,22 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Rationale | 50–59 | Why record templates exist, value proposition |
-| Data Model | 60–166 | record_templates table, canonical_data shape, dynamic tokens, linked_records, scoping |
-| Automation Integration | 167–305 | Templates in automation actions, record_creation_source, contextual creation |
-| Table View & Permission Layer | 306–452 | Template visibility per view, role access, view-contextual overrides |
-| UX Flow | 453–619 | Template picker UI, split button, dropdown, mobile bottom sheet |
-| Template Manager (Configuration UI) | 620–703 | Admin template CRUD, field mapping, default templates, categories |
-| Record Creation Flow (End-to-End) | 704–726 | 7-step creation flow with template resolution |
-| API Surface | 727–765 | REST endpoints for template CRUD and application |
-| Deletion Cascades & Edge Cases | 766–778 | Orphan handling, field deletion impact, table deletion |
-| Real-Time Behavior | 779–788 | Template updates broadcast, cache invalidation |
-| What to Defer | 789–802 | Explicitly deferred features |
-| Phase Implementation | 803–817 | MVP — Core UX + Post-MVP — Automations delivery scope |
-| Claude Code Prompt Roadmap | 818–845 | 6-prompt implementation roadmap |
-| Key Architectural Decisions | 846–860 | ADR-style decisions with rationale |
+| Section                             | Lines   | Covers                                                                                |
+| ----------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| Strategic Rationale                 | 50–59   | Why record templates exist, value proposition                                         |
+| Data Model                          | 60–166  | record_templates table, canonical_data shape, dynamic tokens, linked_records, scoping |
+| Automation Integration              | 167–305 | Templates in automation actions, record_creation_source, contextual creation          |
+| Table View & Permission Layer       | 306–452 | Template visibility per view, role access, view-contextual overrides                  |
+| UX Flow                             | 453–619 | Template picker UI, split button, dropdown, mobile bottom sheet                       |
+| Template Manager (Configuration UI) | 620–703 | Admin template CRUD, field mapping, default templates, categories                     |
+| Record Creation Flow (End-to-End)   | 704–726 | 7-step creation flow with template resolution                                         |
+| API Surface                         | 727–765 | REST endpoints for template CRUD and application                                      |
+| Deletion Cascades & Edge Cases      | 766–778 | Orphan handling, field deletion impact, table deletion                                |
+| Real-Time Behavior                  | 779–788 | Template updates broadcast, cache invalidation                                        |
+| What to Defer                       | 789–802 | Explicitly deferred features                                                          |
+| Phase Implementation                | 803–817 | MVP — Core UX + Post-MVP — Automations delivery scope                                 |
+| Claude Code Prompt Roadmap          | 818–845 | 6-prompt implementation roadmap                                                       |
+| Key Architectural Decisions         | 846–860 | ADR-style decisions with rationale                                                    |
 
 ---
 
@@ -51,7 +53,7 @@
 
 EveryStack has no concept of record templates — pre-filled field value sets that users select when creating a new record. Every CRM, project manager, and operations tool has this. A "New Client Onboarding" template that pre-populates status, default fields, linked records, and triggers a checklist is the kind of quality-of-life feature that makes the difference between a database and a business tool.
 
-The existing `fields.default_value` column provides per-field defaults at the schema level, but it's a single static default per field across *all* new records. There's no way to say "when creating a *client onboarding* record, use *this set* of defaults; when creating a *vendor setup* record, use *that set*."
+The existing `fields.default_value` column provides per-field defaults at the schema level, but it's a single static default per field across _all_ new records. There's no way to say "when creating a _client onboarding_ record, use _this set_ of defaults; when creating a _vendor setup_ record, use _that set_."
 
 Record templates are trivially implementable — a template is a JSONB blob of default field values stored alongside the table config — and they unlock significant value across automations, portals, Command Bar, Quick Entry, and contextual creation flows.
 
@@ -63,26 +65,26 @@ Record templates are trivially implementable — a template is a JSONB blob of d
 
 Standalone table, not JSONB on `tables`. Templates are CRUD objects with their own lifecycle — users create, edit, reorder, duplicate, and delete them independently. A mature CRM table might have 8–10 templates. Storing them as a JSONB array on `tables` would mean every template edit rewrites a hot row, makes permissions queries awkward, and swallows foreign key relationships.
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID PK | Stable identifier. |
-| `tenant_id` | UUID FK → tenants | Tenant scope. |
-| `table_id` | UUID FK → tables | Parent table. |
-| `name` | VARCHAR(255) NOT NULL | Display name (e.g., "Client Onboarding"). |
-| `description` | TEXT (nullable) | Help text shown in template picker tooltip. |
-| `icon` | VARCHAR(50) (nullable) | Emoji or icon key for visual distinction. |
-| `color` | VARCHAR(20) (nullable) | Visual distinction in template picker. |
-| `canonical_data` | JSONB NOT NULL DEFAULT {} | Pre-filled values keyed by `fields.id`. Same shape as `records.canonical_data`. Supports dynamic tokens. |
-| `linked_records` | JSONB (nullable) | Pre-link specifications keyed by Linked Record field ID. Supports `$context_record` token. |
-| `is_default` | BOOLEAN DEFAULT false | Auto-apply when creating via plain "+" button. One per table max. |
-| `available_in` | VARCHAR[] DEFAULT '{all}' | Contexts where the template surfaces. Values: `all`, `grid`, `table_view`, `portal`, `automation`, `quick_entry`, `command_bar`, `api`. |
-| `section_id` | UUID (nullable) FK → sections | Grouping in template picker (for tables with many templates). |
-| `sort_order` | INTEGER DEFAULT 0 | Order in template picker. |
-| `created_by` | UUID FK → users | Creator. |
-| `publish_state` | VARCHAR DEFAULT 'live' | `live` \| `draft` — governs draft/live authoring workflow. |
-| `environment` | VARCHAR DEFAULT 'live' | `live` \| `sandbox` — standard sandbox isolation (post-MVP). Orthogonal to `publish_state`. |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column           | Type                          | Purpose                                                                                                                                 |
+| ---------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | UUID PK                       | Stable identifier.                                                                                                                      |
+| `tenant_id`      | UUID FK → tenants             | Tenant scope.                                                                                                                           |
+| `table_id`       | UUID FK → tables              | Parent table.                                                                                                                           |
+| `name`           | VARCHAR(255) NOT NULL         | Display name (e.g., "Client Onboarding").                                                                                               |
+| `description`    | TEXT (nullable)               | Help text shown in template picker tooltip.                                                                                             |
+| `icon`           | VARCHAR(50) (nullable)        | Emoji or icon key for visual distinction.                                                                                               |
+| `color`          | VARCHAR(20) (nullable)        | Visual distinction in template picker.                                                                                                  |
+| `canonical_data` | JSONB NOT NULL DEFAULT {}     | Pre-filled values keyed by `fields.id`. Same shape as `records.canonical_data`. Supports dynamic tokens.                                |
+| `linked_records` | JSONB (nullable)              | Pre-link specifications keyed by Linked Record field ID. Supports `$context_record` token.                                              |
+| `is_default`     | BOOLEAN DEFAULT false         | Auto-apply when creating via plain "+" button. One per table max.                                                                       |
+| `available_in`   | VARCHAR[] DEFAULT '{all}'     | Contexts where the template surfaces. Values: `all`, `grid`, `table_view`, `portal`, `automation`, `quick_entry`, `command_bar`, `api`. |
+| `section_id`     | UUID (nullable) FK → sections | Grouping in template picker (for tables with many templates).                                                                           |
+| `sort_order`     | INTEGER DEFAULT 0             | Order in template picker.                                                                                                               |
+| `created_by`     | UUID FK → users               | Creator.                                                                                                                                |
+| `publish_state`  | VARCHAR DEFAULT 'live'        | `live` \| `draft` — governs draft/live authoring workflow.                                                                              |
+| `environment`    | VARCHAR DEFAULT 'live'        | `live` \| `sandbox` — standard sandbox isolation (post-MVP). Orthogonal to `publish_state`.                                             |
+| `created_at`     | TIMESTAMPTZ                   |                                                                                                                                         |
+| `updated_at`     | TIMESTAMPTZ                   |                                                                                                                                         |
 
 **Indexes:** `(tenant_id, table_id, environment)` for sandbox isolation (standard query rule). `(tenant_id, table_id, publish_state)` for listing templates per table. Unique partial index on `(tenant_id, table_id)` where `is_default = true` to enforce one default per table.
 
@@ -94,17 +96,18 @@ Keyed by `fields.id`, identical structure to `records.canonical_data`. This is c
 
 ```jsonc
 {
-  "fld_status_abc": "opt_active",            // single select option ID
-  "fld_priority_def": "opt_high",            // another select
-  "fld_checkbox_ghi": true,                  // boolean
-  "fld_assignee_jkl": ["$me"],              // dynamic token — resolved at creation time
-  "fld_due_date_mno": "$today+14d",          // relative date expression
-  "fld_text_pqr": "Standard onboarding",     // static text
-  "fld_checklist_xyz": [                     // checklist pre-population
+  "fld_status_abc": "opt_active", // single select option ID
+  "fld_priority_def": "opt_high", // another select
+  "fld_checkbox_ghi": true, // boolean
+  "fld_assignee_jkl": ["$me"], // dynamic token — resolved at creation time
+  "fld_due_date_mno": "$today+14d", // relative date expression
+  "fld_text_pqr": "Standard onboarding", // static text
+  "fld_checklist_xyz": [
+    // checklist pre-population
     { "id": "chk_1", "title": "Send welcome email", "completed": false },
     { "id": "chk_2", "title": "Schedule kickoff call", "completed": false },
-    { "id": "chk_3", "title": "Create shared folder", "completed": false }
-  ]
+    { "id": "chk_3", "title": "Create shared folder", "completed": false },
+  ],
 }
 ```
 
@@ -116,16 +119,16 @@ Checklist pre-population lives inside `canonical_data`, not in a separate column
 
 Static values are easy, but templates become dramatically more useful with dynamic tokens that resolve at record creation time. These tokens reuse existing resolution engines — `$me` in view filters is already specced in `tables-and-views.md`.
 
-| Token | Resolves To | Available In | Notes |
-|-------|-------------|-------------|-------|
-| `$me` | Creating user's ID | People fields | Same token used in view filter rules. |
-| `$today` | Current date (UTC) | Date, Due Date fields | ISO 8601 string. |
-| `$today+Nd` | Current date + N days | Date, Due Date fields | N is a positive integer. |
-| `$today-Nd` | Current date − N days | Date, Due Date fields | N is a positive integer. |
-| `$now` | Current timestamp | Date fields with `include_time: true` | Full datetime. |
+| Token             | Resolves To                                              | Available In                                     | Notes                                           |
+| ----------------- | -------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `$me`             | Creating user's ID                                       | People fields                                    | Same token used in view filter rules.           |
+| `$today`          | Current date (UTC)                                       | Date, Due Date fields                            | ISO 8601 string.                                |
+| `$today+Nd`       | Current date + N days                                    | Date, Due Date fields                            | N is a positive integer.                        |
+| `$today-Nd`       | Current date − N days                                    | Date, Due Date fields                            | N is a positive integer.                        |
+| `$now`            | Current timestamp                                        | Date fields with `include_time: true`            | Full datetime.                                  |
 | `$context_record` | Record the user was viewing when they chose the template | Linked Record fields (in `linked_records` JSONB) | See Linked Records section. Null if no context. |
 
-**Token resolution runs server-side** at record creation time, not at template save time. A template with `$today+14d` always resolves to 14 days from *now*, not 14 days from when the template was created.
+**Token resolution runs server-side** at record creation time, not at template save time. A template with `$today+14d` always resolves to 14 days from _now_, not 14 days from when the template was created.
 
 **Validation of token values:** Tokens are validated at template save time for structural correctness (e.g., `$today+Nd` must have a valid integer) but the resolved value is validated at creation time through the standard `FieldTypeRegistry.validate()` pipeline.
 
@@ -135,8 +138,8 @@ Pre-link specifications keyed by Linked Record field ID:
 
 ```jsonc
 {
-  "fld_linked_client": "$context_record",       // link to the record user was viewing
-  "fld_linked_team": ["rec_abc", "rec_def"]     // static record IDs (e.g., "Default Team")
+  "fld_linked_client": "$context_record", // link to the record user was viewing
+  "fld_linked_team": ["rec_abc", "rec_def"], // static record IDs (e.g., "Default Team")
 }
 ```
 
@@ -170,7 +173,7 @@ Five integration surfaces, prioritized by value and independence.
 
 ### Direction 1: Record Creation Source Context (Priority: Foundational)
 
-The "Record Created" trigger (#1 in `automations.md`) currently fires with the new record as context but no way to know *how* the record was created. This is a gap independent of templates.
+The "Record Created" trigger (#1 in `automations.md`) currently fires with the new record as context but no way to know _how_ the record was created. This is a gap independent of templates.
 
 **Add `source` and `template` to trigger execution context:**
 
@@ -178,30 +181,32 @@ The "Record Created" trigger (#1 in `automations.md`) currently fires with the n
 {
   "trigger": {
     "type": "record_created",
-    "record": { /* full record */ },
+    "record": {
+      /* full record */
+    },
     "source": "template",
     "template": {
       "id": "tmpl_abc123",
-      "name": "New Client Onboarding"
+      "name": "New Client Onboarding",
     },
-    "created_by": "usr_xyz"
-  }
+    "created_by": "usr_xyz",
+  },
 }
 ```
 
 **`record_creation_source` enum:**
 
-| Value | Meaning |
-|-------|---------|
-| `manual` | User created a blank record (empty row click, "+" button with no template) |
-| `template` | User selected a record template |
-| `automation` | Created by a Create Record automation action |
-| `api` | Created via API |
-| `portal` | Portal client submitted a form |
-| `import` | Bulk import (CSV, XLSX, or sync initial load) |
-| `quick_entry` | Created via Quick Entry mode |
-| `inline_sub_table` | Created as a child row in an inline sub-table |
-| `duplicate` | Duplicated from an existing record |
+| Value              | Meaning                                                                    |
+| ------------------ | -------------------------------------------------------------------------- |
+| `manual`           | User created a blank record (empty row click, "+" button with no template) |
+| `template`         | User selected a record template                                            |
+| `automation`       | Created by a Create Record automation action                               |
+| `api`              | Created via API                                                            |
+| `portal`           | Portal client submitted a form                                             |
+| `import`           | Bulk import (CSV, XLSX, or sync initial load)                              |
+| `quick_entry`      | Created via Quick Entry mode                                               |
+| `inline_sub_table` | Created as a child row in an inline sub-table                              |
+| `duplicate`        | Duplicated from an existing record                                         |
 
 This enables critical automation patterns:
 
@@ -280,24 +285,24 @@ Automation recipes (pre-built templates for accounting, inventory, etc.) could b
 
 The `source` enum is set at the application layer. Every record creation code path must be updated:
 
-| Code Path | Source Value |
-|-----------|-------------|
-| Grid empty row click | `manual` |
-| "+" toolbar button (no template) | `manual` |
-| "+" toolbar button (with template) | `template` |
-| FAB tap (no template) | `manual` |
-| FAB tap (with template) | `template` |
-| Create Record automation action (no templateId) | `automation` |
+| Code Path                                         | Source Value                                                |
+| ------------------------------------------------- | ----------------------------------------------------------- |
+| Grid empty row click                              | `manual`                                                    |
+| "+" toolbar button (no template)                  | `manual`                                                    |
+| "+" toolbar button (with template)                | `template`                                                  |
+| FAB tap (no template)                             | `manual`                                                    |
+| FAB tap (with template)                           | `template`                                                  |
+| Create Record automation action (no templateId)   | `automation`                                                |
 | Create Record automation action (with templateId) | `automation` (not `template` — the automation is the actor) |
-| API `POST /records` (no template) | `api` |
-| API `POST /records` (with template_id param) | `api` (same reasoning) |
-| Portal form submission | `portal` |
-| CSV/XLSX import | `import` |
-| Sync initial load | `import` |
-| Quick Entry scan/submit | `quick_entry` |
-| Inline sub-table Add Row | `inline_sub_table` |
-| Record duplication | `duplicate` |
-| Right-click → "Create linked from template" | `template` |
+| API `POST /records` (no template)                 | `api`                                                       |
+| API `POST /records` (with template_id param)      | `api` (same reasoning)                                      |
+| Portal form submission                            | `portal`                                                    |
+| CSV/XLSX import                                   | `import`                                                    |
+| Sync initial load                                 | `import`                                                    |
+| Quick Entry scan/submit                           | `quick_entry`                                               |
+| Inline sub-table Add Row                          | `inline_sub_table`                                          |
+| Record duplication                                | `duplicate`                                                 |
+| Right-click → "Create linked from template"       | `template`                                                  |
 
 **Note:** When an automation uses a template (Mode B), the source is `automation`, not `template`. The automation is the actor — the template is just a configuration detail. `source = template` means a human chose the template interactively. This distinction matters for loop prevention: "skip when source = automation" should catch all automation-created records, including those using templates.
 
@@ -311,7 +316,7 @@ Templates are definition-level objects. **Manager+ creates and edits templates**
 
 ### Table View Template Scoping
 
-The Table View architecture controls whether record creation is allowed (`allow_create` on views), which fields are visible, and which fields are editable. Templates add a fourth dimension: *which creation paths* are available.
+The Table View architecture controls whether record creation is allowed (`allow_create` on views), which fields are visible, and which fields are editable. Templates add a fourth dimension: _which creation paths_ are available.
 
 **Add `template_config` to the view's `view_config` JSONB** (DB: `views.view_config`):
 
@@ -323,31 +328,31 @@ The Table View architecture controls whether record creation is allowed (`allow_
       "mode": "all",
       "template_ids": [],
       "require_template": false,
-      "default_template_id": null
-    }
-  }
+      "default_template_id": null,
+    },
+  },
 }
 ```
 
 ### Template Config Modes
 
-| Mode | Behavior |
-|------|----------|
-| `"all"` | Team Members see every template on the table (filtered by `available_in` on the template itself). Default. Low-config. |
+| Mode         | Behavior                                                                                                                                                                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`      | Team Members see every template on the table (filtered by `available_in` on the template itself). Default. Low-config.                                                                                                                                                                 |
 | `"selected"` | Manager picks which templates appear in this view via `template_ids` array. A "Sales Pipeline" view might only show "New Lead" and "New Opportunity" templates, even though the Deals table also has "New Partner Deal" and "Internal Project" templates irrelevant to the sales team. |
-| `"none"` | No templates offered — just blank record creation (or no creation at all if `allow_create` is false). |
+| `"none"`     | No templates offered — just blank record creation (or no creation at all if `allow_create` is false).                                                                                                                                                                                  |
 
 ### `require_template` Flag
 
-When true, the "+" button *only* shows templates — there's no "blank record" option. For tables where unstructured record creation is a mistake: an invoice table where every record needs a type, a project table where every project needs a methodology template.
+When true, the "+" button _only_ shows templates — there's no "blank record" option. For tables where unstructured record creation is a mistake: an invoice table where every record needs a type, a project table where every project needs a methodology template.
 
 **Interaction matrix with `allow_create`:**
 
-| `allow_create` | `require_template` | Behavior |
-|---|---|---|
-| false | (irrelevant) | No "+" button at all |
-| true | false | "+" shows blank record + templates |
-| true | true | "+" shows only templates, no blank option |
+| `allow_create` | `require_template` | Behavior                                  |
+| -------------- | ------------------ | ----------------------------------------- |
+| false          | (irrelevant)       | No "+" button at all                      |
+| true           | false              | "+" shows blank record + templates        |
+| true           | true               | "+" shows only templates, no blank option |
 
 ### `default_template_id`
 
@@ -355,7 +360,7 @@ Pre-selects a template in the picker for this view. Does not auto-apply — the 
 
 ### Hidden Field Interaction
 
-A view can hide fields via `field_config`. If a template pre-fills a hidden field, **the template still sets the value.** The field is hidden from the *view*, not from the *record*. This is consistent with how Table View field overrides already work — hidden fields are still queryable, still exist on the record, still fire automations.
+A view can hide fields via `field_config`. If a template pre-fills a hidden field, **the template still sets the value.** The field is hidden from the _view_, not from the _record_. This is consistent with how Table View field overrides already work — hidden fields are still queryable, still exist on the record, still fire automations.
 
 This is a feature: a Manager can use templates to set internal fields (like a routing code or department tag) that Team Members never see or interact with. The template does the data entry the user shouldn't have to think about.
 
@@ -372,8 +377,8 @@ Portals have a different permission model — `portal_clients` with `record_scop
     "table_id": "tbl_xyz",
     "template_id": "tmpl_portal_request",
     "visible_fields": ["fld_a", "fld_b", "fld_c"],
-    "editable_fields": ["fld_a", "fld_b"]
-  }
+    "editable_fields": ["fld_a", "fld_b"],
+  },
 }
 ```
 
@@ -385,16 +390,16 @@ The template sets default values for the form. The portal client can edit the fi
 
 `available_in` on the template controls broad context eligibility. View-level `template_config.template_ids` further narrows within the `table_view` context. Both layers apply — a template must pass both to appear.
 
-| Value | Where Template Surfaces |
-|-------|------------------------|
-| `all` | Shorthand for all contexts. Default. |
-| `grid` | Raw table "+" menu (Manager view). |
-| `table_view` | Eligible for view `template_config` selection. |
-| `portal` | Eligible for portal form block `template_id` [post-MVP block concept]. |
-| `automation` | Available as `templateId` in Create Record action. |
-| `quick_entry` | Appears in Quick Entry mode template picker. |
-| `command_bar` | Appears as "Create: [name]" Command Bar command. |
-| `api` | Available via API `POST /records` with `template_id` param. |
+| Value         | Where Template Surfaces                                                |
+| ------------- | ---------------------------------------------------------------------- |
+| `all`         | Shorthand for all contexts. Default.                                   |
+| `grid`        | Raw table "+" menu (Manager view).                                     |
+| `table_view`  | Eligible for view `template_config` selection.                         |
+| `portal`      | Eligible for portal form block `template_id` [post-MVP block concept]. |
+| `automation`  | Available as `templateId` in Create Record action.                     |
+| `quick_entry` | Appears in Quick Entry mode template picker.                           |
+| `command_bar` | Appears as "Create: [name]" Command Bar command.                       |
+| `api`         | Available via API `POST /records` with `template_id` param.            |
 
 This lets a Manager create an automation-only template (internal use, never clutters the UI) or a portal-only template (clients see it, internal users don't).
 
@@ -406,21 +411,25 @@ Following the existing pattern — enforce in `apps/web/src/data/`, not in compo
 // apps/web/src/data/record-templates.ts
 export async function getTemplatesForContext(
   tableId: string,
-  context: 'grid' | 'table_view' | 'portal' | 'quick_entry' | 'command_bar'
+  context: 'grid' | 'table_view' | 'portal' | 'quick_entry' | 'command_bar',
 ): Promise<RecordTemplate[]> {
   const tenantId = await getTenantId();
   const dbConn = getDbForTenant(tenantId, 'read');
 
-  const templates = await dbConn.select().from(recordTemplates)
-    .where(and(
-      eq(recordTemplates.tenantId, tenantId),
-      eq(recordTemplates.tableId, tableId),
-      eq(recordTemplates.publishState, 'live'),    // Only published templates
-      eq(recordTemplates.environment, 'live')       // Standard sandbox isolation rule
-    ))
+  const templates = await dbConn
+    .select()
+    .from(recordTemplates)
+    .where(
+      and(
+        eq(recordTemplates.tenantId, tenantId),
+        eq(recordTemplates.tableId, tableId),
+        eq(recordTemplates.publishState, 'live'), // Only published templates
+        eq(recordTemplates.environment, 'live'), // Standard sandbox isolation rule
+      ),
+    )
     .orderBy(recordTemplates.sortOrder);
 
-  return templates.filter(t => {
+  return templates.filter((t) => {
     const availableIn = t.availableIn as string[];
     return availableIn.includes('all') || availableIn.includes(context);
   });
@@ -429,7 +438,7 @@ export async function getTemplatesForContext(
 // For view context, caller further filters by template_config:
 export async function getTemplatesForView(
   tableId: string,
-  viewId: string
+  viewId: string,
 ): Promise<RecordTemplate[]> {
   const allTemplates = await getTemplatesForContext(tableId, 'table_view');
   const view = await getView(viewId);
@@ -438,7 +447,7 @@ export async function getTemplatesForView(
   if (!templateConfig || templateConfig.mode === 'all') return allTemplates;
   if (templateConfig.mode === 'none') return [];
   if (templateConfig.mode === 'selected') {
-    return allTemplates.filter(t => templateConfig.template_ids.includes(t.id));
+    return allTemplates.filter((t) => templateConfig.template_ids.includes(t.id));
   }
   return allTemplates;
 }
@@ -496,7 +505,7 @@ If a table has exactly one template and it's marked `is_default: true`, the "+" 
 
 The "+" at the bottom of each column currently creates a record with that column's status value pre-filled. With templates, it becomes the same split button: click creates with the column's status (existing behavior), chevron opens the template picker.
 
-**Contextual override:** When a template is selected, the template's field values apply *and* the column's status value overrides the template's status value. Column context wins over template defaults — the user clicked "+" in the "In Progress" column, so the record is "In Progress" regardless of what the template says.
+**Contextual override:** When a template is selected, the template's field values apply _and_ the column's status value overrides the template's status value. Column context wins over template defaults — the user clicked "+" in the "In Progress" column, so the record is "In Progress" regardless of what the template says.
 
 ### Template Picker — Calendar View **[Post-MVP]**
 
@@ -554,7 +563,7 @@ Quick Entry (specced in `tables-and-views.md` > Quick Entry mode) already has `d
   "target_table_id": "tbl_xyz",
   "template_id": "tmpl_receiving",
   "scan_field_id": "fld_barcode",
-  "entry_fields": ["fld_qty", "fld_location"]
+  "entry_fields": ["fld_qty", "fld_location"],
 }
 ```
 
@@ -570,7 +579,7 @@ When a Manager creates a template with `available_in` including `'command_bar'`,
   "label": "Create: Client Onboarding",
   "category": "create",
   "source": "system_template",
-  "context_scopes": { "table_id": "tbl_xyz" }
+  "context_scopes": { "table_id": "tbl_xyz" },
 }
 ```
 
@@ -732,11 +741,12 @@ Existing endpoint, extended with optional `template_id`:
 
 ```jsonc
 {
-  "template_id": "tmpl_abc123",       // optional — apply template before canonical_data
-  "canonical_data": {                    // optional — overrides template values
-    "fld_name": "Acme Corp"
+  "template_id": "tmpl_abc123", // optional — apply template before canonical_data
+  "canonical_data": {
+    // optional — overrides template values
+    "fld_name": "Acme Corp",
   },
-  "context_record_id": "rec_xyz"       // optional — resolves $context_record in template
+  "context_record_id": "rec_xyz", // optional — resolves $context_record in template
 }
 ```
 
@@ -765,24 +775,24 @@ Standard REST endpoints, Manager+ only:
 
 ## Deletion Cascades & Edge Cases
 
-| Event | Behavior |
-|-------|----------|
-| **Template deleted** | Automations referencing `templateId` in Create Record actions: action config becomes invalid, automation fails with descriptive error on next run, Manager notified. View `template_config.template_ids` entries: stale ID silently ignored (template just disappears from picker). Portal form block `template_id` [post-MVP]: form reverts to no-template behavior (blank record). Command Bar command auto-removed. Quick Entry config: falls back to no defaults. |
-| **Field deleted** | Template `canonical_data` entries referencing deleted field: silently ignored at creation time (key in JSONB has no matching field definition, so it's skipped). No template schema migration needed. |
-| **Select option deleted** | Template `canonical_data` referencing deleted option ID: validation failure at creation time → field left at default (see Validation Failure Handling). Manager notified. |
-| **Table deleted** | All `record_templates` for the table deleted (cascade). |
-| **Linked table deleted** | `linked_records` entries referencing fields on deleted table: cross-link definition deleted, so link creation silently skipped at creation time. |
-| **Referenced record deleted** | Static record IDs in `linked_records`: link creation silently skipped (target doesn't exist). No error — the rest of the template applies normally. |
+| Event                         | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Template deleted**          | Automations referencing `templateId` in Create Record actions: action config becomes invalid, automation fails with descriptive error on next run, Manager notified. View `template_config.template_ids` entries: stale ID silently ignored (template just disappears from picker). Portal form block `template_id` [post-MVP]: form reverts to no-template behavior (blank record). Command Bar command auto-removed. Quick Entry config: falls back to no defaults. |
+| **Field deleted**             | Template `canonical_data` entries referencing deleted field: silently ignored at creation time (key in JSONB has no matching field definition, so it's skipped). No template schema migration needed.                                                                                                                                                                                                                                                                 |
+| **Select option deleted**     | Template `canonical_data` referencing deleted option ID: validation failure at creation time → field left at default (see Validation Failure Handling). Manager notified.                                                                                                                                                                                                                                                                                             |
+| **Table deleted**             | All `record_templates` for the table deleted (cascade).                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **Linked table deleted**      | `linked_records` entries referencing fields on deleted table: cross-link definition deleted, so link creation silently skipped at creation time.                                                                                                                                                                                                                                                                                                                      |
+| **Referenced record deleted** | Static record IDs in `linked_records`: link creation silently skipped (target doesn't exist). No error — the rest of the template applies normally.                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
 ## Real-Time Behavior
 
-| Event | Effect |
-|-------|--------|
+| Event                                                             | Effect                                                                                                                         |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | **Manager creates/edits/deletes template** (publish_state → live) | `template.updated` event broadcast to workspace. Clients with open template pickers on that table refresh their template list. |
-| **Manager changes view template_config** | `view.updated` event (existing). Clients reload view config, template picker reflects new settings. |
-| **Template validation issue detected** | `template.validation_warning` event to Manager users. Shown as a badge on the Templates tab in table settings. |
+| **Manager changes view template_config**                          | `view.updated` event (existing). Clients reload view config, template picker reflects new settings.                            |
+| **Template validation issue detected**                            | `template.validation_warning` event to Manager users. Shown as a badge on the Templates tab in table settings.                 |
 
 ---
 
@@ -802,21 +812,20 @@ Standard REST endpoints, Manager+ only:
 
 ## Phase Implementation
 
-| Phase | Work |
-|-------|------|
-| **MVP — Core UX** | `record_templates` table in schema. Template CRUD (Manager+). Template editor UI in table settings. Template picker on "+" button (Grid; Kanban and Calendar are post-MVP view types). `record_creation_source` enum on Record Created trigger context (ships with or without templates — foundational). Single-template `is_default` auto-apply. Record View highlight animation + cursor focus. 5-second undo. Mobile bottom sheet picker. |
-| **MVP — Core UX** | View `template_config` on view config JSONB (DB: `views.view_config`). All/selected/none modes in `getTemplatesForView()`. Portal form block `template_id` [post-MVP — App Designer block concept]. |
-| **Post-MVP — Automations** | Automation integration: `templateId` + `fieldOverrides` on Create Record action. `source` and `template` as filterable fields in Record Created trigger condition builder. |
-| **Post-MVP — Automations** | Command Bar auto-registration for templates with `command_bar` in `available_in`. |
-| **Post-MVP — Automations** | Quick Entry `template_id` config (replaces `default_values`). |
-| **Post-MVP — Automations** | Contextual creation shortcuts: right-click "Create linked...", Linked Record field "+" template options, inline sub-table template options. |
-| **Post-MVP — Verticals & Advanced+** | Recipe bundling (templates as part of automation recipe definitions). |
-| **Post-MVP — Verticals & Advanced+** | API `template_id` parameter on `POST /records`. |
+| Phase                                | Work                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Core UX**                    | `record_templates` table in schema. Template CRUD (Manager+). Template editor UI in table settings. Template picker on "+" button (Grid; Kanban and Calendar are post-MVP view types). `record_creation_source` enum on Record Created trigger context (ships with or without templates — foundational). Single-template `is_default` auto-apply. Record View highlight animation + cursor focus. 5-second undo. Mobile bottom sheet picker. |
+| **MVP — Core UX**                    | View `template_config` on view config JSONB (DB: `views.view_config`). All/selected/none modes in `getTemplatesForView()`. Portal form block `template_id` [post-MVP — App Designer block concept].                                                                                                                                                                                                                                          |
+| **Post-MVP — Automations**           | Automation integration: `templateId` + `fieldOverrides` on Create Record action. `source` and `template` as filterable fields in Record Created trigger condition builder.                                                                                                                                                                                                                                                                   |
+| **Post-MVP — Automations**           | Command Bar auto-registration for templates with `command_bar` in `available_in`.                                                                                                                                                                                                                                                                                                                                                            |
+| **Post-MVP — Automations**           | Quick Entry `template_id` config (replaces `default_values`).                                                                                                                                                                                                                                                                                                                                                                                |
+| **Post-MVP — Automations**           | Contextual creation shortcuts: right-click "Create linked...", Linked Record field "+" template options, inline sub-table template options.                                                                                                                                                                                                                                                                                                  |
+| **Post-MVP — Verticals & Advanced+** | Recipe bundling (templates as part of automation recipe definitions).                                                                                                                                                                                                                                                                                                                                                                        |
+| **Post-MVP — Verticals & Advanced+** | API `template_id` parameter on `POST /records`.                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
 ## Claude Code Prompt Roadmap
-
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
@@ -848,16 +857,16 @@ Auto-register Command Bar commands for templates with `command_bar` in `availabl
 
 ## Key Architectural Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| Standalone table, not JSONB on `tables` | Templates are CRUD objects with lifecycle, accumulate over time, need FK relationships, need independent queries. JSONB on a hot row is wrong. |
-| No `automation_id` FK on template | Creates parallel execution path requiring dedup. Trigger system with `source` + `template` context handles all the same use cases through a single path. |
-| `record_creation_source` enum ships independently | Fixes real automation correctness bugs (imports firing triggers, duplicates re-running onboarding) regardless of template adoption. Foundational. |
-| `canonical_data` uses same JSONB shape as `records.canonical_data` | Same validation pipeline, same FieldTypeRegistry, no special-casing. Template is just a pre-filled record shape. |
-| Dynamic tokens reuse existing resolution engines | `$me` already exists in view filters. Date arithmetic is a small extension. No new resolution infrastructure. |
-| View-contextual values override template values | Kanban column status, Calendar slot date, inline sub-table parent link are user intent — the whole point of clicking *there*. Template provides the rest. |
-| `available_in` as VARCHAR array, not single value | A template may need to appear in some contexts but not others. Array is the minimal correct model. `'{all}'` shorthand keeps the common case simple. |
-| Hidden Table View fields still receive template values | Consistent with existing Table View field_override semantics. Enables "invisible data entry" pattern where templates set routing/classification fields users shouldn't see. |
-| `require_template` is per-view, not per-table | Different views on the same table may have different policies. Sales team requires templates, admin team doesn't. |
-| Validation failures skip, don't block | A stale template value (deleted option, etc.) shouldn't prevent record creation. User can fix manually. Manager gets notified to fix template. Graceful degradation. |
-| Persistent empty grid row stays blank-only | The empty row is the fastest creation path. Adding template friction to it would slow down the most common interaction in the app. Templates are for intentional, structured creation via the "+" button. |
+| Decision                                                           | Rationale                                                                                                                                                                                                 |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Standalone table, not JSONB on `tables`                            | Templates are CRUD objects with lifecycle, accumulate over time, need FK relationships, need independent queries. JSONB on a hot row is wrong.                                                            |
+| No `automation_id` FK on template                                  | Creates parallel execution path requiring dedup. Trigger system with `source` + `template` context handles all the same use cases through a single path.                                                  |
+| `record_creation_source` enum ships independently                  | Fixes real automation correctness bugs (imports firing triggers, duplicates re-running onboarding) regardless of template adoption. Foundational.                                                         |
+| `canonical_data` uses same JSONB shape as `records.canonical_data` | Same validation pipeline, same FieldTypeRegistry, no special-casing. Template is just a pre-filled record shape.                                                                                          |
+| Dynamic tokens reuse existing resolution engines                   | `$me` already exists in view filters. Date arithmetic is a small extension. No new resolution infrastructure.                                                                                             |
+| View-contextual values override template values                    | Kanban column status, Calendar slot date, inline sub-table parent link are user intent — the whole point of clicking _there_. Template provides the rest.                                                 |
+| `available_in` as VARCHAR array, not single value                  | A template may need to appear in some contexts but not others. Array is the minimal correct model. `'{all}'` shorthand keeps the common case simple.                                                      |
+| Hidden Table View fields still receive template values             | Consistent with existing Table View field_override semantics. Enables "invisible data entry" pattern where templates set routing/classification fields users shouldn't see.                               |
+| `require_template` is per-view, not per-table                      | Different views on the same table may have different policies. Sales team requires templates, admin team doesn't.                                                                                         |
+| Validation failures skip, don't block                              | A stale template value (deleted option, etc.) shouldn't prevent record creation. User can fix manually. Manager gets notified to fix template. Graceful degradation.                                      |
+| Persistent empty grid row stays blank-only                         | The empty row is the fastest creation path. Adding template friction to it would slow down the most common interaction in the app. Templates are for intentional, structured creation via the "+" button. |

@@ -11,24 +11,25 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| MVP Scope | 29–55 | Record Thread, DMs, group DMs; what's post-MVP |
-| Thread Scopes (MVP) | 57–113 | Record Thread, DMs, thread data model (threads, thread_messages, thread_participants) |
-| Threaded Replies | 115–128 | Reply-to-parent pattern, participant auto-add, unread markers |
-| Chat Navigation | 130–146 | Hierarchical sidebar for self-referential records, tree dropdown in Record Thread |
-| Pinned, Bookmarks & Presence | 148–182 | Pinned messages, saved/bookmarked messages, presence indicators, DND/status |
-| Notification Aggregation & Delivery | 184–292 | Data model (notifications table), 8 notification types, delivery pipeline (in-app + push + email digest), API, error handling |
-| Chat Editor (TipTap Env 1) | 294–415 | Input states, progressive disclosure, keyboard shortcuts, @mentions, markdown shortcuts, bubble toolbar, link handling, attachments, message display/edit/delete, emoji reactions |
-| Messaging Error Handling | 417–432 | Optimistic send, retry logic, failed message UX |
-| Emoji Picker | 434–440 | emoji-mart, colon autocomplete, skin tone, search |
-| Post-MVP Expansion | 442–458 | Activity feed, slash commands, base/table threads, omnichannel |
+| Section                             | Lines   | Covers                                                                                                                                                                            |
+| ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVP Scope                           | 29–55   | Record Thread, DMs, group DMs; what's post-MVP                                                                                                                                    |
+| Thread Scopes (MVP)                 | 57–113  | Record Thread, DMs, thread data model (threads, thread_messages, thread_participants)                                                                                             |
+| Threaded Replies                    | 115–128 | Reply-to-parent pattern, participant auto-add, unread markers                                                                                                                     |
+| Chat Navigation                     | 130–146 | Hierarchical sidebar for self-referential records, tree dropdown in Record Thread                                                                                                 |
+| Pinned, Bookmarks & Presence        | 148–182 | Pinned messages, saved/bookmarked messages, presence indicators, DND/status                                                                                                       |
+| Notification Aggregation & Delivery | 184–292 | Data model (notifications table), 8 notification types, delivery pipeline (in-app + push + email digest), API, error handling                                                     |
+| Chat Editor (TipTap Env 1)          | 294–415 | Input states, progressive disclosure, keyboard shortcuts, @mentions, markdown shortcuts, bubble toolbar, link handling, attachments, message display/edit/delete, emoji reactions |
+| Messaging Error Handling            | 417–432 | Optimistic send, retry logic, failed message UX                                                                                                                                   |
+| Emoji Picker                        | 434–440 | emoji-mart, colon autocomplete, skin tone, search                                                                                                                                 |
+| Post-MVP Expansion                  | 442–458 | Activity feed, slash commands, base/table threads, omnichannel                                                                                                                    |
 
 ---
 
 ## MVP Scope
 
 **What ships:**
+
 - Record Thread (contextual comments on records)
 - DMs (1:1 direct messages between workspace members)
 - Group DMs (3–8 people)
@@ -43,6 +44,7 @@
 - Bookmarks / saved messages
 
 **What's post-MVP:**
+
 - Base-scoped threads (workspace-wide conversations)
 - Table-scoped threads
 - Omnichannel external messaging (WhatsApp, Telegram, Messenger, Viber — Post-MVP — Custom Apps & Live Chat)
@@ -56,25 +58,26 @@
 
 ## Thread Scopes (MVP)
 
-| scope_type | Participants | Use Case |
-|------------|-------------|----------|
-| `record` | Thread participants + portal clients (if client_visible) | Contextual comments on a specific record |
-| `dm` | 2 users (1:1) | "Quick question about the client dinner" |
-| `group_dm` | 3–8 users (fixed cap) | "Design team sync" |
+| scope_type | Participants                                             | Use Case                                 |
+| ---------- | -------------------------------------------------------- | ---------------------------------------- |
+| `record`   | Thread participants + portal clients (if client_visible) | Contextual comments on a specific record |
+| `dm`       | 2 users (1:1)                                            | "Quick question about the client dinner" |
+| `group_dm` | 3–8 users (fixed cap)                                    | "Design team sync"                       |
 
 **Post-MVP scopes:**
 
-| scope_type | Participants | Phase |
-|------------|-------------|-------|
-| `base` | Workspace members with base access | 7 |
-| `table` | Workspace members with table access | 7 |
-| `external` | Workspace members ↔ external contacts | 9 |
+| scope_type | Participants                          | Phase |
+| ---------- | ------------------------------------- | ----- |
+| `base`     | Workspace members with base access    | 7     |
+| `table`    | Workspace members with table access   | 7     |
+| `external` | Workspace members ↔ external contacts | 9     |
 
 ### Record Thread
 
 The Record Thread is a **contextual conversation attached to a record**. Every record in every table has an implicit thread. The thread activates when someone posts the first message.
 
 **Where it appears:**
+
 - **Record View overlay:** Click chat icon → Record Thread opens alongside at 25% width. See `tables-and-views.md` > Record View.
 - **Mobile:** Bottom tab contextual swap — "Thread" tab on record detail. See `mobile.md`.
 - **Chat Quick Panel:** Record thread notifications appear in the Chat feed.
@@ -101,10 +104,10 @@ DMs are workspace-scoped (you DM a teammate within a workspace context).
 
 **`thread_messages.message_type` enum:**
 
-| Value | Purpose |
-|-------|---------|
-| `message` | Standard user message |
-| `system` | System-generated (join, pin, field change) |
+| Value     | Purpose                                    |
+| --------- | ------------------------------------------ |
+| `message` | Standard user message                      |
+| `system`  | System-generated (join, pin, field change) |
 
 Post-MVP additions: `activity_log`, `email_outbound`, `email_inbound`.
 
@@ -117,10 +120,12 @@ Post-MVP additions: `activity_log`, `email_outbound`, `email_inbound`.
 Messages can be replies to a parent message within a thread. `parent_message_id` (nullable) — when null, top-level; when set, it's a reply.
 
 **UX (Progressive Disclosure):**
+
 - **Level 1 — Flat timeline (default):** Messages chronological. Messages with replies show chip: "3 replies · last 2h ago".
 - **Level 2 — Expand replies:** Click chip → opens reply chain in side panel (360px). New replies compose at bottom.
 
 **Reply notification rules:**
+
 - **Notified:** Parent message author + explicit thread followers + @mentioned users. NOT all thread participants.
 - **Auto-follow:** Posting in a thread auto-follows it. Unfollow via thread menu.
 - **Follow button:** Bell icon on any thread to follow without posting.
@@ -132,11 +137,13 @@ Messages can be replies to a parent message within a thread. `parent_message_id`
 Tables with a self-referential linked record field get hierarchical chat navigation. The Record Thread panel includes a **dropdown picker** at the top for navigating the record tree without leaving chat context.
 
 **Dropdown layout:**
+
 - Parent record (top) — click to navigate up
 - Current record (highlighted) + siblings — each with unread indicator (teal dot + count)
 - Children of current record — each with unread indicators
 
 **Hierarchical unread rollup:**
+
 - **One level up only:** Parent record shows aggregate unread badge from direct child threads.
 - **No deeper recursion.** Covers the key case: "My project has 12 unread messages across tasks."
 - **Implementation:** Materialized counter on parent's thread, incremented on child message events.
@@ -187,23 +194,23 @@ Real-time presence via WebSocket heartbeat + Redis.
 
 **`notifications` table** (per `data-model.md`):
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `user_id` | UUID (FK → users) | Notification recipient |
-| `tenant_id` | UUID (FK → tenants) | Workspace scope (notifications are workspace-scoped) |
-| `type` | VARCHAR | Notification category (see Notification Types below) |
-| `title` | VARCHAR | Short display text: "Sarah mentioned you in Project Alpha" |
-| `body` | VARCHAR (nullable) | Optional preview text (first 120 chars of message content) |
-| `source_type` | VARCHAR | `'thread_message'` | `'approval'` | `'automation'` | `'sync'` | `'system'` |
-| `source_thread_id` | UUID (nullable, FK → threads) | Thread context for navigation |
-| `source_message_id` | UUID (nullable, FK → thread_messages) | Specific message for deep-link |
-| `source_record_id` | UUID (nullable) | Record context for approval/automation notifications |
-| `actor_id` | UUID (nullable, FK → users) | Who triggered the notification (null for system) |
-| `group_key` | VARCHAR (nullable) | Dedup/collapse key: e.g., `thread:{threadId}` for grouping |
-| `read` | BOOLEAN (default false) | Read state |
-| `read_at` | TIMESTAMP (nullable) | When marked read |
-| `created_at` | TIMESTAMP | |
+| Column              | Type                                  | Purpose                                                    |
+| ------------------- | ------------------------------------- | ---------------------------------------------------------- | ------------ | -------------- | -------- | ---------- |
+| `id`                | UUID                                  | Primary key                                                |
+| `user_id`           | UUID (FK → users)                     | Notification recipient                                     |
+| `tenant_id`         | UUID (FK → tenants)                   | Workspace scope (notifications are workspace-scoped)       |
+| `type`              | VARCHAR                               | Notification category (see Notification Types below)       |
+| `title`             | VARCHAR                               | Short display text: "Sarah mentioned you in Project Alpha" |
+| `body`              | VARCHAR (nullable)                    | Optional preview text (first 120 chars of message content) |
+| `source_type`       | VARCHAR                               | `'thread_message'`                                         | `'approval'` | `'automation'` | `'sync'` | `'system'` |
+| `source_thread_id`  | UUID (nullable, FK → threads)         | Thread context for navigation                              |
+| `source_message_id` | UUID (nullable, FK → thread_messages) | Specific message for deep-link                             |
+| `source_record_id`  | UUID (nullable)                       | Record context for approval/automation notifications       |
+| `actor_id`          | UUID (nullable, FK → users)           | Who triggered the notification (null for system)           |
+| `group_key`         | VARCHAR (nullable)                    | Dedup/collapse key: e.g., `thread:{threadId}` for grouping |
+| `read`              | BOOLEAN (default false)               | Read state                                                 |
+| `read_at`           | TIMESTAMP (nullable)                  | When marked read                                           |
+| `created_at`        | TIMESTAMP                             |                                                            |
 
 **Indexes:** `(user_id, tenant_id, read, created_at DESC)` — primary query: unread notifications for bell icon. `(user_id, tenant_id, created_at DESC)` — notification tray pagination. `(group_key, created_at)` — collapse grouping.
 
@@ -223,7 +230,7 @@ interface NotificationPreferences {
   automationFailures: { inApp: boolean; email: 'instant' | 'digest' | 'off' };
   syncErrors: { inApp: boolean; email: 'instant' | 'digest' | 'off' };
   // Global
-  digestFrequency: 'hourly' | 'daily' | 'off';  // When email mode is 'digest'
+  digestFrequency: 'hourly' | 'daily' | 'off'; // When email mode is 'digest'
   muteSchedule: { enabled: boolean; start: string; end: string; timezone: string }; // "Do not disturb"
 }
 ```
@@ -232,16 +239,16 @@ Defaults: `mentions` and `dms` — inApp: true, email: 'instant'. All others —
 
 ### Notification Types
 
-| Type | Source | Template Example |
-|------|--------|-----------------|
-| `mention` | @mention in thread message | "{actor} mentioned you in {threadName}" |
-| `dm` | New DM or group DM message | "{actor} sent you a message" |
-| `thread_reply` | Reply to a thread user participates in | "{actor} replied in {threadName}" |
-| `approval_requested` | Approval workflow | "Approval requested: {recordTitle}" |
-| `approval_decided` | Approval workflow | "{recordTitle} was approved by {actor}" |
-| `automation_failed` | Automation execution error | "Automation '{automationName}' failed" |
-| `sync_error` | Sync engine error | "Sync error on {connectionName}: {errorCategory}" |
-| `system` | Platform-level (plan limits, maintenance) | "You've used 80% of your AI credits this month" |
+| Type                 | Source                                    | Template Example                                  |
+| -------------------- | ----------------------------------------- | ------------------------------------------------- |
+| `mention`            | @mention in thread message                | "{actor} mentioned you in {threadName}"           |
+| `dm`                 | New DM or group DM message                | "{actor} sent you a message"                      |
+| `thread_reply`       | Reply to a thread user participates in    | "{actor} replied in {threadName}"                 |
+| `approval_requested` | Approval workflow                         | "Approval requested: {recordTitle}"               |
+| `approval_decided`   | Approval workflow                         | "{recordTitle} was approved by {actor}"           |
+| `automation_failed`  | Automation execution error                | "Automation '{automationName}' failed"            |
+| `sync_error`         | Sync engine error                         | "Sync error on {connectionName}: {errorCategory}" |
+| `system`             | Platform-level (plan limits, maintenance) | "You've used 80% of your AI credits this month"   |
 
 ### Delivery Pipeline
 
@@ -270,22 +277,22 @@ Event occurs (message sent, approval requested, etc.)
 
 ### Notification API
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/notifications` | GET | Paginated notification list. Params: `read` (boolean filter), `limit`, `cursor`. |
-| `/api/notifications/unread-count` | GET | Returns `{ count: number }`. Used by bell badge. Cached in Redis (5s TTL). |
-| `/api/notifications/{id}/read` | PATCH | Mark single notification as read. |
-| `/api/notifications/read-all` | PATCH | Mark all notifications as read for current workspace. |
-| `/api/notifications/preferences` | GET/PUT | Read or update notification preferences. |
+| Endpoint                          | Method  | Purpose                                                                          |
+| --------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `/api/notifications`              | GET     | Paginated notification list. Params: `read` (boolean filter), `limit`, `cursor`. |
+| `/api/notifications/unread-count` | GET     | Returns `{ count: number }`. Used by bell badge. Cached in Redis (5s TTL).       |
+| `/api/notifications/{id}/read`    | PATCH   | Mark single notification as read.                                                |
+| `/api/notifications/read-all`     | PATCH   | Mark all notifications as read for current workspace.                            |
+| `/api/notifications/preferences`  | GET/PUT | Read or update notification preferences.                                         |
 
 ### Error Handling
 
-| Scenario | Behavior |
-|----------|----------|
-| Notification insert fails (DB error) | Log error. Do not block the originating action (message send, approval). Notification is best-effort. |
-| Redis publish fails | Notification exists in DB. Client will see it on next tray open (DB query fallback). Log warning. |
-| Email send fails | BullMQ retry with exponential backoff (3 attempts, 1min/5min/15min). After 3 failures, mark as failed in job log. Do not retry further. |
-| Notification for deleted user | Skip silently. `user_id` FK is not cascade-delete — cleanup job removes orphaned notifications nightly. |
+| Scenario                             | Behavior                                                                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Notification insert fails (DB error) | Log error. Do not block the originating action (message send, approval). Notification is best-effort.                                   |
+| Redis publish fails                  | Notification exists in DB. Client will see it on next tray open (DB query fallback). Log warning.                                       |
+| Email send fails                     | BullMQ retry with exponential backoff (3 attempts, 1min/5min/15min). After 3 failures, mark as failed in job log. Do not retry further. |
+| Notification for deleted user        | Skip silently. `user_id` FK is not cascade-delete — cleanup job removes orphaned notifications nightly.                                 |
 
 **Email notifications (MVP):** `mention` and `dm` types support instant email delivery via Resend (see `email.md`). All other types default to digest-only email. Full email notification support for all types ships in Post-MVP — Comms & Polish.
 
@@ -306,37 +313,39 @@ Three states: **Compact** (single-line), **Focused** (compact + active), **Expan
 
 ### Progressive Disclosure Levels
 
-| Level | What's Visible | How Accessed |
-|-------|---------------|-------------|
-| **L1 — Default** | Single-line input, Enter to send, attach, emoji | Start typing |
+| Level             | What's Visible                                                    | How Accessed                       |
+| ----------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| **L1 — Default**  | Single-line input, Enter to send, attach, emoji                   | Start typing                       |
 | **L2 — Expanded** | Bubble toolbar (B/I/U/Link/Bullets/Numbers), Cancel/Send, @people | Select text, type `@`, Shift+Enter |
-| **L3 — Power** | Markdown shortcuts, full keyboard shortcuts | Just know them |
+| **L3 — Power**    | Markdown shortcuts, full keyboard shortcuts                       | Just know them                     |
 
 ### Keyboard Shortcuts
 
-| Shortcut | State | Action |
-|----------|-------|--------|
-| `Enter` | Compact/Focused | Send message |
-| `Shift+Enter` | Compact/Focused | Expand to paragraph mode |
-| `Enter` | Expanded | New line |
-| `Cmd+Enter` | Expanded | Send message |
-| `Escape` | Expanded | Collapse (confirm if content) |
-| `↑` | Focused (empty) | Edit last sent message |
-| `Tab` | In list | Indent list item |
-| `Shift+Tab` | In list | Outdent list item |
-| `Cmd+B/I/U` | Any | Bold / Italic / Underline |
-| `Cmd+K` | Any | Insert/edit link |
-| `Cmd+Z` / `Cmd+Shift+Z` | Any | Undo / Redo |
+| Shortcut                | State           | Action                        |
+| ----------------------- | --------------- | ----------------------------- |
+| `Enter`                 | Compact/Focused | Send message                  |
+| `Shift+Enter`           | Compact/Focused | Expand to paragraph mode      |
+| `Enter`                 | Expanded        | New line                      |
+| `Cmd+Enter`             | Expanded        | Send message                  |
+| `Escape`                | Expanded        | Collapse (confirm if content) |
+| `↑`                     | Focused (empty) | Edit last sent message        |
+| `Tab`                   | In list         | Indent list item              |
+| `Shift+Tab`             | In list         | Outdent list item             |
+| `Cmd+B/I/U`             | Any             | Bold / Italic / Underline     |
+| `Cmd+K`                 | Any             | Insert/edit link              |
+| `Cmd+Z` / `Cmd+Shift+Z` | Any             | Undo / Redo                   |
 
 ### @Mention System
 
 Typing `@` triggers contextual autocomplete dropdown:
 
 **Dropdown layout (top to bottom):**
+
 1. **People** (primary): Avatar + display name + role badge. Fuzzy-filtered as user types. Arrow keys + Enter to select.
 2. **Notify Group** (divider below people): `@here` (all thread participants, any role), `@channel` (all members with scope access, Manager+ only).
 
 **Contextual filtering:**
+
 - Record thread: Workspace members + portal clients (if client_visible)
 - DM/Group DM: Participants only
 
@@ -416,18 +425,18 @@ Bold, Italic, Underline, Strike, Code (inline marks), BulletList, OrderedList, B
 
 ## Messaging Error Handling
 
-| Scenario | Client behavior | Server behavior |
-|----------|----------------|-----------------|
-| **Message send fails (network)** | Message shows "failed to send" state (red outline, retry icon). Tap/click to retry. Message stays in composer until confirmed sent. | No server action needed — message never arrived. |
-| **Message send fails (server error)** | Same "failed to send" state. After 3 retries (1s, 3s, 10s), show: "Message could not be sent. Tap to retry." | Log error with `traceId`. Return 500 to client. |
-| **Message send fails (permission)** | Toast: "You no longer have access to this thread." Remove thread from sidebar. | Return 403. Log `permission_denied` audit event. |
-| **Attachment upload fails** | Inline error on the attachment thumbnail: "Upload failed — tap to retry." Message can still be sent without the failed attachment. | Return upload error. Do not create partial `thread_messages` row. |
-| **Attachment too large** | Client-side validation before upload: "File exceeds 25MB limit." File rejected, not queued. | Never reaches server. Limit enforced client-side + server-side (reject at middleware). |
-| **@mention resolution fails** | Mention pill renders as `@Unknown User` in gray. Notification still attempts delivery using stored user_id. | Log warning. Do not block message creation. |
-| **Thread not found (deleted/moved)** | Redirect to parent context (record, DM list) with toast: "This conversation is no longer available." | Return 404. |
-| **Real-time delivery fails** | Message persisted to DB first. Client receives on next poll/reconnect. No data loss. | Redis pub/sub is fire-and-forget. Message exists in DB as fallback. |
-| **Concurrent edit conflict** | Last-write-wins for message edits (rare case — only author can edit). No merge. Stale edit toast: "Message was updated. Your changes were not saved." | Compare `edited_at` timestamp. Reject if stale. |
-| **Rate limiting on message send** | Toast: "You're sending messages too quickly. Please slow down." Composer disabled for 5 seconds. | 30 messages/minute per user per thread. Return 429. |
+| Scenario                              | Client behavior                                                                                                                                       | Server behavior                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Message send fails (network)**      | Message shows "failed to send" state (red outline, retry icon). Tap/click to retry. Message stays in composer until confirmed sent.                   | No server action needed — message never arrived.                                       |
+| **Message send fails (server error)** | Same "failed to send" state. After 3 retries (1s, 3s, 10s), show: "Message could not be sent. Tap to retry."                                          | Log error with `traceId`. Return 500 to client.                                        |
+| **Message send fails (permission)**   | Toast: "You no longer have access to this thread." Remove thread from sidebar.                                                                        | Return 403. Log `permission_denied` audit event.                                       |
+| **Attachment upload fails**           | Inline error on the attachment thumbnail: "Upload failed — tap to retry." Message can still be sent without the failed attachment.                    | Return upload error. Do not create partial `thread_messages` row.                      |
+| **Attachment too large**              | Client-side validation before upload: "File exceeds 25MB limit." File rejected, not queued.                                                           | Never reaches server. Limit enforced client-side + server-side (reject at middleware). |
+| **@mention resolution fails**         | Mention pill renders as `@Unknown User` in gray. Notification still attempts delivery using stored user_id.                                           | Log warning. Do not block message creation.                                            |
+| **Thread not found (deleted/moved)**  | Redirect to parent context (record, DM list) with toast: "This conversation is no longer available."                                                  | Return 404.                                                                            |
+| **Real-time delivery fails**          | Message persisted to DB first. Client receives on next poll/reconnect. No data loss.                                                                  | Redis pub/sub is fire-and-forget. Message exists in DB as fallback.                    |
+| **Concurrent edit conflict**          | Last-write-wins for message edits (rare case — only author can edit). No merge. Stale edit toast: "Message was updated. Your changes were not saved." | Compare `edited_at` timestamp. Reject if stale.                                        |
+| **Rate limiting on message send**     | Toast: "You're sending messages too quickly. Please slow down." Composer disabled for 5 seconds.                                                      | 30 messages/minute per user per thread. Return 429.                                    |
 
 ---
 
@@ -442,6 +451,7 @@ Categories: Frequently Used (personalized), Smileys, People, Animals, Food, Trav
 ## Post-MVP Expansion
 
 **Post-MVP — Comms & Polish — Advanced Communications:**
+
 - Base-scoped and table-scoped threads
 - Activity logging in record threads (call/meeting/note/email structured entries)
 - Slash commands in chat (`/remind`, `/todo`, `/poll`, `/status`)
@@ -450,6 +460,7 @@ Categories: Frequently Used (personalized), Smileys, People, Animals, Food, Trav
 - Connected inbox integration (email threads in Chat — see `email.md`)
 
 **Post-MVP — Custom Apps & Live Chat — Omnichannel:**
+
 - External messaging (WhatsApp, Telegram, Messenger, Viber)
 - External contacts CRM auto-linking
 - Channel connections management

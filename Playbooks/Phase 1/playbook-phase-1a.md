@@ -45,18 +45,18 @@ Phase division files are not needed during build execution — their content has
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | Monorepo scaffold with Turborepo + pnpm workspaces | None | ~180 |
-| 2 | Next.js web app scaffold with health check endpoint | 1 | ~200 |
-| 3 | Worker + realtime app scaffolds (entry points) | 1 | ~150 |
-| 4 | Shared package scaffold with subpackage structure | 1 | ~150 |
-| CP-1 | Integration Checkpoint 1 (after Prompts 1–4) | 1–4 | — |
-| 5 | ESLint + Prettier + i18n stub configuration | 1–4 | ~180 |
-| 6 | Docker Compose dev environment + .env.example | 1 | ~160 |
-| 7 | Docker Compose test services (tmpfs-backed for CI) | 6 | ~120 |
-| 8 | GitHub Actions CI pipeline (all 9 pre-merge gates) | 1–7 | ~200 |
-| CP-2 | Integration Checkpoint 2 — Final (after Prompts 5–8) | 1–8 | — |
+| Prompt | Deliverable                                          | Depends On | Lines (est.) |
+| ------ | ---------------------------------------------------- | ---------- | ------------ |
+| 1      | Monorepo scaffold with Turborepo + pnpm workspaces   | None       | ~180         |
+| 2      | Next.js web app scaffold with health check endpoint  | 1          | ~200         |
+| 3      | Worker + realtime app scaffolds (entry points)       | 1          | ~150         |
+| 4      | Shared package scaffold with subpackage structure    | 1          | ~150         |
+| CP-1   | Integration Checkpoint 1 (after Prompts 1–4)         | 1–4        | —            |
+| 5      | ESLint + Prettier + i18n stub configuration          | 1–4        | ~180         |
+| 6      | Docker Compose dev environment + .env.example        | 1          | ~160         |
+| 7      | Docker Compose test services (tmpfs-backed for CI)   | 6          | ~120         |
+| 8      | GitHub Actions CI pipeline (all 9 pre-merge gates)   | 1–7        | ~200         |
+| CP-2   | Integration Checkpoint 2 — Final (after Prompts 5–8) | 1–8        | —            |
 
 ---
 
@@ -77,6 +77,7 @@ N/A — no schema changes.
 Initialize the EveryStack monorepo from an empty directory. This is the project root — everything else builds on this scaffold.
 
 **1. Root `package.json`:**
+
 - `name`: `everystack`
 - `private`: `true`
 - `engines.node`: `>=20`
@@ -85,13 +86,15 @@ Initialize the EveryStack monorepo from an empty directory. This is the project 
 - No direct dependencies at root — all deps live in workspace packages
 
 **2. `pnpm-workspace.yaml`:**
+
 ```yaml
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 **3. `turbo.json`:**
+
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -136,6 +139,7 @@ packages:
 ```
 
 **4. `tsconfig.base.json`:**
+
 - `compilerOptions.target`: `ES2022`
 - `compilerOptions.module`: `ESNext`
 - `compilerOptions.moduleResolution`: `bundler`
@@ -152,6 +156,7 @@ packages:
 - This is the base config. Each workspace package extends it with `"extends": "../../tsconfig.base.json"` (or the appropriate relative path).
 
 **5. `.gitignore`:**
+
 - Standard Node ignores: `node_modules/`, `dist/`, `.next/`, `.turbo/`, `coverage/`
 - Environment files: `.env`, `.env.local`, `.env.test`
 - IDE files: `.idea/`, `.vscode/settings.json` (but include `.vscode/extensions.json`)
@@ -160,16 +165,19 @@ packages:
 - Playwright: `playwright-report/`, `test-results/`
 
 **6. `.nvmrc`:**
+
 ```
 20
 ```
 
 **7. `README.md`:**
+
 - Brief project description: "EveryStack — Multi-tenant SaaS unifying no-code databases"
 - Placeholder sections: Getting Started, Development, Testing, Architecture
 - Reference to `CLAUDE.md` for project conventions
 
 **8. Create empty directory scaffolds** (with `.gitkeep` files to track them in git):
+
 - `apps/web/`
 - `apps/worker/`
 - `apps/realtime/`
@@ -213,6 +221,7 @@ N/A — no schema changes.
 Create the `apps/web` Next.js application using the App Router pattern. This is the primary user-facing application.
 
 **1. `apps/web/package.json`:**
+
 - `name`: `@everystack/web`
 - Dependencies: `next`, `react`, `react-dom`
 - Dev dependencies: `typescript`, `@types/react`, `@types/react-dom`, `@types/node`
@@ -220,27 +229,32 @@ Create the `apps/web` Next.js application using the App Router pattern. This is 
 - Do NOT install ESLint, Prettier, Tailwind, shadcn, or any feature libraries yet — those come in later sub-phases.
 
 **2. `apps/web/tsconfig.json`:**
+
 - Extends `../../tsconfig.base.json`
 - Add Next.js-specific options: `jsx: "preserve"`, `incremental: true`
 - Path aliases: `"@/*": ["./src/*"]`
 - Include: `["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]`
 
 **3. `apps/web/next.config.ts`:**
+
 - Enable Turborepo transpile for `@everystack/shared`
 - Strict mode: `reactStrictMode: true`
 - Output: `standalone` (for containerized deployment)
 - Placeholder for future headers (security headers come in 1D)
 
 **4. `apps/web/src/app/layout.tsx`:**
+
 - Root layout with `<html lang="en">` and `<body>`
 - Metadata: title "EveryStack", description from CLAUDE.md
 - No styling yet — raw HTML structure. Design system comes in 1F.
 
 **5. `apps/web/src/app/page.tsx`:**
+
 - Minimal placeholder: "EveryStack is running." with a `<h1>` tag.
 - Server component (default in App Router).
 
 **6. `apps/web/src/app/api/health/route.ts`:**
+
 - `GET /api/health` route handler
 - For now: returns `{ status: "ok", timestamp: new Date().toISOString() }` with HTTP 200
 - Future: will check Postgres and Redis connectivity (added in 1B and 1G respectively)
@@ -248,6 +262,7 @@ Create the `apps/web` Next.js application using the App Router pattern. This is 
 - Include a `TODO` comment: `// TODO [Phase 1G]: Add Redis health check`
 
 **7. Create empty directory structure:**
+
 - `apps/web/src/components/` (React components)
 - `apps/web/src/data/` (server-side data access)
 - `apps/web/src/actions/` (Server Actions)
@@ -300,6 +315,7 @@ Create minimal, compilable entry points for the two non-web applications. These 
   - Scripts: `dev` (`tsx watch src/index.ts`), `build` (`tsc`), `start` (`node dist/index.js`), `typecheck` (`tsc --noEmit`)
 - `tsconfig.json`: extends `../../tsconfig.base.json`, `outDir: "dist"`, `rootDir: "src"`
 - `src/index.ts`:
+
   ```typescript
   // EveryStack Worker — BullMQ Job Processor
   // Queue definitions and job processors will be added in Phase 1G.
@@ -328,6 +344,7 @@ Create minimal, compilable entry points for the two non-web applications. These 
   - Scripts: `dev` (`tsx watch src/index.ts`), `build` (`tsc`), `start` (`node dist/index.js`), `typecheck` (`tsc --noEmit`)
 - `tsconfig.json`: extends `../../tsconfig.base.json`, `outDir: "dist"`, `rootDir: "src"`
 - `src/index.ts`:
+
   ```typescript
   // EveryStack Realtime — Socket.io Server
   // Room model, auth, and event handling will be added in Phase 1G.
@@ -387,6 +404,7 @@ N/A — no schema changes.
 Create the `packages/shared` package that all apps import from. This package contains the shared database layer, sync engine, AI service, and test utilities. For now, create the directory structure and barrel exports — actual implementations come in later sub-phases.
 
 **1. `packages/shared/package.json`:**
+
 - `name`: `@everystack/shared`
 - `main`: `./index.ts` (for now — will add proper exports map)
 - `exports`:
@@ -403,6 +421,7 @@ Create the `packages/shared` package that all apps import from. This package con
 - Scripts: `typecheck` (`tsc --noEmit`), `build` (`tsc`), `lint` (placeholder)
 
 **2. `packages/shared/tsconfig.json`:**
+
 - Extends `../../tsconfig.base.json`
 - `compilerOptions.outDir`: `"dist"`
 - `compilerOptions.rootDir`: `"."` (covers all subdirs)
@@ -410,6 +429,7 @@ Create the `packages/shared` package that all apps import from. This package con
 - Exclude: `["dist", "node_modules", "**/*.test.ts"]`
 
 **3. Create directory structure:**
+
 ```
 packages/shared/
 ├── db/
@@ -434,6 +454,7 @@ packages/shared/
 ```
 
 **4. Barrel exports — each `index.ts` is a placeholder:**
+
 ```typescript
 // packages/shared/db/index.ts
 // Database layer — Drizzle schema, connection helpers, migrations
@@ -449,6 +470,7 @@ export {};
 ```
 
 **5. Root barrel `packages/shared/index.ts`:**
+
 ```typescript
 // @everystack/shared — shared utilities across all apps
 // Import from specific subpackages: @everystack/shared/db, @everystack/shared/sync, etc.
@@ -456,6 +478,7 @@ export {};
 ```
 
 **6. Verify that apps can import from the shared package:**
+
 - Add `@everystack/shared` as a workspace dependency in `apps/web/package.json`, `apps/worker/package.json`, and `apps/realtime/package.json` using `"@everystack/shared": "workspace:*"`
 
 ### Acceptance Criteria
@@ -482,6 +505,7 @@ export {};
 **Task:** Verify the monorepo structure is correct and all packages compile together.
 
 Run:
+
 1. `pnpm install` — all workspace packages resolve
 2. `pnpm turbo typecheck` — zero TypeScript errors across all 4 packages
 3. `pnpm turbo build` — all packages build successfully
@@ -514,6 +538,7 @@ Configure the code quality tooling that enforces CLAUDE.md conventions across th
 **1. ESLint configuration (flat config preferred if Next.js ESLint plugin supports it, otherwise `.eslintrc.cjs`):**
 
 Core rules enforced:
+
 - `no-console: "error"` — all logging goes through Pino (introduced in 1D). For Prompt 3's bootstrap entry points, add `// eslint-disable-next-line no-console` comments.
 - `@typescript-eslint/no-explicit-any: "error"` — no `any` types.
 - `@typescript-eslint/no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]`
@@ -521,6 +546,7 @@ Core rules enforced:
 - Extend from `eslint:recommended`, `@typescript-eslint/recommended`, and `next/core-web-vitals` for `apps/web`.
 
 Install dev dependencies at the root level:
+
 - `eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint-config-prettier`
 - In `apps/web`: `eslint-config-next`
 
@@ -529,6 +555,7 @@ Each workspace package should have a minimal ESLint config that extends the root
 **Alternative approach (simpler):** Create a shared ESLint config package or a root-level config that all workspaces inherit. Turborepo's `lint` task runs ESLint per-package.
 
 **2. Prettier configuration (`.prettierrc`):**
+
 ```json
 {
   "semi": true,
@@ -542,6 +569,7 @@ Each workspace package should have a minimal ESLint config that extends the root
 ```
 
 **`.prettierignore`:**
+
 ```
 node_modules
 dist
@@ -554,6 +582,7 @@ pnpm-lock.yaml
 **3. i18n completeness check (`scripts/check-i18n.ts`):**
 
 This is a stub script that will be expanded when actual UI strings exist. For now, it:
+
 - Scans `apps/web/src/**/*.tsx` files for hardcoded English strings (string literals in JSX that aren't inside a `t()` call, `className`, or known safe attributes like `data-testid`).
 - Returns exit code 0 if no violations, exit code 1 if violations found.
 - For Phase 1A, this will trivially pass (no JSX with text content exists yet).
@@ -562,10 +591,12 @@ This is a stub script that will be expanded when actual UI strings exist. For no
 **Note:** A full i18n solution (e.g., `next-intl` or `react-i18next`) will be configured when the first UI components are built in Phase 1F/Phase 3. This stub ensures the CI gate exists from day one.
 
 **4. Add lint/format scripts to all workspace packages:**
+
 - Each package should have a `lint` script that runs ESLint on its source files.
 - Root scripts: `format` (`prettier --write .`), `format:check` (`prettier --check .`)
 
 **5. Verify existing code passes:**
+
 - Add `eslint-disable-next-line no-console` to the `console.log` statements in `apps/worker/src/index.ts` and `apps/realtime/src/index.ts` (temporary — replaced by Pino in 1D).
 
 ### Acceptance Criteria
@@ -618,11 +649,11 @@ services:
       POSTGRES_PASSWORD: everystack_dev
       POSTGRES_DB: everystack_dev
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "everystack"]
+      test: ['CMD', 'pg_isready', '-U', 'everystack']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -639,7 +670,7 @@ services:
       PGBOUNCER_MAX_CLIENT_CONN: 200
       PGBOUNCER_DEFAULT_POOL_SIZE: 20
     ports:
-      - "${PGBOUNCER_PORT:-6432}:6432"
+      - '${PGBOUNCER_PORT:-6432}:6432'
     depends_on:
       postgres:
         condition: service_healthy
@@ -655,11 +686,11 @@ services:
       --save 300 10
       --save 60 10000
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 3
@@ -670,6 +701,7 @@ volumes:
 ```
 
 Key design decisions:
+
 - `pgvector/pgvector:pg16` image (not plain `postgres:16`) — pgvector extension pre-installed for future vector operations.
 - PgBouncer in `transaction` mode — required for serverless-compatible connection pooling.
 - Redis with `volatile-lru` eviction, AOF + RDB persistence — matches the operations.md specification.
@@ -782,10 +814,10 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: everystack_test
     ports:
-      - "5433:5432"
+      - '5433:5432'
     tmpfs: /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "everystack_test"]
+      test: ['CMD', 'pg_isready', '-U', 'everystack_test']
       interval: 2s
       timeout: 5s
       retries: 10
@@ -802,7 +834,7 @@ services:
       PGBOUNCER_MAX_CLIENT_CONN: 100
       PGBOUNCER_DEFAULT_POOL_SIZE: 10
     ports:
-      - "6433:6432"
+      - '6433:6432'
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -810,10 +842,10 @@ services:
   redis-test:
     image: redis:7-alpine
     ports:
-      - "6380:6379"
+      - '6380:6379'
     tmpfs: /data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 2s
       timeout: 5s
       retries: 10
@@ -833,10 +865,12 @@ NODE_ENV=test
 ```
 
 **3. Add convenience scripts to root `package.json`:**
+
 - `test:services:up`: `docker compose -f docker-compose.test.yml up -d --wait`
 - `test:services:down`: `docker compose -f docker-compose.test.yml down`
 
 **Key design decisions:**
+
 - **tmpfs storage:** Tests run 3–5× faster on RAM. No persistence needed — each test creates its own state.
 - **Offset ports:** Test Postgres on 5433 (not 5432), test Redis on 6380 (not 6379). Dev and test services can run simultaneously.
 - **Separate PgBouncer instance:** Test traffic goes through PgBouncer just like production, catching connection pooling issues early.
@@ -880,12 +914,14 @@ Create the GitHub Actions CI workflow that enforces all 9 pre-merge gates from C
 **Implement the complete workflow from testing.md lines 697–862, with these jobs:**
 
 **1. `lint` job (runs first):**
+
 - Checkout, setup pnpm, setup Node 20, `pnpm install --frozen-lockfile`
 - `pnpm turbo lint` (ESLint — `no-console`, `no-any`)
 - `pnpm turbo typecheck` (tsc --noEmit with strict mode)
 - `pnpm turbo check:i18n` (no hardcoded English strings)
 
 **2. `unit-test` job (needs: lint):**
+
 - Same checkout + install steps
 - Service containers: PostgreSQL (`pgvector/pgvector:pg16` on port 5433 with tmpfs) and Redis (`redis:7-alpine` on port 6380)
 - Run migrations: `pnpm turbo db:migrate` (will be a no-op until 1B adds migration files)
@@ -894,17 +930,20 @@ Create the GitHub Actions CI workflow that enforces all 9 pre-merge gates from C
 - Upload coverage to Codecov on PRs
 
 **3. `e2e-test` job (needs: unit-test, only on push to main):**
+
 - Playwright browser install
 - Run E2E tests against staging URL (from secrets)
 - Upload Playwright report as artifact on failure
 - This job will be effectively no-op until E2E tests are written in Phase 1E/Phase 3
 
 **4. `ai-eval` job (needs: lint, conditional on changes to `packages/shared/ai/`):**
+
 - Run AI evaluation suite
 - Fails if any template drops below 95% schema compliance
 - This job will not trigger until Phase 1H adds AI prompt templates
 
 **5. `migration-check` job (needs: lint, conditional on changes to `packages/shared/db/migrations/`):**
+
 - Service container: PostgreSQL on port 5434 (separate from unit-test)
 - Seed staging-scale data: `pnpm turbo db:seed-staging`
 - Run migration with timing check: `pnpm turbo db:migrate:check`
@@ -912,14 +951,17 @@ Create the GitHub Actions CI workflow that enforces all 9 pre-merge gates from C
 - This job will not trigger until Phase 1B adds migration files
 
 **6. Concurrency control:**
+
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 ```
+
 This cancels in-progress CI runs when a new push arrives on the same branch — prevents queue buildup.
 
 **Important implementation details:**
+
 - Use `pnpm/action-setup@v4` for pnpm installation
 - Use `actions/setup-node@v4` with `node-version: 20` and `cache: pnpm`
 - Use `--frozen-lockfile` for reproducible installs in CI
@@ -957,6 +999,7 @@ Several turbo tasks (`db:migrate`, `test`, `test:coverage-check`, `db:seed-stagi
 **Task:** Verify the complete Phase 1A deliverable: a fully configured monorepo with tooling, dev services, and CI pipeline.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero TypeScript errors across all packages
 2. `pnpm turbo lint` — zero ESLint errors across all packages
 3. `pnpm turbo check:i18n` — passes
@@ -970,6 +1013,7 @@ Run:
 11. `docker compose down && docker compose -f docker-compose.test.yml down` — clean shutdown
 
 **Manual verification checklist:**
+
 - Directory structure matches the CLAUDE.md Monorepo Structure (apps/web, apps/worker, apps/realtime, packages/shared with db/, sync/, ai/, testing/)
 - `turbo.json` has all task definitions from the Key Commands list
 - `tsconfig.base.json` has `strict: true`
@@ -1006,6 +1050,7 @@ Prompt 1 (Monorepo scaffold)
 ## Post-Phase Notes
 
 **What Phase 1B expects to find:**
+
 - A working monorepo with `pnpm install` and `pnpm turbo build` passing
 - `packages/shared/db/` directory ready for Drizzle schema files
 - `packages/shared/db/migrations/` directory ready for migration files
@@ -1015,6 +1060,7 @@ Prompt 1 (Monorepo scaffold)
 - `.env.example` with `DATABASE_URL`, `DATABASE_URL_DIRECT`, and `DATABASE_READ_URL` defined
 
 **What Phase 1E expects to find:**
+
 - `packages/shared/testing/` directory ready for test factories and helpers
 - Docker Compose test services for integration tests
 - GitHub Actions CI pipeline with `unit-test` job and service containers

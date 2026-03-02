@@ -6,19 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "echo 'lint not configured yet'",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "check:i18n": "tsx ../../scripts/check-i18n.ts"
   },
   "dependencies": {
+    "@everystack/shared": "workspace:*",
     "next": "^15.3.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@everystack/shared": "workspace:*"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "eslint-config-next": "^16.1.6",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

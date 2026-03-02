@@ -12,36 +12,36 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Test Framework | 34–47 | Tool selection per test layer (Vitest, Playwright, axe-core) |
-| Test File Conventions | 48–120 | Naming patterns, directory structure, 6 test writing rules |
-| Test Utilities | 121–279 | Tenant isolation helper, data factories, MSW mocks, Clerk test helpers |
-| Test Priority Tiers | 280–324 | 3-tier priority system for test coverage decisions |
-| Coverage Targets | 325–343 | Per-package line/branch targets, enforcement rules |
-| Vitest Configuration | 344–427 | Monorepo workspace setup, per-app config, test setup file |
-| Playwright Configuration | 428–524 | E2E config, 3 viewport projects, auth setup |
-| Docker Compose for Test Services | 525–588 | Postgres (pgvector), PgBouncer, Redis — all tmpfs-backed |
-| Accessibility Testing | 589–630 | axe-core + Playwright WCAG 2.1 AA, mandatory a11y test pages |
-| Performance Regression Testing | 631–692 | Query timing guards, thresholds by operation, CI behavior |
-| CI Pipeline (GitHub Actions) | 693–886 | Workflow YAML, 9 pre-merge gates, post-merge pipeline |
-| Staging Database Management | 887–943 | Synthetic data seeding, staging volumes, migration testing |
-| Local Development Testing | 944–1002 | Local dev workflow and quick-run commands |
-| Phase Implementation | 1003–1011 | Testing milestones per phase |
+| Section                          | Lines     | Covers                                                                 |
+| -------------------------------- | --------- | ---------------------------------------------------------------------- |
+| Test Framework                   | 34–47     | Tool selection per test layer (Vitest, Playwright, axe-core)           |
+| Test File Conventions            | 48–120    | Naming patterns, directory structure, 6 test writing rules             |
+| Test Utilities                   | 121–279   | Tenant isolation helper, data factories, MSW mocks, Clerk test helpers |
+| Test Priority Tiers              | 280–324   | 3-tier priority system for test coverage decisions                     |
+| Coverage Targets                 | 325–343   | Per-package line/branch targets, enforcement rules                     |
+| Vitest Configuration             | 344–427   | Monorepo workspace setup, per-app config, test setup file              |
+| Playwright Configuration         | 428–524   | E2E config, 3 viewport projects, auth setup                            |
+| Docker Compose for Test Services | 525–588   | Postgres (pgvector), PgBouncer, Redis — all tmpfs-backed               |
+| Accessibility Testing            | 589–630   | axe-core + Playwright WCAG 2.1 AA, mandatory a11y test pages           |
+| Performance Regression Testing   | 631–692   | Query timing guards, thresholds by operation, CI behavior              |
+| CI Pipeline (GitHub Actions)     | 693–886   | Workflow YAML, 9 pre-merge gates, post-merge pipeline                  |
+| Staging Database Management      | 887–943   | Synthetic data seeding, staging volumes, migration testing             |
+| Local Development Testing        | 944–1002  | Local dev workflow and quick-run commands                              |
+| Phase Implementation             | 1003–1011 | Testing milestones per phase                                           |
 
 ---
 
 ## Test Framework
 
-| Layer | Tool | Location |
-|-------|------|----------|
-| Unit tests | **Vitest** | `*.test.ts` co-located with source files |
-| Integration tests | **Vitest** + test database | `*.integration.test.ts` in `__tests__/` directories |
-| E2E tests | **Playwright** | `apps/web/e2e/` |
-| API tests | **Vitest** + supertest | `apps/web/__tests__/api/` |
-| Component tests | **Vitest** + Testing Library | `*.test.tsx` co-located with components |
-| Accessibility tests | **axe-core** + Playwright | `apps/web/e2e/a11y/` |
-| AI evaluation | Custom suite | `packages/shared/ai/evaluation/` |
+| Layer               | Tool                         | Location                                            |
+| ------------------- | ---------------------------- | --------------------------------------------------- |
+| Unit tests          | **Vitest**                   | `*.test.ts` co-located with source files            |
+| Integration tests   | **Vitest** + test database   | `*.integration.test.ts` in `__tests__/` directories |
+| E2E tests           | **Playwright**               | `apps/web/e2e/`                                     |
+| API tests           | **Vitest** + supertest       | `apps/web/__tests__/api/`                           |
+| Component tests     | **Vitest** + Testing Library | `*.test.tsx` co-located with components             |
+| Accessibility tests | **axe-core** + Playwright    | `apps/web/e2e/a11y/`                                |
+| AI evaluation       | Custom suite                 | `packages/shared/ai/evaluation/`                    |
 
 ---
 
@@ -49,13 +49,13 @@
 
 ### File Naming
 
-| Test type | File pattern | Example |
-|-----------|-------------|---------|
-| Unit test | `[source].test.ts` | `records.test.ts` next to `records.ts` |
-| Integration test | `[feature].integration.test.ts` | `__tests__/records.integration.test.ts` |
-| E2E test | `[flow].spec.ts` | `e2e/create-record.spec.ts` |
-| Component test | `[Component].test.tsx` | `RecordCard.test.tsx` next to `RecordCard.tsx` |
-| A11y test | `[feature].a11y.spec.ts` | `e2e/a11y/grid-view.a11y.spec.ts` |
+| Test type        | File pattern                    | Example                                        |
+| ---------------- | ------------------------------- | ---------------------------------------------- |
+| Unit test        | `[source].test.ts`              | `records.test.ts` next to `records.ts`         |
+| Integration test | `[feature].integration.test.ts` | `__tests__/records.integration.test.ts`        |
+| E2E test         | `[flow].spec.ts`                | `e2e/create-record.spec.ts`                    |
+| Component test   | `[Component].test.tsx`          | `RecordCard.test.tsx` next to `RecordCard.tsx` |
+| A11y test        | `[feature].a11y.spec.ts`        | `e2e/a11y/grid-view.a11y.spec.ts`              |
 
 ### Directory Structure
 
@@ -257,9 +257,7 @@ import { setupServer } from 'msw/node';
 export const airtableHandlers = [
   http.get('https://api.airtable.com/v0/:baseId/:tableId', ({ params }) => {
     return HttpResponse.json({
-      records: [
-        { id: 'rec1', fields: { Name: 'Test Record', Status: 'Active' } },
-      ],
+      records: [{ id: 'rec1', fields: { Name: 'Test Record', Status: 'Active' } }],
     });
   }),
   http.patch('https://api.airtable.com/v0/:baseId/:tableId', ({ params }) => {
@@ -287,11 +285,12 @@ These must pass before any PR merges. They protect the invariants that, if broke
 
 **Permission boundary tests:** For each of the 5 roles, verify: what they CAN access, and what they CANNOT access. Test both data access and Server Action authorization.
 
-**Data integrity tests:** JSONB canonical form round-trips correctly through `toCanonical()` → storage → retrieval → `fromCanonical()`. Cross-link index stays consistent with canonical_data. Formula dependency graph is acyclic *(post-MVP — formula engine)*.
+**Data integrity tests:** JSONB canonical form round-trips correctly through `toCanonical()` → storage → retrieval → `fromCanonical()`. Cross-link index stays consistent with canonical*data. Formula dependency graph is acyclic *(post-MVP — formula engine)\_.
 
 **Zod validation tests:** Every Server Action rejects malformed input. Every boundary validates tenant_id is not client-provided.
 
 **Security tests:**
+
 - **SQL injection via JSONB:** Verify that JSONB filter values containing SQL metacharacters do not escape the query. Test with `'; DROP TABLE records; --` in filter values.
 - **XSS in canonical data:** Verify that field values containing `<script>` tags are sanitized on output, not stored raw. The canonical form stores raw; renderers must escape.
 - **Portal data scope bypass:** Verify that a portal client cannot access records outside their `data_scope` by manipulating request parameters.
@@ -324,16 +323,16 @@ These must pass before any PR merges. They protect the invariants that, if broke
 
 ## Coverage Targets
 
-| Package/App | Line Coverage | Branch Coverage | Enforced |
-|-------------|--------------|-----------------|----------|
-| `packages/shared/db/` | 90% | 85% | Yes (blocks merge) |
-| `packages/shared/ai/` | 80% | 75% | Yes |
-| `packages/shared/sync/` | 90% | 85% | Yes |
-| `apps/web/src/data/` | 95% | 90% | Yes (critical path) |
-| `apps/web/src/actions/` | 90% | 85% | Yes |
-| `apps/worker/src/jobs/` | 85% | 80% | Yes |
-| `apps/web/src/components/` | 60% | 50% | No (UI coverage via E2E) |
-| Overall | 80% | 75% | CI warning, not blocking |
+| Package/App                | Line Coverage | Branch Coverage | Enforced                 |
+| -------------------------- | ------------- | --------------- | ------------------------ |
+| `packages/shared/db/`      | 90%           | 85%             | Yes (blocks merge)       |
+| `packages/shared/ai/`      | 80%           | 75%             | Yes                      |
+| `packages/shared/sync/`    | 90%           | 85%             | Yes                      |
+| `apps/web/src/data/`       | 95%           | 90%             | Yes (critical path)      |
+| `apps/web/src/actions/`    | 90%           | 85%             | Yes                      |
+| `apps/worker/src/jobs/`    | 85%           | 80%             | Yes                      |
+| `apps/web/src/components/` | 60%           | 50%             | No (UI coverage via E2E) |
+| Overall                    | 80%           | 75%             | CI warning, not blocking |
 
 **Coverage tool:** Vitest's built-in V8 coverage provider. Reports in `lcov` format for CI integration. `istanbul` thresholds configured per workspace in `vitest.workspace.ts`.
 
@@ -367,7 +366,7 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',  // Server-side tests (data, actions)
+    environment: 'node', // Server-side tests (data, actions)
     include: ['src/**/*.test.{ts,tsx}', '__tests__/**/*.test.ts'],
     exclude: ['e2e/**'],
     setupFiles: ['./vitest.setup.ts'],
@@ -380,9 +379,9 @@ export default defineConfig({
         'src/actions/': { lines: 90, branches: 85 },
       },
     },
-    testTimeout: 10_000,           // 10s default
-    hookTimeout: 30_000,           // 30s for setup/teardown
-    pool: 'forks',                 // Isolation for DB tests
+    testTimeout: 10_000, // 10s default
+    hookTimeout: 30_000, // 30s for setup/teardown
+    pool: 'forks', // Isolation for DB tests
     poolOptions: { forks: { singleFork: false } },
   },
   resolve: {
@@ -437,9 +436,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI
-    ? [['html'], ['github']]
-    : [['list']],
+  reporter: process.env.CI ? [['html'], ['github']] : [['list']],
 
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000',
@@ -485,12 +482,14 @@ export default defineConfig({
     },
   ],
 
-  webServer: process.env.CI ? undefined : {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: 'pnpm dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });
 ```
 
@@ -535,10 +534,10 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: everystack_test
     ports:
-      - "5433:5432"  # Different port from dev
-    tmpfs: /var/lib/postgresql/data  # RAM-backed for speed
+      - '5433:5432' # Different port from dev
+    tmpfs: /var/lib/postgresql/data # RAM-backed for speed
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "everystack_test"]
+      test: ['CMD', 'pg_isready', '-U', 'everystack_test']
       interval: 2s
       timeout: 5s
       retries: 10
@@ -555,7 +554,7 @@ services:
       PGBOUNCER_MAX_CLIENT_CONN: 100
       PGBOUNCER_DEFAULT_POOL_SIZE: 10
     ports:
-      - "6433:6432"
+      - '6433:6432'
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -563,10 +562,10 @@ services:
   redis-test:
     image: redis:7-alpine
     ports:
-      - "6380:6379"  # Different port from dev
+      - '6380:6379' # Different port from dev
     tmpfs: /data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 2s
       timeout: 5s
       retries: 10
@@ -602,7 +601,7 @@ test.describe('Grid View Accessibility', () => {
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-      .exclude('.recharts-wrapper')  // Chart SVGs have known issues
+      .exclude('.recharts-wrapper') // Chart SVGs have known issues
       .analyze();
 
     expect(results.violations).toEqual([]);
@@ -620,6 +619,7 @@ test.describe('Grid View Accessibility', () => {
 ```
 
 **Pages with mandatory a11y tests:**
+
 - Grid view (keyboard navigation, screen reader labels)
 - Record View (form field labels, focus management)
 - Command Bar (ARIA roles, search announcement)
@@ -634,11 +634,7 @@ Query timing guards prevent slow queries from shipping undetected:
 
 ```typescript
 // packages/shared/testing/performance.ts
-export function expectQueryTime(
-  label: string,
-  queryFn: () => Promise<unknown>,
-  maxMs: number,
-) {
+export function expectQueryTime(label: string, queryFn: () => Promise<unknown>, maxMs: number) {
   it(`${label} completes within ${maxMs}ms`, async () => {
     // Warm up (first query may be slower due to query plan caching)
     await queryFn();
@@ -658,17 +654,20 @@ describe('getRecordsByTable performance', () => {
     await seedRecords(tenantId, tableId, 10_000);
   });
 
-  expectQueryTime('10K records with 3 filters', 
+  expectQueryTime(
+    '10K records with 3 filters',
     () => getRecordsByTable(tenantId, tableId, { filters: threeFilters }),
-    200,  // Must complete in 200ms
+    200, // Must complete in 200ms
   );
 
-  expectQueryTime('10K records with tsvector search',
+  expectQueryTime(
+    '10K records with tsvector search',
     () => searchRecords(tenantId, tableId, 'search term'),
     150,
   );
 
-  expectQueryTime('cross-link resolution depth 2',
+  expectQueryTime(
+    'cross-link resolution depth 2',
     () => resolveCrossLinks(tenantId, recordId, { maxDepth: 2 }),
     500,
   );
@@ -677,14 +676,14 @@ describe('getRecordsByTable performance', () => {
 
 **Performance thresholds by operation:**
 
-| Operation | Max Time | Dataset Size | Enforced |
-|-----------|----------|-------------|----------|
-| Grid page load (50 records) | 200ms | 10K records in table | Tier 2 |
-| Full-text search (tsvector) | 150ms | 10K records in table | Tier 2 |
-| Cross-link resolution (depth 2) | 500ms | 1K links per record | Tier 2 |
-| Record create (single) | 100ms | N/A | Tier 2 |
-| Portal page render (5 blocks) | 300ms | 5K records bound | Tier 3 *(post-MVP — App Designer portals)* |
-| Formula recalculation chain (10 fields) | 1,000ms | 10K records | Tier 3 *(post-MVP — formula engine)* |
+| Operation                               | Max Time | Dataset Size         | Enforced                                   |
+| --------------------------------------- | -------- | -------------------- | ------------------------------------------ |
+| Grid page load (50 records)             | 200ms    | 10K records in table | Tier 2                                     |
+| Full-text search (tsvector)             | 150ms    | 10K records in table | Tier 2                                     |
+| Cross-link resolution (depth 2)         | 500ms    | 1K links per record  | Tier 2                                     |
+| Record create (single)                  | 100ms    | N/A                  | Tier 2                                     |
+| Portal page render (5 blocks)           | 300ms    | 5K records bound     | Tier 3 _(post-MVP — App Designer portals)_ |
+| Formula recalculation chain (10 fields) | 1,000ms  | 10K records          | Tier 3 _(post-MVP — formula engine)_       |
 
 **CI behavior:** Performance tests run against the staging-seeded test database. Failures are **warnings** (not blocking) in MVP — Foundation–3. From Post-MVP — Portals & Apps onward, Tier 2 performance tests block merge.
 
@@ -719,9 +718,9 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo lint          # ESLint (no-console, no-any)
-      - run: pnpm turbo typecheck     # tsc --noEmit (strict mode)
-      - run: pnpm turbo check:i18n    # No hardcoded English strings
+      - run: pnpm turbo lint # ESLint (no-console, no-any)
+      - run: pnpm turbo typecheck # tsc --noEmit (strict mode)
+      - run: pnpm turbo check:i18n # No hardcoded English strings
 
   unit-test:
     runs-on: ubuntu-latest
@@ -890,13 +889,13 @@ jobs:
 
 **Strategy:** Staging database seeded with synthetic data matching production scale:
 
-| Entity | Staging Volume | Production Estimate (1K tenants) |
-|--------|---------------|----------------------------------|
-| Tenants | 500 | 1,000 |
-| Records | 5M | 10M+ |
-| Fields | 10K | 20K+ |
-| Cross-link index | 500K | 1M+ |
-| Embeddings | 1M | 2M+ | *(post-MVP — vector embeddings)* |
+| Entity           | Staging Volume | Production Estimate (1K tenants) |
+| ---------------- | -------------- | -------------------------------- | -------------------------------- |
+| Tenants          | 500            | 1,000                            |
+| Records          | 5M             | 10M+                             |
+| Fields           | 10K            | 20K+                             |
+| Cross-link index | 500K           | 1M+                              |
+| Embeddings       | 1M             | 2M+                              | _(post-MVP — vector embeddings)_ |
 
 **Seeding:** A `seed-staging` script generates realistic synthetic data: varied tenant sizes (10 records to 100K records), multiple field types, cross-links between tables, realistic JSONB canonical data shapes. Re-run monthly or when schema changes.
 
@@ -909,20 +908,20 @@ jobs:
 // pnpm turbo db:seed-staging
 async function seedStaging() {
   const tenantSizes = [
-    { count: 300, records: 100 },      // Small tenants
-    { count: 150, records: 5_000 },    // Medium tenants
-    { count: 40,  records: 50_000 },   // Large tenants
-    { count: 10,  records: 200_000 },  // Enterprise tenants
+    { count: 300, records: 100 }, // Small tenants
+    { count: 150, records: 5_000 }, // Medium tenants
+    { count: 40, records: 50_000 }, // Large tenants
+    { count: 10, records: 200_000 }, // Enterprise tenants
   ];
 
   for (const tier of tenantSizes) {
     for (let i = 0; i < tier.count; i++) {
       const tenant = await createStagingTenant();
       const base = await createStagingBase(tenant.id);
-      const tables = await createStagingTables(base.id, 5);  // 5 tables per base
-      
+      const tables = await createStagingTables(base.id, 5); // 5 tables per base
+
       for (const table of tables) {
-        const fields = await createStagingFields(table.id, 15);  // 15 fields per table
+        const fields = await createStagingFields(table.id, 15); // 15 fields per table
         await createStagingRecords(tenant.id, table.id, fields, tier.records / tables.length);
       }
 
@@ -933,7 +932,7 @@ async function seedStaging() {
 
   // Build search vectors and embedding stubs (post-MVP — vector embeddings)
   await rebuildAllSearchVectors();
-  await createEmbeddingStubs();  // post-MVP
+  await createEmbeddingStubs(); // post-MVP
 
   console.log('Staging seed complete');
 }
@@ -1002,10 +1001,10 @@ pnpm vitest watch
 
 ## Phase Implementation
 
-| Phase | Testing Work |
-|-------|-------------|
-| MVP — Foundation | Vitest workspace setup (`vitest.workspace.ts`), Docker Compose test services, test factories (`createTestTenant`, `createTestUser`, `createTestRecord`), `testTenantIsolation()` helper, mock Clerk session utility, Tier 1 tests for all `/data` functions, CI pipeline (GitHub Actions: lint → typecheck → unit-test → migration-check), basic staging seed script, `.env.test` template. Playwright skeleton (config + auth setup, no E2E tests yet). |
-| MVP — Sync | Sync round-trip tests per field type (Airtable, Notion), MSW mock API server setup, rate limiter tests, integration tests with mock external APIs, performance regression tests for query timing. |
-| MVP — Core UX | Playwright E2E for critical paths (create workspace → create table → add record → edit cell), component tests for grid cell renderers, cross-link resolution tests, formula engine tests *(post-MVP)* (dependency graph, circular detection, recalculation), AI eval pipeline, accessibility tests (grid view, record expand). |
-| Post-MVP — Portals & Apps | Portal auth flow tests (magic link, session, data_scope), portal rendering tests, cookie security tests. |
-| Post-MVP — Comms & Polish | Full E2E suite (all viewports: desktop + tablet + mobile), comprehensive accessibility audit, performance benchmarks on staging-scale data, automated deployment pipeline with approval gates. |
+| Phase                     | Testing Work                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVP — Foundation          | Vitest workspace setup (`vitest.workspace.ts`), Docker Compose test services, test factories (`createTestTenant`, `createTestUser`, `createTestRecord`), `testTenantIsolation()` helper, mock Clerk session utility, Tier 1 tests for all `/data` functions, CI pipeline (GitHub Actions: lint → typecheck → unit-test → migration-check), basic staging seed script, `.env.test` template. Playwright skeleton (config + auth setup, no E2E tests yet). |
+| MVP — Sync                | Sync round-trip tests per field type (Airtable, Notion), MSW mock API server setup, rate limiter tests, integration tests with mock external APIs, performance regression tests for query timing.                                                                                                                                                                                                                                                        |
+| MVP — Core UX             | Playwright E2E for critical paths (create workspace → create table → add record → edit cell), component tests for grid cell renderers, cross-link resolution tests, formula engine tests _(post-MVP)_ (dependency graph, circular detection, recalculation), AI eval pipeline, accessibility tests (grid view, record expand).                                                                                                                           |
+| Post-MVP — Portals & Apps | Portal auth flow tests (magic link, session, data_scope), portal rendering tests, cookie security tests.                                                                                                                                                                                                                                                                                                                                                 |
+| Post-MVP — Comms & Polish | Full E2E suite (all viewports: desktop + tablet + mobile), comprehensive accessibility audit, performance benchmarks on staging-scale data, automated deployment pipeline with approval gates.                                                                                                                                                                                                                                                           |

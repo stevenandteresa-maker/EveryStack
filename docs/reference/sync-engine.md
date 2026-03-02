@@ -12,18 +12,18 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Core Pattern | 30–46 | Adapter → Canonical JSONB → Adapter flow, adding new platforms |
-| Source References for Lossless Round-Tripping | 47–68 | source_refs map for platform-specific identifiers |
-| Field Type Registry | 69–87 | Per-platform transforms, lossy field handling, type mapping |
-| Sync Setup & Table Selection | 88–399 | OAuth wizard, table selection, sync filters, record quotas, orphan handling |
-| Synced Data Performance Strategy | 400–458 | 6-layer performance: progressive sync, JSONB source of truth, read cache, optimistic UI, smart polling |
-| External API Rate Limit Management | 459–513 | Platform rate limits, token bucket, priority scheduling, multi-tenant fairness |
-| Conflict Resolution UX | 514–772 | Detection, manual resolution UI, diff view, grid rendering, mobile conflicts, audit trail |
-| Sync Error Recovery UX | 773–1063 | 8 error categories, connection status model, UI indicators, 5 recovery flows, settings dashboard |
-| Schema Sync | 1064–1071 | Schema change detection and handling |
-| Phase Implementation | 1072–1079 | MVP — Sync delivery scope and ordering |
+| Section                                       | Lines     | Covers                                                                                                 |
+| --------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
+| Core Pattern                                  | 30–46     | Adapter → Canonical JSONB → Adapter flow, adding new platforms                                         |
+| Source References for Lossless Round-Tripping | 47–68     | source_refs map for platform-specific identifiers                                                      |
+| Field Type Registry                           | 69–87     | Per-platform transforms, lossy field handling, type mapping                                            |
+| Sync Setup & Table Selection                  | 88–399    | OAuth wizard, table selection, sync filters, record quotas, orphan handling                            |
+| Synced Data Performance Strategy              | 400–458   | 6-layer performance: progressive sync, JSONB source of truth, read cache, optimistic UI, smart polling |
+| External API Rate Limit Management            | 459–513   | Platform rate limits, token bucket, priority scheduling, multi-tenant fairness                         |
+| Conflict Resolution UX                        | 514–772   | Detection, manual resolution UI, diff view, grid rendering, mobile conflicts, audit trail              |
+| Sync Error Recovery UX                        | 773–1063  | 8 error categories, connection status model, UI indicators, 5 recovery flows, settings dashboard       |
+| Schema Sync                                   | 1064–1071 | Schema change detection and handling                                                                   |
+| Phase Implementation                          | 1072–1079 | MVP — Sync delivery scope and ordering                                                                 |
 
 ---
 
@@ -137,21 +137,22 @@ Each base connection stores its table selection and per-table config in `base_co
 ```typescript
 // Shape of base_connections.sync_config (JSONB)
 interface SyncConfig {
-  polling_interval_seconds: number;   // Default: 300 (5 min)
-  tables: SyncTableConfig[];          // Per-table selection and filters
+  polling_interval_seconds: number; // Default: 300 (5 min)
+  tables: SyncTableConfig[]; // Per-table selection and filters
 }
 
 interface SyncTableConfig {
-  external_table_id: string;          // Platform's table/database ID
-  external_table_name: string;        // Display name from platform
-  enabled: boolean;                   // User toggled this table on/off
-  sync_filter: FilterRule[] | null;   // Inbound filter — same grammar as view filters
-  estimated_record_count: number;     // Last known count from platform
-  synced_record_count: number;        // Actual records synced locally
+  external_table_id: string; // Platform's table/database ID
+  external_table_name: string; // Display name from platform
+  enabled: boolean; // User toggled this table on/off
+  sync_filter: FilterRule[] | null; // Inbound filter — same grammar as view filters
+  estimated_record_count: number; // Last known count from platform
+  synced_record_count: number; // Actual records synced locally
 }
 ```
 
 **Key design decisions:**
+
 - **Per-table, not per-base.** Each table in a synced base can have its own filter. A user might sync "Projects" unfiltered but filter "Tasks" to only active ones.
 - **Same filter grammar as views.** The `FilterRule[]` type is identical to what grid view filters use. The filter builder UI is the same component. Users learn one system.
 - **`enabled: boolean` is the toggle.** Tables not selected in the wizard have `enabled: false`. They can be toggled on later from Sync Settings without re-running the wizard.
@@ -163,19 +164,28 @@ A sync filter is a `FilterRule[]` applied to inbound records. Records that don't
 ```typescript
 // Same FilterRule type used by grid views, portal data_scope, and App record_filters (post-MVP)
 interface FilterRule {
-  fieldId: string;         // EveryStack field ID (mapped from platform field)
+  fieldId: string; // EveryStack field ID (mapped from platform field)
   operator: FilterOperator;
-  value: unknown;          // Type depends on field type
+  value: unknown; // Type depends on field type
   conjunction: 'and' | 'or';
 }
 
 type FilterOperator =
-  | 'equals' | 'not_equals'
-  | 'contains' | 'not_contains'
-  | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal'
-  | 'is_empty' | 'is_not_empty'
-  | 'is_any_of' | 'is_none_of'
-  | 'is_before' | 'is_after' | 'is_within';  // Date operators
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_equal'
+  | 'less_equal'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'is_any_of'
+  | 'is_none_of'
+  | 'is_before'
+  | 'is_after'
+  | 'is_within'; // Date operators
 ```
 
 **Setup wizard bootstrapping:** During initial sync setup (Step 3), EveryStack fields don't exist yet — they're created during the first schema sync (Step 4). The filter builder handles this with a two-phase approach:
@@ -192,11 +202,11 @@ If a platform field referenced in a filter is not synced (e.g., the user deselec
 
 Where possible, the sync adapter translates `FilterRule[]` into the platform's native filter API to avoid fetching unnecessary data:
 
-| Platform | Native Filter API | Pushdown Support |
-|----------|------------------|-----------------|
-| Airtable | `filterByFormula` | ✅ Full — most operators map directly. String `contains` uses `FIND()`. Date operators use `IS_BEFORE()`/`IS_AFTER()`. |
-| Notion | `filter` parameter on database query | ✅ Full — Notion's filter JSON maps well to FilterRule. |
-| SmartSuite | `filter` parameter (limited) | ⚠️ Partial — basic equality and empty checks. Complex filters fall back to local post-filtering. |
+| Platform   | Native Filter API                    | Pushdown Support                                                                                                       |
+| ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Airtable   | `filterByFormula`                    | ✅ Full — most operators map directly. String `contains` uses `FIND()`. Date operators use `IS_BEFORE()`/`IS_AFTER()`. |
+| Notion     | `filter` parameter on database query | ✅ Full — Notion's filter JSON maps well to FilterRule.                                                                |
+| SmartSuite | `filter` parameter (limited)         | ⚠️ Partial — basic equality and empty checks. Complex filters fall back to local post-filtering.                       |
 
 **Pushdown translation in adapter:**
 
@@ -205,16 +215,24 @@ Where possible, the sync adapter translates `FilterRule[]` into the platform's n
 function translateFilterToFormula(filters: FilterRule[], fieldMap: Map<string, string>): string {
   // Convert FilterRule[] → Airtable filterByFormula string
   // e.g., AND({Status} != "Archived", {Priority} = "High")
-  return filters.map(f => {
-    const fieldName = fieldMap.get(f.fieldId);
-    switch (f.operator) {
-      case 'equals': return `{${fieldName}} = "${f.value}"`;
-      case 'not_equals': return `{${fieldName}} != "${f.value}"`;
-      case 'contains': return `FIND("${f.value}", {${fieldName}}) > 0`;
-      case 'is_empty': return `{${fieldName}} = BLANK()`;
-      // ... other operators
-    }
-  }).join(filters[0]?.conjunction === 'or' ? ', OR(' : ', AND(') + ')';
+  return (
+    filters
+      .map((f) => {
+        const fieldName = fieldMap.get(f.fieldId);
+        switch (f.operator) {
+          case 'equals':
+            return `{${fieldName}} = "${f.value}"`;
+          case 'not_equals':
+            return `{${fieldName}} != "${f.value}"`;
+          case 'contains':
+            return `FIND("${f.value}", {${fieldName}}) > 0`;
+          case 'is_empty':
+            return `{${fieldName}} = BLANK()`;
+          // ... other operators
+        }
+      })
+      .join(filters[0]?.conjunction === 'or' ? ', OR(' : ', AND(') + ')'
+  );
 }
 ```
 
@@ -240,13 +258,13 @@ During setup, the wizard needs to show how many records will sync after filterin
 
 Record quotas exist per workspace tier (see root CLAUDE.md > Pricing for canonical values):
 
-| Plan | Record Quota (Cached Records) | Bases | Tables per Base |
-|------|------------------------------|-------|----------------|
-| Freelancer | 10,000 | 3 | 20 |
-| Starter | 50,000 | 10 | 50 |
-| Professional | 250,000 | 25 | 100 |
-| Business | 1,000,000 | Unlimited | Unlimited |
-| Enterprise | Unlimited | Unlimited | Unlimited |
+| Plan         | Record Quota (Cached Records) | Bases     | Tables per Base |
+| ------------ | ----------------------------- | --------- | --------------- |
+| Freelancer   | 10,000                        | 3         | 20              |
+| Starter      | 50,000                        | 10        | 50              |
+| Professional | 250,000                       | 25        | 100             |
+| Business     | 1,000,000                     | Unlimited | Unlimited       |
+| Enterprise   | Unlimited                     | Unlimited | Unlimited       |
 
 **Quota = all records across all tables in all bases in the workspace** (synced + native). Soft-deleted records don't count. Sync-orphaned records DO count (they're still stored data).
 
@@ -255,13 +273,12 @@ Record quotas exist per workspace tier (see root CLAUDE.md > Pricing for canonic
 1. **Sync setup wizard (preventive).** Before confirming sync, compare estimated filtered count against remaining quota. If it would exceed: block "Connect & Start Sync" button, show "This would exceed your record quota by ~12,000 records. Add filters to reduce record count or upgrade your plan." User must either filter down or deselect tables until estimate fits.
 
 2. **Ongoing inbound sync (runtime).** Before inserting each batch of inbound records, check current count against quota:
+
    ```typescript
-   const currentCount = await db.select({ count: count() })
+   const currentCount = await db
+     .select({ count: count() })
      .from(records)
-     .where(and(
-       eq(records.tenantId, tenantId),
-       isNull(records.deletedAt),
-     ));
+     .where(and(eq(records.tenantId, tenantId), isNull(records.deletedAt)));
 
    const remainingQuota = planQuota - currentCount;
    if (inboundBatch.length > remainingQuota) {
@@ -293,6 +310,7 @@ Record quotas exist per workspace tier (see root CLAUDE.md > Pricing for canonic
 When a user changes a sync filter such that previously-synced records no longer match, those records become **sync-orphaned** — they exist locally but are no longer receiving updates from the platform.
 
 **Detection:** On each inbound sync cycle, the adapter fetches the full set of record IDs matching the current filter. Records that exist locally (synced from this table) but are NOT in the inbound set are candidates for orphaning. However, the adapter must distinguish between:
+
 - Records that no longer match the filter (→ orphan)
 - Records that were deleted on the platform (→ mark as remotely deleted)
 
@@ -305,9 +323,9 @@ The adapter checks: if the record's `platform_record_id` still exists on the pla
 interface RecordSyncMetadata {
   platform_record_id: string;
   last_synced_at: string;
-  last_synced_value: Record<string, unknown>;  // For conflict detection
-  sync_status: 'active' | 'orphaned';          // NEW
-  orphaned_at: string | null;                   // When filter excluded it
+  last_synced_value: Record<string, unknown>; // For conflict detection
+  sync_status: 'active' | 'orphaned'; // NEW
+  orphaned_at: string | null; // When filter excluded it
   orphaned_reason: 'filter_changed' | null;
 }
 ```
@@ -326,6 +344,7 @@ interface RecordSyncMetadata {
 ```
 
 **Actions:**
+
 - **Delete Orphaned Records:** Soft-deletes all orphaned records. Frees quota. Records go to recycle bin (recoverable for 30 days). Does NOT delete them on the platform.
 - **Keep as Local-Only:** Records remain visible and editable but their `sync_status` stays `orphaned`. They no longer receive inbound updates and edits are NOT pushed outbound. A subtle indicator (gray sync icon with strikethrough) appears on these records in the grid.
 - **Undo Filter Change:** Reverts the sync filter to the previous value. Re-syncs the records that were about to be orphaned. Only available immediately after a filter change (within the same session).
@@ -388,6 +407,7 @@ Users can change sync filters post-setup from Sync Settings → Sync Filter tab 
 ```
 
 **"Save & Re-sync" behavior:**
+
 1. Save new filter to `SyncTableConfig.sync_filter`
 2. Trigger an immediate sync with the new filter
 3. After sync completes, identify orphaned records (see above)
@@ -425,6 +445,7 @@ If grid performance degrades on large synced tables (50K+ records), introduce `r
 ### Layer 4 — Optimistic UI for Edits
 
 User edits a cell in a synced table:
+
 1. Update JSONB in local Postgres immediately
 2. Re-render grid instantly from local data
 3. Queue outbound sync to source platform via BullMQ
@@ -432,12 +453,12 @@ User edits a cell in a synced table:
 
 ### Layer 5 — Smart Polling & Real-Time Push
 
-| Context | Poll Interval |
-|---------|---------------|
-| User actively viewing the synced table | 30 seconds |
-| Tab open, table not visible | 5 minutes |
-| Workspace not accessed | 30 minutes |
-| Webhook available (Airtable) | Event-driven (no polling) |
+| Context                                | Poll Interval             |
+| -------------------------------------- | ------------------------- |
+| User actively viewing the synced table | 30 seconds                |
+| Tab open, table not visible            | 5 minutes                 |
+| Workspace not accessed                 | 30 minutes                |
+| Webhook available (Airtable)           | Event-driven (no polling) |
 
 All polling uses cursor-based change detection (`modifiedTime > lastSyncTimestamp`). Changed records pushed to connected clients via Redis pub/sub.
 
@@ -445,14 +466,14 @@ All polling uses cursor-based change detection (`modifiedTime > lastSyncTimestam
 
 ### Layer 6 — Native Speed Showcase
 
-| Capability | Synced Table | Native Table |
-|-----------|-------------|--------------|
-| Field creation | Requires sync cycle | Instant |
-| Cell edits | Optimistic + background sync | Immediate write |
-| Sort/filter | Fast (JSONB indexes) | Fastest |
-| Cross-base linking | Full support | Full support |
-| Real-time collaboration | Limited by sync interval | Live cursor + instant updates |
-| Formula computation | Full support | Real-time recalculation |
+| Capability              | Synced Table                 | Native Table                  |
+| ----------------------- | ---------------------------- | ----------------------------- |
+| Field creation          | Requires sync cycle          | Instant                       |
+| Cell edits              | Optimistic + background sync | Immediate write               |
+| Sort/filter             | Fast (JSONB indexes)         | Fastest                       |
+| Cross-base linking      | Full support                 | Full support                  |
+| Real-time collaboration | Limited by sync interval     | Live cursor + instant updates |
+| Formula computation     | Full support                 | Real-time recalculation       |
 
 ---
 
@@ -472,12 +493,12 @@ interface PlatformRateLimits {
 }
 ```
 
-| Platform | Scope | Limit |
-|----------|-------|-------|
-| Airtable | Per base | 5 req/s |
-| Airtable | Per API key | 50 req/s |
-| Notion | Per integration | 3 req/s |
-| SmartSuite | Per API key | 10 req/s |
+| Platform   | Scope           | Limit    |
+| ---------- | --------------- | -------- |
+| Airtable   | Per base        | 5 req/s  |
+| Airtable   | Per API key     | 50 req/s |
+| Notion     | Per integration | 3 req/s  |
+| SmartSuite | Per API key     | 10 req/s |
 
 These are configuration, not hardcoded — updated when platforms change limits.
 
@@ -487,12 +508,12 @@ Redis-backed sliding window (`ZSET` per key, scored by timestamp, atomic Lua scr
 
 ### Priority-Based Scheduling
 
-| Priority | Jobs | Behavior Under Rate Pressure |
-|----------|------|------------------------------|
-| **P0** | Outbound sync (cell edits), webhook-triggered inbound | Always dispatched. Retry with backoff. |
-| **P1** | Inbound polling for actively viewed tables | Dispatched if capacity >30%. Delayed <30%. |
-| **P2** | Inbound polling for non-visible tables | Dispatched if capacity >50%. Skipped <50%. |
-| **P3** | Inbound polling for inactive workspaces | Dispatched if capacity >70%. Skipped <70%. |
+| Priority | Jobs                                                  | Behavior Under Rate Pressure               |
+| -------- | ----------------------------------------------------- | ------------------------------------------ |
+| **P0**   | Outbound sync (cell edits), webhook-triggered inbound | Always dispatched. Retry with backoff.     |
+| **P1**   | Inbound polling for actively viewed tables            | Dispatched if capacity >30%. Delayed <30%. |
+| **P2**   | Inbound polling for non-visible tables                | Dispatched if capacity >50%. Skipped <50%. |
+| **P3**   | Inbound polling for inactive workspaces               | Dispatched if capacity >70%. Skipped <70%. |
 
 ### Multi-Tenant Fairness
 
@@ -500,12 +521,12 @@ Round-robin across tenants within same priority tier. Per-tenant poll budget: ma
 
 ### Sync Status UI
 
-| State | Indicator | Shown When |
-|-------|-----------|------------|
-| Normal | "Last synced 30s ago" (green dot) | On schedule |
-| Delayed | "Last synced 3m ago — sync pending" (yellow dot) | P1 delayed >2× expected interval |
-| Stalled | "Last synced 15m ago — platform rate limit" (orange dot) | Multiple cycles skipped |
-| Failed | "Sync error — tap to retry" (red dot) | P0 outbound fails after retries |
+| State   | Indicator                                                | Shown When                       |
+| ------- | -------------------------------------------------------- | -------------------------------- |
+| Normal  | "Last synced 30s ago" (green dot)                        | On schedule                      |
+| Delayed | "Last synced 3m ago — sync pending" (yellow dot)         | P1 delayed >2× expected interval |
+| Stalled | "Last synced 15m ago — platform rate limit" (orange dot) | Multiple cycles skipped          |
+| Failed  | "Sync error — tap to retry" (red dot)                    | P0 outbound fails after retries  |
 
 Users never see "429" or technical details.
 
@@ -522,6 +543,7 @@ A conflict occurs when the same field in the same record is modified in both Eve
 ### Detection
 
 On inbound sync for each record:
+
 1. Compare inbound platform value against `last_synced_value` (stored per-field in `sync_metadata` JSONB on the record)
 2. Compare `last_synced_value` against current `canonical_data` value
 3. If **both** differ from `last_synced_value`, there's a conflict (both sides changed independently)
@@ -531,20 +553,20 @@ On inbound sync for each record:
 
 When a conflict is detected, it's written to a `sync_conflicts` table:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | |
-| `record_id` | UUID | Affected record |
-| `field_id` | UUID | Affected field |
-| `local_value` | JSONB | EveryStack's current canonical value |
-| `remote_value` | JSONB | Platform's incoming value |
-| `base_value` | JSONB | Last known synced value (common ancestor) |
-| `platform` | VARCHAR | Which platform (`airtable`, `notion`, etc.) |
-| `status` | VARCHAR | `pending`, `resolved_local`, `resolved_remote`, `resolved_merged` |
-| `resolved_by` | UUID (nullable) | User who resolved |
-| `created_at` | TIMESTAMPTZ | |
-| `resolved_at` | TIMESTAMPTZ (nullable) | |
+| Column         | Type                   | Purpose                                                           |
+| -------------- | ---------------------- | ----------------------------------------------------------------- |
+| `id`           | UUID                   | Primary key                                                       |
+| `tenant_id`    | UUID                   |                                                                   |
+| `record_id`    | UUID                   | Affected record                                                   |
+| `field_id`     | UUID                   | Affected field                                                    |
+| `local_value`  | JSONB                  | EveryStack's current canonical value                              |
+| `remote_value` | JSONB                  | Platform's incoming value                                         |
+| `base_value`   | JSONB                  | Last known synced value (common ancestor)                         |
+| `platform`     | VARCHAR                | Which platform (`airtable`, `notion`, etc.)                       |
+| `status`       | VARCHAR                | `pending`, `resolved_local`, `resolved_remote`, `resolved_merged` |
+| `resolved_by`  | UUID (nullable)        | User who resolved                                                 |
+| `created_at`   | TIMESTAMPTZ            |                                                                   |
+| `resolved_at`  | TIMESTAMPTZ (nullable) |                                                                   |
 
 ### Default Resolution: Last-Write-Wins
 
@@ -557,6 +579,7 @@ Managers can switch a synced table to "manual conflict resolution" mode. When en
 **Conflict indicator:** A yellow warning badge appears on the record row in the grid. The cell with the conflict shows a split-value indicator.
 
 **Resolution modal (on click):**
+
 ```
 ┌─────────────────────────────────────────────┐
 │  Conflict: "Status" field on "Acme Project" │
@@ -578,6 +601,7 @@ Managers can switch a synced table to "manual conflict resolution" mode. When en
 ```
 
 **Resolution actions:**
+
 - **Keep EveryStack:** Local value becomes canonical. Outbound sync pushes it to the platform.
 - **Keep Airtable/Notion/SmartSuite:** Remote value becomes canonical. Local value discarded.
 - **Edit:** Open the field editor with both values visible. User types a merged value. Both local and remote are overwritten.
@@ -658,12 +682,12 @@ cell: ({ getValue, row, column }) => {
 
 ### Role Visibility for Conflicts
 
-| Role | Sees conflict indicators? | Can resolve? | Notes |
-|------|--------------------------|-------------|-------|
-| Owner/Admin | ✅ Always | ✅ Yes | Full resolution UI |
-| Manager | ✅ On permitted bases | ✅ Yes | Full resolution UI within their bases |
-| Team Member | ✅ Indicator visible (amber dot) | ❌ No | Tooltip: "This field has a sync conflict. A Manager will resolve it." Cell shows currently applied value. |
-| Viewer | ❌ No indicator | ❌ No | Viewers see the resolved/current value only. Conflicts are an internal concern. |
+| Role        | Sees conflict indicators?        | Can resolve? | Notes                                                                                                     |
+| ----------- | -------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------- |
+| Owner/Admin | ✅ Always                        | ✅ Yes       | Full resolution UI                                                                                        |
+| Manager     | ✅ On permitted bases            | ✅ Yes       | Full resolution UI within their bases                                                                     |
+| Team Member | ✅ Indicator visible (amber dot) | ❌ No        | Tooltip: "This field has a sync conflict. A Manager will resolve it." Cell shows currently applied value. |
+| Viewer      | ❌ No indicator                  | ❌ No        | Viewers see the resolved/current value only. Conflicts are an internal concern.                           |
 
 **Through Apps (post-MVP: App Designer):** Team Members viewing data through Apps see conflict indicators on conflicted cells (if the field is visible in the App). They cannot click to resolve — the click opens a read-only info panel: "Sync conflict detected. Contact a Manager to resolve." The conflict indicator uses the App's field override — if a field is hidden in the App, its conflict indicator is also hidden.
 
@@ -722,13 +746,13 @@ When a Manager clicks "Keep EveryStack" or "Keep Remote":
 
 ### Mobile Conflict Resolution
 
-| Element | Desktop | Tablet | Mobile |
-|---------|---------|--------|--------|
-| **Cell indicator** | 4px amber triangle + dashed underline | Same (wider touch target: 12px triangle) | Card view: amber dot next to field label |
-| **Click to resolve** | Inline modal next to cell | Overlay modal (360px, centered) | Full-screen bottom sheet (slide up) |
-| **Multi-field conflicts** | Scrollable list in modal | Same | Bottom sheet with vertical scroll, sticky header with bulk actions |
-| **Bulk resolution** | Toolbar badge → filter → select all → bulk action bar | Same | Toolbar badge → filter → "Select" mode → floating action bar at bottom |
-| **Undo toast** | Bottom-left toast | Bottom-center toast | Bottom-center toast (above bottom nav) |
+| Element                   | Desktop                                               | Tablet                                   | Mobile                                                                 |
+| ------------------------- | ----------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| **Cell indicator**        | 4px amber triangle + dashed underline                 | Same (wider touch target: 12px triangle) | Card view: amber dot next to field label                               |
+| **Click to resolve**      | Inline modal next to cell                             | Overlay modal (360px, centered)          | Full-screen bottom sheet (slide up)                                    |
+| **Multi-field conflicts** | Scrollable list in modal                              | Same                                     | Bottom sheet with vertical scroll, sticky header with bulk actions     |
+| **Bulk resolution**       | Toolbar badge → filter → select all → bulk action bar | Same                                     | Toolbar badge → filter → "Select" mode → floating action bar at bottom |
+| **Undo toast**            | Bottom-left toast                                     | Bottom-center toast                      | Bottom-center toast (above bottom nav)                                 |
 
 ### Conflict Interaction with Other Features
 
@@ -758,8 +782,8 @@ await writeAuditLog(tx, {
     conflictId,
     fieldId,
     resolution: 'resolved_local' | 'resolved_remote' | 'resolved_merged',
-    previousValue: conflict.localValue,   // What was overwritten
-    resolvedValue: chosenValue,            // What was chosen
+    previousValue: conflict.localValue, // What was overwritten
+    resolvedValue: chosenValue, // What was chosen
     platform: conflict.platform,
   },
   traceId,
@@ -776,40 +800,41 @@ Sync can fail for many reasons beyond field-level conflicts. Each failure type r
 
 ### Error Categories
 
-| Category | Examples | Severity | Auto-Recovery? |
-|----------|---------|----------|---------------|
-| **Conflict** | Same field edited both sides | Low | Yes (last-write-wins default) or manual |
-| **Rate Limited** | Airtable 5 req/s exceeded, Notion 3 req/s | Low | Yes (exponential backoff, resume automatically) |
-| **Partial Failure** | 3 of 500 records fail validation on platform | Medium | Partial — successful records committed, failures retried |
-| **Auth Expired** | OAuth token expired or revoked | High | No — requires re-authentication by Manager |
-| **Platform Unavailable** | Airtable/Notion API 5xx or timeout | Medium | Yes (retry with backoff, up to 6 hours) |
-| **Schema Mismatch** | Field deleted on platform, or type changed | High | No — requires Manager decision |
-| **Permission Denied** | API key no longer has write access | High | No — requires Manager to fix permissions on platform |
-| **Quota Exceeded** | EveryStack plan sync limit reached | High | No — requires plan upgrade or wait for next cycle |
+| Category                 | Examples                                     | Severity | Auto-Recovery?                                           |
+| ------------------------ | -------------------------------------------- | -------- | -------------------------------------------------------- |
+| **Conflict**             | Same field edited both sides                 | Low      | Yes (last-write-wins default) or manual                  |
+| **Rate Limited**         | Airtable 5 req/s exceeded, Notion 3 req/s    | Low      | Yes (exponential backoff, resume automatically)          |
+| **Partial Failure**      | 3 of 500 records fail validation on platform | Medium   | Partial — successful records committed, failures retried |
+| **Auth Expired**         | OAuth token expired or revoked               | High     | No — requires re-authentication by Manager               |
+| **Platform Unavailable** | Airtable/Notion API 5xx or timeout           | Medium   | Yes (retry with backoff, up to 6 hours)                  |
+| **Schema Mismatch**      | Field deleted on platform, or type changed   | High     | No — requires Manager decision                           |
+| **Permission Denied**    | API key no longer has write access           | High     | No — requires Manager to fix permissions on platform     |
+| **Quota Exceeded**       | EveryStack plan sync limit reached           | High     | No — requires plan upgrade or wait for next cycle        |
 
 ### Sync Connection Status Model
 
 Connection status uses two storage locations on `base_connections`:
+
 - **Top-level columns:** `sync_status` (enum — see `data-model.md`), `last_sync_at` (timestamp)
 - **`health` JSONB column:** Detailed health metrics, shaped as follows:
 
 ```typescript
 // Shape of base_connections.health (JSONB)
 interface ConnectionHealth {
-  last_success_at: string | null;    // Last fully successful sync
-  last_error: SyncError | null;      // Most recent error
-  consecutive_failures: number;       // Resets on success
-  next_retry_at: string | null;      // When the next retry is scheduled
-  records_synced: number;             // Total records in last successful sync
-  records_failed: number;             // Records that failed in last sync attempt
+  last_success_at: string | null; // Last fully successful sync
+  last_error: SyncError | null; // Most recent error
+  consecutive_failures: number; // Resets on success
+  next_retry_at: string | null; // When the next retry is scheduled
+  records_synced: number; // Total records in last successful sync
+  records_failed: number; // Records that failed in last sync attempt
 }
 
 interface SyncError {
-  code: string;                       // 'auth_expired' | 'rate_limited' | 'platform_unavailable' | 'schema_mismatch' | 'permission_denied' | 'partial_failure' | 'quota_exceeded'
-  message: string;                    // Human-readable description
-  timestamp: string;                  // When it occurred
-  retryable: boolean;                 // Can the system retry automatically?
-  details: Record<string, unknown>;   // Error-specific data (e.g., which records failed, quota remaining)
+  code: string; // 'auth_expired' | 'rate_limited' | 'platform_unavailable' | 'schema_mismatch' | 'permission_denied' | 'partial_failure' | 'quota_exceeded'
+  message: string; // Human-readable description
+  timestamp: string; // When it occurred
+  retryable: boolean; // Can the system retry automatically?
+  details: Record<string, unknown>; // Error-specific data (e.g., which records failed, quota remaining)
 }
 ```
 
@@ -817,29 +842,29 @@ interface SyncError {
 
 **Table header badge:** Every synced table shows its sync status in the table header:
 
-| Status | Badge | Behavior |
-|--------|-------|----------|
-| `active` + recent sync | 🟢 "Synced 2 min ago" (green) | Normal operation |
-| `active` + stale (>2× polling interval) | 🟡 "Last synced 45 min ago" (yellow) | Indicates possible issue — tooltip: "Sync may be delayed. Check connection status." |
-| `error` (retryable) | 🟡 "Sync retrying..." (yellow, pulsing) | Tooltip shows error and next retry time |
-| `error` (non-retryable) | 🔴 "Sync error" (red) | Click opens sync settings with error detail |
-| `auth_required` | 🔴 "Re-authentication required" (red) | Click navigates directly to re-auth flow |
-| `paused` | ⏸️ "Sync paused" (gray) | Manager manually paused |
+| Status                                  | Badge                                   | Behavior                                                                            |
+| --------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------- |
+| `active` + recent sync                  | 🟢 "Synced 2 min ago" (green)           | Normal operation                                                                    |
+| `active` + stale (>2× polling interval) | 🟡 "Last synced 45 min ago" (yellow)    | Indicates possible issue — tooltip: "Sync may be delayed. Check connection status." |
+| `error` (retryable)                     | 🟡 "Sync retrying..." (yellow, pulsing) | Tooltip shows error and next retry time                                             |
+| `error` (non-retryable)                 | 🔴 "Sync error" (red)                   | Click opens sync settings with error detail                                         |
+| `auth_required`                         | 🔴 "Re-authentication required" (red)   | Click navigates directly to re-auth flow                                            |
+| `paused`                                | ⏸️ "Sync paused" (gray)                 | Manager manually paused                                                             |
 
 **Staleness threshold:** Calculated as `2 × polling_interval`. If polling interval is 5 minutes and last sync was >10 minutes ago, badge turns yellow.
 
 ### Notification System for Sync Issues
 
-| Event | Notification Type | Recipients | Timing |
-|-------|------------------|------------|--------|
-| Conflict detected (manual mode) | In-app badge on table + push notification | Table Manager(s) | Immediate |
-| Auth expired | In-app banner + email | Workspace Owner + Admins | Immediate |
-| 3 consecutive sync failures | In-app toast | Table Manager(s) | After 3rd failure |
-| Sync down >1 hour | Email | Workspace Owner | After 1 hour |
-| Sync down >6 hours | Email (escalation) | Workspace Owner + Admins | After 6 hours |
-| Partial failure (>10 records) | In-app toast + badge on sync settings | Table Manager(s) | After sync completes |
-| Schema mismatch detected | In-app banner on table | Table Manager(s) | Immediate |
-| Rate limit sustained (>5 min) | In-app subtle indicator | None (auto-resolves) | — |
+| Event                           | Notification Type                         | Recipients               | Timing               |
+| ------------------------------- | ----------------------------------------- | ------------------------ | -------------------- |
+| Conflict detected (manual mode) | In-app badge on table + push notification | Table Manager(s)         | Immediate            |
+| Auth expired                    | In-app banner + email                     | Workspace Owner + Admins | Immediate            |
+| 3 consecutive sync failures     | In-app toast                              | Table Manager(s)         | After 3rd failure    |
+| Sync down >1 hour               | Email                                     | Workspace Owner          | After 1 hour         |
+| Sync down >6 hours              | Email (escalation)                        | Workspace Owner + Admins | After 6 hours        |
+| Partial failure (>10 records)   | In-app toast + badge on sync settings     | Table Manager(s)         | After sync completes |
+| Schema mismatch detected        | In-app banner on table                    | Table Manager(s)         | Immediate            |
+| Rate limit sustained (>5 min)   | In-app subtle indicator                   | None (auto-resolves)     | —                    |
 
 **In-app notification channel:** Notifications published to Redis `t:{tenantId}:user:{userId}:notifications`. Real-time service forwards to connected clients. Persistent notifications stored in `notifications` table (Post-MVP — Comms & Polish comms infrastructure; before that, toast-only).
 
@@ -1022,42 +1047,42 @@ Managers access sync status from Base Settings → Sync Connection:
 
 ### `sync_failures` Table (MVP — Sync Schema)
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope |
-| `base_connection_id` | UUID | → base_connections.id |
-| `record_id` | UUID (nullable) | Null if failure was record-independent (e.g., auth) |
-| `direction` | VARCHAR | `'inbound'` or `'outbound'` |
-| `error_code` | VARCHAR | `'validation'`, `'schema_mismatch'`, `'payload_too_large'`, `'platform_rejected'`, `'unknown'` |
-| `error_message` | TEXT | Human-readable description |
-| `platform_record_id` | VARCHAR (nullable) | External record ID for cross-reference |
-| `payload` | JSONB | The data that failed (for retry) |
-| `retry_count` | INTEGER | Auto-incremented on each retry attempt (max 3) |
-| `status` | VARCHAR | `'pending'`, `'retrying'`, `'resolved'`, `'skipped'`, `'requires_manual_resolution'` |
-| `created_at` | TIMESTAMPTZ | |
-| `resolved_at` | TIMESTAMPTZ (nullable) | |
-| `resolved_by` | UUID (nullable) | Manager who resolved manually |
+| Column               | Type                   | Purpose                                                                                        |
+| -------------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `id`                 | UUID                   | Primary key                                                                                    |
+| `tenant_id`          | UUID                   | Tenant scope                                                                                   |
+| `base_connection_id` | UUID                   | → base_connections.id                                                                          |
+| `record_id`          | UUID (nullable)        | Null if failure was record-independent (e.g., auth)                                            |
+| `direction`          | VARCHAR                | `'inbound'` or `'outbound'`                                                                    |
+| `error_code`         | VARCHAR                | `'validation'`, `'schema_mismatch'`, `'payload_too_large'`, `'platform_rejected'`, `'unknown'` |
+| `error_message`      | TEXT                   | Human-readable description                                                                     |
+| `platform_record_id` | VARCHAR (nullable)     | External record ID for cross-reference                                                         |
+| `payload`            | JSONB                  | The data that failed (for retry)                                                               |
+| `retry_count`        | INTEGER                | Auto-incremented on each retry attempt (max 3)                                                 |
+| `status`             | VARCHAR                | `'pending'`, `'retrying'`, `'resolved'`, `'skipped'`, `'requires_manual_resolution'`           |
+| `created_at`         | TIMESTAMPTZ            |                                                                                                |
+| `resolved_at`        | TIMESTAMPTZ (nullable) |                                                                                                |
+| `resolved_by`        | UUID (nullable)        | Manager who resolved manually                                                                  |
 
 **Retention:** 30 days for resolved failures. Pending failures retained indefinitely until resolved.
 
 ### `sync_schema_changes` Table (MVP — Sync Schema)
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope |
-| `base_connection_id` | UUID | → base_connections.id |
-| `change_type` | VARCHAR | `'field_type_changed'`, `'field_deleted'`, `'field_added'`, `'field_renamed'` |
-| `field_id` | UUID (nullable) | EveryStack field (null for new fields) |
-| `platform_field_id` | VARCHAR | External field identifier |
-| `old_schema` | JSONB | Previous field config |
-| `new_schema` | JSONB | New field config from platform |
-| `impact` | JSONB | Computed downstream impact: `{ formulaCount, automationCount, portalFieldCount, appBlockCount (post-MVP), crossLinkCount }` |
-| `status` | VARCHAR | `'pending'`, `'accepted'`, `'rejected'` |
-| `created_at` | TIMESTAMPTZ | |
-| `resolved_at` | TIMESTAMPTZ (nullable) | |
-| `resolved_by` | UUID (nullable) | |
+| Column               | Type                   | Purpose                                                                                                                     |
+| -------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `id`                 | UUID                   | Primary key                                                                                                                 |
+| `tenant_id`          | UUID                   | Tenant scope                                                                                                                |
+| `base_connection_id` | UUID                   | → base_connections.id                                                                                                       |
+| `change_type`        | VARCHAR                | `'field_type_changed'`, `'field_deleted'`, `'field_added'`, `'field_renamed'`                                               |
+| `field_id`           | UUID (nullable)        | EveryStack field (null for new fields)                                                                                      |
+| `platform_field_id`  | VARCHAR                | External field identifier                                                                                                   |
+| `old_schema`         | JSONB                  | Previous field config                                                                                                       |
+| `new_schema`         | JSONB                  | New field config from platform                                                                                              |
+| `impact`             | JSONB                  | Computed downstream impact: `{ formulaCount, automationCount, portalFieldCount, appBlockCount (post-MVP), crossLinkCount }` |
+| `status`             | VARCHAR                | `'pending'`, `'accepted'`, `'rejected'`                                                                                     |
+| `created_at`         | TIMESTAMPTZ            |                                                                                                                             |
+| `resolved_at`        | TIMESTAMPTZ (nullable) |                                                                                                                             |
+| `resolved_by`        | UUID (nullable)        |                                                                                                                             |
 
 ---
 
@@ -1071,9 +1096,9 @@ Field definitions synced separately from record data. Deleted external fields ar
 
 ## Phase Implementation
 
-| Phase | Sync Work |
-|-------|----------|
-| MVP — Sync, Weeks 5–6 | Canonical data model, Airtable adapter, FieldTypeRegistry, progressive initial sync, rate limit registry, Redis token bucket |
-| MVP — Sync, Weeks 6–7 | Grid rendering from JSONB, expression indexes, optimistic UI |
+| Phase                 | Sync Work                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| MVP — Sync, Weeks 5–6 | Canonical data model, Airtable adapter, FieldTypeRegistry, progressive initial sync, rate limit registry, Redis token bucket               |
+| MVP — Sync, Weeks 6–7 | Grid rendering from JSONB, expression indexes, optimistic UI                                                                               |
 | MVP — Sync, Weeks 7–8 | Outbound sync, conflict resolution, Notion adapter, smart polling, priority scheduling, multi-tenant fairness, backpressure sync status UI |
-| MVP — Core UX | SmartSuite adapter |
+| MVP — Core UX         | SmartSuite adapter                                                                                                                         |

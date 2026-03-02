@@ -5,12 +5,14 @@
 ### What Has Been Built
 
 **Phase 1A (Monorepo, CI Pipeline, Dev Environment) — merged to main:**
+
 - Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` scaffolds
 - Docker Compose with PostgreSQL 16, PgBouncer, Redis
 - GitHub Actions CI (lint → typecheck → test)
 - ESLint + Prettier config, `tsconfig` strict mode, `.env.example`
 
 **Phase 1B (Database Schema, Connection Pooling, Tenant Routing) — merged to main:**
+
 - Drizzle schema for all 50 MVP tables (Tiers 0–7) in `packages/shared/db/schema/`
 - PgBouncer connection pooling config (transaction mode)
 - `getDbForTenant()` with read/write intent routing (`dbRead` + `db`)
@@ -19,6 +21,7 @@
 - Initial migration files in `packages/shared/db/migrations/`
 
 **Key tables that now exist (relevant to this sub-phase):**
+
 - `users`: id (UUIDv7 PK), clerk_id, email, name
 - `tenants`: id (UUIDv7 PK), name, slug, plan
 - `tenant_memberships`: id, tenant_id, user_id, role (`owner` | `admin` | `member`), status (`active` | `invited` | `suspended`)
@@ -66,13 +69,13 @@ Phase division files are not needed during build execution — their content has
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | Clerk Middleware & Auth Session Context | None | ~180 |
-| 2 | Tenant Resolver & Data Access Context | 1 | ~160 |
-| 3 | Clerk Webhook Handlers (user.created, organization.created) | 1, 2 | ~200 |
-| 4 | Workspace Role Hierarchy & Permission Check Utilities | 2 | ~180 |
-| CP-1 | Integration Checkpoint 1 (final) | 1–4 | — |
+| Prompt | Deliverable                                                 | Depends On | Lines (est.) |
+| ------ | ----------------------------------------------------------- | ---------- | ------------ |
+| 1      | Clerk Middleware & Auth Session Context                     | None       | ~180         |
+| 2      | Tenant Resolver & Data Access Context                       | 1          | ~160         |
+| 3      | Clerk Webhook Handlers (user.created, organization.created) | 1, 2       | ~200         |
+| 4      | Workspace Role Hierarchy & Permission Check Utilities       | 2          | ~180         |
+| CP-1   | Integration Checkpoint 1 (final)                            | 1–4        | —            |
 
 ---
 
@@ -87,6 +90,7 @@ Phase division files are not needed during build execution — their content has
 ### Schema Snapshot
 
 N/A — no schema changes. Reads from existing tables:
+
 ```
 users: id (UUIDv7 PK), clerk_id, email, name
 tenants: id (UUIDv7 PK), name, slug, plan
@@ -111,8 +115,8 @@ Export an `auth()` async function that wraps Clerk's `auth()` from `@clerk/nextj
 
 ```typescript
 interface AuthContext {
-  userId: string;        // Clerk user ID (from session)
-  clerkOrgId: string | null;  // Clerk organization ID (from session, if set)
+  userId: string; // Clerk user ID (from session)
+  clerkOrgId: string | null; // Clerk organization ID (from session, if set)
 }
 ```
 
@@ -151,6 +155,7 @@ Export a `requireAuth()` async function that calls `auth()` and throws a redirec
 ### Schema Snapshot
 
 Reads from existing tables (from data-model.md, created in Phase 1B):
+
 ```
 users: id (UUIDv7 PK), clerk_id, email, name
 tenants: id (UUIDv7 PK), name, slug, plan
@@ -175,13 +180,14 @@ Export a `getAuthContext()` async function that composes Prompt 1's `requireAuth
 
 ```typescript
 interface ResolvedAuthContext {
-  userId: string;         // Internal EveryStack user UUID
-  tenantId: string;       // Internal EveryStack tenant UUID
-  clerkUserId: string;    // Original Clerk user ID (for Clerk API calls only)
+  userId: string; // Internal EveryStack user UUID
+  tenantId: string; // Internal EveryStack tenant UUID
+  clerkUserId: string; // Original Clerk user ID (for Clerk API calls only)
 }
 ```
 
 This is the primary context object that all Server Actions and data access functions will use. It guarantees:
+
 - `userId` is the internal UUID (not the Clerk ID)
 - `tenantId` is resolved from the server-side session (never from client input)
 - The user has an active membership in this tenant
@@ -224,6 +230,7 @@ Document and enforce in the resolver: if a user attempts to access a tenant they
 ### Schema Snapshot
 
 Writes to existing tables (created in Phase 1B):
+
 ```
 users: id (UUIDv7 PK), clerk_id, email, name
 tenants: id (UUIDv7 PK), name, slug, plan (default: 'freelancer')
@@ -309,6 +316,7 @@ Use UUIDv7 generation from the utility built in Phase 1B. Use `getDbForTenant()`
 ### Schema Snapshot
 
 Reads from existing tables (created in Phase 1B):
+
 ```
 tenant_memberships: id, tenant_id, user_id, role (owner|admin|member), status
 workspace_memberships: user_id + workspace_id (composite PK), tenant_id, role (manager|team_member|viewer)
@@ -323,11 +331,11 @@ Define the five-role hierarchy as TypeScript types and constants:
 ```typescript
 // Tenant-level roles
 const TENANT_ROLES = ['owner', 'admin', 'member'] as const;
-type TenantRole = typeof TENANT_ROLES[number];
+type TenantRole = (typeof TENANT_ROLES)[number];
 
 // Workspace-level roles (for tenant members with role 'member')
 const WORKSPACE_ROLES = ['manager', 'team_member', 'viewer'] as const;
-type WorkspaceRole = typeof WORKSPACE_ROLES[number];
+type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
 
 // Combined role type for the flat five-role hierarchy
 type EffectiveRole = 'owner' | 'admin' | 'manager' | 'team_member' | 'viewer';
@@ -346,15 +354,16 @@ class PermissionDeniedError extends Error {
   readonly code = 'PERMISSION_DENIED' as const;
   readonly httpStatus = 403;
   readonly details: {
-    action: string;           // 'read' | 'edit' | 'delete' | 'manage' | 'create'
-    resource: string;         // 'workspace' | 'table' | 'view' | 'field' | 'record' | 'automation'
+    action: string; // 'read' | 'edit' | 'delete' | 'manage' | 'create'
+    resource: string; // 'workspace' | 'table' | 'view' | 'field' | 'record' | 'automation'
     resourceId?: string;
-    requiredRole?: string;    // Minimum role needed
+    requiredRole?: string; // Minimum role needed
   };
 }
 ```
 
 This error class must:
+
 - Extend `Error` with a human-readable `message`
 - Include the structured `details` object for audit logging
 - Match the `AppError` pattern from CLAUDE.md (code, message, details)
@@ -363,6 +372,7 @@ This error class must:
 **3. Create role check utilities (`packages/shared/auth/check-role.ts`):**
 
 `resolveEffectiveRole(userId: string, tenantId: string, workspaceId?: string): Promise<EffectiveRole | null>`:
+
 - Query `tenant_memberships` for the user's tenant role.
 - If tenant role is `'owner'` or `'admin'` → return it immediately (these bypass workspace scoping).
 - If tenant role is `'member'` AND `workspaceId` is provided → query `workspace_memberships` for the workspace role. Return the workspace role.
@@ -371,14 +381,17 @@ This error class must:
 - All queries use `getDbForTenant()` with the resolved `tenantId`.
 
 `checkRole(userId: string, tenantId: string, workspaceId: string | undefined, requiredRole: EffectiveRole): Promise<boolean>`:
+
 - Calls `resolveEffectiveRole()`, then checks via `roleAtLeast()`.
 - Returns `true` if the user meets or exceeds the required role.
 
 `requireRole(userId: string, tenantId: string, workspaceId: string | undefined, requiredRole: EffectiveRole, resource: string, action: string): Promise<void>`:
+
 - Calls `checkRole()`. If `false`, throws `PermissionDeniedError` with the appropriate details.
 - This is the function that Server Actions will call to gate management operations.
 
 **Key constraints from the spec:**
+
 - Owners and Admins always see everything — they bypass workspace scoping.
 - Owners and Admins do NOT need `workspace_memberships` rows for access.
 - Restriction hierarchy is strictly one-directional downward — no lateral or upward restrictions.
@@ -419,22 +432,16 @@ Create a barrel export file for clean imports: `import { requireRole, Permission
 **Task:** Verify all work from Prompts 1–4 integrates correctly. This is the final checkpoint for Phase 1C.
 
 Run:
+
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
 3. `pnpm turbo test` — all pass (including new auth and role tests)
 4. `pnpm turbo test -- --coverage` — thresholds met, ≥80% on all new files
 5. No migrations were added in this sub-phase — skip migration check
 
-Manual verification:
-6. Confirm `@clerk/nextjs` and `svix` are in `apps/web/package.json` dependencies
-7. Confirm `.env.example` includes `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
-8. Confirm the barrel export `packages/shared/auth/index.ts` exports: `PermissionDeniedError`, `requireRole`, `checkRole`, `resolveEffectiveRole`, `roleAtLeast`, role type constants
-9. Confirm Clerk middleware correctly splits public vs. protected routes by reviewing `apps/web/src/middleware.ts`
+Manual verification: 6. Confirm `@clerk/nextjs` and `svix` are in `apps/web/package.json` dependencies 7. Confirm `.env.example` includes `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` 8. Confirm the barrel export `packages/shared/auth/index.ts` exports: `PermissionDeniedError`, `requireRole`, `checkRole`, `resolveEffectiveRole`, `roleAtLeast`, role type constants 9. Confirm Clerk middleware correctly splits public vs. protected routes by reviewing `apps/web/src/middleware.ts`
 
-Integration tests to verify:
-10. Auth flow integration: `requireAuth()` → `resolveUser()` → `resolveTenant()` → `getAuthContext()` chain produces a valid `ResolvedAuthContext`
-11. Role check integration: `getAuthContext()` → `requireRole('admin', 'manage', 'workspace')` throws `PermissionDeniedError` for a viewer-role user
-12. Webhook integration: Simulated `user.created` event with valid Svix signature creates all expected rows in the database in a single transaction
+Integration tests to verify: 10. Auth flow integration: `requireAuth()` → `resolveUser()` → `resolveTenant()` → `getAuthContext()` chain produces a valid `ResolvedAuthContext` 11. Role check integration: `getAuthContext()` → `requireRole('admin', 'manage', 'workspace')` throws `PermissionDeniedError` for a viewer-role user 12. Webhook integration: Simulated `user.created` event with valid Svix signature creates all expected rows in the database in a single transaction
 
 **Git:** Commit with message `chore(verify): integration checkpoint 1 — auth, tenant resolver, roles verified [Phase 1C, CP-1]`, then push branch to origin. Open PR to `main` with title `Phase 1C — Authentication, Tenant Isolation, Workspace Roles`.
 
@@ -460,11 +467,11 @@ Prompts 3 and 4 are independent of each other and could run in parallel after Pr
 
 ## Reference Doc Traceability
 
-| Prompt | Reference Doc Sections Used |
-|--------|---------------------------|
-| 1 | `permissions.md` lines 452–464 (Tenant Isolation); `CLAUDE.md` lines 158–194 (Platform Auth) |
-| 2 | `permissions.md` lines 452–464 (Tenant Isolation), lines 59–86 (Workspace Roles) |
-| 3 | `CLAUDE.md` lines 158–194 (Signup Flow, Invitation Flow, Session Handling) |
-| 4 | `permissions.md` lines 43–86 (Core Principles, Workspace Roles), lines 409–448 (Permission Denial Behavior), lines 468–475 (Phase Implementation) |
+| Prompt | Reference Doc Sections Used                                                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | `permissions.md` lines 452–464 (Tenant Isolation); `CLAUDE.md` lines 158–194 (Platform Auth)                                                      |
+| 2      | `permissions.md` lines 452–464 (Tenant Isolation), lines 59–86 (Workspace Roles)                                                                  |
+| 3      | `CLAUDE.md` lines 158–194 (Signup Flow, Invitation Flow, Session Handling)                                                                        |
+| 4      | `permissions.md` lines 43–86 (Core Principles, Workspace Roles), lines 409–448 (Permission Denial Behavior), lines 468–475 (Phase Implementation) |
 
 Total reference doc lines loaded across all prompts: ~132 lines from `permissions.md` + ~37 lines from `CLAUDE.md` auth section = ~169 lines (well within the ~800-line budget per prompt).

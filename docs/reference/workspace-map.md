@@ -16,28 +16,28 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Rationale | 44–80 | Why a topology visualization, competitive gap, target users |
-| Core Design Principles | 81–94 | Read-only, schema-derived, progressive complexity, performance ceiling |
-| Access & Responsive Behavior | 95–129 | Desktop full-screen, tablet, mobile list fallback, Command Bar entry |
-| Topology Graph Model | 130–485 | 14 node types, 28 edge types, 5 cluster types, node/edge schemas |
-| Layout Engine | 486–545 | Dagre + d3-force hybrid, layered force-directed, cluster containment |
-| Node Rendering | 546–620 | React Flow custom nodes, 3 semantic zoom levels, visual encoding |
-| Interaction Model | 621–737 | Selection, multi-select, context menu, search, minimap, keyboard nav |
-| Impact Analysis Overlay | 738–817 | BFS traversal, 3-tier severity, impact cascade visualization |
-| Toolbar and Controls | 818–883 | Zoom, filter, layout toggle, legend, export |
-| Workspace Map Route | 884–926 | Route architecture, data loading, URL state |
-| Data Sources & Graph Generation | 927–1052 | Schema queries, graph builder, SDS integration |
-| Performance Strategy | 1053–1096 | 500-node soft cap, virtualization, incremental updates, Web Workers |
-| Responsive Behavior | 1097–1148 | Breakpoint adaptations, touch gestures, mobile list view |
-| Permissions | 1149–1166 | Role-based visibility, filtered graph per user role |
-| Empty States & Onboarding | 1167–1202 | Progressive empty states, guided first experience |
-| Real-Time Updates | 1203–1223 | Incremental graph updates via Socket.io events |
-| Phase Integration | 1224–1239 | Post-MVP — Workspace Map delivery scope |
-| Claude Code Prompt Roadmap | 1240–1592 | 10-prompt implementation roadmap |
-| Key Architectural Decisions | 1593–1612 | ADR-style decisions with rationale |
-| Future Extensions (Post-Post-MVP — Verticals & Advanced) | 1613–1625 | Deferred features |
+| Section                                                  | Lines     | Covers                                                                 |
+| -------------------------------------------------------- | --------- | ---------------------------------------------------------------------- |
+| Strategic Rationale                                      | 44–80     | Why a topology visualization, competitive gap, target users            |
+| Core Design Principles                                   | 81–94     | Read-only, schema-derived, progressive complexity, performance ceiling |
+| Access & Responsive Behavior                             | 95–129    | Desktop full-screen, tablet, mobile list fallback, Command Bar entry   |
+| Topology Graph Model                                     | 130–485   | 14 node types, 28 edge types, 5 cluster types, node/edge schemas       |
+| Layout Engine                                            | 486–545   | Dagre + d3-force hybrid, layered force-directed, cluster containment   |
+| Node Rendering                                           | 546–620   | React Flow custom nodes, 3 semantic zoom levels, visual encoding       |
+| Interaction Model                                        | 621–737   | Selection, multi-select, context menu, search, minimap, keyboard nav   |
+| Impact Analysis Overlay                                  | 738–817   | BFS traversal, 3-tier severity, impact cascade visualization           |
+| Toolbar and Controls                                     | 818–883   | Zoom, filter, layout toggle, legend, export                            |
+| Workspace Map Route                                      | 884–926   | Route architecture, data loading, URL state                            |
+| Data Sources & Graph Generation                          | 927–1052  | Schema queries, graph builder, SDS integration                         |
+| Performance Strategy                                     | 1053–1096 | 500-node soft cap, virtualization, incremental updates, Web Workers    |
+| Responsive Behavior                                      | 1097–1148 | Breakpoint adaptations, touch gestures, mobile list view               |
+| Permissions                                              | 1149–1166 | Role-based visibility, filtered graph per user role                    |
+| Empty States & Onboarding                                | 1167–1202 | Progressive empty states, guided first experience                      |
+| Real-Time Updates                                        | 1203–1223 | Incremental graph updates via Socket.io events                         |
+| Phase Integration                                        | 1224–1239 | Post-MVP — Workspace Map delivery scope                                |
+| Claude Code Prompt Roadmap                               | 1240–1592 | 10-prompt implementation roadmap                                       |
+| Key Architectural Decisions                              | 1593–1612 | ADR-style decisions with rationale                                     |
+| Future Extensions (Post-Post-MVP — Verticals & Advanced) | 1613–1625 | Deferred features                                                      |
 
 ---
 
@@ -60,12 +60,12 @@ The Workspace Map makes this full topology visible, navigable, and actionable.
 
 ### Competitive Positioning
 
-| Platform | What Their "Map" Can Show |
-|---|---|
-| **Make Grid** | Automation → automation and automation → external app connections. No data relationships, no UI surfaces, no AI dependencies. |
-| **Airtable** | No map feature. Base-internal linked records are visible in the field list but no topology view exists. Cannot see cross-base anything. |
-| **SmartSuite** | No map feature. Solution-internal links only. |
-| **Monday.com** | No map feature. Board-level views only. |
+| Platform       | What Their "Map" Can Show                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Make Grid**  | Automation → automation and automation → external app connections. No data relationships, no UI surfaces, no AI dependencies.                                |
+| **Airtable**   | No map feature. Base-internal linked records are visible in the field list but no topology view exists. Cannot see cross-base anything.                      |
+| **SmartSuite** | No map feature. Solution-internal links only.                                                                                                                |
+| **Monday.com** | No map feature. Board-level views only.                                                                                                                      |
 | **EveryStack** | Full-stack topology: sync sources → tables → Cross-Links → Automations → Portals → Document Templates → AI agents. Everything connected, everything visible. |
 
 ### Sales & Retention Value
@@ -84,7 +84,7 @@ The Workspace Map serves three strategic purposes:
 
 2. **Read-only visualization, not a builder.** The map does not modify anything. It is a lens, not an editor. Clicking a node navigates to the relevant builder (automation builder, App Designer, Table View, etc.) — the map itself never mutates workspace state.
 
-3. **Impact analysis is the killer feature.** Seeing the topology is useful. Seeing what *would break* if you changed something is transformative. Every node supports "Show Impact" — highlighting all downstream dependencies.
+3. **Impact analysis is the killer feature.** Seeing the topology is useful. Seeing what _would break_ if you changed something is transformative. Every node supports "Show Impact" — highlighting all downstream dependencies.
 
 4. **Progressive detail.** The default view shows high-level node clusters (bases, automation groups, portal groups). Zooming in reveals individual tables, fields, and connection details. Zooming out collapses detail. The map is useful at every zoom level.
 
@@ -98,12 +98,12 @@ The Workspace Map serves three strategic purposes:
 
 The Workspace Map renders differently based on workspace role. The topology data is the same — the difference is which interactions are available and how nodes outside the user's permission scope are presented.
 
-| Role | Graph Visibility | Impact Analysis | Node Click → Navigate | Nodes Outside Scope |
-|---|---|---|---|---|
-| **Owner / Admin** | Full topology — all nodes, all edges | Available on every node | Opens relevant builder | N/A — full access |
-| **Manager** | Full topology — all nodes, all edges | Available on every node | Opens relevant builder | N/A — Managers see all workspace entities |
-| **Team Member** | Full topology — all nodes visible | Disabled | Taps navigate to entity only if user has access; otherwise shows tooltip "Ask a Manager for access" | Dimmed at 40% opacity, name visible, no detail expansion |
-| **Viewer** | Full topology — all nodes visible | Disabled | Read-only — no navigation on tap | Dimmed at 40% opacity, name visible |
+| Role              | Graph Visibility                     | Impact Analysis         | Node Click → Navigate                                                                               | Nodes Outside Scope                                      |
+| ----------------- | ------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Owner / Admin** | Full topology — all nodes, all edges | Available on every node | Opens relevant builder                                                                              | N/A — full access                                        |
+| **Manager**       | Full topology — all nodes, all edges | Available on every node | Opens relevant builder                                                                              | N/A — Managers see all workspace entities                |
+| **Team Member**   | Full topology — all nodes visible    | Disabled                | Taps navigate to entity only if user has access; otherwise shows tooltip "Ask a Manager for access" | Dimmed at 40% opacity, name visible, no detail expansion |
+| **Viewer**        | Full topology — all nodes visible    | Disabled                | Read-only — no navigation on tap                                                                    | Dimmed at 40% opacity, name visible                      |
 
 **Rationale:** Team Members and Viewers benefit from seeing the full topology for orientation ("this is how the workspace is connected") without needing administrative interactions. Dimming nodes outside their access scope rather than hiding them preserves the map's primary value — making the workspace's shape visible — while respecting permission boundaries. Impact analysis is Manager+ only because its purpose is pre-change governance.
 
@@ -115,7 +115,7 @@ The Workspace Map canvas does not render on phone. Instead, the Map route shows 
 
 - **Bases** — expandable, showing tables as nested list (icon + name + record count). Tap table → navigate to table view.
 - **Automations** — flat list with status dot (green/gray/red), name, one-line trigger summary. Tap → navigate to automation builder.
-- **Apps** *(post-MVP)* — flat list with type badge (Portal/App/Form/Website/Widget), publish status badge, name. Tap → navigate to App Designer (if on tablet) or read-only preview (if on phone, per capability gating rules).
+- **Apps** _(post-MVP)_ — flat list with type badge (Portal/App/Form/Website/Widget), publish status badge, name. Tap → navigate to App Designer (if on tablet) or read-only preview (if on phone, per capability gating rules).
 - **Document Templates** — flat list with template name and bound table. Tap → navigate to Document Template editor.
 - **Sync Connections** — flat list with platform icon, connection name, status badge. Tap → navigate to sync settings.
 
@@ -136,12 +136,12 @@ The Workspace Map renders a directed graph where nodes are workspace entities an
 ```typescript
 interface TopologyGraph {
   workspace_id: string;
-  generated_at: string;                    // ISO timestamp
-  schema_version_hash: string;             // From SDS — cache invalidation key
+  generated_at: string; // ISO timestamp
+  schema_version_hash: string; // From SDS — cache invalidation key
   nodes: TopologyNode[];
   edges: TopologyEdge[];
-  clusters: TopologyCluster[];             // Visual grouping containers
-  stats: TopologyStats;                    // Summary counts for the header bar
+  clusters: TopologyCluster[]; // Visual grouping containers
+  stats: TopologyStats; // Summary counts for the header bar
 }
 
 interface TopologyStats {
@@ -153,9 +153,9 @@ interface TopologyStats {
   automations: number;
   portals: number;
   apps: number;
-  document_templates: number;              // Glossary term: "Document Template" (not "Smart Doc")
-  ai_field_agents: number;                 // Post-MVP
-  approval_workflows: number;              // Post-MVP
+  document_templates: number; // Glossary term: "Document Template" (not "Smart Doc")
+  ai_field_agents: number; // Post-MVP
+  approval_workflows: number; // Post-MVP
   websites: number;
   commerce_embeds: number;
   chat_widgets: number;
@@ -173,57 +173,58 @@ type TopologyNode =
   | TableNode
   | AutomationNode
   | PortalNode
-  | AppNode                                // Post-MVP: App Designer output, uses `apps` table
-  | DocumentTemplateNode                   // Glossary: "Document Template" (formerly "SmartDocNode")
-  | AIFieldAgentNode                       // Post-MVP
-  | ApprovalWorkflowNode                   // Post-MVP
+  | AppNode // Post-MVP: App Designer output, uses `apps` table
+  | DocumentTemplateNode // Glossary: "Document Template" (formerly "SmartDocNode")
+  | AIFieldAgentNode // Post-MVP
+  | ApprovalWorkflowNode // Post-MVP
   | WebhookNode
-  | WebsiteNode                            // Post-MVP: App type built in App Designer
-  | CommerceEmbedNode                      // Post-MVP
-  | ChatWidgetNode                         // Post-MVP
+  | WebsiteNode // Post-MVP: App type built in App Designer
+  | CommerceEmbedNode // Post-MVP
+  | ChatWidgetNode // Post-MVP
   | ExternalServiceNode;
 
 // ── Sync Sources ──────────────────────────────────────────
 
 interface SyncSourceNode {
   type: 'sync_source';
-  id: string;                              // sync_connection.id
+  id: string; // sync_connection.id
   platform: 'airtable' | 'smartsuite' | 'notion' | 'google_sheets' | 'excel_online';
-  platform_base_name: string;              // Name of the source base/workspace on the platform
+  platform_base_name: string; // Name of the source base/workspace on the platform
   status: 'healthy' | 'stale' | 'error' | 'paused' | 'disconnected';
   last_sync_at: string | null;
-  table_count: number;                     // Number of tables synced from this source
-  total_records: number;                   // Sum of synced records across all tables
-  error_message?: string;                  // When status = 'error'
+  table_count: number; // Number of tables synced from this source
+  total_records: number; // Sum of synced records across all tables
+  error_message?: string; // When status = 'error'
 }
 
 // ── Bases & Tables ────────────────────────────────────────
 
 interface BaseNode {
   type: 'base';
-  id: string;                              // base.id
+  id: string; // base.id
   name: string;
-  color: string;                           // Base color from workspace config
+  color: string; // Base color from workspace config
   table_count: number;
   total_records: number;
-  is_synced: boolean;                      // Has at least one sync connection
-  sync_source_id?: string;                 // If synced, which sync source
+  is_synced: boolean; // Has at least one sync connection
+  sync_source_id?: string; // If synced, which sync source
 }
 
 interface TableNode {
   type: 'table';
-  id: string;                              // table.id
-  base_connection_id: string;                  // Parent base connection (base_connections.id)
+  id: string; // table.id
+  base_connection_id: string; // Parent base connection (base_connections.id)
   name: string;
   record_count: number;
   field_count: number;
   is_synced: boolean;
   sync_status?: 'healthy' | 'stale' | 'error' | 'paused';
-  has_approval_workflows: boolean;         // Any status field has transition governance
-  has_ai_agents: boolean;                  // Any field is an AI field agent
-  has_formulas: boolean;                   // Any formula fields
-  has_booking_config: boolean;             // booking_enabled table config
-  key_fields: {                            // Top 5 fields for tooltip display
+  has_approval_workflows: boolean; // Any status field has transition governance
+  has_ai_agents: boolean; // Any field is an AI field agent
+  has_formulas: boolean; // Any formula fields
+  has_booking_config: boolean; // booking_enabled table config
+  key_fields: {
+    // Top 5 fields for tooltip display
     name: string;
     type: string;
   }[];
@@ -233,39 +234,39 @@ interface TableNode {
 
 interface AutomationNode {
   type: 'automation';
-  id: string;                              // automation.id
+  id: string; // automation.id
   name: string;
   status: 'active' | 'inactive' | 'error';
-  trigger_type: string;                    // Post-MVP: from 22 trigger types (MVP: 6 triggers)
-  trigger_table_id: string | null;         // Table that triggers this automation (null for scheduled/webhook)
-  action_table_ids: string[];              // Tables that actions read from or write to
+  trigger_type: string; // Post-MVP: from 22 trigger types (MVP: 6 triggers)
+  trigger_table_id: string | null; // Table that triggers this automation (null for scheduled/webhook)
+  action_table_ids: string[]; // Tables that actions read from or write to
   last_run_at: string | null;
   last_run_status: 'success' | 'failure' | 'running' | null;
-  run_count_30d: number;                   // Execution count last 30 days
+  run_count_30d: number; // Execution count last 30 days
   failure_count_30d: number;
-  uses_webhook: boolean;                   // Has inbound or outbound webhook actions
-  uses_external_service: boolean;          // Has email, Slack, Stripe, etc. actions
-  external_services: string[];             // ['email', 'stripe', 'slack', ...]
+  uses_webhook: boolean; // Has inbound or outbound webhook actions
+  uses_external_service: boolean; // Has email, Slack, Stripe, etc. actions
+  external_services: string[]; // ['email', 'stripe', 'slack', ...]
 }
 
 interface ApprovalWorkflowNode {
   type: 'approval_workflow';
-  id: string;                              // Composite: table_id + status_field_id
-  table_id: string;                        // Table containing the governed status field
+  id: string; // Composite: table_id + status_field_id
+  table_id: string; // Table containing the governed status field
   status_field_name: string;
-  mode: 2 | 3;                             // Gated transitions or approval chain
-  transition_count: number;                // Number of governed transitions
-  step_count: number;                      // Max approval steps (0 for Mode 2)
-  pending_approvals: number;               // Current queue depth
+  mode: 2 | 3; // Gated transitions or approval chain
+  transition_count: number; // Number of governed transitions
+  step_count: number; // Max approval steps (0 for Mode 2)
+  pending_approvals: number; // Current queue depth
 }
 
 interface WebhookNode {
   type: 'webhook';
-  id: string;                              // webhook_endpoint.id
+  id: string; // webhook_endpoint.id
   direction: 'inbound' | 'outbound';
-  url_pattern: string;                     // Display-safe URL (masked for security)
+  url_pattern: string; // Display-safe URL (masked for security)
   event_types: string[];
-  linked_automation_ids: string[];         // Automations that use this webhook
+  linked_automation_ids: string[]; // Automations that use this webhook
   last_delivery_at: string | null;
   last_delivery_status: 'success' | 'failure' | null;
 }
@@ -274,98 +275,100 @@ interface WebhookNode {
 
 interface PortalNode {
   type: 'portal';
-  id: string;                              // portals.id (glossary: `portals` table with record_view_config_id)
+  id: string; // portals.id (glossary: `portals` table with record_view_config_id)
   name: string;
   status: 'published' | 'draft' | 'unpublished';
   page_count: number;
-  bound_table_ids: string[];               // Tables referenced by data bindings in blocks
-  scoping_table_id?: string;               // Client scoping table (e.g., CRM contacts)
-  client_count: number;                    // Registered portal clients
-  has_payments: boolean;                   // Contains Stripe payment block
-  has_forms: boolean;                      // Contains form blocks
-  has_charts: boolean;                     // Contains chart or metric blocks
-  has_approval_blocks: boolean;            // Contains portal approval block
-  has_booking_blocks: boolean;             // Contains scheduler block
+  bound_table_ids: string[]; // Tables referenced by data bindings in blocks
+  scoping_table_id?: string; // Client scoping table (e.g., CRM contacts)
+  client_count: number; // Registered portal clients
+  has_payments: boolean; // Contains Stripe payment block
+  has_forms: boolean; // Contains form blocks
+  has_charts: boolean; // Contains chart or metric blocks
+  has_approval_blocks: boolean; // Contains portal approval block
+  has_booking_blocks: boolean; // Contains scheduler block
   custom_domain?: string;
 }
 
 interface AppNode {
   type: 'app';
-  id: string;                              // apps.id (post-MVP: separate `apps` table per glossary)
+  id: string; // apps.id (post-MVP: separate `apps` table per glossary)
   name: string;
   status: 'published' | 'draft' | 'unpublished';
-  app_type_hint: 'pos' | 'kiosk' | 'warehouse' | 'dispatch' | 'custom';  // Inferred from blocks
+  app_type_hint: 'pos' | 'kiosk' | 'warehouse' | 'dispatch' | 'custom'; // Inferred from blocks
   bound_table_ids: string[];
-  has_cart: boolean;                       // Contains Cart/Transaction block
+  has_cart: boolean; // Contains Cart/Transaction block
   has_stripe_terminal: boolean;
   has_quick_entry: boolean;
   kiosk_mode: boolean;
 }
 
 interface DocumentTemplateNode {
-  type: 'document_template';               // Glossary: "Document Template" (formerly 'smart_doc')
-  id: string;                              // document_templates.id
+  type: 'document_template'; // Glossary: "Document Template" (formerly 'smart_doc')
+  id: string; // document_templates.id
   name: string;
-  source_table_id: string;                 // Table that provides merge fields
-  referenced_field_ids: string[];          // Fields used in merge field syntax
-  referenced_cross_link_ids: string[];     // Cross-links traversed for related data
+  source_table_id: string; // Table that provides merge fields
+  referenced_field_ids: string[]; // Fields used in merge field syntax
+  referenced_cross_link_ids: string[]; // Cross-links traversed for related data
   output_format: 'pdf' | 'docx';
-  has_chart_embeds: boolean;               // Contains chart merge fields
+  has_chart_embeds: boolean; // Contains chart merge fields
   generation_count_30d: number;
 }
 
 interface WebsiteNode {
   type: 'website';
-  id: string;                              // apps.id (post-MVP: Website is an App type built in App Designer)
+  id: string; // apps.id (post-MVP: Website is an App type built in App Designer)
   name: string;
   status: 'published' | 'draft';
   page_count: number;
-  bound_table_ids: string[];               // Tables referenced by data blocks
-  has_commerce: boolean;                   // Contains commerce embed integration
-  has_chat_widget: boolean;                // Chat widget embedded on site
+  bound_table_ids: string[]; // Tables referenced by data blocks
+  has_commerce: boolean; // Contains commerce embed integration
+  has_chat_widget: boolean; // Chat widget embedded on site
   custom_domain?: string;
 }
 
 interface CommerceEmbedNode {
   type: 'commerce_embed';
-  id: string;                              // commerce_embed.id
+  id: string; // commerce_embed.id
   name: string;
   embed_type: 'single_product' | 'catalog' | 'custom_amount';
-  product_table_id?: string;               // For catalog mode
-  transaction_table_id: string;            // Where payment records land
+  product_table_id?: string; // For catalog mode
+  transaction_table_id: string; // Where payment records land
   transaction_count_30d: number;
   revenue_30d: number;
 }
 
 interface ChatWidgetNode {
   type: 'chat_widget';
-  id: string;                              // chat_widget.id
+  id: string; // chat_widget.id
   name: string;
   status: 'active' | 'inactive';
-  linked_crm_table_id?: string;            // CRM table for auto-linking visitors
+  linked_crm_table_id?: string; // CRM table for auto-linking visitors
   conversation_count_30d: number;
-  embedded_on_website_id?: string;         // If embedded on an EveryStack website
+  embedded_on_website_id?: string; // If embedded on an EveryStack website
 }
 
 // ── Intelligence Layer ────────────────────────────────────
 
 interface AIFieldAgentNode {
   type: 'ai_field_agent';
-  id: string;                              // fields.id (where field_type = 'ai_field_agent')
-  name: string;                            // Field name
-  table_id: string;                        // Table this field belongs to
-  output_type: string;                     // text, number, single_select, etc.
-  local_field_refs: string[];              // Field IDs on the same table
-  linked_field_refs: {                     // Cross-link field references
+  id: string; // fields.id (where field_type = 'ai_field_agent')
+  name: string; // Field name
+  table_id: string; // Table this field belongs to
+  output_type: string; // text, number, single_select, etc.
+  local_field_refs: string[]; // Field IDs on the same table
+  linked_field_refs: {
+    // Cross-link field references
     cross_link_id: string;
     field_id: string;
   }[];
-  multi_hop_refs: {                        // Multi-hop traversals
-    path: string[];                        // Array of cross_link_ids
+  multi_hop_refs: {
+    // Multi-hop traversals
+    path: string[]; // Array of cross_link_ids
     field_id: string;
   }[];
-  has_aggregate_context: boolean;          // Uses DuckDB analytical query
-  aggregate_table_ids: string[];           // Tables in aggregate context QueryPlan
+  has_aggregate_context: boolean; // Uses DuckDB analytical query
+  aggregate_table_ids: string[]; // Tables in aggregate context QueryPlan
   trigger_mode: 'manual' | 'on_create' | 'on_field_change' | 'scheduled';
   run_count_30d: number;
   credit_cost_30d: number;
@@ -375,14 +378,24 @@ interface AIFieldAgentNode {
 
 interface ExternalServiceNode {
   type: 'external_service';
-  id: string;                              // Derived: service name slug
-  service: 'email' | 'stripe' | 'slack' | 'twilio' | 'google_drive' | 'dropbox' |
-           'quickbooks' | 'xero' | 'google_calendar' | 'outlook_calendar' |
-           'zoom' | 'custom_api';
+  id: string; // Derived: service name slug
+  service:
+    | 'email'
+    | 'stripe'
+    | 'slack'
+    | 'twilio'
+    | 'google_drive'
+    | 'dropbox'
+    | 'quickbooks'
+    | 'xero'
+    | 'google_calendar'
+    | 'outlook_calendar'
+    | 'zoom'
+    | 'custom_api';
   display_name: string;
   status: 'connected' | 'disconnected' | 'error';
   connected_at: string | null;
-  used_by_automation_ids: string[];        // Automations that use this service
+  used_by_automation_ids: string[]; // Automations that use this service
 }
 ```
 
@@ -392,66 +405,66 @@ Edges represent typed, directed dependencies between nodes. Each edge type has a
 
 ```typescript
 interface TopologyEdge {
-  id: string;                              // Deterministic: `${source_type}:${source_id}->${target_type}:${target_id}:${edge_type}`
+  id: string; // Deterministic: `${source_type}:${source_id}->${target_type}:${target_id}:${edge_type}`
   source_node_id: string;
   target_node_id: string;
   edge_type: EdgeType;
-  label?: string;                          // Short label displayed on hover or when zoomed in
-  metadata?: Record<string, any>;          // Edge-type-specific data
-  strength: 'critical' | 'normal' | 'weak';  // Visual weight — critical = thick, normal = standard, weak = thin/dashed
+  label?: string; // Short label displayed on hover or when zoomed in
+  metadata?: Record<string, any>; // Edge-type-specific data
+  strength: 'critical' | 'normal' | 'weak'; // Visual weight — critical = thick, normal = standard, weak = thin/dashed
 }
 
 type EdgeType =
-  | 'sync_feeds'                           // Sync source → table (data flows in)
-  | 'cross_link'                           // Table → table (cross-base link)
-  | 'native_link'                          // Table → table (same-base link, dimmer)
-  | 'formula_depends'                      // Table → table (formula references field in linked table)
-  | 'automation_triggers_from'             // Table → automation (record change triggers)
-  | 'automation_writes_to'                 // Automation → table (action creates/updates records)
-  | 'automation_reads_from'                // Automation → table (action reads/queries records — lighter than writes)
-  | 'automation_calls_service'             // Automation → external service (email, Stripe, etc.)
-  | 'portal_displays'                      // Portal → table (data binding reads from)
-  | 'portal_scoped_by'                     // Portal → table (client scoping references)
-  | 'portal_writes_to'                     // Portal → table (form submissions, status updates)
-  | 'app_binds_to'                         // App → table (data binding)
-  | 'app_transacts_to'                     // App → table (Cart/Transaction block → orders/line items)
-  | 'doc_merges_from'                      // Document Template → table (merge field source)
-  | 'doc_traverses_link'                   // Document Template → cross_link (template traverses a link for related data)
-  | 'ai_agent_reads'                       // AI field agent → table (local or linked field reference)
-  | 'ai_agent_hops'                        // AI field agent → cross_link (multi-hop traversal)
-  | 'ai_agent_aggregates'                  // AI field agent → table (DuckDB aggregate context)
-  | 'approval_governs'                     // Approval workflow → table (status transition enforcement)
-  | 'webhook_receives'                     // Webhook → automation (inbound webhook triggers)
-  | 'webhook_sends'                        // Automation → webhook (outbound delivery)
-  | 'website_displays'                     // Website → table (data binding)
-  | 'commerce_sells_from'                  // Commerce embed → table (product catalog)
-  | 'commerce_records_to'                  // Commerce embed → table (transaction records)
-  | 'chat_links_to'                        // Chat widget → table (CRM auto-linking)
-  | 'booking_manages'                      // Booking config → table (bookable table)
-  | 'chart_aggregates'                     // Chart (in portal/app/interface) → table (aggregate source)
-  | 'automation_chains'                    // Automation → automation (Run Automation action)
-  | 'side_effect_triggers';                // Approval workflow → automation (on-approved/on-rejected fires automation)
+  | 'sync_feeds' // Sync source → table (data flows in)
+  | 'cross_link' // Table → table (cross-base link)
+  | 'native_link' // Table → table (same-base link, dimmer)
+  | 'formula_depends' // Table → table (formula references field in linked table)
+  | 'automation_triggers_from' // Table → automation (record change triggers)
+  | 'automation_writes_to' // Automation → table (action creates/updates records)
+  | 'automation_reads_from' // Automation → table (action reads/queries records — lighter than writes)
+  | 'automation_calls_service' // Automation → external service (email, Stripe, etc.)
+  | 'portal_displays' // Portal → table (data binding reads from)
+  | 'portal_scoped_by' // Portal → table (client scoping references)
+  | 'portal_writes_to' // Portal → table (form submissions, status updates)
+  | 'app_binds_to' // App → table (data binding)
+  | 'app_transacts_to' // App → table (Cart/Transaction block → orders/line items)
+  | 'doc_merges_from' // Document Template → table (merge field source)
+  | 'doc_traverses_link' // Document Template → cross_link (template traverses a link for related data)
+  | 'ai_agent_reads' // AI field agent → table (local or linked field reference)
+  | 'ai_agent_hops' // AI field agent → cross_link (multi-hop traversal)
+  | 'ai_agent_aggregates' // AI field agent → table (DuckDB aggregate context)
+  | 'approval_governs' // Approval workflow → table (status transition enforcement)
+  | 'webhook_receives' // Webhook → automation (inbound webhook triggers)
+  | 'webhook_sends' // Automation → webhook (outbound delivery)
+  | 'website_displays' // Website → table (data binding)
+  | 'commerce_sells_from' // Commerce embed → table (product catalog)
+  | 'commerce_records_to' // Commerce embed → table (transaction records)
+  | 'chat_links_to' // Chat widget → table (CRM auto-linking)
+  | 'booking_manages' // Booking config → table (bookable table)
+  | 'chart_aggregates' // Chart (in portal/app/interface) → table (aggregate source)
+  | 'automation_chains' // Automation → automation (Run Automation action)
+  | 'side_effect_triggers'; // Approval workflow → automation (on-approved/on-rejected fires automation)
 ```
 
 ### Edge Visual Styles
 
-| Edge Type | Color (Dark Mode) | Color (Light Mode) | Dash Pattern | Thickness | Arrow |
-|---|---|---|---|---|---|
-| `sync_feeds` | `hsl(200, 70%, 55%)` | `hsl(200, 70%, 40%)` | Solid | 2px | → (into table) |
-| `cross_link` | `hsl(170, 65%, 50%)` (Teal — brand emphasis) | `hsl(170, 65%, 35%)` | Solid | 2.5px | ↔ (bidirectional) |
-| `native_link` | `hsl(220, 30%, 55%)` | `hsl(220, 30%, 45%)` | Solid | 1.5px | ↔ |
-| `automation_triggers_from` | `hsl(40, 85%, 55%)` (Amber) | `hsl(40, 85%, 40%)` | Solid | 2px | → (into automation) |
-| `automation_writes_to` | `hsl(40, 85%, 55%)` | `hsl(40, 85%, 40%)` | Solid | 2px | → (into table) |
-| `automation_reads_from` | `hsl(40, 85%, 55%)` | `hsl(40, 85%, 40%)` | Dashed (6, 4) | 1.5px | → (into automation) |
-| `automation_calls_service` | `hsl(280, 50%, 55%)` (Purple) | `hsl(280, 50%, 40%)` | Solid | 1.5px | → (into service) |
-| `portal_displays` | `hsl(140, 60%, 50%)` (Green) | `hsl(140, 60%, 35%)` | Solid | 2px | → (into portal) |
-| `portal_scoped_by` | `hsl(140, 60%, 50%)` | `hsl(140, 60%, 35%)` | Dotted (3, 3) | 1.5px | → (into portal) |
-| `portal_writes_to` | `hsl(140, 60%, 50%)` | `hsl(140, 60%, 35%)` | Solid | 2px | → (into table) |
-| `doc_merges_from` | `hsl(30, 75%, 55%)` (Orange) | `hsl(30, 75%, 40%)` | Solid | 1.5px | → (into doc) |
-| `ai_agent_reads` | `hsl(260, 65%, 60%)` (Violet) | `hsl(260, 65%, 40%)` | Solid | 1.5px | → (into agent) |
-| `ai_agent_hops` | `hsl(260, 65%, 60%)` | `hsl(260, 65%, 40%)` | Dashed (8, 4) | 2px | → (along cross-link) |
-| `approval_governs` | `hsl(350, 70%, 55%)` (Red-pink) | `hsl(350, 70%, 40%)` | Solid | 2px | → (into table) |
-| `automation_chains` | `hsl(40, 85%, 55%)` | `hsl(40, 85%, 40%)` | Dashed (10, 5) | 2px | → (into child automation) |
+| Edge Type                  | Color (Dark Mode)                            | Color (Light Mode)   | Dash Pattern   | Thickness | Arrow                     |
+| -------------------------- | -------------------------------------------- | -------------------- | -------------- | --------- | ------------------------- |
+| `sync_feeds`               | `hsl(200, 70%, 55%)`                         | `hsl(200, 70%, 40%)` | Solid          | 2px       | → (into table)            |
+| `cross_link`               | `hsl(170, 65%, 50%)` (Teal — brand emphasis) | `hsl(170, 65%, 35%)` | Solid          | 2.5px     | ↔ (bidirectional)         |
+| `native_link`              | `hsl(220, 30%, 55%)`                         | `hsl(220, 30%, 45%)` | Solid          | 1.5px     | ↔                         |
+| `automation_triggers_from` | `hsl(40, 85%, 55%)` (Amber)                  | `hsl(40, 85%, 40%)`  | Solid          | 2px       | → (into automation)       |
+| `automation_writes_to`     | `hsl(40, 85%, 55%)`                          | `hsl(40, 85%, 40%)`  | Solid          | 2px       | → (into table)            |
+| `automation_reads_from`    | `hsl(40, 85%, 55%)`                          | `hsl(40, 85%, 40%)`  | Dashed (6, 4)  | 1.5px     | → (into automation)       |
+| `automation_calls_service` | `hsl(280, 50%, 55%)` (Purple)                | `hsl(280, 50%, 40%)` | Solid          | 1.5px     | → (into service)          |
+| `portal_displays`          | `hsl(140, 60%, 50%)` (Green)                 | `hsl(140, 60%, 35%)` | Solid          | 2px       | → (into portal)           |
+| `portal_scoped_by`         | `hsl(140, 60%, 50%)`                         | `hsl(140, 60%, 35%)` | Dotted (3, 3)  | 1.5px     | → (into portal)           |
+| `portal_writes_to`         | `hsl(140, 60%, 50%)`                         | `hsl(140, 60%, 35%)` | Solid          | 2px       | → (into table)            |
+| `doc_merges_from`          | `hsl(30, 75%, 55%)` (Orange)                 | `hsl(30, 75%, 40%)`  | Solid          | 1.5px     | → (into doc)              |
+| `ai_agent_reads`           | `hsl(260, 65%, 60%)` (Violet)                | `hsl(260, 65%, 40%)` | Solid          | 1.5px     | → (into agent)            |
+| `ai_agent_hops`            | `hsl(260, 65%, 60%)`                         | `hsl(260, 65%, 40%)` | Dashed (8, 4)  | 2px       | → (along cross-link)      |
+| `approval_governs`         | `hsl(350, 70%, 55%)` (Red-pink)              | `hsl(350, 70%, 40%)` | Solid          | 2px       | → (into table)            |
+| `automation_chains`        | `hsl(40, 85%, 55%)`                          | `hsl(40, 85%, 40%)`  | Dashed (10, 5) | 2px       | → (into child automation) |
 
 Cross-link edges (`cross_link`) use the brand teal color and are rendered thicker than native links. This is deliberate — cross-links are the moat, and the map should make them visually prominent.
 
@@ -464,22 +477,22 @@ interface TopologyCluster {
   id: string;
   type: 'base' | 'automation_group' | 'portal_group' | 'external_services' | 'intelligence';
   label: string;
-  color: string;                           // Background tint color (low opacity)
-  node_ids: string[];                      // Nodes belonging to this cluster
-  position?: { x: number; y: number };     // Layout-computed position
-  collapsed: boolean;                      // When true, shows as a single summary node
+  color: string; // Background tint color (low opacity)
+  node_ids: string[]; // Nodes belonging to this cluster
+  position?: { x: number; y: number }; // Layout-computed position
+  collapsed: boolean; // When true, shows as a single summary node
 }
 ```
 
 **Cluster Types:**
 
-| Cluster | Contains | Background Color | Collapsed Label |
-|---|---|---|---|
-| Base cluster | BaseNode + child TableNodes | Base color at 8% opacity | "Sales Pipeline (8 tables, 12.4K records)" |
-| Automation group | All AutomationNodes + WebhookNodes | Amber at 6% opacity | "15 Automations (12 active, 3 inactive)" |
-| Portal group | All PortalNodes + AppNodes + WebsiteNodes | Green at 6% opacity | "3 Portals, 2 Apps, 1 Website" |
-| External services | All ExternalServiceNodes + SyncSourceNodes | Blue at 6% opacity | "Connected: Airtable, Stripe, Gmail, Slack" |
-| Intelligence | All AIFieldAgentNodes | Violet at 6% opacity | "10 AI Agents (4 tables)" |
+| Cluster           | Contains                                   | Background Color         | Collapsed Label                             |
+| ----------------- | ------------------------------------------ | ------------------------ | ------------------------------------------- |
+| Base cluster      | BaseNode + child TableNodes                | Base color at 8% opacity | "Sales Pipeline (8 tables, 12.4K records)"  |
+| Automation group  | All AutomationNodes + WebhookNodes         | Amber at 6% opacity      | "15 Automations (12 active, 3 inactive)"    |
+| Portal group      | All PortalNodes + AppNodes + WebsiteNodes  | Green at 6% opacity      | "3 Portals, 2 Apps, 1 Website"              |
+| External services | All ExternalServiceNodes + SyncSourceNodes | Blue at 6% opacity       | "Connected: Airtable, Stripe, Gmail, Slack" |
+| Intelligence      | All AIFieldAgentNodes                      | Violet at 6% opacity     | "10 AI Agents (4 tables)"                   |
 
 ---
 
@@ -514,12 +527,12 @@ Data flows left-to-right conceptually: external platforms sync data IN from the 
 
 ```typescript
 interface LayoutConfig {
-  algorithm: 'layered_force';              // Dagre for initial placement + d3-force for refinement
-  layer_spacing: 400;                      // px between layer zones
-  node_spacing: 80;                        // Minimum px between nodes in same layer
-  cluster_padding: 40;                     // px padding inside cluster background
-  edge_routing: 'orthogonal_smooth';       // Right-angle edges with rounded corners
-  iterations: 300;                         // Force simulation iterations (server-side)
+  algorithm: 'layered_force'; // Dagre for initial placement + d3-force for refinement
+  layer_spacing: 400; // px between layer zones
+  node_spacing: 80; // Minimum px between nodes in same layer
+  cluster_padding: 40; // px padding inside cluster background
+  edge_routing: 'orthogonal_smooth'; // Right-angle edges with rounded corners
+  iterations: 300; // Force simulation iterations (server-side)
 }
 ```
 
@@ -533,11 +546,11 @@ interface LayoutConfig {
 
 The map supports continuous zoom via scroll/pinch with three conceptual detail levels:
 
-| Zoom Level | Threshold | What's Visible |
-|---|---|---|
-| **Overview** (default) | Fit-to-screen | Clusters as labeled rectangles. Cross-link edges between clusters visible. Stats in each cluster. Individual nodes not rendered. |
-| **Standard** | 60–150% | Individual nodes visible with icons and names. All edges rendered. Key metadata on hover. Cluster backgrounds visible as subtle tint regions. |
-| **Detail** | 150%+ | Nodes show expanded cards with record counts, status indicators, field lists. Edge labels visible. Full metadata panel on click. |
+| Zoom Level             | Threshold     | What's Visible                                                                                                                                |
+| ---------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Overview** (default) | Fit-to-screen | Clusters as labeled rectangles. Cross-link edges between clusters visible. Stats in each cluster. Individual nodes not rendered.              |
+| **Standard**           | 60–150%       | Individual nodes visible with icons and names. All edges rendered. Key metadata on hover. Cluster backgrounds visible as subtle tint regions. |
+| **Detail**             | 150%+         | Nodes show expanded cards with record counts, status indicators, field lists. Edge labels visible. Full metadata panel on click.              |
 
 **Semantic zoom** renders different node representations at different zoom levels without user action. This is critical for performance — at overview zoom, the renderer draws ~10 cluster rectangles instead of 100+ individual nodes.
 
@@ -571,22 +584,22 @@ Expanded Node (150%+ zoom):
 
 ### Node Icons and Colors
 
-| Node Type | Icon | Accent Color | Accent Meaning |
-|---|---|---|---|
-| Sync Source | Platform logo (Airtable/SmartSuite/Notion icon) | Platform brand color | Data origin |
-| Base | Stacked layers icon | Base-assigned color | Data container |
-| Table | Grid/table icon | Inherits base color | Data entity |
-| Automation | Zap/lightning icon | Amber `hsl(40, 85%, 55%)` | Logic/processing |
-| Approval Workflow | Shield-check icon | Red-pink `hsl(350, 70%, 55%)` | Governance |
-| Webhook | Arrow-right-left icon | Amber (lighter) | External integration |
-| Portal | Globe icon | Green `hsl(140, 60%, 50%)` | External surface |
-| App (post-MVP) | Layout-grid icon | Green (shifted) `hsl(160, 60%, 50%)` | Internal surface |
-| Website | Monitor icon | Green (lighter) | Public surface |
-| Commerce Embed | Credit-card icon | Green + Stripe purple accent | Payment surface |
-| Chat Widget | Message-circle icon | Green + chat blue accent | Communication surface |
-| Document Template | File-text icon | Orange `hsl(30, 75%, 55%)` | Document output |
-| AI Field Agent | Brain/sparkles icon | Violet `hsl(260, 65%, 60%)` | Intelligence |
-| External Service | Service-specific icon | Purple `hsl(280, 50%, 55%)` | External dependency |
+| Node Type         | Icon                                            | Accent Color                         | Accent Meaning        |
+| ----------------- | ----------------------------------------------- | ------------------------------------ | --------------------- |
+| Sync Source       | Platform logo (Airtable/SmartSuite/Notion icon) | Platform brand color                 | Data origin           |
+| Base              | Stacked layers icon                             | Base-assigned color                  | Data container        |
+| Table             | Grid/table icon                                 | Inherits base color                  | Data entity           |
+| Automation        | Zap/lightning icon                              | Amber `hsl(40, 85%, 55%)`            | Logic/processing      |
+| Approval Workflow | Shield-check icon                               | Red-pink `hsl(350, 70%, 55%)`        | Governance            |
+| Webhook           | Arrow-right-left icon                           | Amber (lighter)                      | External integration  |
+| Portal            | Globe icon                                      | Green `hsl(140, 60%, 50%)`           | External surface      |
+| App (post-MVP)    | Layout-grid icon                                | Green (shifted) `hsl(160, 60%, 50%)` | Internal surface      |
+| Website           | Monitor icon                                    | Green (lighter)                      | Public surface        |
+| Commerce Embed    | Credit-card icon                                | Green + Stripe purple accent         | Payment surface       |
+| Chat Widget       | Message-circle icon                             | Green + chat blue accent             | Communication surface |
+| Document Template | File-text icon                                  | Orange `hsl(30, 75%, 55%)`           | Document output       |
+| AI Field Agent    | Brain/sparkles icon                             | Violet `hsl(260, 65%, 60%)`          | Intelligence          |
+| External Service  | Service-specific icon                           | Purple `hsl(280, 50%, 55%)`          | External dependency   |
 
 Icons sourced from `lucide-react` (already in the design system dependency tree).
 
@@ -595,23 +608,27 @@ Icons sourced from `lucide-react` (already in the design system dependency tree)
 Each node type has status-relevant visual indicators:
 
 **Sync Sources:**
+
 - Green dot: Healthy (last sync < 2× sync interval)
 - Yellow dot: Stale (last sync > 2× interval but < 10×)
 - Red dot: Error (sync failures, auth expired)
 - Gray dot: Paused or disconnected
 
 **Automations:**
+
 - Green dot: Active, last run succeeded
 - Red dot + pulse animation: Active, last run failed (requires attention)
 - Gray dot: Inactive
 - Blue spinner: Currently running
 
 **Portals / Apps / Websites:**
+
 - Green dot: Published
 - Yellow dot: Draft (never published)
 - Gray dot: Unpublished (was published, now disabled)
 
 **AI Field Agents:**
+
 - Green dot: Healthy (runs succeeding)
 - Yellow dot: High credit usage warning (> 80% of daily limit)
 - Red dot: Errors in recent runs
@@ -622,16 +639,16 @@ Each node type has status-relevant visual indicators:
 
 ### Canvas Interactions
 
-| Interaction | Desktop | Tablet |
-|---|---|---|
-| **Pan** | Click + drag on canvas background | Two-finger drag |
-| **Zoom** | Scroll wheel / pinch trackpad | Pinch gesture |
-| **Select node** | Click node | Tap node |
-| **Multi-select** | Shift + click, or drag selection rectangle | Long-press + tap additional |
-| **Open entity** | Double-click node | Double-tap node |
-| **Show impact** | Right-click node → "Show Impact" | Long-press → context menu |
-| **Fit to view** | `Ctrl/Cmd + 0` or toolbar button | Toolbar button |
-| **Center on node** | Search → select result → map pans/zooms to node | Same |
+| Interaction        | Desktop                                         | Tablet                      |
+| ------------------ | ----------------------------------------------- | --------------------------- |
+| **Pan**            | Click + drag on canvas background               | Two-finger drag             |
+| **Zoom**           | Scroll wheel / pinch trackpad                   | Pinch gesture               |
+| **Select node**    | Click node                                      | Tap node                    |
+| **Multi-select**   | Shift + click, or drag selection rectangle      | Long-press + tap additional |
+| **Open entity**    | Double-click node                               | Double-tap node             |
+| **Show impact**    | Right-click node → "Show Impact"                | Long-press → context menu   |
+| **Fit to view**    | `Ctrl/Cmd + 0` or toolbar button                | Toolbar button              |
+| **Center on node** | Search → select result → map pans/zooms to node | Same                        |
 
 ### Node Click Behavior
 
@@ -640,6 +657,7 @@ Single-clicking a node selects it and opens the **Detail Panel** — a 360px rig
 **Detail Panel Content by Node Type:**
 
 **Table Detail Panel:**
+
 ```
 ┌─────────────────────────────────────────┐
 │  📊  Deals                          ✕   │
@@ -674,6 +692,7 @@ Single-clicking a node selects it and opens the **Detail Panel** — a 360px rig
 ```
 
 **Automation Detail Panel:**
+
 ```
 ┌─────────────────────────────────────────┐
 │  ⚡  Deal Won Notification          ✕   │
@@ -706,18 +725,18 @@ Single-clicking a node selects it and opens the **Detail Panel** — a 360px rig
 
 Double-clicking any node navigates to that entity's builder/editor:
 
-| Node Type | Navigation Target |
-|---|---|
-| Sync Source | Sync Settings dashboard for this connection |
-| Table | Table View (default view) |
-| Automation | Automation builder (full-screen) |
-| Portal | Portal configuration (MVP Quick Portal) / App Designer (post-MVP App Designer portal) |
-| App | App Designer (post-MVP) |
-| Website | App Designer (post-MVP) |
-| Document Template | Template editor |
-| AI Field Agent | Field configuration panel in table settings |
-| Approval Workflow | Status field configuration in table settings |
-| External Service | Integration settings page |
+| Node Type         | Navigation Target                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| Sync Source       | Sync Settings dashboard for this connection                                           |
+| Table             | Table View (default view)                                                             |
+| Automation        | Automation builder (full-screen)                                                      |
+| Portal            | Portal configuration (MVP Quick Portal) / App Designer (post-MVP App Designer portal) |
+| App               | App Designer (post-MVP)                                                               |
+| Website           | App Designer (post-MVP)                                                               |
+| Document Template | Template editor                                                                       |
+| AI Field Agent    | Field configuration panel in table settings                                           |
+| Approval Workflow | Status field configuration in table settings                                          |
+| External Service  | Integration settings page                                                             |
 
 Navigation opens in the same browser tab. The map state (zoom, pan, selection) is preserved in session storage so the user can press Back to return to the exact same map position.
 
@@ -725,13 +744,13 @@ Navigation opens in the same browser tab. The map state (zoom, pan, selection) i
 
 Right-click (desktop) or long-press (tablet) on a node opens a context menu:
 
-| Menu Item | Action |
-|---|---|
-| **Show Impact** | Activates impact analysis overlay for this node (see Impact Analysis) |
-| **Show Connections Only** | Filters the map to show only this node and its direct connections |
-| **Open in New Tab** | Navigates to the entity's builder in a new tab |
-| **Copy Link** | Copies a deep link to the map centered on this node |
-| **Hide from Map** | Temporarily hides this node (session-only, not persisted) |
+| Menu Item                 | Action                                                                |
+| ------------------------- | --------------------------------------------------------------------- |
+| **Show Impact**           | Activates impact analysis overlay for this node (see Impact Analysis) |
+| **Show Connections Only** | Filters the map to show only this node and its direct connections     |
+| **Open in New Tab**       | Navigates to the entity's builder in a new tab                        |
+| **Copy Link**             | Copies a deep link to the map centered on this node                   |
+| **Hide from Map**         | Temporarily hides this node (session-only, not persisted)             |
 
 ---
 
@@ -753,10 +772,10 @@ When the user activates "Show Impact" on a node, the map transitions into impact
 
 Reuses the 3-tier consequence model from `cross-linking.md` > Impact Analysis & User Communication, extended to all node types:
 
-| Tier | Label | Color | Meaning |
-|---|---|---|---|
-| **Tier 1** | Breaking | Red `hsl(0, 70%, 55%)` | Entity would fail or produce errors. E.g., automation triggers from a table that would be disconnected. |
-| **Tier 2** | Degraded | Amber `hsl(40, 85%, 55%)` | Entity would lose data or functionality but not break. E.g., portal chart loses one of its data sources. |
+| Tier       | Label         | Color                     | Meaning                                                                                                               |
+| ---------- | ------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Tier 1** | Breaking      | Red `hsl(0, 70%, 55%)`    | Entity would fail or produce errors. E.g., automation triggers from a table that would be disconnected.               |
+| **Tier 2** | Degraded      | Amber `hsl(40, 85%, 55%)` | Entity would lose data or functionality but not break. E.g., portal chart loses one of its data sources.              |
 | **Tier 3** | Informational | Blue `hsl(210, 60%, 55%)` | Entity references this node but impact is minimal. E.g., a Document Template has a merge field that would show empty. |
 
 ### Impact Computation
@@ -770,8 +789,8 @@ interface ImpactAnalysisResult {
   affected_nodes: {
     node_id: string;
     tier: 1 | 2 | 3;
-    reason: string;                        // Human-readable: "This automation triggers when Deals.Stage changes"
-    edge_path: string[];                   // Chain of edge IDs from source to this node
+    reason: string; // Human-readable: "This automation triggers when Deals.Stage changes"
+    edge_path: string[]; // Chain of edge IDs from source to this node
   }[];
   summary: {
     tier_1_count: number;
@@ -779,20 +798,20 @@ interface ImpactAnalysisResult {
     tier_3_count: number;
     total_affected: number;
   };
-  ai_summary?: string;                    // AI-generated natural language impact summary (optional, 2 credits)
+  ai_summary?: string; // AI-generated natural language impact summary (optional, 2 credits)
 }
 ```
 
 **Impact propagation rules by edge type:**
 
-| If you remove/change... | Edge Type | Downstream Impact |
-|---|---|---|
-| A sync connection | `sync_feeds` | Tier 1: All tables fed by this sync (data stops updating). Tier 1: All automations triggered by those tables. Tier 2: All portals/docs that display data from those tables. |
-| A table | `cross_link`, `automation_triggers_from`, `portal_displays`, `doc_merges_from`, `ai_agent_reads` | Tier 1: Every entity that reads from or writes to this table. |
-| A cross-link | `cross_link` | Tier 1: AI agents with multi-hop refs through this link. Tier 2: Portals displaying cross-linked data. Tier 2: Document Templates merging cross-linked fields. Tier 3: Formulas referencing linked record values. |
-| A field (rename or delete) | (Field-level — traverses all edges from parent table) | Tier 1: Automation conditions or actions referencing this field. Tier 1: Formula fields depending on this field. Tier 2: AI agents with this field in their prompt. Tier 2: Document Template merge fields referencing this field. Tier 3: Portal/App blocks filtering by this field. |
-| An automation | `automation_chains`, `side_effect_triggers` | Tier 1: Child automations called via Run Automation. Tier 2: Approval workflows with on-approved/on-rejected side effects targeting this automation. |
-| A portal/app | `portal_displays`, `portal_writes_to` | Tier 3: Informational only — removal doesn't affect data integrity. |
+| If you remove/change...    | Edge Type                                                                                        | Downstream Impact                                                                                                                                                                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A sync connection          | `sync_feeds`                                                                                     | Tier 1: All tables fed by this sync (data stops updating). Tier 1: All automations triggered by those tables. Tier 2: All portals/docs that display data from those tables.                                                                                                           |
+| A table                    | `cross_link`, `automation_triggers_from`, `portal_displays`, `doc_merges_from`, `ai_agent_reads` | Tier 1: Every entity that reads from or writes to this table.                                                                                                                                                                                                                         |
+| A cross-link               | `cross_link`                                                                                     | Tier 1: AI agents with multi-hop refs through this link. Tier 2: Portals displaying cross-linked data. Tier 2: Document Templates merging cross-linked fields. Tier 3: Formulas referencing linked record values.                                                                     |
+| A field (rename or delete) | (Field-level — traverses all edges from parent table)                                            | Tier 1: Automation conditions or actions referencing this field. Tier 1: Formula fields depending on this field. Tier 2: AI agents with this field in their prompt. Tier 2: Document Template merge fields referencing this field. Tier 3: Portal/App blocks filtering by this field. |
+| An automation              | `automation_chains`, `side_effect_triggers`                                                      | Tier 1: Child automations called via Run Automation. Tier 2: Approval workflows with on-approved/on-rejected side effects targeting this automation.                                                                                                                                  |
+| A portal/app               | `portal_displays`, `portal_writes_to`                                                            | Tier 3: Informational only — removal doesn't affect data integrity.                                                                                                                                                                                                                   |
 
 ### Impact Summary Card
 
@@ -811,7 +830,7 @@ Displayed above the canvas when impact analysis is active:
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-**AI Summary** (optional, on-demand): When clicked, invokes the AI architecture with a prompt constructed from the `ImpactAnalysisResult` to produce a natural language summary. Example output: *"Disconnecting the Airtable Sales Pipeline sync would immediately stop data updates for 8 tables including Deals, Contacts, and Activities. The 'Deal Won Notification' and 'Monthly Revenue Report' automations would begin failing. Your Client Portal would continue to display data but it would become stale. Your Invoice Generator template references 3 fields from synced tables that would show empty values."*
+**AI Summary** (optional, on-demand): When clicked, invokes the AI architecture with a prompt constructed from the `ImpactAnalysisResult` to produce a natural language summary. Example output: _"Disconnecting the Airtable Sales Pipeline sync would immediately stop data updates for 8 tables including Deals, Contacts, and Activities. The 'Deal Won Notification' and 'Monthly Revenue Report' automations would begin failing. Your Client Portal would continue to display data but it would become stale. Your Invoice Generator template references 3 fields from synced tables that would show empty values."_
 
 ---
 
@@ -828,14 +847,14 @@ The Workspace Map is a full-screen route (`/workspace/{workspaceId}/map`) with a
  Back   Title                  Search          Filter     Fit  Zoom  Refresh
 ```
 
-| Control | Behavior |
-|---|---|
-| **← Back** | Returns to previous route (workspace home, table view, etc.) |
-| **Search** | Expandable search field. Searches all node names and metadata. Results appear as a dropdown — selecting a result pans/zooms the map to center on that node and opens the detail panel. |
-| **Filter** | Dropdown with toggleable filters (see Filter System below) |
-| **◎ Fit** | Zoom-to-fit: adjusts zoom and pan to show all visible nodes |
-| **− / +** | Zoom out / zoom in (10% increments) |
-| **⟳ Refresh** | Force-regenerate the topology graph (bypasses cache) |
+| Control       | Behavior                                                                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **← Back**    | Returns to previous route (workspace home, table view, etc.)                                                                                                                           |
+| **Search**    | Expandable search field. Searches all node names and metadata. Results appear as a dropdown — selecting a result pans/zooms the map to center on that node and opens the detail panel. |
+| **Filter**    | Dropdown with toggleable filters (see Filter System below)                                                                                                                             |
+| **◎ Fit**     | Zoom-to-fit: adjusts zoom and pan to show all visible nodes                                                                                                                            |
+| **− / +**     | Zoom out / zoom in (10% increments)                                                                                                                                                    |
+| **⟳ Refresh** | Force-regenerate the topology graph (bypasses cache)                                                                                                                                   |
 
 ### Filter System
 
@@ -916,11 +935,11 @@ The Workspace Map appears in the workspace navigation sidebar as a top-level ite
 
 The Workspace Map is accessible via the Command Bar (`command-bar.md`):
 
-| Command | Action |
-|---|---|
-| `Go to Workspace Map` | Opens `/workspace/{id}/map` |
+| Command                        | Action                            |
+| ------------------------------ | --------------------------------- |
+| `Go to Workspace Map`          | Opens `/workspace/{id}/map`       |
 | `Show impact of [entity name]` | Opens map with `?impact={nodeId}` |
-| `Find [entity name] on map` | Opens map with `?focus={nodeId}` |
+| `Find [entity name] on map`    | Opens map with `?focus={nodeId}`  |
 
 ---
 
@@ -930,20 +949,20 @@ The Workspace Map is accessible via the Command Bar (`command-bar.md`):
 
 The topology graph is generated by reading from existing metadata tables. **No new tables are required** — the map is a pure read-only projection of existing workspace config.
 
-| Data Source | What It Provides | Tables / APIs Read |
-|---|---|---|
-| **Schema Descriptor Service** | Bases, tables, fields, cross-links, field types, record counts | `describe_workspace()`, `describe_links()` |
-| **Sync Engine config** | Sync connections, platform sources, sync status, sync filters | `sync_connections`, `sync_configs`, `sync_table_configs` |
-| **Automations config** | Automation definitions, trigger/action table refs, status, run history | `automations` table, `automation_runs` (aggregate stats) |
-| **Portal config** | Portal definitions, data bindings | MVP: `portals` (with `record_view_config_id`); post-MVP App Designer portals: `apps`, `app_pages`, `app_blocks` (data_binding JSONB) |
-| **Document Templates** | Template definitions, merge field references | `document_templates` (merge_fields JSONB) |
-| **AI Field Agent config** | Agent configs, field references, aggregate context | `fields` where `field_type = 'ai_field_agent'` (config JSONB) |
-| **Approval workflow config** | Status field transition rules, approval rules | `fields` where `field_type = 'status'` (config.transitions JSONB), `approval_rules` |
-| **Connected services** | External service connections, OAuth tokens (existence only) | `connected_services` (or equivalent OAuth token store) |
-| **Webhook endpoints** | Inbound/outbound webhook registrations | `webhook_endpoints` |
-| **Commerce / Chat** | Commerce embed configs, chat widget configs | `commerce_embeds`, `chat_widgets` |
-| **Booking config** | Bookable table configurations | `calendar_table_config` where `booking_enabled = true` |
-| **Run statistics** | Automation run counts, AI agent run counts, generation counts | Aggregate queries on `automation_runs`, `ai_agent_runs` (30-day window) |
+| Data Source                   | What It Provides                                                       | Tables / APIs Read                                                                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Schema Descriptor Service** | Bases, tables, fields, cross-links, field types, record counts         | `describe_workspace()`, `describe_links()`                                                                                           |
+| **Sync Engine config**        | Sync connections, platform sources, sync status, sync filters          | `sync_connections`, `sync_configs`, `sync_table_configs`                                                                             |
+| **Automations config**        | Automation definitions, trigger/action table refs, status, run history | `automations` table, `automation_runs` (aggregate stats)                                                                             |
+| **Portal config**             | Portal definitions, data bindings                                      | MVP: `portals` (with `record_view_config_id`); post-MVP App Designer portals: `apps`, `app_pages`, `app_blocks` (data_binding JSONB) |
+| **Document Templates**        | Template definitions, merge field references                           | `document_templates` (merge_fields JSONB)                                                                                            |
+| **AI Field Agent config**     | Agent configs, field references, aggregate context                     | `fields` where `field_type = 'ai_field_agent'` (config JSONB)                                                                        |
+| **Approval workflow config**  | Status field transition rules, approval rules                          | `fields` where `field_type = 'status'` (config.transitions JSONB), `approval_rules`                                                  |
+| **Connected services**        | External service connections, OAuth tokens (existence only)            | `connected_services` (or equivalent OAuth token store)                                                                               |
+| **Webhook endpoints**         | Inbound/outbound webhook registrations                                 | `webhook_endpoints`                                                                                                                  |
+| **Commerce / Chat**           | Commerce embed configs, chat widget configs                            | `commerce_embeds`, `chat_widgets`                                                                                                    |
+| **Booking config**            | Bookable table configurations                                          | `calendar_table_config` where `booking_enabled = true`                                                                               |
+| **Run statistics**            | Automation run counts, AI agent run counts, generation counts          | Aggregate queries on `automation_runs`, `ai_agent_runs` (30-day window)                                                              |
 
 ### Graph Generation Pipeline
 
@@ -975,16 +994,37 @@ async function generateTopologyGraph(tenantId: string, userId: string): Promise<
   const approvalConfigs = await db.query(/* fields where type = status AND transitions */);
 
   // 8. Read connected services, webhooks, commerce, chat
-  const services = await db.query(/* connected_services, webhook_endpoints, commerce_embeds, chat_widgets */);
+  const services =
+    await db.query(/* connected_services, webhook_endpoints, commerce_embeds, chat_widgets */);
 
   // 9. Read run statistics (30-day aggregates)
   const runStats = await db.query(/* aggregate automation_runs, ai_agent_runs */);
 
   // 10. Build nodes
-  const nodes = buildNodes(schema, links, syncConnections, automations, portals, docTemplates, aiAgents, approvalConfigs, services, runStats);
+  const nodes = buildNodes(
+    schema,
+    links,
+    syncConnections,
+    automations,
+    portals,
+    docTemplates,
+    aiAgents,
+    approvalConfigs,
+    services,
+    runStats,
+  );
 
   // 11. Build edges by analyzing config references
-  const edges = buildEdges(nodes, schema, links, automations, portals, docTemplates, aiAgents, approvalConfigs);
+  const edges = buildEdges(
+    nodes,
+    schema,
+    links,
+    automations,
+    portals,
+    docTemplates,
+    aiAgents,
+    approvalConfigs,
+  );
 
   // 12. Build clusters
   const clusters = buildClusters(nodes, schema);
@@ -995,7 +1035,15 @@ async function generateTopologyGraph(tenantId: string, userId: string): Promise<
   // 14. Compute stats
   const stats = computeStats(nodes);
 
-  return { workspace_id: tenantId, generated_at: new Date().toISOString(), schema_version_hash: schema.version_hash, nodes, edges, clusters, stats };
+  return {
+    workspace_id: tenantId,
+    generated_at: new Date().toISOString(),
+    schema_version_hash: schema.version_hash,
+    nodes,
+    edges,
+    clusters,
+    stats,
+  };
 }
 ```
 
@@ -1004,6 +1052,7 @@ async function generateTopologyGraph(tenantId: string, userId: string): Promise<
 The most nuanced part of graph generation is extracting edges from existing JSONB configs. Each subsystem stores references differently:
 
 **Automations → Tables:** Each automation step (JSONB array) contains a `config` object with table/field references. The step `type` determines which config keys to inspect:
+
 - Trigger step: `config.table_id` → `automation_triggers_from` edge
 - Create Record action: `config.target_table_id` → `automation_writes_to` edge
 - Update Record action: `config.table_id` → `automation_writes_to` edge
@@ -1013,22 +1062,26 @@ The most nuanced part of graph generation is extracting edges from existing JSON
 - Run Automation action: `config.automation_id` → `automation_chains` edge
 
 **Portals → Tables:** For MVP Quick Portals, edges are derived from the portal's `record_view_config_id` (bound to one table). For post-MVP App Designer portals/apps, each `app_block` has a `data_binding` JSONB (see `portals.md` > Block `data_binding` JSONB Shape):
+
 - `data_binding.source.table_id` → `portal_displays` edge
 - `data_binding.source.view_id` (resolved to table) → `portal_displays` edge
 - Form blocks with `data_binding.target_table_id` → `portal_writes_to` edge
 - Portal `scoping_config.scoping_table_id` → `portal_scoped_by` edge
 
 **Document Templates → Tables:** Template merge field syntax `{{table.field}}` is parsed:
+
 - Source table → `doc_merges_from` edge
 - Cross-link traversals in merge paths → `doc_traverses_link` edge
 
 **AI Field Agents → Tables/Links:** `AIFieldAgentConfig` contains explicit references:
+
 - `field_references` (LocalFieldRef) → `ai_agent_reads` edge to same table
 - `field_references` (LinkedFieldRef) → `ai_agent_reads` edge to linked table + `ai_agent_hops` edge to cross-link
 - `field_references` (MultiHopFieldRef) → `ai_agent_hops` edges along each cross-link in path
 - `aggregate_context.query_plan.sources[].table_id` → `ai_agent_aggregates` edge
 
 **Formula Fields → Fields/Tables:** Formula dependency graph (from `formula-engine.md`):
+
 - Field references within formulas → `formula_depends` edges between tables (when referencing linked record values via ROLLUP or lookup)
 
 ### Caching Strategy
@@ -1040,6 +1093,7 @@ Invalidation: schema_version_hash change (piggybacked on SDS cache invalidation 
 ```
 
 **Invalidation triggers** (via real-time events already in the platform):
+
 - `schema.updated` → table/field/cross-link structural changes
 - `sync.connection_updated` → sync status changes
 - `automation.updated` → automation config changes
@@ -1059,6 +1113,7 @@ The map client maintains a WebSocket subscription to `tenant:{tenantId}` channel
 **Library recommendation: `@xyflow/react` (React Flow v12).**
 
 React Flow is purpose-built for node-based graph UIs. It handles:
+
 - Canvas panning and zooming with hardware acceleration
 - Node rendering as React components (overlaid on the canvas coordinate system)
 - Edge routing with multiple path types (bezier, step, smoothstep)
@@ -1073,15 +1128,15 @@ React Flow renders nodes as positioned `<div>` elements (not canvas-drawn), whic
 
 ### Performance Targets
 
-| Metric | Target | Strategy |
-|---|---|---|
-| **Initial render** (cold cache) | < 2s for 100-node graph | Server-side layout computation, graph JSON ~50KB gzipped |
-| **Initial render** (warm cache) | < 500ms | Redis cache for both graph and layout |
-| **Zoom/pan** | 60fps | React Flow hardware-accelerated viewport transform |
-| **Node count limit** | 500 nodes (soft cap) | Beyond 500, force cluster-collapsed default view |
-| **Edge count limit** | 2,000 edges (soft cap) | Edge bundling for parallel edges between same node pair |
-| **Impact analysis** | < 200ms | Server-side graph traversal, cached per-node |
-| **Detail panel open** | < 100ms | Node metadata included in graph JSON, no additional fetch |
+| Metric                          | Target                  | Strategy                                                  |
+| ------------------------------- | ----------------------- | --------------------------------------------------------- |
+| **Initial render** (cold cache) | < 2s for 100-node graph | Server-side layout computation, graph JSON ~50KB gzipped  |
+| **Initial render** (warm cache) | < 500ms                 | Redis cache for both graph and layout                     |
+| **Zoom/pan**                    | 60fps                   | React Flow hardware-accelerated viewport transform        |
+| **Node count limit**            | 500 nodes (soft cap)    | Beyond 500, force cluster-collapsed default view          |
+| **Edge count limit**            | 2,000 edges (soft cap)  | Edge bundling for parallel edges between same node pair   |
+| **Impact analysis**             | < 200ms                 | Server-side graph traversal, cached per-node              |
+| **Detail panel open**           | < 100ms                 | Node metadata included in graph JSON, no additional fetch |
 
 ### Large Workspace Handling
 
@@ -1103,6 +1158,7 @@ Full experience. Full-screen canvas with toolbar, minimap, and detail panel. Det
 ### Tablet (768px – 1279px)
 
 Full experience with adaptations:
+
 - Detail panel opens as a bottom sheet (40% height) instead of right panel
 - Minimap hidden by default (toggle available)
 - Touch interactions: pinch-to-zoom, two-finger-pan, tap-to-select, long-press for context menu
@@ -1148,13 +1204,13 @@ Tapping an entity on the phone list view navigates directly to that entity's bui
 
 ## Permissions
 
-| Action | Owner | Admin | Manager | Team Member | Viewer |
-|---|---|---|---|---|---|
-| View Workspace Map | ✅ | ✅ | ✅ | ✅ (simplified — see below) | ❌ |
-| View all node types | ✅ | ✅ | ✅ | ❌ (data layer only) | ❌ |
-| Impact Analysis | ✅ | ✅ | ✅ | ❌ | ❌ |
-| AI Impact Summary | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Double-click navigate to builder | ✅ | ✅ | ✅ | ✅ (to accessible entities) | ❌ |
+| Action                           | Owner | Admin | Manager | Team Member                 | Viewer |
+| -------------------------------- | ----- | ----- | ------- | --------------------------- | ------ |
+| View Workspace Map               | ✅    | ✅    | ✅      | ✅ (simplified — see below) | ❌     |
+| View all node types              | ✅    | ✅    | ✅      | ❌ (data layer only)        | ❌     |
+| Impact Analysis                  | ✅    | ✅    | ✅      | ❌                          | ❌     |
+| AI Impact Summary                | ✅    | ✅    | ✅      | ❌                          | ❌     |
+| Double-click navigate to builder | ✅    | ✅    | ✅      | ✅ (to accessible entities) | ❌     |
 
 **Team Member simplified view:** Team Members see the Data layer (tables, cross-links, sync status) but not the Logic or Surface layers (automations, portals, AI agents). This aligns with the permission model — Team Members don't configure automations or portals, so showing them those nodes adds complexity without actionable value.
 
@@ -1204,16 +1260,16 @@ Coach marks dismiss on click and don't show again (tracked via `localStorage` pr
 
 The Workspace Map subscribes to real-time events via the existing WebSocket infrastructure (`realtime.md`). Rather than re-rendering the entire graph on every event, the map applies incremental updates:
 
-| Event | Map Response |
-|---|---|
-| `schema.table_created` / `schema.table_deleted` | Add/remove table node. Re-layout adjacent nodes. |
-| `schema.field_created` / `schema.field_deleted` | Update table node metadata (field count). If cross-link field, add/remove edge. |
-| `sync.status_changed` | Update sync source node status indicator. |
-| `sync.connection_created` / `sync.connection_deleted` | Add/remove sync source node and edges. |
-| `automation.status_changed` | Update automation node status indicator. |
-| `automation.run_completed` | Update automation node last run status (debounced). |
-| `portal.published` / `portal.unpublished` | Update portal node status indicator. |
-| `approval.requested` / `approval.decided` | Update approval workflow node pending count. |
+| Event                                                 | Map Response                                                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `schema.table_created` / `schema.table_deleted`       | Add/remove table node. Re-layout adjacent nodes.                                |
+| `schema.field_created` / `schema.field_deleted`       | Update table node metadata (field count). If cross-link field, add/remove edge. |
+| `sync.status_changed`                                 | Update sync source node status indicator.                                       |
+| `sync.connection_created` / `sync.connection_deleted` | Add/remove sync source node and edges.                                          |
+| `automation.status_changed`                           | Update automation node status indicator.                                        |
+| `automation.run_completed`                            | Update automation node last run status (debounced).                             |
+| `portal.published` / `portal.unpublished`             | Update portal node status indicator.                                            |
+| `approval.requested` / `approval.decided`             | Update approval workflow node pending count.                                    |
 
 **Debouncing:** High-frequency events (automation runs, sync status pings) are debounced to a maximum of 1 update per 5 seconds to prevent map flickering.
 
@@ -1223,11 +1279,11 @@ The Workspace Map subscribes to real-time events via the existing WebSocket infr
 
 ## Phase Integration
 
-| Phase | Map Deliverables | Depends On |
-|---|---|---|
-| **Post-MVP — Verticals & Advanced** | Full Workspace Map implementation. Topology graph generator. React Flow canvas with all node types for Data and Logic layers. Edge rendering. Cluster layout. Zoom levels with semantic zoom. Detail panel for all node types. Search and filter. Impact analysis (Tier 1–3). AI impact summary. Minimap. Desktop + tablet + phone list view. Permissions. Real-time incremental updates. Caching. Command Bar integration. Workspace nav entry. | SDS (MVP — Core UX), Automations (Post-MVP — Automations), Portals (Post-MVP — Portals & Apps), Document Templates (Post-MVP — Documents), AI Field Agents (MVP — Core UX), Approval Workflows (MVP — Core UX/6), Cross-linking (MVP — Core UX), Sync Engine (MVP — Sync), Real-time (MVP — Core UX) |
-| **Post-MVP — Verticals & Advanced (Surface layer)** | Portal, App, Website, Commerce Embed, Chat Widget node types. All surface-layer edge types. Surface cluster. | Portals (Post-MVP — Portals & Apps), Apps / App Designer (Post-MVP — Custom Apps, post-MVP), Embeddable Extensions (Post-MVP — Portals & Apps (Fast-Follow)/9c), Workspace Map core (Post-MVP — Verticals & Advanced) |
-| **Post-MVP — Custom Apps & Live Chat+** | Export as image/PDF (for stakeholder presentations). Shareable read-only map link (for agency clients). Time-travel mode (show map state at a previous date using audit log). Map-based automation creation ("connect these two tables" → automation wizard). | Workspace Map core (Post-MVP — Verticals & Advanced) |
+| Phase                                               | Map Deliverables                                                                                                                                                                                                                                                                                                                                                                                                                                 | Depends On                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Post-MVP — Verticals & Advanced**                 | Full Workspace Map implementation. Topology graph generator. React Flow canvas with all node types for Data and Logic layers. Edge rendering. Cluster layout. Zoom levels with semantic zoom. Detail panel for all node types. Search and filter. Impact analysis (Tier 1–3). AI impact summary. Minimap. Desktop + tablet + phone list view. Permissions. Real-time incremental updates. Caching. Command Bar integration. Workspace nav entry. | SDS (MVP — Core UX), Automations (Post-MVP — Automations), Portals (Post-MVP — Portals & Apps), Document Templates (Post-MVP — Documents), AI Field Agents (MVP — Core UX), Approval Workflows (MVP — Core UX/6), Cross-linking (MVP — Core UX), Sync Engine (MVP — Sync), Real-time (MVP — Core UX) |
+| **Post-MVP — Verticals & Advanced (Surface layer)** | Portal, App, Website, Commerce Embed, Chat Widget node types. All surface-layer edge types. Surface cluster.                                                                                                                                                                                                                                                                                                                                     | Portals (Post-MVP — Portals & Apps), Apps / App Designer (Post-MVP — Custom Apps, post-MVP), Embeddable Extensions (Post-MVP — Portals & Apps (Fast-Follow)/9c), Workspace Map core (Post-MVP — Verticals & Advanced)                                                                                |
+| **Post-MVP — Custom Apps & Live Chat+**             | Export as image/PDF (for stakeholder presentations). Shareable read-only map link (for agency clients). Time-travel mode (show map state at a previous date using audit log). Map-based automation creation ("connect these two tables" → automation wizard).                                                                                                                                                                                    | Workspace Map core (Post-MVP — Verticals & Advanced)                                                                                                                                                                                                                                                 |
 
 ### Post-MVP — Verticals & Advanced Scope (Core)
 
@@ -1238,7 +1294,6 @@ The full Workspace Map ships in Post-MVP — Verticals & Advanced because it req
 ---
 
 ## Claude Code Prompt Roadmap
-
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
@@ -1595,21 +1650,21 @@ Command Bar commands (register in existing command registry):
 
 ## Key Architectural Decisions
 
-| # | Decision | Rationale |
-|---|---|---|
-| 1 | Read-only visualization, not an editor | The map is a lens. Every entity already has its own builder (automation builder, App Designer, Table View). Adding edit capabilities to the map would duplicate UI and create confusing affordances. Clicking navigates to the right builder. |
-| 2 | Server-side graph generation, client-side rendering | The graph generation queries 10+ tables and computes layout. Doing this client-side would require exposing raw metadata APIs and would be slow. Server-side generation returns a single JSON payload. Client only handles rendering and interaction. |
-| 3 | React Flow (not D3, not Cytoscape) | React Flow is purpose-built for node-based UIs in React. It handles virtualization, panning, zooming, and edge routing out of the box. D3 would require building all of that from scratch. Cytoscape is more academic/scientific and doesn't produce the polished, branded visual quality we need. |
-| 4 | No new database tables | The map reads existing metadata tables only. Adding a `topology_graph` table would create a synchronization problem. By computing the graph on demand from live metadata, the map is always accurate. |
-| 5 | SDS as primary data source | SDS already exposes the workspace schema in a condensed, permission-filtered format. Reusing SDS ensures the map respects existing permission boundaries without duplicating permission logic. |
-| 6 | Cluster-based semantic zoom | At workspace scale (50+ tables), showing all nodes at once is overwhelming. Clusters group related nodes (by base, by subsystem) and collapse at low zoom levels. This is how humans naturally organize complex systems — zoom out to see the big picture, zoom in to see details. |
-| 7 | Impact analysis server-side, not client-side | Impact propagation rules are complex and depend on edge types, cascade rules, and permission boundaries. Computing impact client-side would require sending all rules to the browser and would be hard to maintain. Server-side computation is cached per-node and returns a clean result set. |
-| 8 | Phone gets list view, not canvas | A topology graph with 50+ nodes and 100+ edges on a 375px-wide screen is useless. Rather than building a compromised touch experience, the phone shows a structured, searchable list that serves the same navigation purpose. |
-| 9 | AI impact summary is optional and on-demand | Not all users want or need an AI-generated summary. Making it a button click (2 credits) rather than automatic respects the user's AI credit budget and keeps the core map experience fast. |
-| 10 | Post-MVP — Verticals & Advanced delivery, not earlier | The map's value is proportional to workspace complexity. Before Post-MVP — Verticals & Advanced, most workspaces won't have enough subsystems connected to justify the feature. Post-MVP — Verticals & Advanced is the inflection point where sync + tables + cross-links + automations + portals + docs + AI agents are all present. |
-| 11 | Edge type taxonomy matches existing subsystem boundaries | Each edge type maps cleanly to one subsystem's dependency pattern (automation reads/writes, portal displays, doc merges, AI agent reads). This 1:1 mapping makes the edge extraction code maintainable — each subsystem's edge builder is independent. |
-| 12 | Deterministic edge IDs | Edge IDs are derived from source, target, and type — not randomly generated. This enables efficient diffing for incremental real-time updates. If the same logical edge exists in both the old and new graph, it keeps the same ID and React Flow doesn't re-render it. |
-| 13 | Cross-link edges visually prominent (thicker, brand teal) | Cross-links are the moat. The map should make them impossible to miss. A user glancing at their map should immediately see which connections span platform boundaries — reinforcing the value that only EveryStack provides. |
+| #   | Decision                                                  | Rationale                                                                                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Read-only visualization, not an editor                    | The map is a lens. Every entity already has its own builder (automation builder, App Designer, Table View). Adding edit capabilities to the map would duplicate UI and create confusing affordances. Clicking navigates to the right builder.                                                                                         |
+| 2   | Server-side graph generation, client-side rendering       | The graph generation queries 10+ tables and computes layout. Doing this client-side would require exposing raw metadata APIs and would be slow. Server-side generation returns a single JSON payload. Client only handles rendering and interaction.                                                                                  |
+| 3   | React Flow (not D3, not Cytoscape)                        | React Flow is purpose-built for node-based UIs in React. It handles virtualization, panning, zooming, and edge routing out of the box. D3 would require building all of that from scratch. Cytoscape is more academic/scientific and doesn't produce the polished, branded visual quality we need.                                    |
+| 4   | No new database tables                                    | The map reads existing metadata tables only. Adding a `topology_graph` table would create a synchronization problem. By computing the graph on demand from live metadata, the map is always accurate.                                                                                                                                 |
+| 5   | SDS as primary data source                                | SDS already exposes the workspace schema in a condensed, permission-filtered format. Reusing SDS ensures the map respects existing permission boundaries without duplicating permission logic.                                                                                                                                        |
+| 6   | Cluster-based semantic zoom                               | At workspace scale (50+ tables), showing all nodes at once is overwhelming. Clusters group related nodes (by base, by subsystem) and collapse at low zoom levels. This is how humans naturally organize complex systems — zoom out to see the big picture, zoom in to see details.                                                    |
+| 7   | Impact analysis server-side, not client-side              | Impact propagation rules are complex and depend on edge types, cascade rules, and permission boundaries. Computing impact client-side would require sending all rules to the browser and would be hard to maintain. Server-side computation is cached per-node and returns a clean result set.                                        |
+| 8   | Phone gets list view, not canvas                          | A topology graph with 50+ nodes and 100+ edges on a 375px-wide screen is useless. Rather than building a compromised touch experience, the phone shows a structured, searchable list that serves the same navigation purpose.                                                                                                         |
+| 9   | AI impact summary is optional and on-demand               | Not all users want or need an AI-generated summary. Making it a button click (2 credits) rather than automatic respects the user's AI credit budget and keeps the core map experience fast.                                                                                                                                           |
+| 10  | Post-MVP — Verticals & Advanced delivery, not earlier     | The map's value is proportional to workspace complexity. Before Post-MVP — Verticals & Advanced, most workspaces won't have enough subsystems connected to justify the feature. Post-MVP — Verticals & Advanced is the inflection point where sync + tables + cross-links + automations + portals + docs + AI agents are all present. |
+| 11  | Edge type taxonomy matches existing subsystem boundaries  | Each edge type maps cleanly to one subsystem's dependency pattern (automation reads/writes, portal displays, doc merges, AI agent reads). This 1:1 mapping makes the edge extraction code maintainable — each subsystem's edge builder is independent.                                                                                |
+| 12  | Deterministic edge IDs                                    | Edge IDs are derived from source, target, and type — not randomly generated. This enables efficient diffing for incremental real-time updates. If the same logical edge exists in both the old and new graph, it keeps the same ID and React Flow doesn't re-render it.                                                               |
+| 13  | Cross-link edges visually prominent (thicker, brand teal) | Cross-links are the moat. The map should make them impossible to miss. A user glancing at their map should immediately see which connections span platform boundaries — reinforcing the value that only EveryStack provides.                                                                                                          |
 
 ---
 
@@ -1617,12 +1672,12 @@ Command Bar commands (register in existing command registry):
 
 These are not in scope for the initial implementation but inform architectural decisions:
 
-| Extension | Description | Why It's Deferred |
-|---|---|---|
-| **Export as image/PDF** | Render the current map view as a high-resolution PNG or PDF for presentations and stakeholder reports | Requires server-side canvas rendering (Puppeteer or similar). Nice-to-have, not core. |
-| **Shareable read-only link** | Generate a temporary URL that shows a static snapshot of the map to non-workspace members (e.g., agency sharing with clients) | Requires a new access control surface (public links with expiry). Complex security implications. |
-| **Time-travel mode** | Show the workspace map as it existed at a previous date, using audit log data to reconstruct historical topology | Requires historical schema snapshots. Extremely valuable for debugging "what changed?" but high implementation cost. |
-| **Map-based automation creation** | Right-click two table nodes → "Create automation between these tables" → launches automation builder with trigger and target pre-configured | Requires deep integration between map and automation builder. Great UX but not MVP. |
-| **Diff view** | Compare two snapshots of the map (e.g., last week vs today) with additions/removals highlighted | Requires versioned snapshots. Valuable for change management. |
-| **Embeddable map widget** | Embed a read-only, branded mini-map in a portal page showing clients how their data flows | Requires extracting the renderer into an embeddable component. Strong agency value. |
+| Extension                             | Description                                                                                                                                                                   | Why It's Deferred                                                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Export as image/PDF**               | Render the current map view as a high-resolution PNG or PDF for presentations and stakeholder reports                                                                         | Requires server-side canvas rendering (Puppeteer or similar). Nice-to-have, not core.                                    |
+| **Shareable read-only link**          | Generate a temporary URL that shows a static snapshot of the map to non-workspace members (e.g., agency sharing with clients)                                                 | Requires a new access control surface (public links with expiry). Complex security implications.                         |
+| **Time-travel mode**                  | Show the workspace map as it existed at a previous date, using audit log data to reconstruct historical topology                                                              | Requires historical schema snapshots. Extremely valuable for debugging "what changed?" but high implementation cost.     |
+| **Map-based automation creation**     | Right-click two table nodes → "Create automation between these tables" → launches automation builder with trigger and target pre-configured                                   | Requires deep integration between map and automation builder. Great UX but not MVP.                                      |
+| **Diff view**                         | Compare two snapshots of the map (e.g., last week vs today) with additions/removals highlighted                                                                               | Requires versioned snapshots. Valuable for change management.                                                            |
+| **Embeddable map widget**             | Embed a read-only, branded mini-map in a portal page showing clients how their data flows                                                                                     | Requires extracting the renderer into an embeddable component. Strong agency value.                                      |
 | **AI-powered workspace optimization** | AI analyzes the topology and suggests improvements: "This automation reads from Table A and writes to Table B, but there's no cross-link between them — would one be useful?" | Requires agent architecture (Post-MVP — Verticals & Advanced+). Transform the map from visibility tool to advisory tool. |

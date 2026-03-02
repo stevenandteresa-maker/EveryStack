@@ -15,11 +15,11 @@ When `table_type = projects`, the table gains PM capabilities. Built on three pi
 
 ### Progressive Disclosure Mapping
 
-| Level | User Experience | What's Visible |
-|---|---|---|
+| Level        | User Experience                                                                                                                                                          | What's Visible                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | **L1 (80%)** | Create a projects table, get task hierarchy with indentation (Tab/Shift+Tab), assignees, statuses, due dates. Grid View with grouping. Kanban for status-based workflow. | Task list with nesting, drag-and-drop reorder, "Add subtask" buttons, Kanban by status, basic Timeline (bars on date axis). |
-| **L2 (15%)** | Dependencies (FS/SS/FF/SF), manual "Shift dependents" button, Timeline with dependency arrows, overallocation warnings, milestone markers. | Dependency picker on records, Timeline arrows, overallocation red bar, milestone diamonds, duration vs dates toggle. |
-| **L3 (5%)** | Critical path visualization, baselines (plan vs actual overlay), working calendars, resource profiles, constraint types, auto-scheduling mode. Professional+ features. | Critical path red accents, baseline ghosted bars, calendar exception management, resource capacity settings, Gantt view. |
+| **L2 (15%)** | Dependencies (FS/SS/FF/SF), manual "Shift dependents" button, Timeline with dependency arrows, overallocation warnings, milestone markers.                               | Dependency picker on records, Timeline arrows, overallocation red bar, milestone diamonds, duration vs dates toggle.        |
+| **L3 (5%)**  | Critical path visualization, baselines (plan vs actual overlay), working calendars, resource profiles, constraint types, auto-scheduling mode. Professional+ features.   | Critical path red accents, baseline ghosted bars, calendar exception management, resource capacity settings, Gantt view.    |
 
 > **Note (glossary scope):** Per GLOSSARY.md, MVP Table Views are Grid + Card only. Kanban, List, Gantt, Calendar, and Gallery are post-MVP Table View types. The PM-specific views below (List, Kanban, Timeline, Gantt) follow the PM internal phasing roadmap and are **post-MVP** relative to the platform's overall MVP scope.
 
@@ -67,6 +67,7 @@ One `pm_table_config` per projects-type table. Maps field IDs to PM roles:
 - Workload view: allocated hours vs capacity per person per time period
 
 **Overallocation warnings (post-MVP — PM roadmap MVP — Foundation):**
+
 - When viewing Timeline grouped by assignee, overlapping tasks exceeding capacity show a red overallocation indicator on that day/week.
 - Red bar above person's swim lane showing overallocated days.
 - **No auto-fix.** Manager sees conflict and manually adjusts (drag task, reassign, or adjust scope).
@@ -89,10 +90,12 @@ Full resource leveling (auto-rescheduling tasks so no person is double-booked) r
 ### Auto-Scheduling & Cascading Dates
 
 **Two scheduling modes per task:**
+
 - **Manually scheduled (default):** User sets dates by hand. Dependencies exist as visual arrows but don't auto-cascade.
 - **Auto-scheduled:** System calculates dates from dependencies + constraints. Predecessor slip cascades to successors.
 
 **Cascading date behavior. Decided 2026-02-10:**
+
 - **Opt-in per view:** Toggle in Timeline view toolbar: "Auto-cascade dates" (default: off). When off, dependencies are visual only.
 - **How it works:** When a task's end date changes and it has finish-to-start or start-to-start dependencies, all downstream dependent tasks shift by the same delta. Duration stays the same — start and end dates move together.
 - **Scope:** Only affects tasks within the current table's dependency chain. Cross-table dependencies don't cascade.
@@ -134,11 +137,11 @@ Full resource leveling (auto-rescheduling tasks so no person is double-booked) r
 
 > **Note:** This PM-specific phasing is the internal build order for project management features. Per GLOSSARY.md, all PM views beyond Grid + Card are **post-MVP** relative to the platform's overall MVP. The labels below reflect PM feature sequencing, not platform MVP scope.
 
-| Phase | Capabilities |
-|-------|-------------|
+| Phase          | Capabilities                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PM Milestone 1 | List view, Kanban, Timeline with basic dependency arrows + manual "Shift dependents" button, project list/detail, nesting, pm_table_config, overallocation warnings |
-| PM Milestone 2 | Sub-items, Progress (auto), advanced dependency types (FF, SF), working calendars, recurring tasks |
-| PM Milestone 3 | Auto-cascade toggle, critical path visual (red accent + float), full Gantt view, baseline overlay, baselines, workload view, portfolio view |
-| PM Milestone 4 | Time tracking (timer, entries, timesheet, profitability), dashboards, resource leveling, multi-project Gantt |
+| PM Milestone 2 | Sub-items, Progress (auto), advanced dependency types (FF, SF), working calendars, recurring tasks                                                                  |
+| PM Milestone 3 | Auto-cascade toggle, critical path visual (red accent + float), full Gantt view, baseline overlay, baselines, workload view, portfolio view                         |
+| PM Milestone 4 | Time tracking (timer, entries, timesheet, profitability), dashboards, resource leveling, multi-project Gantt                                                        |
 
 ---

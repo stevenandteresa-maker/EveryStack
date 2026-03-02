@@ -11,7 +11,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "lint": "echo 'lint not configured yet'"
+    "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

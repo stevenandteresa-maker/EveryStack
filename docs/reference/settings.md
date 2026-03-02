@@ -24,17 +24,17 @@ Full-page route: `/workspace/{id}/settings`. Accessible via sidebar gear icon (b
 
 Sections are grouped by audience — settings a Manager touches monthly at top, settings an Admin touches once at bottom.
 
-| Section | Icon | Accessible By | Summary |
-|---|---|---|---|
-| **General** | Settings gear | Manager+ | Workspace name, timezone, week start day, date/number format, working hours, default calendar |
-| **Members & Roles** | Users | Admin+ | Invite members, assign roles, manage seats (builder vs consumer), pending invitations, deactivated users |
-| **Billing & Plan** | Credit card | Owner only | Current plan, usage meters (records, automations, AI credits, storage), upgrade/downgrade, payment method, invoice history |
-| **AI & Credits** | Sparkle | Admin+ | AI credit balance, auto-top-up settings, credit usage breakdown by feature, AI model preferences (default tier) |
-| **Integrations** | Plug | Manager+ (connect), Admin+ (disconnect) | Connected services overview (sync platforms, email, payments, storage, calendar). Quick status view — detailed config in Automation Builder's Integrations tab |
-| **Branding** | Palette | Manager+ | **Accent color picker** (8 curated colors — applies to header bar), workspace logo, default portal theme, email template branding (logo, colors, footer), portal custom domain list *(post-MVP)* |
-| **Notifications** | Bell | All roles (personal) | Per-user notification preferences: in-app, email digest frequency, push notification categories, mute schedule. Personal setting — not workspace-wide. |
-| **Data & Privacy** | Shield | Admin+ | Data retention policies, export workspace data, GDPR tools (PII registry link, right-to-erasure), audit log access, API key management |
-| **Advanced** | Terminal | Owner only | Danger zone: transfer ownership, delete workspace. Environment configuration (if applicable). CockroachDB region selection *(post-MVP — Enterprise)* |
+| Section             | Icon          | Accessible By                           | Summary                                                                                                                                                                                          |
+| ------------------- | ------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **General**         | Settings gear | Manager+                                | Workspace name, timezone, week start day, date/number format, working hours, default calendar                                                                                                    |
+| **Members & Roles** | Users         | Admin+                                  | Invite members, assign roles, manage seats (builder vs consumer), pending invitations, deactivated users                                                                                         |
+| **Billing & Plan**  | Credit card   | Owner only                              | Current plan, usage meters (records, automations, AI credits, storage), upgrade/downgrade, payment method, invoice history                                                                       |
+| **AI & Credits**    | Sparkle       | Admin+                                  | AI credit balance, auto-top-up settings, credit usage breakdown by feature, AI model preferences (default tier)                                                                                  |
+| **Integrations**    | Plug          | Manager+ (connect), Admin+ (disconnect) | Connected services overview (sync platforms, email, payments, storage, calendar). Quick status view — detailed config in Automation Builder's Integrations tab                                   |
+| **Branding**        | Palette       | Manager+                                | **Accent color picker** (8 curated colors — applies to header bar), workspace logo, default portal theme, email template branding (logo, colors, footer), portal custom domain list _(post-MVP)_ |
+| **Notifications**   | Bell          | All roles (personal)                    | Per-user notification preferences: in-app, email digest frequency, push notification categories, mute schedule. Personal setting — not workspace-wide.                                           |
+| **Data & Privacy**  | Shield        | Admin+                                  | Data retention policies, export workspace data, GDPR tools (PII registry link, right-to-erasure), audit log access, API key management                                                           |
+| **Advanced**        | Terminal      | Owner only                              | Danger zone: transfer ownership, delete workspace. Environment configuration (if applicable). CockroachDB region selection _(post-MVP — Enterprise)_                                             |
 
 ### Section Layout Pattern
 
@@ -69,26 +69,26 @@ Settings that affect the entire workspace (General, Members, Billing, Branding, 
 
 Settings are stored in two locations:
 
-| Setting scope | Storage | Table |
-|--------------|---------|-------|
-| Workspace settings (General, Branding, Integrations) | `workspaces.settings` JSONB | `workspaces` |
-| Notification preferences | `user_notification_preferences.preferences` JSONB | `user_notification_preferences` |
-| Billing & Plan | `tenants.plan` + Stripe metadata | `tenants` |
-| AI & Credits | `ai_usage_log` aggregates + `tenants.plan` limits | Multiple |
-| Member management | `workspace_memberships` | `workspace_memberships` |
+| Setting scope                                        | Storage                                           | Table                           |
+| ---------------------------------------------------- | ------------------------------------------------- | ------------------------------- |
+| Workspace settings (General, Branding, Integrations) | `workspaces.settings` JSONB                       | `workspaces`                    |
+| Notification preferences                             | `user_notification_preferences.preferences` JSONB | `user_notification_preferences` |
+| Billing & Plan                                       | `tenants.plan` + Stripe metadata                  | `tenants`                       |
+| AI & Credits                                         | `ai_usage_log` aggregates + `tenants.plan` limits | Multiple                        |
+| Member management                                    | `workspace_memberships`                           | `workspace_memberships`         |
 
 **Server Actions:** Each settings section has a dedicated Server Action (e.g., `updateWorkspaceGeneral`, `updateBranding`, `updateNotificationPreferences`). Server Actions validate input, check role permissions, write to DB, and publish a real-time event (`workspace.settings_updated`) so other connected admins see changes immediately.
 
 ### Validation & Constraints
 
-| Setting | Validation |
-|---------|-----------|
-| Workspace name | 1–100 chars, no leading/trailing whitespace |
-| Timezone | Must be valid IANA timezone string |
-| Week start day | `'sunday'` or `'monday'` |
-| Accent color | Must be one of the 8 curated hex values |
+| Setting        | Validation                                                                              |
+| -------------- | --------------------------------------------------------------------------------------- |
+| Workspace name | 1–100 chars, no leading/trailing whitespace                                             |
+| Timezone       | Must be valid IANA timezone string                                                      |
+| Week start day | `'sunday'` or `'monday'`                                                                |
+| Accent color   | Must be one of the 8 curated hex values                                                 |
 | Workspace logo | Image file, max 2MB, min 64×64px, max 512×512px. Stored via `files.md` upload pipeline. |
-| Working hours | Start < End, valid 24h format |
+| Working hours  | Start < End, valid 24h format                                                           |
 
 ### Concurrent Edit Handling
 

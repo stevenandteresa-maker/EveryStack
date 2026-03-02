@@ -18,28 +18,28 @@ EveryStack is a multi-tenant SaaS that unifies no-code databases (Airtable, Smar
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Framework** | Next.js (App Router) |
-| **Language** | TypeScript (strict mode) |
-| **Monorepo** | Turborepo + pnpm workspaces |
-| **UI** | React, shadcn/ui, Tailwind CSS |
-| **State** | Zustand (client state), TanStack Query (server state/cache) |
-| **Grid virtualization** | TanStack Virtual |
-| **Database** | PostgreSQL 16 (pgvector extension), Drizzle ORM |
-| **Connection pooling** | PgBouncer (transaction mode) |
-| **Cache / Pub-Sub** | Redis 7 |
-| **Realtime** | Socket.io (Redis adapter for horizontal scaling) |
-| **Background jobs** | BullMQ (Redis-backed) |
-| **Auth** | Clerk (users), custom portal auth (magic link / password) |
-| **File storage** | Cloudflare R2 (S3-compatible), presigned URLs |
-| **Email** | Resend (transactional) |
-| **PDF generation** | Gotenberg (sandboxed) |
-| **Rich text** | TipTap (2 environments: chat editor, Smart Doc editor) |
-| **AI** | Anthropic Claude (via AIService abstraction — feature code never references providers directly) |
-| **Testing** | Vitest (unit/integration), Playwright (E2E), axe-core (a11y) |
-| **CI/CD** | GitHub Actions |
-| **Node** | v20 |
+| Layer                   | Technology                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| **Framework**           | Next.js (App Router)                                                                            |
+| **Language**            | TypeScript (strict mode)                                                                        |
+| **Monorepo**            | Turborepo + pnpm workspaces                                                                     |
+| **UI**                  | React, shadcn/ui, Tailwind CSS                                                                  |
+| **State**               | Zustand (client state), TanStack Query (server state/cache)                                     |
+| **Grid virtualization** | TanStack Virtual                                                                                |
+| **Database**            | PostgreSQL 16 (pgvector extension), Drizzle ORM                                                 |
+| **Connection pooling**  | PgBouncer (transaction mode)                                                                    |
+| **Cache / Pub-Sub**     | Redis 7                                                                                         |
+| **Realtime**            | Socket.io (Redis adapter for horizontal scaling)                                                |
+| **Background jobs**     | BullMQ (Redis-backed)                                                                           |
+| **Auth**                | Clerk (users), custom portal auth (magic link / password)                                       |
+| **File storage**        | Cloudflare R2 (S3-compatible), presigned URLs                                                   |
+| **Email**               | Resend (transactional)                                                                          |
+| **PDF generation**      | Gotenberg (sandboxed)                                                                           |
+| **Rich text**           | TipTap (2 environments: chat editor, Smart Doc editor)                                          |
+| **AI**                  | Anthropic Claude (via AIService abstraction — feature code never references providers directly) |
+| **Testing**             | Vitest (unit/integration), Playwright (E2E), axe-core (a11y)                                    |
+| **CI/CD**               | GitHub Actions                                                                                  |
+| **Node**                | v20                                                                                             |
 
 ---
 
@@ -236,13 +236,13 @@ Clerk handles all platform user authentication. EveryStack does NOT implement cu
 
 ### File Naming
 
-| Test type | Pattern | Location |
-|-----------|---------|----------|
-| Unit | `[source].test.ts` | Co-located with source |
-| Integration | `[feature].integration.test.ts` | `__tests__/` directories |
-| E2E | `[flow].spec.ts` | `apps/web/e2e/` |
-| Component | `[Component].test.tsx` | Co-located with component |
-| Accessibility | `[feature].a11y.spec.ts` | `apps/web/e2e/a11y/` |
+| Test type     | Pattern                         | Location                  |
+| ------------- | ------------------------------- | ------------------------- |
+| Unit          | `[source].test.ts`              | Co-located with source    |
+| Integration   | `[feature].integration.test.ts` | `__tests__/` directories  |
+| E2E           | `[flow].spec.ts`                | `apps/web/e2e/`           |
+| Component     | `[Component].test.tsx`          | Co-located with component |
+| Accessibility | `[feature].a11y.spec.ts`        | `apps/web/e2e/a11y/`      |
 
 ### Non-Negotiable Testing Rules
 
@@ -255,13 +255,13 @@ Clerk handles all platform user authentication. EveryStack does NOT implement cu
 
 ### Coverage Targets (Enforced)
 
-| Path | Lines | Branches |
-|------|-------|----------|
-| `apps/web/src/data/` | 95% | 90% |
-| `packages/shared/db/` | 90% | 85% |
-| `packages/shared/sync/` | 90% | 85% |
-| `apps/web/src/actions/` | 90% | 85% |
-| `apps/worker/src/jobs/` | 85% | 80% |
+| Path                    | Lines | Branches |
+| ----------------------- | ----- | -------- |
+| `apps/web/src/data/`    | 95%   | 90%      |
+| `packages/shared/db/`   | 90%   | 85%      |
+| `packages/shared/sync/` | 90%   | 85%      |
+| `apps/web/src/actions/` | 90%   | 85%      |
+| `apps/worker/src/jobs/` | 85%   | 80%      |
 
 ---
 
@@ -273,30 +273,30 @@ When a domain doc is silent on error handling, apply these defaults. Domain-spec
 
 ```typescript
 interface AppError {
-  code: string;           // Machine-readable: 'VALIDATION_FAILED', 'PERMISSION_DENIED', 'NOT_FOUND', 'RATE_LIMITED', 'INTERNAL_ERROR'
-  message: string;        // Human-readable, safe to display to end users
+  code: string; // Machine-readable: 'VALIDATION_FAILED', 'PERMISSION_DENIED', 'NOT_FOUND', 'RATE_LIMITED', 'INTERNAL_ERROR'
+  message: string; // Human-readable, safe to display to end users
   details?: Record<string, unknown>; // Optional structured context (field IDs, limits, etc.)
-  traceId?: string;       // For support debugging — included on 500 errors
+  traceId?: string; // For support debugging — included on 500 errors
 }
 ```
 
-| Surface | Success shape | Error shape | Error status codes |
-|---------|--------------|-------------|-------------------|
-| **Server Actions** | Return value | Throw `AppError` (caught by global error boundary) | N/A (not HTTP) |
-| **Platform API** (`/api/v1/*`) | `{ data: ... }` | `{ error: AppError }` — see `platform-api.md` § Error Format | 400, 401, 403, 404, 409, 422, 429, 500 |
-| **Portal endpoints** | Return value | `{ error: { code, message } }` — no `details` or `traceId` (never expose internals to portal clients) | 400, 401, 403, 404, 429, 500 |
-| **Real-time events** | Event payload | No error events sent. Failures are silent (server-side logged). Client recovers via API fallback. | N/A |
+| Surface                        | Success shape   | Error shape                                                                                           | Error status codes                     |
+| ------------------------------ | --------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **Server Actions**             | Return value    | Throw `AppError` (caught by global error boundary)                                                    | N/A (not HTTP)                         |
+| **Platform API** (`/api/v1/*`) | `{ data: ... }` | `{ error: AppError }` — see `platform-api.md` § Error Format                                          | 400, 401, 403, 404, 409, 422, 429, 500 |
+| **Portal endpoints**           | Return value    | `{ error: { code, message } }` — no `details` or `traceId` (never expose internals to portal clients) | 400, 401, 403, 404, 429, 500           |
+| **Real-time events**           | Event payload   | No error events sent. Failures are silent (server-side logged). Client recovers via API fallback.     | N/A                                    |
 
 ### Default UI Error Behavior
 
-| Error type | UI pattern |
-|-----------|-----------|
-| **Validation (422)** | Inline field errors. Focus first error. Do not clear form. |
-| **Permission denied (403)** | Toast: "You don't have permission to do that." Revert optimistic update if applicable. |
-| **Not found (404)** | Redirect to parent context. Toast: "This item is no longer available." |
-| **Rate limited (429)** | Toast: "Too many requests. Please wait a moment." Disable the action briefly. |
-| **Conflict (409)** | Toast: "This was modified by someone else. Please refresh." Offer refresh button. |
-| **Server error (500)** | Toast: "Something went wrong. Please try again." Include "Report Issue" link (opens support with `traceId`). Never expose stack traces or internal details. |
+| Error type                  | UI pattern                                                                                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Validation (422)**        | Inline field errors. Focus first error. Do not clear form.                                                                                                  |
+| **Permission denied (403)** | Toast: "You don't have permission to do that." Revert optimistic update if applicable.                                                                      |
+| **Not found (404)**         | Redirect to parent context. Toast: "This item is no longer available."                                                                                      |
+| **Rate limited (429)**      | Toast: "Too many requests. Please wait a moment." Disable the action briefly.                                                                               |
+| **Conflict (409)**          | Toast: "This was modified by someone else. Please refresh." Offer refresh button.                                                                           |
+| **Server error (500)**      | Toast: "Something went wrong. Please try again." Include "Report Issue" link (opens support with `traceId`). Never expose stack traces or internal details. |
 
 ### Logging Defaults
 
@@ -357,11 +357,11 @@ When specifying a new creation flow, map it to one of these three. If it doesn't
 
 ## Documentation Hierarchy (3-Tier)
 
-| Tier | Location | Loaded | Purpose |
-|------|----------|--------|---------|
-| **1 — Root** | `CLAUDE.md` (this file) | Always | Project-wide rules, tech stack, conventions |
-| **2 — Directory** | `CLAUDE.md` in each directory | When working in that directory | Directory-specific rules and patterns |
-| **3 — Reference** | `docs/reference/*.md` | On demand when needed | Deep-dive specs for each domain |
+| Tier              | Location                      | Loaded                         | Purpose                                     |
+| ----------------- | ----------------------------- | ------------------------------ | ------------------------------------------- |
+| **1 — Root**      | `CLAUDE.md` (this file)       | Always                         | Project-wide rules, tech stack, conventions |
+| **2 — Directory** | `CLAUDE.md` in each directory | When working in that directory | Directory-specific rules and patterns       |
+| **3 — Reference** | `docs/reference/*.md`         | On demand when needed          | Deep-dive specs for each domain             |
 
 ### How to Use Reference Docs
 
@@ -375,27 +375,27 @@ When working on a feature:
 
 ### Key Reference Docs by Domain
 
-| Domain | Reference Doc(s) |
-|--------|-----------------|
-| Naming, MVP scope, definitions | `GLOSSARY.md` — **always check this first** |
-| Database schema | `data-model.md` |
-| Sync engine | `sync-engine.md` |
-| Permissions | `permissions.md` |
-| UI/design | `design-system.md` |
-| AI features | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md` |
-| Testing | `testing.md` |
-| Cross-linking | `cross-linking.md` |
-| Portals | `portals.md` |
-| Forms | `forms.md` |
-| Automations | `automations.md` |
-| Documents | `smart-docs.md` |
-| Communications | `communications.md`, `email.md` |
-| Files | `files.md` |
-| Platform API | `platform-api.md` |
-| Compliance/security | `compliance.md` |
-| CI/CD, operations | `testing.md`, `operations.md`, `observability.md` |
-| Mobile | `mobile.md` |
-| Reference doc scope map | `MANIFEST.md` > "Reference Doc Scope Map" |
+| Domain                         | Reference Doc(s)                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| Naming, MVP scope, definitions | `GLOSSARY.md` — **always check this first**                                                   |
+| Database schema                | `data-model.md`                                                                               |
+| Sync engine                    | `sync-engine.md`                                                                              |
+| Permissions                    | `permissions.md`                                                                              |
+| UI/design                      | `design-system.md`                                                                            |
+| AI features                    | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md` |
+| Testing                        | `testing.md`                                                                                  |
+| Cross-linking                  | `cross-linking.md`                                                                            |
+| Portals                        | `portals.md`                                                                                  |
+| Forms                          | `forms.md`                                                                                    |
+| Automations                    | `automations.md`                                                                              |
+| Documents                      | `smart-docs.md`                                                                               |
+| Communications                 | `communications.md`, `email.md`                                                               |
+| Files                          | `files.md`                                                                                    |
+| Platform API                   | `platform-api.md`                                                                             |
+| Compliance/security            | `compliance.md`                                                                               |
+| CI/CD, operations              | `testing.md`, `operations.md`, `observability.md`                                             |
+| Mobile                         | `mobile.md`                                                                                   |
+| Reference doc scope map        | `MANIFEST.md` > "Reference Doc Scope Map"                                                     |
 
 ---
 
@@ -417,7 +417,7 @@ Reference docs (this `docs/reference/` directory) define **what each system is a
 
 Phase build docs (created per sprint) define **what to build and in what order** — sequencing, sprint scope, and prompt decomposition.
 
-**Hierarchy rule:** If a phase build doc and a reference doc give conflicting guidance on *build order or sequencing*, the phase build doc wins. Reference docs are authoritative on *architecture, schema, and behavior*.
+**Hierarchy rule:** If a phase build doc and a reference doc give conflicting guidance on _build order or sequencing_, the phase build doc wins. Reference docs are authoritative on _architecture, schema, and behavior_.
 
 Reference docs use **scope labels** (e.g., "MVP — Core UX", "Post-MVP — Automations"), never phase numbers. Phase build docs may use their own internal numbering for sprints.
 

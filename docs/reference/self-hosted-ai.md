@@ -29,13 +29,13 @@ Airtable offers data residency (US/EU/Australia) for Enterprise Scale, but AI st
 
 ### Recommended: Qwen3 Family (Apache 2.0)
 
-| Model | Architecture | Active Params | Total Params | Context | Strengths |
-|-------|-------------|---------------|--------------|---------|-----------|
-| Qwen3-8B | Dense | 8B | 8B | 128K | Fast inference, good for `fast` tier |
-| Qwen3-30B-A3B | MoE | 3B/token | 30B | 128K | Excellent speed/quality, `fast` tier candidate |
-| Qwen3-32B | Dense | 32B | 32B | 128K | Strong quality, `standard` tier candidate |
-| Qwen3-235B-A22B | MoE | 22B/token | 235B | 128K | Frontier-competitive, `standard`/`advanced` candidate |
-| Qwen3-Coder-Next | MoE (80B, 3B active) | 3B/token | 80B | 128K | Purpose-built for agentic tool use |
+| Model            | Architecture         | Active Params | Total Params | Context | Strengths                                             |
+| ---------------- | -------------------- | ------------- | ------------ | ------- | ----------------------------------------------------- |
+| Qwen3-8B         | Dense                | 8B            | 8B           | 128K    | Fast inference, good for `fast` tier                  |
+| Qwen3-30B-A3B    | MoE                  | 3B/token      | 30B          | 128K    | Excellent speed/quality, `fast` tier candidate        |
+| Qwen3-32B        | Dense                | 32B           | 32B          | 128K    | Strong quality, `standard` tier candidate             |
+| Qwen3-235B-A22B  | MoE                  | 22B/token     | 235B         | 128K    | Frontier-competitive, `standard`/`advanced` candidate |
+| Qwen3-Coder-Next | MoE (80B, 3B active) | 3B/token      | 80B          | 128K    | Purpose-built for agentic tool use                    |
 
 **Why Qwen3:** Apache 2.0 license (fully commercial, no restrictions). Native tool calling and structured output. Thinking/non-thinking modes. 128K context window. Strongest open-weight option as of early 2026.
 
@@ -58,20 +58,20 @@ AIService → CAPABILITY_ROUTING[tier] → self-hosted adapter
 
 The smart play at scale: route different capability tiers to different backends.
 
-| Tier | Estimated Traffic Share | Self-Hosted Option | Cloud API Option |
-|------|----------------------|-------------------|-----------------|
-| `fast` (60% of calls) | Intent classification, autocomplete, summarization | Qwen3-8B or Qwen3-30B-A3B | Claude Haiku |
-| `standard` (35%) | Conversational AI, drafting, automation building | Qwen3-32B or Qwen3-235B-A22B | Claude Sonnet |
-| `advanced` (5%) | Complex reasoning, full generation, cross-base analysis | Cloud API only (no open model matches yet) | Claude Opus |
+| Tier                  | Estimated Traffic Share                                 | Self-Hosted Option                         | Cloud API Option |
+| --------------------- | ------------------------------------------------------- | ------------------------------------------ | ---------------- |
+| `fast` (60% of calls) | Intent classification, autocomplete, summarization      | Qwen3-8B or Qwen3-30B-A3B                  | Claude Haiku     |
+| `standard` (35%)      | Conversational AI, drafting, automation building        | Qwen3-32B or Qwen3-235B-A22B               | Claude Sonnet    |
+| `advanced` (5%)       | Complex reasoning, full generation, cross-base analysis | Cloud API only (no open model matches yet) | Claude Opus      |
 
 **Implementation:** Update `CAPABILITY_ROUTING` in `packages/shared/ai/config/routing.ts`:
 
 ```typescript
 // Hybrid routing example
 const CAPABILITY_ROUTING: Record<CapabilityTier, ProviderModelConfig> = {
-  fast:     { providerId: 'self-hosted', modelId: 'qwen3-30b-a3b' },
-  standard: { providerId: 'anthropic',   modelId: 'claude-sonnet-4-5-20250929' },
-  advanced: { providerId: 'anthropic',   modelId: 'claude-opus-4-6' },
+  fast: { providerId: 'self-hosted', modelId: 'qwen3-30b-a3b' },
+  standard: { providerId: 'anthropic', modelId: 'claude-sonnet-4-5-20250929' },
+  advanced: { providerId: 'anthropic', modelId: 'claude-opus-4-6' },
 };
 ```
 
@@ -79,14 +79,14 @@ const CAPABILITY_ROUTING: Record<CapabilityTier, ProviderModelConfig> = {
 
 ### Quality Gap Assessment
 
-| Capability | Open Models (Qwen3 family) | Cloud API (Claude) |
-|-----------|---------------------------|-------------------|
-| Tool calling / structured JSON | Competitive | Excellent |
-| Code generation | Competitive | Excellent |
-| Classification / summarization | Competitive | Excellent |
-| Nuanced multi-step reasoning | Acceptable gap | Best-in-class |
-| Complex business context judgment | Notable gap | Best-in-class |
-| Graceful error recovery | Notable gap | Best-in-class |
+| Capability                        | Open Models (Qwen3 family) | Cloud API (Claude) |
+| --------------------------------- | -------------------------- | ------------------ |
+| Tool calling / structured JSON    | Competitive                | Excellent          |
+| Code generation                   | Competitive                | Excellent          |
+| Classification / summarization    | Competitive                | Excellent          |
+| Nuanced multi-step reasoning      | Acceptable gap             | Best-in-class      |
+| Complex business context judgment | Notable gap                | Best-in-class      |
+| Graceful error recovery           | Notable gap                | Best-in-class      |
 
 **The gap is narrowing fast.** What was a chasm 12 months ago is now a manageable difference for most tasks. Run the evaluation suite (`ai-architecture.md` > Provider Evaluation Framework) against each model to quantify the quality delta for EveryStack's specific prompt templates.
 
@@ -96,11 +96,11 @@ const CAPABILITY_ROUTING: Record<CapabilityTier, ProviderModelConfig> = {
 
 ### Cloud GPU Economics
 
-| Resource | Cost | Notes |
-|----------|------|-------|
-| H100 (cloud) | $1.49–$3.50/hour | Varies by provider |
-| Monthly always-on | $1,100–$2,500/month | Single GPU |
-| Breakeven point | ~$1,500/month Anthropic spend | ~75 Enterprise workspaces at full AI budget |
+| Resource          | Cost                          | Notes                                       |
+| ----------------- | ----------------------------- | ------------------------------------------- |
+| H100 (cloud)      | $1.49–$3.50/hour              | Varies by provider                          |
+| Monthly always-on | $1,100–$2,500/month           | Single GPU                                  |
+| Breakeven point   | ~$1,500/month Anthropic spend | ~75 Enterprise workspaces at full AI budget |
 
 ### Consumer GPU (Development Only)
 
@@ -108,11 +108,11 @@ RTX 5090 ($2,000 one-time) can run Qwen3-32B quantized for development and testi
 
 ### Recommendation
 
-| Stage | Strategy |
-|-------|----------|
-| Pre-launch → early growth | Stay on Anthropic API exclusively. Best quality, credit model caps cost exposure. |
-| At scale (hundreds of workspaces) | Implement hybrid routing. Self-host `fast` tier, API for `standard`/`advanced`. |
-| Enterprise customers | Self-hosted becomes a *feature*, not just cost optimization. See Enterprise Deployment below. |
+| Stage                             | Strategy                                                                                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
+| Pre-launch → early growth         | Stay on Anthropic API exclusively. Best quality, credit model caps cost exposure.             |
+| At scale (hundreds of workspaces) | Implement hybrid routing. Self-host `fast` tier, API for `standard`/`advanced`.               |
+| Enterprise customers              | Self-hosted becomes a _feature_, not just cost optimization. See Enterprise Deployment below. |
 
 ---
 
@@ -160,11 +160,11 @@ The `self-hosted.ts` adapter hits the internal inference endpoint. `CAPABILITY_R
 
 ### Target Customers
 
-| Segment | Driver | Examples |
-|---------|--------|---------|
-| **Regulated industries** | Data restrictions, compliance mandates | Financial services, healthcare (HIPAA), defense/government (ITAR, FedRAMP) |
-| **Internal security policies** | Client contracts prohibiting third-party data sharing | Consulting firms (McKinsey, Bain), law firms |
-| **Sovereign AI requirements** | EU AI Act + GDPR preference for in-region processing | European enterprises, government agencies |
+| Segment                        | Driver                                                | Examples                                                                   |
+| ------------------------------ | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Regulated industries**       | Data restrictions, compliance mandates                | Financial services, healthcare (HIPAA), defense/government (ITAR, FedRAMP) |
+| **Internal security policies** | Client contracts prohibiting third-party data sharing | Consulting firms (McKinsey, Bain), law firms                               |
+| **Sovereign AI requirements**  | EU AI Act + GDPR preference for in-region processing  | European enterprises, government agencies                                  |
 
 ### Why Competitors Can't Match
 
@@ -176,13 +176,13 @@ Airtable and SmartSuite are pure cloud SaaS with AI tightly coupled to third-par
 
 ### Risk Assessment
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **Malicious code in model file format** | HIGH (but mitigable) | **Mandate SafeTensors format only.** SafeTensors is a pure data format — cannot contain executable code. Never use pickle-format models. All major models publish SafeTensors versions. vLLM/SGLang support it natively. |
+| Risk                                      | Severity                         | Mitigation                                                                                                                                                                                                                                          |
+| ----------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Malicious code in model file format**   | HIGH (but mitigable)             | **Mandate SafeTensors format only.** SafeTensors is a pure data format — cannot contain executable code. Never use pickle-format models. All major models publish SafeTensors versions. vLLM/SGLang support it natively.                            |
 | **Behavioral backdoors in model weights** | MEDIUM (hard to fully eliminate) | Run Microsoft's backdoor scanner (open-weights scanner, Feb 2026). Run EveryStack's evaluation suite against adversarial test cases. The tool registry with permission gating means even a compromised model can only take actions the tools allow. |
-| **Supply chain compromise** | MEDIUM (mitigable) | Verify SHA-256 checksums against official repository. Download only from official Qwen organization on Hugging Face. Pin specific model revisions by commit hash. Include checksum verification in deployment tooling. |
-| **Training data bias** | LOW-MEDIUM | Run evaluation suite with adversarial test cases for systematic bias. Standard practice regardless of model provider. |
-| **Inference runtime vulnerabilities** | LOW (standard ops) | Run inference endpoint in a container with no outbound network access. Standard server hardening. Monitor CVEs in vLLM/SGLang. |
+| **Supply chain compromise**               | MEDIUM (mitigable)               | Verify SHA-256 checksums against official repository. Download only from official Qwen organization on Hugging Face. Pin specific model revisions by commit hash. Include checksum verification in deployment tooling.                              |
+| **Training data bias**                    | LOW-MEDIUM                       | Run evaluation suite with adversarial test cases for systematic bias. Standard practice regardless of model provider.                                                                                                                               |
+| **Inference runtime vulnerabilities**     | LOW (standard ops)               | Run inference endpoint in a container with no outbound network access. Standard server hardening. Monitor CVEs in vLLM/SGLang.                                                                                                                      |
 
 ### Enterprise Security Documentation
 
@@ -199,7 +199,7 @@ For each enterprise deployment, provide:
 
 ### Key Insight: Self-Hosted Is More Auditable
 
-Open-weight models are *more* auditable and *more* controllable than closed API models. You can inspect, scan, and evaluate the weights. With a closed API, you trust the provider's claims. With self-hosted, you verify.
+Open-weight models are _more_ auditable and _more_ controllable than closed API models. You can inspect, scan, and evaluate the weights. With a closed API, you trust the provider's claims. With self-hosted, you verify.
 
 ---
 
@@ -229,11 +229,11 @@ The compiler layer handles these differences. Prompt templates remain provider-a
 
 Self-hosted AI deployment adds a premium to Enterprise tier pricing:
 
-| Component | Cost | Margin Impact |
-|-----------|------|---------------|
-| Deployment tooling (Helm chart, Docker Compose, health checks) | Included in Enterprise | Development investment |
-| Model validation & compatibility testing | $2K–5K/month premium | Pure margin — customer runs GPU, EveryStack AI costs = zero |
-| BYOM professional services | Per-engagement pricing | High-touch, high-margin |
+| Component                                                      | Cost                   | Margin Impact                                               |
+| -------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------- |
+| Deployment tooling (Helm chart, Docker Compose, health checks) | Included in Enterprise | Development investment                                      |
+| Model validation & compatibility testing                       | $2K–5K/month premium   | Pure margin — customer runs GPU, EveryStack AI costs = zero |
+| BYOM professional services                                     | Per-engagement pricing | High-touch, high-margin                                     |
 
 **Strategic moat:** Once deployed with self-hosted AI, switching cost is enormous (GPU infrastructure, inference pipeline, compliance narrative, possible fine-tuned models). Genuine lock-in that benefits the customer.
 
@@ -269,9 +269,9 @@ Self-hosted AI deployment adds a premium to Enterprise tier pricing:
 
 ## Phase Implementation Summary
 
-| Phase | Self-Hosted AI Work |
-|-------|-------------------|
-| **MVP — Foundation (Foundation)** | `self-hosted.ts` adapter skeleton. `providerId: 'self-hosted'` in type union. `supportedRegions()` on adapter interface. Zero runtime code. |
-| **Post-MVP — Automations (Automations)** | Validate that automation building AI prompts work with the prompt compiler abstraction (they should — this is the architecture's purpose). |
+| Phase                                    | Self-Hosted AI Work                                                                                                                                                    |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation (Foundation)**        | `self-hosted.ts` adapter skeleton. `providerId: 'self-hosted'` in type union. `supportedRegions()` on adapter interface. Zero runtime code.                            |
+| **Post-MVP — Automations (Automations)** | Validate that automation building AI prompts work with the prompt compiler abstraction (they should — this is the architecture's purpose).                             |
 | **Post-MVP — Self-Hosted AI (Post-MVP)** | Model evaluation against Qwen3. Prompt compiler for Qwen3 instruction format. Helm chart. Health checks. Enterprise security documentation. Hybrid routing activation. |
-| **Enterprise Demand-Driven** | BYOM professional services. Fine-tuning pipeline. Deployment guides. GPU sizing. |
+| **Enterprise Demand-Driven**             | BYOM professional services. Fine-tuning pipeline. Deployment guides. GPU sizing.                                                                                       |

@@ -10,19 +10,19 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Overview | 29–76 | Product family model, horizontal platform + branded verticals |
-| Three-Layer Architecture | 77–130 | Vertical Application → Domain Data → EveryStack Engine |
-| B2B Branded Verticals | 131–202 | Auth via service API keys, provisioning flow, industry templates |
-| B2C Direct Products | 203–271 | Single-tenant model, heavy domain services, consumer UX |
-| Separation Boundaries | 272–335 | Code, data, integration — 3 separation layers |
-| Platform Reuse Matrix | 336–364 | Capability → reference doc mapping with MVP status |
-| What Verticals Must Build | 365–388 | Domain logic, custom UI, onboarding — what the platform does not provide |
-| Data Flow Patterns | 389–472 | 3 patterns: vertical creates record, EveryStack notifies, B2B provisioning |
-| Vertical Evaluation Criteria | 473–517 | Leverage scoring, checklist, ranked candidates by tier |
-| Build Sequence | 518–544 | 4-phase vertical development plan |
-| Architectural Decisions — Record | 545–555 | ADR-style decisions with rationale |
+| Section                          | Lines   | Covers                                                                     |
+| -------------------------------- | ------- | -------------------------------------------------------------------------- |
+| Strategic Overview               | 29–76   | Product family model, horizontal platform + branded verticals              |
+| Three-Layer Architecture         | 77–130  | Vertical Application → Domain Data → EveryStack Engine                     |
+| B2B Branded Verticals            | 131–202 | Auth via service API keys, provisioning flow, industry templates           |
+| B2C Direct Products              | 203–271 | Single-tenant model, heavy domain services, consumer UX                    |
+| Separation Boundaries            | 272–335 | Code, data, integration — 3 separation layers                              |
+| Platform Reuse Matrix            | 336–364 | Capability → reference doc mapping with MVP status                         |
+| What Verticals Must Build        | 365–388 | Domain logic, custom UI, onboarding — what the platform does not provide   |
+| Data Flow Patterns               | 389–472 | 3 patterns: vertical creates record, EveryStack notifies, B2B provisioning |
+| Vertical Evaluation Criteria     | 473–517 | Leverage scoring, checklist, ranked candidates by tier                     |
+| Build Sequence                   | 518–544 | 4-phase vertical development plan                                          |
+| Architectural Decisions — Record | 545–555 | ADR-style decisions with rationale                                         |
 
 ---
 
@@ -62,11 +62,11 @@ EveryStack is both a product and a platform engine. As a product, it serves powe
 
 ### Three Product Tiers
 
-| Tier | Customer | Experience | Custom Layer | Examples |
-|------|----------|------------|-------------|----------|
-| **Horizontal platform** (EveryStack) | Power users, agencies, ops teams | Flexible, build-your-own | None — this is the engine itself | EveryStack |
-| **B2B branded vertical** | Businesses wanting ready-made solutions | Opinionated, zero-setup, industry templates | Thin — branded UI, provisioning, templates | Trade services management, property management, agency dashboard |
-| **B2C direct product** | End consumers | Fully bespoke consumer experience | Thick — custom frontend + domain services + content | Exam prep platform, tutoring centre |
+| Tier                                 | Customer                                | Experience                                  | Custom Layer                                        | Examples                                                         |
+| ------------------------------------ | --------------------------------------- | ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
+| **Horizontal platform** (EveryStack) | Power users, agencies, ops teams        | Flexible, build-your-own                    | None — this is the engine itself                    | EveryStack                                                       |
+| **B2B branded vertical**             | Businesses wanting ready-made solutions | Opinionated, zero-setup, industry templates | Thin — branded UI, provisioning, templates          | Trade services management, property management, agency dashboard |
+| **B2C direct product**               | End consumers                           | Fully bespoke consumer experience           | Thick — custom frontend + domain services + content | Exam prep platform, tutoring centre                              |
 
 **B2B verticals** are platforms that other businesses subscribe to. You build the platform; businesses pay to run their operations on it. A plumber signs up for a trade services product, gets a dispatch board and customer portal — never sees EveryStack.
 
@@ -76,7 +76,7 @@ EveryStack is both a product and a platform engine. As a product, it serves powe
 
 ## Three-Layer Architecture
 
-Every vertical product follows a three-layer architecture. The vertical sits *above* EveryStack, never *inside* it.
+Every vertical product follows a three-layer architecture. The vertical sits _above_ EveryStack, never _inside_ it.
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -190,11 +190,11 @@ B2B verticals offer multiple templates for sub-industries. Templates are configu
 
 **Example: Trade services vertical with per-industry templates**
 
-| Template | Tables | Key Automations | Quick Portal |
-|---|---|---|---|
-| Plumbing | Customers, Jobs, Technicians, Inventory, Invoices | Job assignment, parts tracking, invoice on completion | Customer job status + history |
-| HVAC | Customers, Jobs, Technicians, Equipment, Service Contracts, Invoices | Seasonal maintenance reminders, warranty tracking | Customer equipment + service history |
-| Cleaning | Customers, Properties, Schedules, Cleaners, Invoices | Recurring schedule generation, checklist creation | Customer schedule + reports |
+| Template | Tables                                                               | Key Automations                                       | Quick Portal                         |
+| -------- | -------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------ |
+| Plumbing | Customers, Jobs, Technicians, Inventory, Invoices                    | Job assignment, parts tracking, invoice on completion | Customer job status + history        |
+| HVAC     | Customers, Jobs, Technicians, Equipment, Service Contracts, Invoices | Seasonal maintenance reminders, warranty tracking     | Customer equipment + service history |
+| Cleaning | Customers, Properties, Schedules, Cleaners, Invoices                 | Recurring schedule generation, checklist creation     | Customer schedule + reports          |
 
 All templates run on the same vertical frontend and backend — only the EveryStack data structure differs.
 
@@ -227,14 +227,14 @@ All templates run on the same vertical frontend and backend — only the EverySt
 
 ### How B2C Differs from B2B
 
-| Dimension | B2B Vertical | B2C Product |
-|---|---|---|
-| **Tenancy model** | One Tenant per customer business | One Tenant for the entire product (or per region/scale unit) |
-| **Custom code volume** | Thin — provisioning + templates + light domain services | Thick — consumer frontend + heavy domain services + content |
-| **Platform API usage** | Schema/Provisioning (onboarding) + Data (operations) | Primarily Data API (high-volume reads/writes from domain services) |
+| Dimension                    | B2B Vertical                                                   | B2C Product                                                        |
+| ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Tenancy model**            | One Tenant per customer business                               | One Tenant for the entire product (or per region/scale unit)       |
+| **Custom code volume**       | Thin — provisioning + templates + light domain services        | Thick — consumer frontend + heavy domain services + content        |
+| **Platform API usage**       | Schema/Provisioning (onboarding) + Data (operations)           | Primarily Data API (high-volume reads/writes from domain services) |
 | **EveryStack features used** | Automations, Doc Gen, Quick Portals, Quick Forms — all heavily | Automations, Doc Gen, AIService — selectively (frontend is custom) |
-| **Content** | None — the customer brings their own data | You create and manage domain content |
-| **Time to build** | Weeks to low months | Months (significant custom engineering) |
+| **Content**                  | None — the customer brings their own data                      | You create and manage domain content                               |
+| **Time to build**            | Weeks to low months                                            | Months (significant custom engineering)                            |
 
 ### Auth (B2C)
 
@@ -319,16 +319,16 @@ Domain data lives in standard EveryStack Tables. No custom database tables, no d
 
 Verticals use the same integration points available to any EveryStack customer or third-party integration:
 
-| Integration Point | Usage | Reference |
-|---|---|---|
-| **Platform API — Data** | CRUD on Records, query Tables with filters/sorts | `platform-api.md` |
-| **Platform API — Schema** | Read Table/Field structure, SDS for AI context | `platform-api.md` |
-| **Platform API — Provisioning** | Create Tenants, Workspaces, Tables, Fields, Automations (B2B onboarding) | `platform-api.md` |
-| **Platform API — AI** | Consume AIService for domain-specific AI tasks, metered per Tenant | `platform-api.md`, `ai-architecture.md` |
-| **Outbound webhooks** | EveryStack notifies vertical services of events (Record created, Field changed) | `automations.md` §Webhook Architecture |
-| **Inbound webhooks** | External services trigger Automations (session completed, score calculated) | `automations.md` §Inbound Webhook Receiving |
-| **Automation recipes** | Pre-built Automation configs importable into Workspaces | `automations.md` |
-| **Document Templates** | Pre-built merge-tag templates for industry documents | `smart-docs.md` |
+| Integration Point               | Usage                                                                           | Reference                                   |
+| ------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| **Platform API — Data**         | CRUD on Records, query Tables with filters/sorts                                | `platform-api.md`                           |
+| **Platform API — Schema**       | Read Table/Field structure, SDS for AI context                                  | `platform-api.md`                           |
+| **Platform API — Provisioning** | Create Tenants, Workspaces, Tables, Fields, Automations (B2B onboarding)        | `platform-api.md`                           |
+| **Platform API — AI**           | Consume AIService for domain-specific AI tasks, metered per Tenant              | `platform-api.md`, `ai-architecture.md`     |
+| **Outbound webhooks**           | EveryStack notifies vertical services of events (Record created, Field changed) | `automations.md` §Webhook Architecture      |
+| **Inbound webhooks**            | External services trigger Automations (session completed, score calculated)     | `automations.md` §Inbound Webhook Receiving |
+| **Automation recipes**          | Pre-built Automation configs importable into Workspaces                         | `automations.md`                            |
+| **Document Templates**          | Pre-built merge-tag templates for industry documents                            | `smart-docs.md`                             |
 
 **Rule:** There are no vertical-specific integration points. The Platform API serves all consumers equally — verticals, third-party integrations, and customer scripts use the same endpoints.
 
@@ -338,26 +338,26 @@ Verticals use the same integration points available to any EveryStack customer o
 
 What EveryStack already provides, mapped to common vertical needs. Vertical-agnostic — applies to trade services, property management, agency dashboards, education, and any other domain.
 
-| Vertical Need | EveryStack Capability | MVP | Reference |
-|---|---|---|---|
-| Customer/client data management | Tables + Fields (typed) + canonical JSONB | ✅ | `data-model.md`, `sync-engine.md` |
-| Entity relationships (customer ↔ job ↔ invoice) | Cross-Links (any Table to any Table, across Workspaces) | ✅ | `cross-linking.md` |
-| Customer-facing status view | Quick Portals (Record View + auth wrapper) | ✅ | `portals.md` |
-| Data collection from customers/public | Quick Forms (Record View layout for record creation) | ✅ | `forms.md` |
-| Automated emails, notifications, updates | Automations (6 triggers, 7 actions including Send Email, Send Webhook) | ✅ | `automations.md` |
-| Document generation (invoices, reports, contracts) | Document Generation (merge tags + Gotenberg → PDF) | ✅ | `smart-docs.md` |
-| AI-powered features (summarization, drafts, suggestions) | AIService (capability tiers, prompt registry, credit metering) | ✅ | `ai-architecture.md`, `ai-metering.md` |
-| Schema-aware AI context | Schema Descriptor Service (SDS) | ✅ | `schema-descriptor-service.md` |
-| Role-based access control | 5-tier Permissions (Owner / Admin / Member → Manager / Team Member / Viewer) | ✅ | `permissions.md` |
-| Audit trail | Audit Log (6-source: user, automation, sync, system, api_key, portal_client) | ✅ | `audit-log.md` |
-| Tenant isolation and security | Multi-tenancy + RLS + encryption at rest/in transit | ✅ | `data-model.md`, `compliance.md` |
-| Event-driven integration | Inbound + outbound webhooks | ✅ | `automations.md` §Webhook Architecture |
-| File storage | Files (S3/R2, presigned URLs, image processing, virus scanning) | ✅ | `files.md` |
-| Real-time updates | Socket.io + Redis pub/sub event bus | ✅ | `realtime.md` |
-| Rich multi-page customer portals | App Designer + App Portals | Post-MVP | `app-designer.md` |
-| Appointment scheduling | Booking/Scheduling | Post-MVP | `booking-scheduling.md` |
-| Data visualization / charts | Chart Blocks (within App Designer) | Post-MVP | `chart-blocks.md` |
-| Analytical queries | DuckDB context layer | Post-MVP | `duckdb-context-layer-ref.md` |
+| Vertical Need                                            | EveryStack Capability                                                        | MVP      | Reference                              |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------- | -------- | -------------------------------------- |
+| Customer/client data management                          | Tables + Fields (typed) + canonical JSONB                                    | ✅       | `data-model.md`, `sync-engine.md`      |
+| Entity relationships (customer ↔ job ↔ invoice)          | Cross-Links (any Table to any Table, across Workspaces)                      | ✅       | `cross-linking.md`                     |
+| Customer-facing status view                              | Quick Portals (Record View + auth wrapper)                                   | ✅       | `portals.md`                           |
+| Data collection from customers/public                    | Quick Forms (Record View layout for record creation)                         | ✅       | `forms.md`                             |
+| Automated emails, notifications, updates                 | Automations (6 triggers, 7 actions including Send Email, Send Webhook)       | ✅       | `automations.md`                       |
+| Document generation (invoices, reports, contracts)       | Document Generation (merge tags + Gotenberg → PDF)                           | ✅       | `smart-docs.md`                        |
+| AI-powered features (summarization, drafts, suggestions) | AIService (capability tiers, prompt registry, credit metering)               | ✅       | `ai-architecture.md`, `ai-metering.md` |
+| Schema-aware AI context                                  | Schema Descriptor Service (SDS)                                              | ✅       | `schema-descriptor-service.md`         |
+| Role-based access control                                | 5-tier Permissions (Owner / Admin / Member → Manager / Team Member / Viewer) | ✅       | `permissions.md`                       |
+| Audit trail                                              | Audit Log (6-source: user, automation, sync, system, api_key, portal_client) | ✅       | `audit-log.md`                         |
+| Tenant isolation and security                            | Multi-tenancy + RLS + encryption at rest/in transit                          | ✅       | `data-model.md`, `compliance.md`       |
+| Event-driven integration                                 | Inbound + outbound webhooks                                                  | ✅       | `automations.md` §Webhook Architecture |
+| File storage                                             | Files (S3/R2, presigned URLs, image processing, virus scanning)              | ✅       | `files.md`                             |
+| Real-time updates                                        | Socket.io + Redis pub/sub event bus                                          | ✅       | `realtime.md`                          |
+| Rich multi-page customer portals                         | App Designer + App Portals                                                   | Post-MVP | `app-designer.md`                      |
+| Appointment scheduling                                   | Booking/Scheduling                                                           | Post-MVP | `booking-scheduling.md`                |
+| Data visualization / charts                              | Chart Blocks (within App Designer)                                           | Post-MVP | `chart-blocks.md`                      |
+| Analytical queries                                       | DuckDB context layer                                                         | Post-MVP | `duckdb-context-layer-ref.md`          |
 
 **Reuse estimate:** A typical B2B vertical leverages 70–90% of its infrastructure from EveryStack. B2C products with heavy domain services leverage 50–70%.
 
@@ -479,37 +479,40 @@ When assessing a new vertical idea, evaluate these dimensions:
 
 How much of the vertical's infrastructure is already provided by EveryStack? Higher is better — it means less custom code, faster time to market, and lower maintenance.
 
-| Score | Meaning | Custom Layer | Example |
-|---|---|---|---|
-| **90%+** | Almost pure EveryStack | Branded frontend + provisioning + templates | Agency client portal, bookkeeping client dashboard |
-| **70–90%** | Light custom layer | Above + 1–2 thin domain services | Property management, trade services, small law firm |
-| **50–70%** | Medium custom layer | Above + heavy domain services + content | Exam prep, tutoring, recruitment, fitness studio |
-| **< 50%** | Questionable fit | EveryStack provides less than half the infrastructure | Don't build — the platform leverage doesn't justify the coupling |
+| Score      | Meaning                | Custom Layer                                          | Example                                                          |
+| ---------- | ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| **90%+**   | Almost pure EveryStack | Branded frontend + provisioning + templates           | Agency client portal, bookkeeping client dashboard               |
+| **70–90%** | Light custom layer     | Above + 1–2 thin domain services                      | Property management, trade services, small law firm              |
+| **50–70%** | Medium custom layer    | Above + heavy domain services + content               | Exam prep, tutoring, recruitment, fitness studio                 |
+| **< 50%**  | Questionable fit       | EveryStack provides less than half the infrastructure | Don't build — the platform leverage doesn't justify the coupling |
 
 ### Evaluation Checklist
 
-| Question | Why It Matters |
-|---|---|
-| Can domain data be modeled as Tables + Fields + Cross-Links? | If the data model requires graph structures, time-series, or non-relational patterns, EveryStack's canonical JSONB may not fit |
-| Are the core workflows trigger → action flows? | EveryStack's Automation system handles sequential workflows. If the domain needs complex DAGs or real-time stream processing, the Automation system won't suffice |
-| Does the customer need a dashboard, not a canvas? | Quick Portals (MVP) and App Portals (post-MVP) display structured Record data. If the customer needs freeform spatial layouts beyond what App Designer provides, portals may not fit |
-| Is document generation a meaningful part of the value? | Doc Gen is a strong differentiator. Verticals that generate invoices, reports, contracts, or summaries get high leverage |
-| Is AI a feature, not the product? | AIService provides embedded AI (summarization, drafts, classification). If AI IS the product (e.g., AI agent platform), the vertical should probably be standalone |
-| Is the market willing to pay for SaaS? | Platform leverage is irrelevant if the market won't pay subscription fees |
+| Question                                                     | Why It Matters                                                                                                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Can domain data be modeled as Tables + Fields + Cross-Links? | If the data model requires graph structures, time-series, or non-relational patterns, EveryStack's canonical JSONB may not fit                                                       |
+| Are the core workflows trigger → action flows?               | EveryStack's Automation system handles sequential workflows. If the domain needs complex DAGs or real-time stream processing, the Automation system won't suffice                    |
+| Does the customer need a dashboard, not a canvas?            | Quick Portals (MVP) and App Portals (post-MVP) display structured Record data. If the customer needs freeform spatial layouts beyond what App Designer provides, portals may not fit |
+| Is document generation a meaningful part of the value?       | Doc Gen is a strong differentiator. Verticals that generate invoices, reports, contracts, or summaries get high leverage                                                             |
+| Is AI a feature, not the product?                            | AIService provides embedded AI (summarization, drafts, classification). If AI IS the product (e.g., AI agent platform), the vertical should probably be standalone                   |
+| Is the market willing to pay for SaaS?                       | Platform leverage is irrelevant if the market won't pay subscription fees                                                                                                            |
 
 ### Vertical Candidates — Ranked by Platform Leverage
 
 **Tier 1 (90%+ leverage — grab first):**
+
 - Agency / consultant client dashboard
 - Bookkeeping / accounting client portal
 - Property management (landlords, 2–50 units)
 
 **Tier 2 (70–90% leverage — strong candidates):**
+
 - Trade services management (HVAC, plumbing, electrical, cleaning)
 - Tutoring / education centre management (without voice/real-time)
 - Small law firm / legal practice management
 
 **Tier 3 (50–70% leverage — larger investment):**
+
 - Fitness / wellness studio management
 - Recruitment / staffing agency
 - English exam prep with voice (the original B2C concept)
@@ -547,10 +550,10 @@ B2C products require heavier investment (domain services, content, consumer mark
 
 Decisions made during the design of this architecture, recorded for future reference.
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| **Verticals are a usage pattern, not a platform concept** | EveryStack does not know it's powering a vertical. No `vertical` namespace in Tenant settings. No vertical-specific config. | The Platform API, webhooks, and AIService exposure benefit every customer equally. Verticals are just sophisticated API consumers. If vertical-awareness is needed later, it can be layered on without changing the engine. |
-| **No embed blocks in Quick Portals** | Custom UI embedding is exclusively an App Portal (post-MVP, App Designer) capability. Quick Portals remain exactly what the glossary defines: an externally-shared Record View with auth. | Clean separation per `GLOSSARY.md`. Quick Portals are simple and fast. App Portals are powerful and custom. Blurring the line erodes both. |
-| **Service-level API keys, not user-level passthrough** | Vertical backends authenticate as trusted services, not as individual users | Vertical users never exist in EveryStack. The vertical manages its own auth. EveryStack sees API keys, not people. This keeps the Tenant boundary clean and avoids coupling vertical identity systems to Clerk. |
-| **No shared package imports between engine and verticals** | All communication through Platform API HTTP endpoints | Shared imports create coupling that's invisible at deployment and impossible to version. HTTP endpoints are explicit contracts that can evolve independently. |
-| **Templates are vertical-side configuration, not EveryStack entities** | Industry templates live in the vertical's codebase, not in EveryStack | EveryStack provides the provisioning API. The vertical decides what to provision. This avoids polluting the engine with domain-specific template concepts. A future marketplace could change this, but that's a separate decision. |
+| Decision                                                               | Choice                                                                                                                                                                                    | Rationale                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Verticals are a usage pattern, not a platform concept**              | EveryStack does not know it's powering a vertical. No `vertical` namespace in Tenant settings. No vertical-specific config.                                                               | The Platform API, webhooks, and AIService exposure benefit every customer equally. Verticals are just sophisticated API consumers. If vertical-awareness is needed later, it can be layered on without changing the engine.        |
+| **No embed blocks in Quick Portals**                                   | Custom UI embedding is exclusively an App Portal (post-MVP, App Designer) capability. Quick Portals remain exactly what the glossary defines: an externally-shared Record View with auth. | Clean separation per `GLOSSARY.md`. Quick Portals are simple and fast. App Portals are powerful and custom. Blurring the line erodes both.                                                                                         |
+| **Service-level API keys, not user-level passthrough**                 | Vertical backends authenticate as trusted services, not as individual users                                                                                                               | Vertical users never exist in EveryStack. The vertical manages its own auth. EveryStack sees API keys, not people. This keeps the Tenant boundary clean and avoids coupling vertical identity systems to Clerk.                    |
+| **No shared package imports between engine and verticals**             | All communication through Platform API HTTP endpoints                                                                                                                                     | Shared imports create coupling that's invisible at deployment and impossible to version. HTTP endpoints are explicit contracts that can evolve independently.                                                                      |
+| **Templates are vertical-side configuration, not EveryStack entities** | Industry templates live in the vertical's codebase, not in EveryStack                                                                                                                     | EveryStack provides the provisioning API. The vertical decides what to provision. This avoids polluting the engine with domain-specific template concepts. A future marketplace could change this, but that's a separate decision. |

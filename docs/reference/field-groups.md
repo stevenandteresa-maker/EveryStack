@@ -13,22 +13,22 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Strategic Rationale | 35–44 | Why field groups, value proposition for data organization |
-| Field Group Anatomy | 45–105 | Group definition, coloring (3 modes), member fields, ordering |
-| Per-Field Emphasis | 106–144 | Bold header, accent color, visual weight per field |
-| Conditional Cell Coloring | 145–176 | 4-level priority cascade for cell background colors |
-| Enhanced Hide/Show Panel | 177–275 | Field visibility panel with group awareness, bulk toggle |
-| Synced Table Tab Badges | 276–326 | Platform badge, sync status indicator, 6 health states |
-| Board Collapse Behavior | 327–360 | Sidebar board/workspace collapse, saved state |
-| Sidebar Visual Hierarchy Summary | 361–392 | Complete sidebar rendering rules |
-| Data Model | 393–462 | field_groups table, fields.group_id, group coloring config |
-| Field Group Lifecycle | 463–488 | Create, edit, reorder, delete, merge groups |
-| Interaction with Existing Features | 489–506 | How groups interact with views, permissions, export |
-| Column Header Right-Click Menu (Updated) | 507–532 | Group assignment from column header context menu |
-| Group Header Right-Click Menu (New) | 533–549 | Context menu on group headers in grid view |
-| Phase Integration | 550–569 | MVP — Core UX delivery scope |
+| Section                                  | Lines   | Covers                                                        |
+| ---------------------------------------- | ------- | ------------------------------------------------------------- |
+| Strategic Rationale                      | 35–44   | Why field groups, value proposition for data organization     |
+| Field Group Anatomy                      | 45–105  | Group definition, coloring (3 modes), member fields, ordering |
+| Per-Field Emphasis                       | 106–144 | Bold header, accent color, visual weight per field            |
+| Conditional Cell Coloring                | 145–176 | 4-level priority cascade for cell background colors           |
+| Enhanced Hide/Show Panel                 | 177–275 | Field visibility panel with group awareness, bulk toggle      |
+| Synced Table Tab Badges                  | 276–326 | Platform badge, sync status indicator, 6 health states        |
+| Board Collapse Behavior                  | 327–360 | Sidebar board/workspace collapse, saved state                 |
+| Sidebar Visual Hierarchy Summary         | 361–392 | Complete sidebar rendering rules                              |
+| Data Model                               | 393–462 | field_groups table, fields.group_id, group coloring config    |
+| Field Group Lifecycle                    | 463–488 | Create, edit, reorder, delete, merge groups                   |
+| Interaction with Existing Features       | 489–506 | How groups interact with views, permissions, export           |
+| Column Header Right-Click Menu (Updated) | 507–532 | Group assignment from column header context menu              |
+| Group Header Right-Click Menu (New)      | 533–549 | Context menu on group headers in grid view                    |
+| Phase Integration                        | 550–569 | MVP — Core UX delivery scope                                  |
 
 ---
 
@@ -71,11 +71,11 @@ A field group is a named span of adjacent columns in the grid, rendered as a gro
 
 Each group has a `color_mode` setting that controls how the group color renders in the grid:
 
-| Mode | Group Header | Field Headers | Data Cells |
-|------|-------------|---------------|------------|
-| `header_only` | Solid color left-edge 3px stripe + color dot | 5–8% opacity tint on member field headers | No tint |
-| `full_column` | Solid color left-edge 3px stripe + color dot | 8–12% opacity tint | 4–6% opacity tint on all data cells in member columns |
-| `both` | Solid color left-edge 3px stripe + color dot | 8–12% opacity tint | 4–6% opacity tint |
+| Mode          | Group Header                                 | Field Headers                             | Data Cells                                            |
+| ------------- | -------------------------------------------- | ----------------------------------------- | ----------------------------------------------------- |
+| `header_only` | Solid color left-edge 3px stripe + color dot | 5–8% opacity tint on member field headers | No tint                                               |
+| `full_column` | Solid color left-edge 3px stripe + color dot | 8–12% opacity tint                        | 4–6% opacity tint on all data cells in member columns |
+| `both`        | Solid color left-edge 3px stripe + color dot | 8–12% opacity tint                        | 4–6% opacity tint                                     |
 
 Default: `header_only`. The subtle opacity values ensure the group color provides orientation without competing with cell content or conditional coloring.
 
@@ -110,6 +110,7 @@ Individual fields within or outside of groups support two independent visual emp
 ### Bold Header
 
 Toggleable per field, per view. When enabled:
+
 - Field name renders at **600 weight** (up from 400 default)
 - Font size remains 13px (no size change — weight alone provides sufficient contrast)
 - The bold indicator (★ or a subtle `B` badge) appears in the hide/show panel next to the field
@@ -120,11 +121,11 @@ Use case: Highlighting the "important" fields in a large group — the primary c
 
 An optional per-field color override that either complements or overrides the parent group color:
 
-| What's Set | Field Header Rendering | Data Cell Rendering |
-|-----------|----------------------|-------------------|
-| Group color only (no accent) | Inherits group tint | Inherits group tint (if `full_column` or `both` mode) |
-| Field accent color, `header_only` | Accent color replaces group tint on this header (10–15% opacity) | No accent tint — inherits group or no color |
-| Field accent color, `full_column` | Accent color on header | Accent color at 4–6% opacity on data cells |
+| What's Set                        | Field Header Rendering                                           | Data Cell Rendering                                   |
+| --------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| Group color only (no accent)      | Inherits group tint                                              | Inherits group tint (if `full_column` or `both` mode) |
+| Field accent color, `header_only` | Accent color replaces group tint on this header (10–15% opacity) | No accent tint — inherits group or no color           |
+| Field accent color, `full_column` | Accent color on header                                           | Accent color at 4–6% opacity on data cells            |
 
 Default accent mode: `header_only`. The accent color uses the same 13-color data palette.
 
@@ -150,12 +151,12 @@ Conditional color rules apply meaning-based color to individual cells or entire 
 
 When multiple color layers apply to the same cell, the highest-priority layer wins. There is no blending.
 
-| Priority | Layer | Source | Purpose |
-|----------|-------|--------|---------|
-| 1 (highest) | **Conditional cell color** | Color rules on the view (field value conditions) | Meaning — "this is overdue," "this deal is won" |
-| 2 | **Conditional row color** | Row-level color rules on the view | Meaning — "this record needs attention" |
-| 3 | **Field accent color** | Per-field emphasis setting (view config) | Organization — "this field is important" |
-| 4 (lowest) | **Group column tint** | Field group color (view config) | Organization — "this field belongs to Contact Info" |
+| Priority    | Layer                      | Source                                           | Purpose                                             |
+| ----------- | -------------------------- | ------------------------------------------------ | --------------------------------------------------- |
+| 1 (highest) | **Conditional cell color** | Color rules on the view (field value conditions) | Meaning — "this is overdue," "this deal is won"     |
+| 2           | **Conditional row color**  | Row-level color rules on the view                | Meaning — "this record needs attention"             |
+| 3           | **Field accent color**     | Per-field emphasis setting (view config)         | Organization — "this field is important"            |
+| 4 (lowest)  | **Group column tint**      | Field group color (view config)                  | Organization — "this field belongs to Contact Info" |
 
 When a conditional rule fires, it fully replaces any structural color beneath it for the affected cell(s). When no conditional rule applies, the structural colors (accent → group) show through.
 
@@ -210,6 +211,7 @@ The hide/show panel (opened via "Hide fields" in the grid toolbar) evolves from 
 **Search bar:** Top, sticky. Filters fields by name across all groups. Groups with no matching fields collapse away. Groups with partial matches show only matching fields. Search is instant (no debounce needed for a local list).
 
 **Group header row** (per group):
+
 - **Collapse chevron (▾/▸):** Collapses the field list within this panel (independent of grid collapse state). Purely for panel navigation when there are many groups.
 - **Group name:** Inline-editable on double-click. 13px, 600 weight.
 - **Color dot (●):** 10px circle in the group color. **Clickable — opens inline color swatch picker** (13 colors in a grid + "Remove color" option). Color change applies instantly to the grid behind the panel.
@@ -218,6 +220,7 @@ The hide/show panel (opened via "Hide fields" in the grid toolbar) evolves from 
 - **Overflow menu (⋯):** Rename group, Change color mode, Collapse in grid (toggle), Delete group (fields move to ungrouped). Confirmation required only for delete.
 
 **Field row** (per field):
+
 - **Drag handle (⠿):** 16px grip icon, left edge. Drag to reorder within group, between groups, or to/from ungrouped. Drop zones highlight during drag: between fields (horizontal line), between groups (group-colored band), ungrouped zone (subtle highlight).
 - **Visibility checkbox (☑/☐):** Toggle field visibility in this view. Instant. Hidden fields show strikethrough name and dimmed row.
 - **Field name:** 13px, 400 weight (600 if bold is enabled). Field type icon (same as grid header) precedes name.
@@ -229,6 +232,7 @@ The hide/show panel (opened via "Hide fields" in the grid toolbar) evolves from 
 **Ungrouped section:** Always appears below all groups. Label: "── Ungrouped ──" in `textSecondary`, 12px. No collapse chevron, no color, no bulk toggle (use Cmd+A style selection for bulk operations on ungrouped fields). Fields here have the same drag handle, visibility, and emphasis controls.
 
 **"+ Add Group" button:** Bottom of panel, sticky if panel scrolls. `textSecondary`, accent color (`#0D9488`) on hover. Click flow:
+
 1. Inline text input appears for group name (auto-focused)
 2. Color swatch picker appears below the name input
 3. Enter confirms → empty group created at bottom of group list
@@ -240,14 +244,14 @@ The hide/show panel (opened via "Hide fields" in the grid toolbar) evolves from 
 
 All drag operations provide live visual feedback and instant grid updates:
 
-| Drag Source | Drop Target | Result |
-|------------|-------------|--------|
-| Field within a group | Between fields in same group | Reorder within group |
-| Field within a group | Between fields in another group | Move field to new group at drop position |
-| Field within a group | Ungrouped zone | Remove field from group |
-| Ungrouped field | Between fields in a group | Add field to group at drop position |
-| Ungrouped field | Ungrouped zone | Reorder within ungrouped |
-| Group header | Between group headers | Reorder entire group (all member fields move as a unit) |
+| Drag Source          | Drop Target                     | Result                                                  |
+| -------------------- | ------------------------------- | ------------------------------------------------------- |
+| Field within a group | Between fields in same group    | Reorder within group                                    |
+| Field within a group | Between fields in another group | Move field to new group at drop position                |
+| Field within a group | Ungrouped zone                  | Remove field from group                                 |
+| Ungrouped field      | Between fields in a group       | Add field to group at drop position                     |
+| Ungrouped field      | Ungrouped zone                  | Reorder within ungrouped                                |
+| Group header         | Between group headers           | Reorder entire group (all member fields move as a unit) |
 
 **Grid synchronization:** Every drag-drop in the panel instantly rearranges columns in the grid. The grid's column order always mirrors the panel's field order (groups in order, then ungrouped fields in order).
 
@@ -263,11 +267,11 @@ All drag operations provide live visual feedback and instant grid updates:
 
 ### Responsive Behavior
 
-| Breakpoint | Panel Behavior |
-|-----------|---------------|
-| Desktop (≥1440px) | 320px panel, side-by-side with grid. Grid shrinks to accommodate. |
-| Tablet (≥768px) | 320px overlay from left edge with scrim. Grid visible but non-interactive behind scrim. |
-| Mobile (<768px) | Full-screen bottom sheet (swipe down to close). Drag-drop uses long-press + drag. |
+| Breakpoint        | Panel Behavior                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Desktop (≥1440px) | 320px panel, side-by-side with grid. Grid shrinks to accommodate.                       |
+| Tablet (≥768px)   | 320px overlay from left edge with scrim. Grid visible but non-interactive behind scrim. |
+| Mobile (<768px)   | Full-screen bottom sheet (swipe down to close). Drag-drop uses long-press + drag.       |
 
 Touch devices: emphasis controls (★ ●) are always visible (not hover-dependent). Drag handles use long-press (200ms) to initiate drag, preventing accidental drags during scroll.
 
@@ -296,12 +300,12 @@ Sidebar tab:
 
 **Badge rendering:** 14×14px platform logo, positioned at the bottom-right of the 18px table type icon with a 2px offset (sub-icon overlay pattern). The badge has a 1px `contentBg` (#FFFFFF) border to separate it from the parent icon. Platform logos:
 
-| Platform | Badge | Notes |
-|----------|-------|-------|
-| Airtable | Airtable logo mark (yellow/blue) | Simplified to work at 14px |
-| Notion | Notion logo mark (black) | |
-| SmartSuite | SmartSuite logo mark | |
-| Native | No badge | Absence of badge = native |
+| Platform   | Badge                            | Notes                      |
+| ---------- | -------------------------------- | -------------------------- |
+| Airtable   | Airtable logo mark (yellow/blue) | Simplified to work at 14px |
+| Notion     | Notion logo mark (black)         |                            |
+| SmartSuite | SmartSuite logo mark             |                            |
+| Native     | No badge                         | Absence of badge = native  |
 
 **Badge + tab color independence:** The platform badge and the tab color stripe are independent visual channels. A synced Airtable table can have an amber tab color (because it's a finance table) AND the Airtable badge (because it's synced). Two pieces of information, two visual treatments, no conflict.
 
@@ -309,14 +313,14 @@ Sidebar tab:
 
 Adjacent to the platform badge (or standalone for tables where the badge is too small to read), a sync status icon communicates health:
 
-| Status | Icon | Color | Tooltip |
-|--------|------|-------|---------|
-| Healthy (syncing normally) | ⇅ (bidirectional arrows) | `textSecondary` | "Synced with {Platform}. Last sync: {time}" |
-| Syncing now | ⇅ (animated spin) | `accent` (teal) | "Syncing with {Platform}…" |
-| Conflicts pending | ⇅ + ⚠️ dot | `accent` (amber) | "{N} sync conflicts. Click to resolve." |
-| Sync paused | ⇅ (paused bars) | `textSecondary` | "Sync paused. Click to resume." |
-| Sync error | ⇅ + ✕ | `error` | "Sync failed: {reason}. Click for details." |
-| Converted (no longer syncing) | — (none) | — | Badge removed after conversion finalized |
+| Status                        | Icon                     | Color            | Tooltip                                     |
+| ----------------------------- | ------------------------ | ---------------- | ------------------------------------------- |
+| Healthy (syncing normally)    | ⇅ (bidirectional arrows) | `textSecondary`  | "Synced with {Platform}. Last sync: {time}" |
+| Syncing now                   | ⇅ (animated spin)        | `accent` (teal)  | "Syncing with {Platform}…"                  |
+| Conflicts pending             | ⇅ + ⚠️ dot               | `accent` (amber) | "{N} sync conflicts. Click to resolve."     |
+| Sync paused                   | ⇅ (paused bars)          | `textSecondary`  | "Sync paused. Click to resume."             |
+| Sync error                    | ⇅ + ✕                    | `error`          | "Sync failed: {reason}. Click for details." |
+| Converted (no longer syncing) | — (none)                 | —                | Badge removed after conversion finalized    |
 
 **Placement:** The sync status icon appears in the sidebar tab to the right of the table name, right-aligned. In the base navigation bar, it appears as a small indicator next to the tab label.
 
@@ -381,12 +385,12 @@ The complete organizational and color hierarchy in the sidebar, from top to bott
 
 Four independent color/badge channels, no conflicts:
 
-| Channel | What It Communicates | Visual Treatment |
-|---------|---------------------|-----------------|
-| Board color stripe | Workspace-level domain grouping | 3px left-edge stripe on board header |
-| Table tab color stripe | Table-level category | 3px left-edge stripe on table tab (sidebar) / 3px bottom-edge border (base nav bar) |
-| Platform badge | Synced vs. native origin | 14px logo overlay on table type icon |
-| Sync status icon | Sync health | Status icon right of table name |
+| Channel                | What It Communicates            | Visual Treatment                                                                    |
+| ---------------------- | ------------------------------- | ----------------------------------------------------------------------------------- |
+| Board color stripe     | Workspace-level domain grouping | 3px left-edge stripe on board header                                                |
+| Table tab color stripe | Table-level category            | 3px left-edge stripe on table tab (sidebar) / 3px bottom-edge border (base nav bar) |
+| Platform badge         | Synced vs. native origin        | 14px logo overlay on table type icon                                                |
+| Sync status icon       | Sync health                     | Status icon right of table name                                                     |
 
 ---
 
@@ -401,18 +405,18 @@ Field groups are **view-level configuration** — different views of the same ta
 ```typescript
 interface ViewConfig {
   // ... existing view config ...
-  
+
   field_groups?: FieldGroup[];
 }
 
 interface FieldGroup {
-  id: string;                           // Stable ID: "fg_" + nanoid(8)
-  name: string;                         // Display name (e.g., "Contact Info")
-  color: string | null;                 // Color name from 13-color data palette, null = no color
-  color_mode: 'header_only' | 'full_column' | 'both';  // Default: 'header_only'
-  collapsed: boolean;                   // Grid collapse state (default view state; user overrides stored separately)
-  field_ids: string[];                  // Ordered list of field IDs in this group
-  sort_order: number;                   // Position relative to other groups
+  id: string; // Stable ID: "fg_" + nanoid(8)
+  name: string; // Display name (e.g., "Contact Info")
+  color: string | null; // Color name from 13-color data palette, null = no color
+  color_mode: 'header_only' | 'full_column' | 'both'; // Default: 'header_only'
+  collapsed: boolean; // Grid collapse state (default view state; user overrides stored separately)
+  field_ids: string[]; // Ordered list of field IDs in this group
+  sort_order: number; // Position relative to other groups
 }
 ```
 
@@ -420,11 +424,11 @@ interface FieldGroup {
 
 ```typescript
 interface FieldViewConfig {
-  width?: number;                       // Existing: column width in px
-  visible?: boolean;                    // Existing: field visibility
-  bold_header?: boolean;                // NEW: render field name at 600 weight
-  accent_color?: string | null;         // NEW: color name from palette, null = inherit group
-  accent_mode?: 'header_only' | 'full_column';  // NEW: only relevant if accent_color set. Default: 'header_only'
+  width?: number; // Existing: column width in px
+  visible?: boolean; // Existing: field visibility
+  bold_header?: boolean; // NEW: render field name at 600 weight
+  accent_color?: string | null; // NEW: color name from palette, null = inherit group
+  accent_mode?: 'header_only' | 'full_column'; // NEW: only relevant if accent_color set. Default: 'header_only'
 }
 ```
 
@@ -437,8 +441,8 @@ Per-user field group collapse state (separate from the view's default collapse s
 ```typescript
 interface UserViewPreferences {
   // ... existing preferences ...
-  
-  field_group_collapsed?: Record<string, boolean>;  // field_group.id → collapsed state
+
+  field_group_collapsed?: Record<string, boolean>; // field_group.id → collapsed state
 }
 ```
 
@@ -453,8 +457,8 @@ No new data model needed. The platform badge derives from `base_connections.plat
 ```typescript
 interface SidebarState {
   // ... existing sidebar preferences ...
-  
-  board_collapsed?: Record<string, boolean>;  // board.id → collapsed state
+
+  board_collapsed?: Record<string, boolean>; // board.id → collapsed state
 }
 ```
 
@@ -488,19 +492,19 @@ Three paths:
 
 ## Interaction with Existing Features
 
-| Feature | Interaction |
-|---------|------------|
-| **Frozen columns** | Primary field (always frozen) can belong to a group. If the primary field's group contains other fields, the group header spans across the freeze boundary — frozen portion shows group name, scrollable portion continues. Freeze indicator (vertical rule) renders on top of group color. |
-| **Column reorder (drag in grid)** | Dragging a column header within a group reorders within the group. Dragging a column past a group boundary moves it to the adjacent group (or to ungrouped if dropped past the last group). Dragging the group header bar moves all member columns as a unit. |
-| **Column resize** | Resizing a column within a group does not affect the group — the group header span adjusts to accommodate the new total width of member columns. |
-| **Filter / Sort / Group-by** | Field groups have no effect on filtering, sorting, or row grouping. These operate on field values, not visual organization. A field can be grouped visually (in a "Contact Info" field group) while simultaneously being the active group-by field (rows grouped by contact name). |
-| **Print / PDF export** | Group headers render in print output. Group colors render as grayscale tints in print. Bold headers render as bold. Collapsed groups expand for print (all data visible). |
-| **CSV / Excel export** | Field groups do not affect CSV export (flat column list). Excel export can optionally include a merged header row representing field groups (cosmetic — no data impact). |
-| **Views** | Field groups are per-view config. Creating a new view copies the current view's groups (if "Duplicate view") or starts with no groups (if "New view"). Shared views share their group config — all viewers see the same groups. Locked shared views prevent group modification by non-creators. |
-| **Apps (Post-MVP)** | App page `field_config` can include `field_groups` in its `view_config`. Managers set up field groups as part of App design in the App Designer. If `customizable` and `can_hide_fields` is true, users can modify groups within their user-level app customization overrides. *(Note: "Interfaces" renamed to "Apps" / "App Designer" per glossary naming discipline. The App Designer and Apps are post-MVP.)* |
-| **Real-time collaboration** | Field group config changes propagate via the existing view config update WebSocket channel. Two users modifying groups on the same shared view: last-write-wins at the `field_groups` array level (same as other view config). |
-| **Responsive** | Desktop: full group header row. Tablet: full group header row (grid is the same, just fewer visible columns). Mobile: group headers hidden (horizontal space too constrained); groups manifest as swipe-between-group navigation if enabled — swipe left/right to jump between field groups. The hide/show panel on mobile (bottom sheet) retains full group management. |
-| **Command Bar** | "Go to field group {name}" command navigates the grid horizontally to the first column of the named group. Available when field groups exist on the active view. |
+| Feature                           | Interaction                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frozen columns**                | Primary field (always frozen) can belong to a group. If the primary field's group contains other fields, the group header spans across the freeze boundary — frozen portion shows group name, scrollable portion continues. Freeze indicator (vertical rule) renders on top of group color.                                                                                                                      |
+| **Column reorder (drag in grid)** | Dragging a column header within a group reorders within the group. Dragging a column past a group boundary moves it to the adjacent group (or to ungrouped if dropped past the last group). Dragging the group header bar moves all member columns as a unit.                                                                                                                                                    |
+| **Column resize**                 | Resizing a column within a group does not affect the group — the group header span adjusts to accommodate the new total width of member columns.                                                                                                                                                                                                                                                                 |
+| **Filter / Sort / Group-by**      | Field groups have no effect on filtering, sorting, or row grouping. These operate on field values, not visual organization. A field can be grouped visually (in a "Contact Info" field group) while simultaneously being the active group-by field (rows grouped by contact name).                                                                                                                               |
+| **Print / PDF export**            | Group headers render in print output. Group colors render as grayscale tints in print. Bold headers render as bold. Collapsed groups expand for print (all data visible).                                                                                                                                                                                                                                        |
+| **CSV / Excel export**            | Field groups do not affect CSV export (flat column list). Excel export can optionally include a merged header row representing field groups (cosmetic — no data impact).                                                                                                                                                                                                                                         |
+| **Views**                         | Field groups are per-view config. Creating a new view copies the current view's groups (if "Duplicate view") or starts with no groups (if "New view"). Shared views share their group config — all viewers see the same groups. Locked shared views prevent group modification by non-creators.                                                                                                                  |
+| **Apps (Post-MVP)**               | App page `field_config` can include `field_groups` in its `view_config`. Managers set up field groups as part of App design in the App Designer. If `customizable` and `can_hide_fields` is true, users can modify groups within their user-level app customization overrides. _(Note: "Interfaces" renamed to "Apps" / "App Designer" per glossary naming discipline. The App Designer and Apps are post-MVP.)_ |
+| **Real-time collaboration**       | Field group config changes propagate via the existing view config update WebSocket channel. Two users modifying groups on the same shared view: last-write-wins at the `field_groups` array level (same as other view config).                                                                                                                                                                                   |
+| **Responsive**                    | Desktop: full group header row. Tablet: full group header row (grid is the same, just fewer visible columns). Mobile: group headers hidden (horizontal space too constrained); groups manifest as swipe-between-group navigation if enabled — swipe left/right to jump between field groups. The hide/show panel on mobile (bottom sheet) retains full group management.                                         |
+| **Command Bar**                   | "Go to field group {name}" command navigates the grid horizontally to the first column of the named group. Available when field groups exist on the active view.                                                                                                                                                                                                                                                 |
 
 ---
 
@@ -526,6 +530,7 @@ The existing column header right-click menu (from `tables-and-views.md`) gains f
 16. Edit permissions (Manager+ only)
 
 When multiple columns are selected (Shift+click headers), additional item:
+
 - **Create group from selected** (new — above item 15)
 
 ---
@@ -555,15 +560,15 @@ Synced table tab badges ship with **MVP — Sync (Sync Engine)** — they requir
 
 Board collapse behavior ships with **MVP — Foundation (Foundation)** — Boards and the sidebar already exist; collapse is a UI interaction addition.
 
-| Component | Phase | Depends On |
-|-----------|-------|-----------|
-| Board collapse in sidebar | MVP — Foundation | Boards data model (exists) — *⚠️ Board/Base not in glossary; pending alignment* |
-| Synced table platform badge | MVP — Sync | Sync engine, platform_source metadata |
-| Synced table sync status icon | MVP — Sync | Sync engine, sync status tracking |
-| Field Groups (grid rendering) | MVP — Core UX | Grid architecture, views |
-| Per-field bold / accent color | MVP — Core UX | Grid column headers, views |
-| Enhanced hide/show panel | MVP — Core UX | Field groups, existing hide fields UI |
-| Conditional cell color cascade | MVP — Core UX | Existing color coding, field groups |
-| Field group collapse | MVP — Core UX | Field groups |
-| Command Bar "go to group" | MVP — Core UX | Field groups, Command Bar |
-| Excel export with group headers | Post-MVP — Documents | Field groups, export system |
+| Component                       | Phase                | Depends On                                                                      |
+| ------------------------------- | -------------------- | ------------------------------------------------------------------------------- |
+| Board collapse in sidebar       | MVP — Foundation     | Boards data model (exists) — _⚠️ Board/Base not in glossary; pending alignment_ |
+| Synced table platform badge     | MVP — Sync           | Sync engine, platform_source metadata                                           |
+| Synced table sync status icon   | MVP — Sync           | Sync engine, sync status tracking                                               |
+| Field Groups (grid rendering)   | MVP — Core UX        | Grid architecture, views                                                        |
+| Per-field bold / accent color   | MVP — Core UX        | Grid column headers, views                                                      |
+| Enhanced hide/show panel        | MVP — Core UX        | Field groups, existing hide fields UI                                           |
+| Conditional cell color cascade  | MVP — Core UX        | Existing color coding, field groups                                             |
+| Field group collapse            | MVP — Core UX        | Field groups                                                                    |
+| Command Bar "go to group"       | MVP — Core UX        | Field groups, Command Bar                                                       |
+| Excel export with group headers | Post-MVP — Documents | Field groups, export system                                                     |

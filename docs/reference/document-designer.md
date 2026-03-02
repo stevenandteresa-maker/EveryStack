@@ -2,6 +2,7 @@
 
 > **Reconciliation Note (2026-02-27):** Aligned with GLOSSARY.md (source of truth).
 > **Changes made:**
+>
 > - **Renamed "Interface Designer" → "App Designer"** throughout per glossary Naming Discipline table ("Interface Designer" → App Designer; "Interface types" → App types)
 > - **Renamed "interface type" → "App type"** and "interface" (as designer output) → "App" throughout
 > - **Renamed "Interfaces Page" → Apps page**, "Create Interface" → "Create App", "interface card" → "App card"
@@ -28,23 +29,23 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Design Philosophy | 51–62 | Fixed-page canvas, PDF-first, merge tags over code |
-| Progressive Disclosure Mapping | 63–74 | 3-level disclosure for document creation |
-| App Creation — Entry Points | 75–105 | Document app creation from workspace, table, template |
-| Document Creation Wizard | 106–144 | Step-by-step wizard for new document apps |
-| Canvas Behavior (Fixed-Size Page) | 145–217 | A4/Letter/Legal canvas, page breaks, margins, rulers |
-| Block Model — Document-Specific Additions | 218–252 | Page break, header/footer, merge tag, table blocks |
-| Data Binding | 253–287 | Merge tag resolution, linked record traversal, image binding |
-| Render Pipeline | 288–345 | TipTap → HTML → Gotenberg → PDF/DOCX output |
-| Automation Integration — "Set Up Automation" Wizard | 346–414 | Auto-generate on record change, batch generation |
-| Preview and Publish | 415–437 | Preview rendering, template versioning, publish flow |
-| Relationship to Other Document Paths | 438–485 | How Document Designer relates to Smart Docs and merge tags |
-| Homegrown DOCX Template Engine | 486–520 | Custom DOCX engine (no Docxtemplater), template compilation |
-| Data Model | 521–577 | document_templates enhancements, generated_documents table |
-| Page Sizes Reference | 578–591 | Standard page dimensions and margins |
-| Phase Implementation | 592–629 | Post-MVP delivery scope |
+| Section                                             | Lines   | Covers                                                       |
+| --------------------------------------------------- | ------- | ------------------------------------------------------------ |
+| Design Philosophy                                   | 51–62   | Fixed-page canvas, PDF-first, merge tags over code           |
+| Progressive Disclosure Mapping                      | 63–74   | 3-level disclosure for document creation                     |
+| App Creation — Entry Points                         | 75–105  | Document app creation from workspace, table, template        |
+| Document Creation Wizard                            | 106–144 | Step-by-step wizard for new document apps                    |
+| Canvas Behavior (Fixed-Size Page)                   | 145–217 | A4/Letter/Legal canvas, page breaks, margins, rulers         |
+| Block Model — Document-Specific Additions           | 218–252 | Page break, header/footer, merge tag, table blocks           |
+| Data Binding                                        | 253–287 | Merge tag resolution, linked record traversal, image binding |
+| Render Pipeline                                     | 288–345 | TipTap → HTML → Gotenberg → PDF/DOCX output                  |
+| Automation Integration — "Set Up Automation" Wizard | 346–414 | Auto-generate on record change, batch generation             |
+| Preview and Publish                                 | 415–437 | Preview rendering, template versioning, publish flow         |
+| Relationship to Other Document Paths                | 438–485 | How Document Designer relates to Smart Docs and merge tags   |
+| Homegrown DOCX Template Engine                      | 486–520 | Custom DOCX engine (no Docxtemplater), template compilation  |
+| Data Model                                          | 521–577 | document_templates enhancements, generated_documents table   |
+| Page Sizes Reference                                | 578–591 | Standard page dimensions and margins                         |
+| Phase Implementation                                | 592–629 | Post-MVP delivery scope                                      |
 
 ---
 
@@ -64,11 +65,11 @@ This means a Manager who has learned to build a client portal App already knows 
 
 > **⚠️ Post-MVP.** Progressive disclosure for Document Apps in the App Designer.
 
-| Level | User Experience | What's Visible |
-|---|---|---|
+| Level        | User Experience                                                                                                                                                                                                                                      | What's Visible                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **L1 (80%)** | Choose a template card ("Invoice", "Contract", etc.), pick a table, select a theme, and get a working document with pre-placed blocks. Edit by selecting blocks and changing fields in the property panel. Set up a quick automation with one click. | Template gallery, 3-step wizard, canvas with pre-placed blocks, Content tab in property panel, page size selector, "Set Up Automation" button. |
-| **L2 (15%)** | Add blocks from the library, configure data binding, add Rich Text blocks with merge tag placeholders, insert manual page breaks, configure header/footer content, adjust styling, multi-page document design. | Block library sidebar, Layers tree mode, merge tag field picker, page break blocks, header/footer zones, Style tab overrides. |
-| **L3 (5%)** | Query-bound data binding across multiple tables, conditional visibility rules on blocks, AI content injection, complex automation flows with multi-step document generation. | Query builder in data binding, Logic tab, AI content blocks, full automation builder integration. |
+| **L2 (15%)** | Add blocks from the library, configure data binding, add Rich Text blocks with merge tag placeholders, insert manual page breaks, configure header/footer content, adjust styling, multi-page document design.                                       | Block library sidebar, Layers tree mode, merge tag field picker, page break blocks, header/footer zones, Style tab overrides.                  |
+| **L3 (5%)**  | Query-bound data binding across multiple tables, conditional visibility rules on blocks, AI content injection, complex automation flows with multi-step document generation.                                                                         | Query builder in data binding, Logic tab, AI content blocks, full automation builder integration.                                              |
 
 ---
 
@@ -80,8 +81,8 @@ This means a Manager who has learned to build a client portal App already knows 
 
 `[+ New App]` → type selection step → "Create a Document" card.
 
-| Card Label | Description | Resolves To |
-|---|---|---|
+| Card Label            | Description                                                             | Resolves To  |
+| --------------------- | ----------------------------------------------------------------------- | ------------ |
 | **Create a Document** | "Design a document template — invoices, contracts, proposals, and more" | Document App |
 
 After selecting the card, the Manager chooses: **From Scratch** or from the **Template Gallery**.
@@ -91,6 +92,7 @@ After selecting the card, the Manager chooses: **From Scratch** or from the **Te
 Table tab menu dropdown → **Create App** → sub-options by App type. Selecting "Document" enters the creation wizard with the table pre-selected.
 
 When creating from a specific table context:
+
 1. The wizard's "Connect to Data" step pre-selects that table (editable)
 2. The designer field picker defaults to showing that table's fields at the top
 3. Any block dropped on the canvas inherits context-bound data binding to that table
@@ -111,17 +113,17 @@ The workspace-level Apps page remains the canonical home for all Apps across all
 
 **Template Gallery** — curated document template cards:
 
-| Template | Description | Pre-built Blocks |
-|---|---|---|
-| **Invoice** | Standard invoice with company header, bill-to, line items, totals | Header with logo + company info, bill-to/ship-to Row, line items Table/List, totals section, payment terms Rich Text |
-| **Proposal / Quote** | Client proposal with scope, pricing, terms | Header, client info, scope Rich Text with merge tags, pricing table, terms and conditions |
-| **Contract** | Agreement with signature blocks | Header, parties section, terms Rich Text, signature blocks, date fields |
-| **Statement of Work** | Detailed deliverables with timeline | Header, project overview, deliverables table, timeline, payment schedule |
-| **Receipt** | Transaction confirmation | Header with logo, transaction details, line items, total, payment method |
-| **Letter / Letterhead** | Branded business letter | Letterhead header/footer, date, recipient address, body Rich Text |
-| **Report** | Data summary with charts | Header, executive summary Rich Text, data tables, chart blocks, footer |
-| **Certificate** | Award or completion certificate (landscape default) | Decorative border, title, recipient name, description, signature, date |
-| **Start from Scratch** | Empty canvas with page chrome only | Header zone, footer zone, empty body |
+| Template                | Description                                                       | Pre-built Blocks                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Invoice**             | Standard invoice with company header, bill-to, line items, totals | Header with logo + company info, bill-to/ship-to Row, line items Table/List, totals section, payment terms Rich Text |
+| **Proposal / Quote**    | Client proposal with scope, pricing, terms                        | Header, client info, scope Rich Text with merge tags, pricing table, terms and conditions                            |
+| **Contract**            | Agreement with signature blocks                                   | Header, parties section, terms Rich Text, signature blocks, date fields                                              |
+| **Statement of Work**   | Detailed deliverables with timeline                               | Header, project overview, deliverables table, timeline, payment schedule                                             |
+| **Receipt**             | Transaction confirmation                                          | Header with logo, transaction details, line items, total, payment method                                             |
+| **Letter / Letterhead** | Branded business letter                                           | Letterhead header/footer, date, recipient address, body Rich Text                                                    |
+| **Report**              | Data summary with charts                                          | Header, executive summary Rich Text, data tables, chart blocks, footer                                               |
+| **Certificate**         | Award or completion certificate (landscape default)               | Decorative border, title, recipient name, description, signature, date                                               |
+| **Start from Scratch**  | Empty canvas with page chrome only                                | Header zone, footer zone, empty body                                                                                 |
 
 ### Step 2: Connect to Data
 
@@ -155,6 +157,7 @@ The canvas renders a physical page on a neutral background (`#E2E0DC`), similar 
 ### Page Size Selector (Replaces Viewport Toggle)
 
 The standard App Designer viewport toggle (Desktop / Tablet / Mobile) is replaced with:
+
 - **Page size selector** — dropdown with available sizes (US Letter, A4, Legal, A3, A5)
 - **Orientation toggle** — Portrait / Landscape
 - **Zoom control** — 50% / 75% / 100% / 125% / 150% / Fit to Width
@@ -198,6 +201,7 @@ The Manager designs on a continuous canvas without manually managing page bounda
 ```
 
 **Header zone behavior:**
+
 - Fixed height (configurable, default 80px)
 - Supports the same blocks as the main canvas: Rich Text, Field Display, Image, Row/Column containers
 - Repeats identically on every rendered page
@@ -205,6 +209,7 @@ The Manager designs on a continuous canvas without manually managing page bounda
 - Typical content: company logo, company name/address, document title, document number field
 
 **Footer zone behavior:**
+
 - Fixed height (configurable, default 48px)
 - Same block support as header
 - Repeats identically on every rendered page
@@ -223,30 +228,30 @@ The Document App type uses the same block categories as the standard App Designe
 
 ### New Blocks
 
-| Block | Category | Behavior |
-|---|---|---|
-| **Page Break** | Layout | Forces subsequent content to the next page. Visible as a dashed line in design mode, invisible in output. |
+| Block          | Category | Behavior                                                                                                  |
+| -------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| **Page Break** | Layout   | Forces subsequent content to the next page. Visible as a dashed line in design mode, invisible in output. |
 
 ### Modified Blocks
 
-| Block | Modification |
-|---|---|
-| **Rich Text** | Merge tag extension enabled. TipTap Environment 2 with the `mergeTag` custom node active — field placeholder pills (`{field_name}`) can be inserted from the field picker. Supports simple tags, loop tags (`{#items}...{/items}`), and conditional tags (`{#if field}...{/if}`). This is the primary block for free-text document content with dynamic data. |
-| **Table/List** | When rendering to PDF, overflow behavior changes: rows that exceed the page boundary continue on the next page with column headers repeated. Pagination controls (used in web-facing Apps) are disabled — all rows render. |
-| **Chart** | Renders as a static image in PDF output. Gotenberg captures the chart component as a PNG and embeds it in the PDF. See `chart-blocks.md`. |
-| **Image** | Supports the `{image_field}` merge tag pattern for dynamic images (company logos, signatures, product photos). When bound to an image/attachment field, resolves to the field's file URL at render time. |
+| Block          | Modification                                                                                                                                                                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rich Text**  | Merge tag extension enabled. TipTap Environment 2 with the `mergeTag` custom node active — field placeholder pills (`{field_name}`) can be inserted from the field picker. Supports simple tags, loop tags (`{#items}...{/items}`), and conditional tags (`{#if field}...{/if}`). This is the primary block for free-text document content with dynamic data. |
+| **Table/List** | When rendering to PDF, overflow behavior changes: rows that exceed the page boundary continue on the next page with column headers repeated. Pagination controls (used in web-facing Apps) are disabled — all rows render.                                                                                                                                    |
+| **Chart**      | Renders as a static image in PDF output. Gotenberg captures the chart component as a PNG and embeds it in the PDF. See `chart-blocks.md`.                                                                                                                                                                                                                     |
+| **Image**      | Supports the `{image_field}` merge tag pattern for dynamic images (company logos, signatures, product photos). When bound to an image/attachment field, resolves to the field's file URL at render time.                                                                                                                                                      |
 
 ### Blocks Not Available in Document App Type
 
-| Block | Reason |
-|---|---|
-| **Scheduler** | Interactive — no meaning in a static document |
-| **Payment (Stripe)** | Interactive — requires web context |
-| **Approval** | Interactive — requires Portal App client context |
-| **Comment Thread** | Interactive — requires user sessions |
-| **Form Input blocks** | Documents are output-only, not input |
-| **Navigation Menu** | Documents don't have navigation |
-| **Embed** | iframes don't render in PDF |
+| Block                 | Reason                                           |
+| --------------------- | ------------------------------------------------ |
+| **Scheduler**         | Interactive — no meaning in a static document    |
+| **Payment (Stripe)**  | Interactive — requires web context               |
+| **Approval**          | Interactive — requires Portal App client context |
+| **Comment Thread**    | Interactive — requires user sessions             |
+| **Form Input blocks** | Documents are output-only, not input             |
+| **Navigation Menu**   | Documents don't have navigation                  |
+| **Embed**             | iframes don't render in PDF                      |
 
 ---
 
@@ -256,11 +261,11 @@ The Document App type uses the same block categories as the standard App Designe
 
 Document Apps use the same three data binding modes as other App types (see `app-designer.md` > Data Binding Modes):
 
-| Mode | Document Usage |
-|---|---|
-| **Context-Bound** (default) | The document template's context table. Field Display blocks and Rich Text merge tags pull from this table's fields for the current record. ~70% of use. |
-| **Relationship-Bound** | Table/List blocks showing related records (e.g., line items linked to an invoice). Used for repeating row sections. ~25% of use. |
-| **Query-Bound** (power user) | Pull data from any table for complex documents that aggregate across multiple sources. ~5% of use. |
+| Mode                         | Document Usage                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Context-Bound** (default)  | The document template's context table. Field Display blocks and Rich Text merge tags pull from this table's fields for the current record. ~70% of use. |
+| **Relationship-Bound**       | Table/List blocks showing related records (e.g., line items linked to an invoice). Used for repeating row sections. ~25% of use.                        |
+| **Query-Bound** (power user) | Pull data from any table for complex documents that aggregate across multiple sources. ~5% of use.                                                      |
 
 **Single-record context.** A Document template always renders in the context of one record. When generating, the system resolves all data binding for that specific record. Batch generation (multiple records → multiple documents) is handled at the automation layer — the template itself is always single-record.
 
@@ -270,14 +275,15 @@ When a Rich Text block is selected in a Document App, the field picker sidebar s
 
 **Available merge tag types:**
 
-| Tag Type | Syntax | Example |
-|---|---|---|
-| **Simple field** | `{field_name}` | `{client_name}`, `{invoice_date}`, `{total_amount}` |
+| Tag Type             | Syntax                              | Example                                                                  |
+| -------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| **Simple field**     | `{field_name}`                      | `{client_name}`, `{invoice_date}`, `{total_amount}`                      |
 | **Loop (repeating)** | `{#relationship}...{/relationship}` | `{#line_items}...{/line_items}` — repeats content for each linked record |
-| **Conditional** | `{#if field_name}...{/if}` | `{#if has_discount}Discount: {discount_amount}{/if}` |
-| **Page tokens** | `{page_number}`, `{total_pages}` | Available in header/footer zones only |
+| **Conditional**      | `{#if field_name}...{/if}`          | `{#if has_discount}Discount: {discount_amount}{/if}`                     |
+| **Page tokens**      | `{page_number}`, `{total_pages}`    | Available in header/footer zones only                                    |
 
 The field picker sidebar organizes fields in sections:
+
 - **This Table** — fields from the context table (shown first, expanded by default)
 - **Related Tables** — fields from Cross-Linked tables, grouped by relationship name (e.g., "Line Items (via Items field)", "Client (via Client field)")
 
@@ -325,16 +331,16 @@ const response = await fetch(`${GOTENBERG_URL}/forms/chromium/convert/html`, {
   method: 'POST',
   body: formData({
     'index.html': styledHtml,
-    'paperWidth': pageConfig.widthInches,    // e.g., 8.5
-    'paperHeight': pageConfig.heightInches,  // e.g., 11
-    'marginTop': pageConfig.marginTop,       // in inches
-    'marginBottom': pageConfig.marginBottom,
-    'marginLeft': pageConfig.marginLeft,
-    'marginRight': pageConfig.marginRight,
-    'preferCssPageSize': 'false',
-    'printBackground': 'true',
-    'headerHtml': headerHtml,    // Gotenberg repeats on every page
-    'footerHtml': footerHtml,    // Gotenberg repeats on every page
+    paperWidth: pageConfig.widthInches, // e.g., 8.5
+    paperHeight: pageConfig.heightInches, // e.g., 11
+    marginTop: pageConfig.marginTop, // in inches
+    marginBottom: pageConfig.marginBottom,
+    marginLeft: pageConfig.marginLeft,
+    marginRight: pageConfig.marginRight,
+    preferCssPageSize: 'false',
+    printBackground: 'true',
+    headerHtml: headerHtml, // Gotenberg repeats on every page
+    footerHtml: footerHtml, // Gotenberg repeats on every page
   }),
 });
 ```
@@ -354,17 +360,20 @@ The Document designer includes a contextual **"Set Up Automation"** button in th
 The wizard already knows: the source table, the document template, and the available fields. It asks three things:
 
 **1. Output Format**
+
 - PDF (default)
 - DOCX
 - Both
 
 **2. Destination**
+
 - **Attach to record** — select an attachment field on the source table (or create one). Generated file is stored as an attachment on the record.
 - **Email to recipient** — select an email field on the source table (e.g., "Client Email") or enter a static address. Generated file sent as attachment.
 - **Save to Documents table** — select or create a Documents-type table. Generated file linked as a record.
 - Multiple destinations can be selected.
 
 **3. Trigger**
+
 - **Manual** (default) — "Generate Document" button on the record
 - **When record is created**
 - **When status changes to [value]** — field + value picker (e.g., Status = "Approved")
@@ -387,7 +396,7 @@ For complex flows (multi-step, conditional routing, approval gates before genera
 interface GenerateDocumentAction {
   actionType: 'generate_document';
   config: {
-    templateId: string;            // Document App ID or Document Template ID
+    templateId: string; // Document App ID or Document Template ID
     recordSource: 'trigger_record' | { tableId: string; filter: FilterRule[] };
     outputFormat: 'pdf' | 'docx' | 'both';
     delivery: Array<{
@@ -399,7 +408,7 @@ interface GenerateDocumentAction {
         recipientFieldId?: string;
         recipientStatic?: string;
         emailSubject?: string;
-        emailBody?: string;         // supports merge tags
+        emailBody?: string; // supports merge tags
         // save_to_table
         targetTableId?: string;
         // webhook
@@ -468,6 +477,7 @@ EveryStack maintains multiple document generation paths, each suited to differen
 ### Shared Infrastructure
 
 All paths share:
+
 - The **automation system** — "Generate Document" action works with all template types. The action config includes `templateType: 'tiptap' | 'app_document' | 'docx_upload'` to route to the appropriate engine.
 - **Gotenberg** — PDF conversion for all paths (TipTap HTML → PDF for MVP templates, block tree HTML → PDF for Document Apps, DOCX → PDF for uploaded templates)
 - **Storage** — `template_definitions` and `generated_documents` tables store all template types
@@ -489,17 +499,17 @@ EveryStack is building a custom DOCX template engine to replace the Docxtemplate
 
 ### Engine Capabilities
 
-| Feature | Status |
-|---|---|
-| Tag parsing (`{{placeholder}}` extraction from document.xml, headers, footers) | Build spec complete |
-| Simple replacement (with XML run-splitting handling) | Build spec complete |
-| Loop support (`{{#items}}...{{/items}}` — table rows and paragraph sections) | Build spec complete |
-| Conditional sections (`{{#if field}}...{{/if}}`) | Build spec complete |
+| Feature                                                                               | Status              |
+| ------------------------------------------------------------------------------------- | ------------------- |
+| Tag parsing (`{{placeholder}}` extraction from document.xml, headers, footers)        | Build spec complete |
+| Simple replacement (with XML run-splitting handling)                                  | Build spec complete |
+| Loop support (`{{#items}}...{{/items}}` — table rows and paragraph sections)          | Build spec complete |
+| Conditional sections (`{{#if field}}...{{/if}}`)                                      | Build spec complete |
 | Expression filters (`{{field \| currency}}`, `{{field \| format_date:"MM/DD/YYYY"}}`) | Build spec complete |
-| Image replacement (alt-text-based `{{logo}}` → image buffer swap) | Build spec complete |
-| API endpoints + workspace data connection | Build spec complete |
-| Mapping Wizard UI | Build spec complete |
-| Automation integration | Build spec complete |
+| Image replacement (alt-text-based `{{logo}}` → image buffer swap)                     | Build spec complete |
+| API endpoints + workspace data connection                                             | Build spec complete |
+| Mapping Wizard UI                                                                     | Build spec complete |
+| Automation integration                                                                | Build spec complete |
 
 Build implementation follows the patterns described above (§ Template Mapper Architecture). The engine replaces Docxtemplater and eliminates the $1,500 PRO pack dependency.
 
@@ -508,6 +518,7 @@ Build implementation follows the patterns described above (§ Template Mapper Ar
 The Template Mapper is the field mapping interface for uploaded DOCX templates. It is **not** a document editor — it is a visual tool for connecting Word template placeholders to EveryStack data fields.
 
 **Workflow:**
+
 1. User uploads a .docx file designed in Word/Google Docs
 2. Platform parses the document and extracts all `{{placeholder}}` tags
 3. Tags are displayed grouped by type: simple fields, loops (with inner fields), conditionals, images
@@ -528,7 +539,7 @@ Post-MVP, Document Apps are stored in the `apps` table alongside other App Desig
 
 ```typescript
 // apps.type includes 'document' for Document Apps
-type: 'portal' | 'internal_app' | 'form' | 'website' | 'widget' | 'document'
+type: 'portal' | 'internal_app' | 'form' | 'website' | 'widget' | 'document';
 ```
 
 Document-specific fields stored in existing JSONB columns:
@@ -539,13 +550,13 @@ interface DocumentLayoutConfig {
   pageSize: 'us_letter' | 'a4' | 'us_legal' | 'a3' | 'a5';
   orientation: 'portrait' | 'landscape';
   margins: {
-    top: number;      // inches
+    top: number; // inches
     bottom: number;
     left: number;
     right: number;
   };
-  headerHeight: number | null;   // px, null = no header
-  footerHeight: number | null;   // px, null = no footer
+  headerHeight: number | null; // px, null = no header
+  footerHeight: number | null; // px, null = no footer
 }
 ```
 
@@ -555,7 +566,7 @@ interface DocumentLayoutConfig {
 
 ```typescript
 // template_type adds 'app_document' alongside existing values
-template_type: 'tiptap' | 'docx_upload' | 'app_document'
+template_type: 'tiptap' | 'docx_upload' | 'app_document';
 
 // For Document App templates (post-MVP):
 // - file_url: null (no uploaded file)
@@ -577,13 +588,13 @@ Stores output files from all paths. The `template_id` FK points to the `template
 
 ## Page Sizes Reference
 
-| Size | Dimensions (in) | Dimensions (mm) | Common Use |
-|---|---|---|---|
-| **US Letter** | 8.5 × 11 | 215.9 × 279.4 | Standard US business documents (default) |
-| **A4** | 8.27 × 11.69 | 210 × 297 | International standard (default outside US) |
-| **US Legal** | 8.5 × 14 | 215.9 × 355.6 | Legal contracts, agreements |
-| **A3** | 11.69 × 16.54 | 297 × 420 | Large format reports, posters |
-| **A5** | 5.83 × 8.27 | 148 × 210 | Booklets, small certificates |
+| Size          | Dimensions (in) | Dimensions (mm) | Common Use                                  |
+| ------------- | --------------- | --------------- | ------------------------------------------- |
+| **US Letter** | 8.5 × 11        | 215.9 × 279.4   | Standard US business documents (default)    |
+| **A4**        | 8.27 × 11.69    | 210 × 297       | International standard (default outside US) |
+| **US Legal**  | 8.5 × 14        | 215.9 × 355.6   | Legal contracts, agreements                 |
+| **A3**        | 11.69 × 16.54   | 297 × 420       | Large format reports, posters               |
+| **A5**        | 5.83 × 8.27     | 148 × 210       | Booklets, small certificates                |
 
 Default page size is inferred from workspace locale (US Letter for US workspaces, A4 for international).
 
@@ -619,11 +630,11 @@ Default page size is inferred from workspace locale (US Letter for US workspaces
 
 ### Dependencies
 
-| Dependency | Source |
-|---|---|
-| App Designer (block model, canvas, property panel, themes) | Post-MVP — Portals & Apps |
-| Gotenberg pipeline (HTML → PDF, network isolation, sandboxing) | Post-MVP — Documents |
-| Automation system (triggers, actions, action registry) | Post-MVP — Automations |
-| Smart Doc TipTap editor (merge tag extension, merge-resolver) | Post-MVP — Documents |
+| Dependency                                                     | Source                    |
+| -------------------------------------------------------------- | ------------------------- |
+| App Designer (block model, canvas, property panel, themes)     | Post-MVP — Portals & Apps |
+| Gotenberg pipeline (HTML → PDF, network isolation, sandboxing) | Post-MVP — Documents      |
+| Automation system (triggers, actions, action registry)         | Post-MVP — Automations    |
+| Smart Doc TipTap editor (merge tag extension, merge-resolver)  | Post-MVP — Documents      |
 
 **Note:** The automation "Set Up Automation" wizard and full "Generate Document" action depend on the automation system (Post-MVP — Automations). Post-MVP — Document Designer can build the designer and render pipeline; the automation integration lands when Post-MVP — Automations is ready. In the interim, document generation can be triggered manually (button on record → generate → download).

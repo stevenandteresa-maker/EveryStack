@@ -14,11 +14,11 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| Part 1: What You Already Have (And Why It Matters for Agents) | 25–132 | Existing infrastructure (AIService, SDS, BullMQ, permissions) that agents build on |
-| Part 2: What Needs to Change or Be Added | 133–623 | AgentSession, AgentScope, execution runtime, 3-layer memory, 5-tier approval, safety framework, 8 agent types |
-| Summary: The 30-Second Version | 624–636 | Quick reference for the full agent architecture |
+| Section                                                       | Lines   | Covers                                                                                                        |
+| ------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| Part 1: What You Already Have (And Why It Matters for Agents) | 25–132  | Existing infrastructure (AIService, SDS, BullMQ, permissions) that agents build on                            |
+| Part 2: What Needs to Change or Be Added                      | 133–623 | AgentSession, AgentScope, execution runtime, 3-layer memory, 5-tier approval, safety framework, 8 agent types |
+| Summary: The 30-Second Version                                | 624–636 | Quick reference for the full agent architecture                                                               |
 
 ---
 
@@ -32,9 +32,9 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **What's planned:** `AIProviderAdapter` interface with `fast`/`standard`/`advanced` tiers. Feature code never references providers or models. `FEATURE_ROUTING` maps task types to tiers, `CAPABILITY_ROUTING` maps tiers to providers.
 
-**Why it matters for agents:** An agent performing a multi-step task will use different capability tiers *within the same task*. Intent classification for a sub-step → `fast`. Planning the next action → `standard`. Generating a complex automation from natural language → `advanced`. The tier abstraction means the agent orchestrator can route each reasoning step appropriately without coupling to models.
+**Why it matters for agents:** An agent performing a multi-step task will use different capability tiers _within the same task_. Intent classification for a sub-step → `fast`. Planning the next action → `standard`. Generating a complex automation from natural language → `advanced`. The tier abstraction means the agent orchestrator can route each reasoning step appropriately without coupling to models.
 
-**Where it falls short:** The current routing is a static map — `FEATURE_ROUTING[taskType] → tier`. Agents need *dynamic* tier selection within a single execution based on the complexity of what they're reasoning about at that moment. A "build me an automation" agent might start at `standard` for planning, realize the logic is genuinely complex, and escalate to `advanced` mid-task. The routing layer needs to support this kind of adaptive escalation, not just fixed task-to-tier mapping.
+**Where it falls short:** The current routing is a static map — `FEATURE_ROUTING[taskType] → tier`. Agents need _dynamic_ tier selection within a single execution based on the complexity of what they're reasoning about at that moment. A "build me an automation" agent might start at `standard` for planning, realize the logic is genuinely complex, and escalate to `advanced` mid-task. The routing layer needs to support this kind of adaptive escalation, not just fixed task-to-tier mapping.
 
 ---
 
@@ -44,7 +44,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** Agents are, at their core, a reasoning loop that calls tools. Your tool registry IS the agent's action space. The fact that tools are already permission-gated (`requiredPermissions: Permission[]`), schema-validated (JSON Schema), and transport-agnostic (works for internal AI, MCP server, and MCP client) means agents get a well-defined, secure action space for free.
 
-**Where it falls short:** The current tool set is designed for user-facing AI assistance — search, read, create. Agents need *operational* tools that the current set doesn't include: modify automation configs, manage portal settings, update field definitions, manage user tasks, send messages on behalf of users, schedule future actions, and critically — tools for *self-management* (checkpoint own state, request human approval, spawn sub-tasks). The tool registry architecture is sound; the tool catalog needs a significant expansion for agents.
+**Where it falls short:** The current tool set is designed for user-facing AI assistance — search, read, create. Agents need _operational_ tools that the current set doesn't include: modify automation configs, manage portal settings, update field definitions, manage user tasks, send messages on behalf of users, schedule future actions, and critically — tools for _self-management_ (checkpoint own state, request human approval, spawn sub-tasks). The tool registry architecture is sound; the tool catalog needs a significant expansion for agents.
 
 ---
 
@@ -54,7 +54,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** This is perhaps the most important existing foundation. The principle that "AI operates with the user's permissions, not its own" is exactly right for agents. An agent acting on behalf of a Team Member must never see or modify data that Team Member can't access. The field-level permission resolution (read-write / read-only / hidden) gives agents properly granular boundaries.
 
-**Where it falls short:** The current model is "AI inherits user's full permissions." Agents need a *further-scoped* delegation model — a Manager might want to deploy an agent that can only operate on one specific table, or can read broadly but only write to specific fields. Think of it like creating an API key with a subset of your permissions. The permission envelope needs to support "user permissions ∩ agent scope restrictions."
+**Where it falls short:** The current model is "AI inherits user's full permissions." Agents need a _further-scoped_ delegation model — a Manager might want to deploy an agent that can only operate on one specific table, or can read broadly but only write to specific fields. Think of it like creating an API key with a subset of your permissions. The permission envelope needs to support "user permissions ∩ agent scope restrictions."
 
 ---
 
@@ -64,7 +64,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** Long-running agent tasks need exactly this infrastructure — queued execution, crash recovery, progress tracking, and timeout enforcement. The automation execution engine's sequential pipeline with checkpointing is structurally close to what an agent execution loop needs.
 
-**Where it falls short:** The automation engine runs a *predetermined* step sequence. Agents don't have a predetermined sequence — they plan, act, observe the result, and decide the next step dynamically. The execution model needs to support an *open-ended loop* that the agent controls, not a static pipeline the builder defined. Also, the 5-minute total timeout is far too short for many agent tasks (a "clean up and reorganize this entire base's field naming conventions" agent might run for 30+ minutes).
+**Where it falls short:** The automation engine runs a _predetermined_ step sequence. Agents don't have a predetermined sequence — they plan, act, observe the result, and decide the next step dynamically. The execution model needs to support an _open-ended loop_ that the agent controls, not a static pipeline the builder defined. Also, the 5-minute total timeout is far too short for many agent tasks (a "clean up and reorganize this entire base's field naming conventions" agent might run for 30+ minutes).
 
 ---
 
@@ -74,7 +74,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** The five-source attribution model already solved the hard conceptual problem of "who did this." Adding `agent` as a sixth `actor_type` is a schema-level addition, not an architecture change. The `ai_usage_log` already tracks cost per call — agents just generate more calls per logical task.
 
-**Where it falls short:** An agent generates a *sequence* of related actions that constitute a single logical task. The current audit log captures each mutation independently. There's no way to see "these 14 record updates and 3 email sends were all part of Agent Task #xyz." You need a concept of an **agent session** that groups related audit entries and AI usage entries into a single traceable unit of work. The `trace_id` correlation partially does this, but it's per-request, not per-agent-task.
+**Where it falls short:** An agent generates a _sequence_ of related actions that constitute a single logical task. The current audit log captures each mutation independently. There's no way to see "these 14 record updates and 3 email sends were all part of Agent Task #xyz." You need a concept of an **agent session** that groups related audit entries and AI usage entries into a single traceable unit of work. The `trace_id` correlation partially does this, but it's per-request, not per-agent-task.
 
 ---
 
@@ -84,7 +84,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** The automations engine and agents share a LOT of DNA. They both execute multi-step workflows, need error handling strategies, carry context between steps, interact with records/email/webhooks, and need safety rails (chain depth limits, rate caps, timeouts). Critically, your template resolution engine — the ability to reference outputs of previous steps via `{{step_N.output.fieldName}}` — is essentially a simple form of agent working memory.
 
-**Where it falls short:** Automations are *rigid flows* defined at build time. An agent's "steps" are *emergent* — decided at runtime by the LLM. The automation builder creates a static DAG; an agent creates its plan on the fly. The execution engine needs to support both paradigms, and ideally agents should be able to *use* automations as tools (e.g., "trigger the client onboarding automation for this new record").
+**Where it falls short:** Automations are _rigid flows_ defined at build time. An agent's "steps" are _emergent_ — decided at runtime by the LLM. The automation builder creates a static DAG; an agent creates its plan on the fly. The execution engine needs to support both paradigms, and ideally agents should be able to _use_ automations as tools (e.g., "trigger the client onboarding automation for this new record").
 
 ---
 
@@ -94,7 +94,7 @@ Your AI architecture is significantly more agent-ready than a typical "bolt-on A
 
 **Why it matters for agents:** Agents operating on a workspace with 30+ tables and hundreds of fields need to understand what's relevant to their task. The Context Builder solves the "needle in a haystack" problem — given a goal like "find all overdue invoices and email the clients," the semantic layer identifies which tables, fields, and records are relevant without the agent needing to enumerate everything.
 
-**Where it falls short:** The Context Builder is optimized for single-turn queries. An agent working on a multi-step task needs *progressive context refinement* — it discovers new relevant context as it works. Step 1 might reveal that "invoices" are linked to "projects" which are linked to "clients," and the agent needs to pull in the project and client schemas that weren't in the initial retrieval. The Context Builder needs to support incremental context expansion across an agent's execution. The Schema Descriptor Service (`schema-descriptor-service.md`) partially addresses this: its `describe_table()` drill-down and `link_graph` traversal map enable agents to progressively discover schema as they work, rather than requiring all context up front.
+**Where it falls short:** The Context Builder is optimized for single-turn queries. An agent working on a multi-step task needs _progressive context refinement_ — it discovers new relevant context as it works. Step 1 might reveal that "invoices" are linked to "projects" which are linked to "clients," and the agent needs to pull in the project and client schemas that weren't in the initial retrieval. The Context Builder needs to support incremental context expansion across an agent's execution. The Schema Descriptor Service (`schema-descriptor-service.md`) partially addresses this: its `describe_table()` drill-down and `link_graph` traversal map enable agents to progressively discover schema as they work, rather than requiring all context up front.
 
 ---
 
@@ -151,18 +151,18 @@ actor_id:   → agent_session_id (the specific execution)
 
 ```typescript
 interface AgentSession {
-  id: string;                          // UUID — the agent execution identity
+  id: string; // UUID — the agent execution identity
   tenant_id: string;
-  delegating_user_id: string;          // Who authorized this agent
-  agent_type: string;                  // 'workspace_assistant' | 'automation_builder' | 'data_cleanup' | ...
-  scope: AgentScope;                   // Permission boundaries (see below)
+  delegating_user_id: string; // Who authorized this agent
+  agent_type: string; // 'workspace_assistant' | 'automation_builder' | 'data_cleanup' | ...
+  scope: AgentScope; // Permission boundaries (see below)
   status: 'planning' | 'executing' | 'awaiting_approval' | 'completed' | 'failed' | 'cancelled';
-  goal: string;                        // Natural language description of the task
-  plan: AgentPlan | null;              // Current execution plan (updated as agent works)
-  config: AgentConfig;                 // Approval mode, budget limits, timeout
+  goal: string; // Natural language description of the task
+  plan: AgentPlan | null; // Current execution plan (updated as agent works)
+  config: AgentConfig; // Approval mode, budget limits, timeout
   started_at: Date;
   completed_at: Date | null;
-  parent_session_id: string | null;    // For sub-agents spawned by a parent agent
+  parent_session_id: string | null; // For sub-agents spawned by a parent agent
 }
 ```
 
@@ -171,12 +171,12 @@ interface AgentSession {
 ```typescript
 interface AgentScope {
   // Agent permissions = user permissions ∩ these constraints
-  allowed_tables: string[] | 'all';          // Which tables the agent can access
+  allowed_tables: string[] | 'all'; // Which tables the agent can access
   allowed_operations: ('read' | 'create' | 'update' | 'delete')[];
-  allowed_tools: string[] | 'all';           // Which tools from the registry
-  max_mutations: number;                     // Hard cap on write operations
-  max_records_affected: number;              // Hard cap on records touched
-  restricted_fields?: Record<string, 'hidden' | 'read_only'>;  // Further field restrictions
+  allowed_tools: string[] | 'all'; // Which tools from the registry
+  max_mutations: number; // Hard cap on write operations
+  max_records_affected: number; // Hard cap on records touched
+  restricted_fields?: Record<string, 'hidden' | 'read_only'>; // Further field restrictions
 }
 ```
 
@@ -213,18 +213,18 @@ User provides goal
   → Session complete → final summary → user notification
 ```
 
-**Key difference from automations:** The agent loop is *open-ended* — the number and sequence of steps isn't predetermined. The agent decides what to do next based on what it's observed so far. This is a fundamentally different execution model from the automation engine's sequential pipeline, but it can and should run on the same BullMQ infrastructure.
+**Key difference from automations:** The agent loop is _open-ended_ — the number and sequence of steps isn't predetermined. The agent decides what to do next based on what it's observed so far. This is a fundamentally different execution model from the automation engine's sequential pipeline, but it can and should run on the same BullMQ infrastructure.
 
 **Implementation approach:** A new job type `agent.execute` in the worker, with its own processor. The processor implements the loop above. Each iteration of the loop is a checkpoint — if the worker crashes, it resumes from the last completed step (exactly like automation checkpointing today).
 
 **Timeout policy for agents:**
 
-| Scope | Limit | Rationale |
-|-------|-------|-----------|
-| Single tool call | 30s | Same as automation step timeout |
-| Planning/reasoning step | 60s | LLM calls for complex reasoning |
-| Total agent session | Configurable: 5min–60min | User sets based on task scope |
-| Idle timeout (awaiting approval) | 24 hours | Don't hold resources indefinitely |
+| Scope                            | Limit                    | Rationale                         |
+| -------------------------------- | ------------------------ | --------------------------------- |
+| Single tool call                 | 30s                      | Same as automation step timeout   |
+| Planning/reasoning step          | 60s                      | LLM calls for complex reasoning   |
+| Total agent session              | Configurable: 5min–60min | User sets based on task scope     |
+| Idle timeout (awaiting approval) | 24 hours                 | Don't hold resources indefinitely |
 
 **Dynamic tier escalation within the agent loop:**
 
@@ -234,9 +234,9 @@ Unlike the static `FEATURE_ROUTING` map (see `ai-architecture.md` > Capability-B
 // Within the agent loop, each reasoning step selects its tier
 const tier = agentRouter.selectTier({
   phase: 'planning' | 'tool_selection' | 'observation_analysis' | 'replanning',
-  complexity: estimatedComplexity,     // heuristic from task context
-  previous_errors: errorCount,         // escalate after failures
-  remaining_budget: creditsLeft,       // downgrade if budget tight
+  complexity: estimatedComplexity, // heuristic from task context
+  previous_errors: errorCount, // escalate after failures
+  remaining_budget: creditsLeft, // downgrade if budget tight
 });
 ```
 
@@ -256,12 +256,13 @@ This already has a partial analog in the automation execution context's `stepOut
 
 ```typescript
 interface AgentWorkingMemory {
-  goal: string;                                    // The original task description
-  plan: AgentStep[];                               // Current plan (mutable — agent can re-plan)
-  completed_steps: CompletedStep[];                // What's been done + results
-  discovered_context: Record<string, unknown>;     // Schema/data learned during execution
-  observations: string[];                          // Natural language notes the agent leaves for itself
-  active_entities: {                               // Records/tables the agent is currently working with
+  goal: string; // The original task description
+  plan: AgentStep[]; // Current plan (mutable — agent can re-plan)
+  completed_steps: CompletedStep[]; // What's been done + results
+  discovered_context: Record<string, unknown>; // Schema/data learned during execution
+  observations: string[]; // Natural language notes the agent leaves for itself
+  active_entities: {
+    // Records/tables the agent is currently working with
     tables: string[];
     records: string[];
     cross_links: string[];
@@ -282,9 +283,9 @@ interface AgentEpisode {
   agent_type: string;
   goal: string;
   outcome: 'success' | 'partial' | 'failed';
-  summary: string;                    // AI-generated summary of what was done
-  lessons: string[];                  // What went wrong, what was tricky
-  entities_affected: string[];        // Table/record IDs touched
+  summary: string; // AI-generated summary of what was done
+  lessons: string[]; // What went wrong, what was tricky
+  entities_affected: string[]; // Table/record IDs touched
   created_at: Date;
 }
 ```
@@ -308,21 +309,22 @@ This is stored in a `workspace_knowledge` table, embedded for retrieval, and inc
 
 **The problem:** "AI never auto-applies" is too restrictive for agents. "AI always auto-applies" is too dangerous. You need a middle ground.
 
-> **Distinction from record approval workflows:** The tiered approval model here governs *agent action permissions* — can the agent do X? The generic record approval system in `approval-workflows.md` governs *record lifecycle state transitions* — can this record advance past a gate? Different problem, different data model, different UX. These two systems do not overlap. See `approval-workflows.md` > Key Architectural Decisions > "Agent approval gates remain separate."
+> **Distinction from record approval workflows:** The tiered approval model here governs _agent action permissions_ — can the agent do X? The generic record approval system in `approval-workflows.md` governs _record lifecycle state transitions_ — can this record advance past a gate? Different problem, different data model, different UX. These two systems do not overlap. See `approval-workflows.md` > Key Architectural Decisions > "Agent approval gates remain separate."
 
 **Action risk tiers:**
 
-| Risk Tier | Examples | Default Approval | Can Override? |
-|-----------|---------|-----------------|---------------|
-| **Read** | Search records, list tables, query data | None (auto-execute) | No — reads are always safe |
-| **Low-risk write** | Update a field value, add a tag, set a status | Auto-execute with undo | Yes — Manager can require approval |
-| **Medium-risk write** | Create records, send notifications, link records | Auto-execute with undo + summary | Yes — can escalate to approval-required |
-| **High-risk write** | Delete records, send external emails, modify field definitions, trigger automations | Requires approval | Yes — Admin can downgrade to auto |
-| **Structural** | Create/delete tables, modify permissions, change automation configs | Always requires approval | No — structural changes always need human review |
+| Risk Tier             | Examples                                                                            | Default Approval                 | Can Override?                                    |
+| --------------------- | ----------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------ |
+| **Read**              | Search records, list tables, query data                                             | None (auto-execute)              | No — reads are always safe                       |
+| **Low-risk write**    | Update a field value, add a tag, set a status                                       | Auto-execute with undo           | Yes — Manager can require approval               |
+| **Medium-risk write** | Create records, send notifications, link records                                    | Auto-execute with undo + summary | Yes — can escalate to approval-required          |
+| **High-risk write**   | Delete records, send external emails, modify field definitions, trigger automations | Requires approval                | Yes — Admin can downgrade to auto                |
+| **Structural**        | Create/delete tables, modify permissions, change automation configs                 | Always requires approval         | No — structural changes always need human review |
 
 **Approval UX:**
 
 When an agent hits an approval gate:
+
 1. Agent session status → `awaiting_approval`
 2. Push notification + in-app indicator to the delegating user
 3. Approval card shows: what the agent wants to do, why (reasoning), what it's done so far, diff/preview of the change
@@ -338,10 +340,10 @@ interface AgentConfig {
   // semi_autonomous: approve high-risk only (default)
   // autonomous: approve structural only
 
-  max_auto_mutations: number;         // After N auto-approved writes, pause for checkpoint
-  require_plan_approval: boolean;     // Must user approve the plan before execution starts?
+  max_auto_mutations: number; // After N auto-approved writes, pause for checkpoint
+  require_plan_approval: boolean; // Must user approve the plan before execution starts?
   notify_on_completion: boolean;
-  budget_credits: number;             // Max AI credits for this session
+  budget_credits: number; // Max AI credits for this session
 }
 ```
 
@@ -359,6 +361,7 @@ interface AgentConfig {
 **New tool categories for agents:**
 
 **Self-management tools (agents managing their own execution):**
+
 - `request_approval` — pause and ask for human input on a specific decision
 - `update_plan` — revise the execution plan based on new observations
 - `checkpoint` — explicitly save current state (beyond automatic checkpointing)
@@ -367,6 +370,7 @@ interface AgentConfig {
 - `abort_with_reason` — gracefully terminate with explanation
 
 **Schema/structural tools (for agents that manage workspace configuration):**
+
 - `create_field` / `update_field` / `delete_field`
 - `create_table` / `update_table`
 - `update_view_config`
@@ -374,20 +378,24 @@ interface AgentConfig {
 - `update_app_config`
 
 **Communication tools:**
+
 - `send_thread_message` — post to a thread on behalf of the user
 - `create_notification` — notify specific users
 - `send_email_draft` — stage an email for user review (not auto-send)
 
 **Cross-entity tools:**
+
 - `create_cross_link` / `remove_cross_link`
 - `bulk_update_records` — batch operations with a single tool call
 - `find_and_replace` — workspace-wide field value replacement
 
 **Automation-as-tool:**
+
 - `trigger_automation` — agents can invoke existing automations as tools
 - `inspect_automation_history` — check if a relevant automation has already handled something
 
 **MCP external tools (when MCP Client ships):**
+
 - All connected MCP server tools are automatically available to agents
 - Agent sees a unified tool list: internal EveryStack tools + external MCP tools
 
@@ -395,7 +403,7 @@ interface AgentConfig {
 
 ### 2.6 Agent Observability & Debugging
 
-**The problem:** Current observability tracks requests and jobs. Agents need *reasoning traces* — not just "what happened" but "why the agent decided to do it."
+**The problem:** Current observability tracks requests and jobs. Agents need _reasoning traces_ — not just "what happened" but "why the agent decided to do it."
 
 **Agent trace structure:**
 
@@ -405,14 +413,14 @@ interface AgentTraceStep {
   phase: 'planning' | 'tool_call' | 'observation' | 'replanning' | 'approval_wait';
 
   // What the agent was thinking
-  reasoning: string;              // The LLM's reasoning (extracted from chain-of-thought)
+  reasoning: string; // The LLM's reasoning (extracted from chain-of-thought)
 
   // What it decided to do
   action: {
     tool_name: string;
     parameters: Record<string, unknown>;
     risk_tier: 'read' | 'low' | 'medium' | 'high' | 'structural';
-  } | null;                       // Null for planning/observation phases
+  } | null; // Null for planning/observation phases
 
   // What happened
   result: {
@@ -437,6 +445,7 @@ interface AgentTraceStep {
 **Agent debugging UI (for Admins/Managers):**
 
 A "replay" view in the workspace admin panel showing:
+
 - The agent's goal and initial plan
 - Each step: what it decided, what it did, what it observed
 - Decision points: why it chose action A over action B
@@ -456,28 +465,33 @@ This builds on the automation execution history UI (sidebar Tab 3 with canvas hi
 **Safety layers (defense in depth):**
 
 **Layer 1 — Scope constraints (prevention):**
+
 - `AgentScope` defines hard boundaries (tables, operations, field restrictions)
 - `max_mutations` and `max_records_affected` are hard caps — agent session terminates if exceeded
 - Budget ceiling in AI credits — agent can't burn unlimited credits on a confused reasoning loop
 
 **Layer 2 — Action validation (detection):**
+
 - Every tool call passes through RBAC middleware (existing)
 - New: **pre-execution validation** — before executing a high-risk action, validate that the action is consistent with the stated goal. A "clean up field names" agent trying to delete records should trigger a safety alert.
 - Schema validation of tool parameters (existing JSON Schema validation)
 
 **Layer 3 — Rollback capability (recovery):**
+
 - Agent sessions create a **change journal** — an ordered list of every mutation made, with before/after values
 - "Undo agent session" reverses all changes in LIFO order
 - For irreversible actions (sent emails, triggered webhooks), the change journal logs them as "non-reversible" so the user knows what can't be undone
 - Change journal is essentially the audit log entries for this session, pre-linked for batch rollback
 
 **Layer 4 — Circuit breakers (containment):**
+
 - If an agent errors on 3 consecutive tool calls → auto-pause, notify user
 - If an agent's reasoning loop doesn't make progress for 3 iterations → auto-pause
 - If an agent exceeds its time budget → auto-pause (not terminate — user can extend)
 - Re-entrant protection: same chain depth logic as automations (≤5) applies to agent → sub-agent spawning
 
 **Layer 5 — Post-hoc review (audit):**
+
 - Every agent session produces a completion summary
 - High-mutation sessions (>20 writes) are flagged for admin review
 - Weekly digest: "Agents in your workspace modified X records, sent Y emails, used Z credits this week"
@@ -488,16 +502,16 @@ This builds on the automation execution history UI (sidebar Tab 3 with canvas hi
 
 Rather than a generic "agent" that does everything, plan for specialized agent types that map to your existing feature surfaces:
 
-| Agent Type | Deployment Surface | Primary Tools | Approval Mode |
-|-----------|-------------------|---------------|---------------|
-| **Workspace Assistant** | Command Bar | search, query, read — answers questions, doesn't modify | Read-only (no approval needed) |
-| **Data Steward** | Table settings / Command Bar | find_records, bulk_update, create_field, find_and_replace | Semi-autonomous |
-| **Automation Builder** | Automation creation flow | create_automation, update_automation, inspect_automation_history | Plan approval required |
-| **App Designer** | App Designer (Portals, Forms, Apps) | update_app_config, create_field, update_view_config | Plan approval required |
-| **Onboarding Agent** | New workspace setup | create_table, create_field, create_automation, create_cross_link | Supervised |
-| **Communication Drafter** | Record Thread / Chat / Email | search_records, send_email_draft, send_thread_message | Emails require approval |
-| **Report Builder** | Document Templates / Portals | search_records, query_tables, generate_document | Semi-autonomous |
-| **Data Import Agent** | Sync / CSV import | create_records, update_records, create_field, map_fields | Semi-autonomous with checkpoints |
+| Agent Type                | Deployment Surface                  | Primary Tools                                                    | Approval Mode                    |
+| ------------------------- | ----------------------------------- | ---------------------------------------------------------------- | -------------------------------- |
+| **Workspace Assistant**   | Command Bar                         | search, query, read — answers questions, doesn't modify          | Read-only (no approval needed)   |
+| **Data Steward**          | Table settings / Command Bar        | find_records, bulk_update, create_field, find_and_replace        | Semi-autonomous                  |
+| **Automation Builder**    | Automation creation flow            | create_automation, update_automation, inspect_automation_history | Plan approval required           |
+| **App Designer**          | App Designer (Portals, Forms, Apps) | update_app_config, create_field, update_view_config              | Plan approval required           |
+| **Onboarding Agent**      | New workspace setup                 | create_table, create_field, create_automation, create_cross_link | Supervised                       |
+| **Communication Drafter** | Record Thread / Chat / Email        | search_records, send_email_draft, send_thread_message            | Emails require approval          |
+| **Report Builder**        | Document Templates / Portals        | search_records, query_tables, generate_document                  | Semi-autonomous                  |
+| **Data Import Agent**     | Sync / CSV import                   | create_records, update_records, create_field, map_fields         | Semi-autonomous with checkpoints |
 
 Each agent type has a default `AgentConfig` and `AgentScope` that can be further restricted by the deploying user.
 
@@ -507,58 +521,58 @@ Each agent type has a default `AgentConfig` and `AgentScope` that can be further
 
 **New tables:**
 
-| Table | Purpose |
-|-------|---------|
-| `agent_sessions` | Core agent execution tracking. One row per agent task. |
-| `agent_steps` | Individual steps within a session (tool calls, reasoning phases, approval gates). |
-| `agent_episodes` | Post-session summaries for episodic memory. Embedded via pgvector. |
-| `workspace_knowledge` | Shared knowledge base entries. Embedded via pgvector. |
-| `agent_approval_requests` | Pending approval gates. Links to notification system. |
-| `agent_type_configs` | Per-workspace customization of agent type defaults (approval mode, scope overrides). |
+| Table                     | Purpose                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| `agent_sessions`          | Core agent execution tracking. One row per agent task.                               |
+| `agent_steps`             | Individual steps within a session (tool calls, reasoning phases, approval gates).    |
+| `agent_episodes`          | Post-session summaries for episodic memory. Embedded via pgvector.                   |
+| `workspace_knowledge`     | Shared knowledge base entries. Embedded via pgvector.                                |
+| `agent_approval_requests` | Pending approval gates. Links to notification system.                                |
+| `agent_type_configs`      | Per-workspace customization of agent type defaults (approval mode, scope overrides). |
 
 **`agent_sessions` schema:**
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key — this is the `actor_id` in audit_log |
-| `tenant_id` | UUID | Tenant scope |
-| `delegating_user_id` | UUID | Who authorized this agent |
-| `agent_type` | VARCHAR | Registered agent type key |
-| `status` | VARCHAR | planning / executing / awaiting_approval / completed / failed / cancelled |
-| `goal` | TEXT | Natural language task description |
-| `config` | JSONB | AgentConfig (approval mode, budget, timeout) |
-| `scope` | JSONB | AgentScope (table/operation/field restrictions) |
-| `working_memory` | JSONB | Current working memory state |
-| `plan` | JSONB | Current execution plan |
-| `cost_credits` | NUMERIC | Total credits consumed so far |
-| `mutations_count` | INTEGER | Total write operations performed |
-| `parent_session_id` | UUID (nullable) | For sub-agent sessions |
-| `started_at` | TIMESTAMPTZ | |
-| `completed_at` | TIMESTAMPTZ (nullable) | |
-| `completion_summary` | TEXT (nullable) | AI-generated summary on completion |
+| Column               | Type                   | Purpose                                                                   |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------- |
+| `id`                 | UUID                   | Primary key — this is the `actor_id` in audit_log                         |
+| `tenant_id`          | UUID                   | Tenant scope                                                              |
+| `delegating_user_id` | UUID                   | Who authorized this agent                                                 |
+| `agent_type`         | VARCHAR                | Registered agent type key                                                 |
+| `status`             | VARCHAR                | planning / executing / awaiting_approval / completed / failed / cancelled |
+| `goal`               | TEXT                   | Natural language task description                                         |
+| `config`             | JSONB                  | AgentConfig (approval mode, budget, timeout)                              |
+| `scope`              | JSONB                  | AgentScope (table/operation/field restrictions)                           |
+| `working_memory`     | JSONB                  | Current working memory state                                              |
+| `plan`               | JSONB                  | Current execution plan                                                    |
+| `cost_credits`       | NUMERIC                | Total credits consumed so far                                             |
+| `mutations_count`    | INTEGER                | Total write operations performed                                          |
+| `parent_session_id`  | UUID (nullable)        | For sub-agent sessions                                                    |
+| `started_at`         | TIMESTAMPTZ            |                                                                           |
+| `completed_at`       | TIMESTAMPTZ (nullable) |                                                                           |
+| `completion_summary` | TEXT (nullable)        | AI-generated summary on completion                                        |
 
 **Changes to existing tables:**
 
-| Table | Change |
-|-------|--------|
-| `audit_log.actor_type` | Add `'agent'` to enum. `actor_id` → `agent_sessions.id` |
-| `ai_usage_log` | Add `agent_session_id` (nullable UUID). Links AI calls to agent sessions. |
-| `notifications` | Add source types for agent approval requests and completions |
+| Table                  | Change                                                                    |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `audit_log.actor_type` | Add `'agent'` to enum. `actor_id` → `agent_sessions.id`                   |
+| `ai_usage_log`         | Add `agent_session_id` (nullable UUID). Links AI calls to agent sessions. |
+| `notifications`        | Add source types for agent approval requests and completions              |
 
 **Redis key patterns:**
 
-| Pattern | Usage | TTL |
-|---------|-------|-----|
-| `agent:session:{sessionId}:lock` | Execution lock (one worker at a time) | Session duration + buffer |
-| `agent:session:{sessionId}:heartbeat` | Liveness check — worker writes heartbeat | 30s (refreshed) |
-| `agent:budget:{sessionId}` | Running credit tally (fast reads during execution) | Session duration |
-| `agent:active:{tenantId}` | Set of currently running agent sessions per tenant | No TTL (managed) |
+| Pattern                               | Usage                                              | TTL                       |
+| ------------------------------------- | -------------------------------------------------- | ------------------------- |
+| `agent:session:{sessionId}:lock`      | Execution lock (one worker at a time)              | Session duration + buffer |
+| `agent:session:{sessionId}:heartbeat` | Liveness check — worker writes heartbeat           | 30s (refreshed)           |
+| `agent:budget:{sessionId}`            | Running credit tally (fast reads during execution) | Session duration          |
+| `agent:active:{tenantId}`             | Set of currently running agent sessions per tenant | No TTL (managed)          |
 
 ---
 
 ### 2.10 Metering & Plan Limits
 
-**The problem:** AI metering tracks individual API calls. Agent sessions are *meta-tasks* that generate many API calls.
+**The problem:** AI metering tracks individual API calls. Agent sessions are _meta-tasks_ that generate many API calls.
 
 **Extension to existing metering:**
 
@@ -569,13 +583,13 @@ Each agent type has a default `AgentConfig` and `AgentScope` that can be further
 
 **Plan limits:**
 
-| Plan | Max Concurrent Agents | Max Agent Sessions/Month | Max Session Duration |
-|------|----------------------|-------------------------|---------------------|
-| Freelancer | 1 | 20 | 10 min |
-| Starter | 2 | 100 | 15 min |
-| Professional | 3 | 500 | 30 min |
-| Business | 5 | 2,000 | 60 min |
-| Enterprise | 10 | Custom | Custom |
+| Plan         | Max Concurrent Agents | Max Agent Sessions/Month | Max Session Duration |
+| ------------ | --------------------- | ------------------------ | -------------------- |
+| Freelancer   | 1                     | 20                       | 10 min               |
+| Starter      | 2                     | 100                      | 15 min               |
+| Professional | 3                     | 500                      | 30 min               |
+| Business     | 5                     | 2,000                    | 60 min               |
+| Enterprise   | 10                    | Custom                   | Custom               |
 
 Concurrent agent limit prevents runaway resource consumption. Monthly session limit prevents cost surprises.
 
@@ -585,13 +599,13 @@ Concurrent agent limit prevents runaway resource consumption. Monthly session li
 
 This is the critical question: when do you build what? Here's how agent foundations thread into your existing phase plan without derailing it.
 
-| Phase | Agent Foundation Work |
-|-------|---------------------|
-| **MVP — Foundation (Foundation)** | Add `'agent'` to `actor_type` enum. Create `agent_sessions` table (empty). Define `AgentScope` and `AgentConfig` type interfaces in `packages/shared/types/`. Add `agent_session_id` nullable FK to `ai_usage_log`. This is schema prep — zero runtime code. |
-| **MVP — Core UX (Core UX)** | When building Context Builder with semantic retrieval, design it to support incremental context expansion (not just single-shot retrieval). This serves agents later without changing the API. Ensure the tool registry supports dynamic tool set composition (agent gets a filtered tool list based on scope). |
-| **Post-MVP — Automations (Automations)** | The automation execution engine's checkpointing, error handling, and chain depth protection are directly reusable. Build them as *reusable primitives* in `packages/shared/` rather than automation-specific code in `apps/worker/`. Also: implement `trigger_automation` as a tool in the tool registry — this is useful for Command Bar AI even before agents exist. |
-| **Post-MVP — Comms & Polish (Comms + Polish)** | Notification infrastructure for approval gates. Agent sessions can use the same notification delivery (in-app + push + email digest) that automations and comms use. |
-| **Post-MVP (Post-MVP — AI Agents)** | Agent execution runtime, memory system, approval model, safety framework, debugging UI, specialized agent types. This is where the bulk of agent-specific code lives — but the foundations from prior phases make it incremental, not a rewrite. |
+| Phase                                          | Agent Foundation Work                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP — Foundation (Foundation)**              | Add `'agent'` to `actor_type` enum. Create `agent_sessions` table (empty). Define `AgentScope` and `AgentConfig` type interfaces in `packages/shared/types/`. Add `agent_session_id` nullable FK to `ai_usage_log`. This is schema prep — zero runtime code.                                                                                                           |
+| **MVP — Core UX (Core UX)**                    | When building Context Builder with semantic retrieval, design it to support incremental context expansion (not just single-shot retrieval). This serves agents later without changing the API. Ensure the tool registry supports dynamic tool set composition (agent gets a filtered tool list based on scope).                                                        |
+| **Post-MVP — Automations (Automations)**       | The automation execution engine's checkpointing, error handling, and chain depth protection are directly reusable. Build them as _reusable primitives_ in `packages/shared/` rather than automation-specific code in `apps/worker/`. Also: implement `trigger_automation` as a tool in the tool registry — this is useful for Command Bar AI even before agents exist. |
+| **Post-MVP — Comms & Polish (Comms + Polish)** | Notification infrastructure for approval gates. Agent sessions can use the same notification delivery (in-app + push + email digest) that automations and comms use.                                                                                                                                                                                                   |
+| **Post-MVP (Post-MVP — AI Agents)**            | Agent execution runtime, memory system, approval model, safety framework, debugging UI, specialized agent types. This is where the bulk of agent-specific code lives — but the foundations from prior phases make it incremental, not a rewrite.                                                                                                                       |
 
 ---
 
@@ -609,7 +623,7 @@ Recommendation: **Parallel, not hierarchical.** Automations are user-defined, de
 
 **3. Agent memory: in the DB or in the context window?**
 
-Recommendation: **Both.** Working memory (current session state) lives in the `agent_sessions.working_memory` JSONB column and is loaded into the LLM context window at each reasoning step. Episodic memory and shared knowledge live in the DB with pgvector embeddings and are *selectively retrieved* into the context window based on relevance — same pattern as the Context Builder already uses for schema retrieval.
+Recommendation: **Both.** Working memory (current session state) lives in the `agent_sessions.working_memory` JSONB column and is loaded into the LLM context window at each reasoning step. Episodic memory and shared knowledge live in the DB with pgvector embeddings and are _selectively retrieved_ into the context window based on relevance — same pattern as the Context Builder already uses for schema retrieval.
 
 **4. Can agents create other agents?**
 

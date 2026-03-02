@@ -9,23 +9,24 @@
 
 ## Email Provider Stack
 
-| Role | Provider | Rationale |
-|------|----------|-----------|
-| **Outbound transactional + CRM** | **Resend** | Modern API, React Email support, webhook tracking (opens/clicks/bounces), clean pricing (3K free → $20/50K). |
-| **Inbound routing** | **Cloudflare Email Workers** | Receives reply emails, routes to API. Free tier. Pairs with existing Cloudflare stack. |
+| Role                             | Provider                     | Rationale                                                                                                    |
+| -------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Outbound transactional + CRM** | **Resend**                   | Modern API, React Email support, webhook tracking (opens/clicks/bounces), clean pricing (3K free → $20/50K). |
+| **Inbound routing**              | **Cloudflare Email Workers** | Receives reply emails, routes to API. Free tier. Pairs with existing Cloudflare stack.                       |
 
 ---
 
 ## Sender Identity — Four Tiers
 
-| Tier | From Address | Phase | Use Case |
-|------|-------------|-------|----------|
-| **System** | `notifications@everystack.com` | MVP | Invitations, system alerts |
-| **Workspace branded** | `{workspace}@mail.everystack.com` | Post-MVP — Documents | Automation emails, doc sends, templates |
-| **Custom domain** | `hello@clientagency.com` | Post-MVP — Documents | Professional branded outbound |
-| **Connected personal** | `alex@clientagency.com` | Post-MVP — Comms & Polish | Personal replies, connected inbox |
+| Tier                   | From Address                      | Phase                     | Use Case                                |
+| ---------------------- | --------------------------------- | ------------------------- | --------------------------------------- |
+| **System**             | `notifications@everystack.com`    | MVP                       | Invitations, system alerts              |
+| **Workspace branded**  | `{workspace}@mail.everystack.com` | Post-MVP — Documents      | Automation emails, doc sends, templates |
+| **Custom domain**      | `hello@clientagency.com`          | Post-MVP — Documents      | Professional branded outbound           |
+| **Connected personal** | `alex@clientagency.com`           | Post-MVP — Comms & Polish | Personal replies, connected inbox       |
 
 **Custom domain verification (Post-MVP — Documents):**
+
 1. Manager → Settings > Email > Domains > "Add Domain"
 2. EveryStack generates DNS records: SPF, DKIM (via Resend), DMARC
 3. Manager adds to DNS. EveryStack verifies (poll or manual button).
@@ -38,6 +39,7 @@
 Platform sends emails on behalf of the system. No compose UI. No user-authored content.
 
 **Email types:**
+
 - Workspace invitations ("You've been invited to join {workspace}")
 - System alerts (sync failures, automation errors, storage quota warnings)
 
@@ -56,6 +58,7 @@ Platform sends emails on behalf of the system. No compose UI. No user-authored c
 **Record-context modal** — email always sent in context of a record.
 
 **Entry points:**
+
 - Record View "Send Email" button (visible when record has Email field)
 - Smart Doc "Send in email" action
 - Automation "Send Email" action (headless — configured in builder)
@@ -85,6 +88,7 @@ Platform sends emails on behalf of the system. No compose UI. No user-authored c
 ```
 
 **Compose behavior:**
+
 - **To auto-population:** Email field on record → auto-fill. Multiple email fields → dropdown.
 - **Merge fields:** Type `{` → field picker. Inline teal pill node. Resolved at send time.
 - **Rich text body:** TipTap Chat Editor with bold, italic, underline, links, lists, images, horizontal rule. No headings, code blocks, or slash commands.
@@ -111,7 +115,8 @@ Every sent email creates `thread_messages` row with `message_type: 'email_outbou
 ```json
 {
   "to": ["alex@client.com"],
-  "cc": [], "bcc": [],
+  "cc": [],
+  "bcc": [],
   "subject": "Proposal for Project Alpha",
   "from_address": "hello@clientagency.com",
   "resend_message_id": "msg_abc123",
@@ -128,14 +133,14 @@ Every sent email creates `thread_messages` row with `message_type: 'email_outbou
 
 Resend webhook events → `/api/webhooks/resend` → `email_events` table.
 
-| Event | How | Display |
-|-------|-----|---------|
-| **Sent** | Resend confirms acceptance | ✓ gray |
-| **Delivered** | Delivery confirmed | ✓ teal |
-| **Opened** | Tracking pixel | 👁 with count and timestamp |
-| **Clicked** | Link wrapping | 🔗 with link name and timestamp |
-| **Bounced** | Webhook | ⚠️ red badge with reason |
-| **Complained** | Webhook | 🚫 red badge, auto-suppresses future sends |
+| Event          | How                        | Display                                    |
+| -------------- | -------------------------- | ------------------------------------------ |
+| **Sent**       | Resend confirms acceptance | ✓ gray                                     |
+| **Delivered**  | Delivery confirmed         | ✓ teal                                     |
+| **Opened**     | Tracking pixel             | 👁 with count and timestamp                |
+| **Clicked**    | Link wrapping              | 🔗 with link name and timestamp            |
+| **Bounced**    | Webhook                    | ⚠️ red badge with reason                   |
+| **Complained** | Webhook                    | 🚫 red badge, auto-suppresses future sends |
 
 - **Opt-out:** Settings > Email > Tracking > "Disable tracking." No pixel, no link wrapping.
 - **Auto-suppression:** Spam complaint → address added to suppression list. Future sends blocked with warning.
@@ -146,36 +151,36 @@ Resend webhook events → `/api/webhooks/resend` → `email_events` table.
 
 ### Sending Limits
 
-| Plan | Emails/month | Daily max |
-|------|-------------|-----------|
-| Freelancer | 500 | 100 |
-| Starter | 5,000 | 1,000 |
-| Professional | 25,000 | 5,000 |
-| Business | 100,000 | 20,000 |
-| Enterprise | Unlimited | Unlimited |
+| Plan         | Emails/month | Daily max |
+| ------------ | ------------ | --------- |
+| Freelancer   | 500          | 100       |
+| Starter      | 5,000        | 1,000     |
+| Professional | 25,000       | 5,000     |
+| Business     | 100,000      | 20,000    |
+| Enterprise   | Unlimited    | Unlimited |
 
 - **Overage:** Blocked with upgrade prompt. Compose shows "limit reached."
 - **Automation awareness:** Send Email action checks quota before executing. Fails gracefully if insufficient.
 
 ### BullMQ Email Queues
 
-| Queue | Job Type | Concurrency | Purpose |
-|-------|----------|-------------|---------|
-| `email` | `email.send` | 10 | Outbound via Resend |
-| `email` | `email.send.scheduled` | 10 | Delayed job at scheduled_at |
-| `email` | `email.event.process` | 20 | Resend webhook events |
-| `email` | `email.inbound.process` | 10 | Inbound email from Cloudflare |
-| `email-sync` | `email.sync.poll` | 5/provider | Connected mailbox polling |
+| Queue        | Job Type                | Concurrency | Purpose                       |
+| ------------ | ----------------------- | ----------- | ----------------------------- |
+| `email`      | `email.send`            | 10          | Outbound via Resend           |
+| `email`      | `email.send.scheduled`  | 10          | Delayed job at scheduled_at   |
+| `email`      | `email.event.process`   | 20          | Resend webhook events         |
+| `email`      | `email.inbound.process` | 10          | Inbound email from Cloudflare |
+| `email-sync` | `email.sync.poll`       | 5/provider  | Connected mailbox polling     |
 
 All with 3× exponential retry.
 
 ### Redis Key Patterns
 
-| Pattern | Usage | TTL |
-|---------|-------|-----|
-| `rl:email:monthly:t:{tenantId}` | Monthly send counter | 35 days |
-| `rl:email:daily:t:{tenantId}` | Daily send counter | 25 hours |
-| `cache:email:suppression:t:{tenantId}` | Suppression list cache | 300s |
+| Pattern                                | Usage                  | TTL      |
+| -------------------------------------- | ---------------------- | -------- |
+| `rl:email:monthly:t:{tenantId}`        | Monthly send counter   | 35 days  |
+| `rl:email:daily:t:{tenantId}`          | Daily send counter     | 25 hours |
+| `cache:email:suppression:t:{tenantId}` | Suppression list cache | 300s     |
 
 ---
 
@@ -239,49 +244,49 @@ Record email thread → "Reply" → compose modal pre-filled. Sent via user's co
 
 ### `email_templates`
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | Workspace |
-| name | VARCHAR | Template name |
-| subject | TEXT | Subject with `{merge}` syntax |
-| body | JSONB | TipTap JSON with merge nodes |
-| category | VARCHAR (nullable) | Grouping |
-| created_by | UUID | Author |
+| Column     | Type               | Purpose                       |
+| ---------- | ------------------ | ----------------------------- |
+| id         | UUID               | Primary key                   |
+| tenant_id  | UUID               | Workspace                     |
+| name       | VARCHAR            | Template name                 |
+| subject    | TEXT               | Subject with `{merge}` syntax |
+| body       | JSONB              | TipTap JSON with merge nodes  |
+| category   | VARCHAR (nullable) | Grouping                      |
+| created_by | UUID               | Author                        |
 
 ### `email_events`
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | |
-| message_id | UUID → thread_messages | Which sent email |
-| event_type | ENUM | sent, delivered, opened, clicked, bounced, complained |
-| metadata | JSONB | Click URL, user agent, bounce reason |
-| created_at | TIMESTAMP | |
+| Column     | Type                   | Purpose                                               |
+| ---------- | ---------------------- | ----------------------------------------------------- |
+| id         | UUID                   | Primary key                                           |
+| tenant_id  | UUID                   |                                                       |
+| message_id | UUID → thread_messages | Which sent email                                      |
+| event_type | ENUM                   | sent, delivered, opened, clicked, bounced, complained |
+| metadata   | JSONB                  | Click URL, user agent, bounce reason                  |
+| created_at | TIMESTAMP              |                                                       |
 
 ### `connected_mailboxes`
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | Primary key |
-| tenant_id | UUID | |
-| user_id | UUID | Which user's mailbox |
-| provider | ENUM | gmail, outlook |
-| email_address | VARCHAR | Connected address |
-| oauth_tokens | JSONB (encrypted) | Access + refresh tokens |
-| sync_cursor | VARCHAR | Last sync position |
-| sync_filter | ENUM | all_inbox, contacts_only |
-| status | ENUM | active, disconnected, token_expired, error |
+| Column        | Type              | Purpose                                    |
+| ------------- | ----------------- | ------------------------------------------ |
+| id            | UUID              | Primary key                                |
+| tenant_id     | UUID              |                                            |
+| user_id       | UUID              | Which user's mailbox                       |
+| provider      | ENUM              | gmail, outlook                             |
+| email_address | VARCHAR           | Connected address                          |
+| oauth_tokens  | JSONB (encrypted) | Access + refresh tokens                    |
+| sync_cursor   | VARCHAR           | Last sync position                         |
+| sync_filter   | ENUM              | all_inbox, contacts_only                   |
+| status        | ENUM              | active, disconnected, token_expired, error |
 
 ### `email_suppression_list`
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | UUID | |
-| tenant_id | UUID | |
-| email_address | VARCHAR | Suppressed address |
-| reason | ENUM | bounced, complained, manual |
+| Column        | Type    | Purpose                     |
+| ------------- | ------- | --------------------------- |
+| id            | UUID    |                             |
+| tenant_id     | UUID    |                             |
+| email_address | VARCHAR | Suppressed address          |
+| reason        | ENUM    | bounced, complained, manual |
 
 Unique index: (tenant_id, email_address). Checked before every outbound send.
 
@@ -293,8 +298,8 @@ Unique index: (tenant_id, email_address). Checked before every outbound send.
 
 ## Phasing Summary
 
-| Phase | Email Capability |
-|-------|-----------------|
-| **MVP** | System emails only: invitations, system alerts. `notifications@everystack.com`. Resend. Auth emails via Clerk. |
-| **Post-MVP — Documents** | Outbound CRM: compose UI, templates, merge fields, tracking, record timeline, branded/custom domain, sending limits, schedule send. |
-| **Post-MVP — Comms & Polish** | Connected inbox: Gmail/Outlook OAuth, two-way sync, auto-matching, reply from EveryStack, unmatched inbox. |
+| Phase                         | Email Capability                                                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **MVP**                       | System emails only: invitations, system alerts. `notifications@everystack.com`. Resend. Auth emails via Clerk.                      |
+| **Post-MVP — Documents**      | Outbound CRM: compose UI, templates, merge fields, tracking, record timeline, branded/custom domain, sending limits, schedule send. |
+| **Post-MVP — Comms & Polish** | Connected inbox: Gmail/Outlook OAuth, two-way sync, auto-matching, reply from EveryStack, unmatched inbox.                          |

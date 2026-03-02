@@ -2,6 +2,7 @@
 
 > **📋 Reconciliation Note (2026-02-27):** Reconciled with `GLOSSARY.md` (source of truth).
 > **Changes made:**
+>
 > - Marked **entire document as POST-MVP**. Per glossary MVP Scope Summary, both "Wiki / Knowledge Base" and "Commerce embeds, live chat widget" are explicitly post-MVP
 > - Renamed "Comms Hub" / "Communications Hub" → **thread model** / **communications model** (glossary: don't use "Communications Hub"; use **Record Thread** for record-level or **Chat** for personal DMs)
 > - Renamed "base-level" → **workspace-level** throughout (glossary term: Workspace, not Base)
@@ -12,6 +13,7 @@
 > - AI Agents references tagged as post-MVP per glossary
 
 > **⚠️ ENTIRE DOCUMENT IS POST-MVP.** Per `GLOSSARY.md` MVP Scope Summary, the following features referenced in this document are all post-MVP:
+>
 > - Wiki / Knowledge Base (post-MVP)
 > - Commerce embeds, live chat widget (post-MVP)
 > - Vector embeddings / semantic search (post-MVP)
@@ -33,13 +35,13 @@
 
 Five docs reference "knowledge base" in different contexts, but none define a unified concept:
 
-| Doc | Reference | What It Describes | What's Missing |
-|-----|-----------|-------------------|----------------|
-| `embeddable-extensions.md` line 450 | "AI auto-responses from knowledge base" (**post-MVP**) | Live Chat AI answering visitor questions | No spec for what "knowledge base" is, where content lives, how retrieval works |
-| `embeddable-extensions.md` line 91 | Website App type template: "Documentation / Knowledge Base" (**post-MVP** — App Designer) | A rendering surface — sidebar nav + rich text pages | No spec connecting this template to a specific data source |
-| `smart-docs.md` line 12–14 | Wiki table_type as "workspace-level knowledge base" (**post-MVP**) | Content authoring — records as pages, Smart Doc body, nesting, status | No spec connecting published wiki content to AI retrieval or Live Chat |
-| `vector-embeddings.md` line 26–27 | "NOT embedded: full rich text bodies" (**post-MVP**) | Record embeddings use only display fields (first 500 tokens) | Wiki article bodies — the actual content that answers questions — are not embedded |
-| `agent-architecture.md` line 281 | `workspace_knowledge` table (**post-MVP** — AI Agents) | Agent-to-agent institutional memory ("invoices over $10k need CFO approval") | Different purpose entirely — not customer-facing help content |
+| Doc                                 | Reference                                                                                 | What It Describes                                                            | What's Missing                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `embeddable-extensions.md` line 450 | "AI auto-responses from knowledge base" (**post-MVP**)                                    | Live Chat AI answering visitor questions                                     | No spec for what "knowledge base" is, where content lives, how retrieval works     |
+| `embeddable-extensions.md` line 91  | Website App type template: "Documentation / Knowledge Base" (**post-MVP** — App Designer) | A rendering surface — sidebar nav + rich text pages                          | No spec connecting this template to a specific data source                         |
+| `smart-docs.md` line 12–14          | Wiki table_type as "workspace-level knowledge base" (**post-MVP**)                        | Content authoring — records as pages, Smart Doc body, nesting, status        | No spec connecting published wiki content to AI retrieval or Live Chat             |
+| `vector-embeddings.md` line 26–27   | "NOT embedded: full rich text bodies" (**post-MVP**)                                      | Record embeddings use only display fields (first 500 tokens)                 | Wiki article bodies — the actual content that answers questions — are not embedded |
+| `agent-architecture.md` line 281    | `workspace_knowledge` table (**post-MVP** — AI Agents)                                    | Agent-to-agent institutional memory ("invoices over $10k need CFO approval") | Different purpose entirely — not customer-facing help content                      |
 
 The result: three existing pieces (content authoring, rendering surface, AI retrieval pipeline) that don't know about each other, and a deliverable with a phantom dependency.
 
@@ -53,11 +55,11 @@ A knowledge base article is a **wiki record with a Smart Doc content field**. Th
 
 The three surfaces:
 
-| Surface | Mechanism | Phase | New Work | MVP Status |
-|---------|-----------|-------|----------|------------|
-| **Public help center** | Website App type (App Designer) "Documentation / Knowledge Base" template, data-bound to the wiki table, filtered by `status = Published` | Post-MVP (App Designer) | Template wiring — connect the template name to wiki table_type as default data source | **Post-MVP** — App Designer and Website App type are post-MVP per glossary |
-| **Internal team reference** | Smart Docs wiki view — the default Table View for wiki table_type | Post-MVP (wiki) | None — already fully specified | **Post-MVP** — Wiki / Knowledge Base is post-MVP per glossary |
-| **Live Chat AI source** | Semantic retrieval from chunked embeddings of published article content | Post-MVP (Live Chat) | **This is the new work** — chunking strategy, embedding schema, retrieval pipeline, confidence routing | **Post-MVP** — Commerce embeds, live chat widget are post-MVP per glossary |
+| Surface                     | Mechanism                                                                                                                                 | Phase                   | New Work                                                                                               | MVP Status                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **Public help center**      | Website App type (App Designer) "Documentation / Knowledge Base" template, data-bound to the wiki table, filtered by `status = Published` | Post-MVP (App Designer) | Template wiring — connect the template name to wiki table_type as default data source                  | **Post-MVP** — App Designer and Website App type are post-MVP per glossary |
+| **Internal team reference** | Smart Docs wiki view — the default Table View for wiki table_type                                                                         | Post-MVP (wiki)         | None — already fully specified                                                                         | **Post-MVP** — Wiki / Knowledge Base is post-MVP per glossary              |
+| **Live Chat AI source**     | Semantic retrieval from chunked embeddings of published article content                                                                   | Post-MVP (Live Chat)    | **This is the new work** — chunking strategy, embedding schema, retrieval pipeline, confidence routing | **Post-MVP** — Commerce embeds, live chat widget are post-MVP per glossary |
 
 ---
 
@@ -75,17 +77,17 @@ Add `kb_sources` to the existing Live Chat widget configuration (extends `chat_w
 // Extension to chat_widgets configuration (post-MVP)
 interface ChatWidgetConfig {
   // ... existing fields from embeddable-extensions.md ...
-  
+
   kb_config: {
-    enabled: boolean;                    // Master toggle for AI auto-responses
-    source_table_ids: UUID[];            // Wiki table(s) to use as knowledge sources
-    confidence_threshold: number;        // 0.0–1.0, default 0.72 — below this, route to human
-    max_chunks_per_response: number;     // Default 5 — context budget for LLM
-    auto_reply_enabled: boolean;         // If false, AI suggests answers to agents instead of auto-replying
-    fallback_message: string;            // Shown when confidence is below threshold
-                                         // Default: "Let me connect you with someone who can help."
-    source_citation: boolean;            // Include "Learn more: [article title](url)" in auto-replies
-    status_filter: string[];             // Which record statuses to include. Default: ['Published']
+    enabled: boolean; // Master toggle for AI auto-responses
+    source_table_ids: UUID[]; // Wiki table(s) to use as knowledge sources
+    confidence_threshold: number; // 0.0–1.0, default 0.72 — below this, route to human
+    max_chunks_per_response: number; // Default 5 — context budget for LLM
+    auto_reply_enabled: boolean; // If false, AI suggests answers to agents instead of auto-replying
+    fallback_message: string; // Shown when confidence is below threshold
+    // Default: "Let me connect you with someone who can help."
+    source_citation: boolean; // Include "Learn more: [article title](url)" in auto-replies
+    status_filter: string[]; // Which record statuses to include. Default: ['Published']
   };
 }
 ```
@@ -156,7 +158,7 @@ CREATE TABLE knowledge_embeddings (
   model_id VARCHAR(100) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  
+
   UNIQUE (record_id, field_id, chunk_index)
 ) PARTITION BY HASH (tenant_id);
 
@@ -178,13 +180,13 @@ Follows the same patterns as `record_embeddings` and `file_embeddings`: same par
 
 ### Embedding Triggers
 
-| Trigger | Job | Behavior |
-|---------|-----|----------|
-| Wiki Smart Doc field saved (auto-save debounce completes) | `embedding.knowledge.upsert` | Flatten TipTap JSON → chunk → hash-compare each chunk → embed only changed/new chunks. Delete orphaned chunks (article shortened). |
-| Article status changed to non-published | `embedding.knowledge.delete` | Remove all chunks for this record. Unpublished articles should not be retrievable. |
-| Article deleted | CASCADE | `ON DELETE CASCADE` from `record_id` handles this automatically. |
-| Wiki table removed from `kb_config.source_table_ids` | No action needed | Retrieval query filters by `table_id IN (source_table_ids)` — embeddings persist but are excluded from search. Re-adding the table instantly restores them. |
-| Embedding model changed | `embedding.recompute.all` | Existing job from vector-embeddings.md already handles this. `knowledge_embeddings` included in the sweep via `model_id` mismatch detection. |
+| Trigger                                                   | Job                          | Behavior                                                                                                                                                    |
+| --------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wiki Smart Doc field saved (auto-save debounce completes) | `embedding.knowledge.upsert` | Flatten TipTap JSON → chunk → hash-compare each chunk → embed only changed/new chunks. Delete orphaned chunks (article shortened).                          |
+| Article status changed to non-published                   | `embedding.knowledge.delete` | Remove all chunks for this record. Unpublished articles should not be retrievable.                                                                          |
+| Article deleted                                           | CASCADE                      | `ON DELETE CASCADE` from `record_id` handles this automatically.                                                                                            |
+| Wiki table removed from `kb_config.source_table_ids`      | No action needed             | Retrieval query filters by `table_id IN (source_table_ids)` — embeddings persist but are excluded from search. Re-adding the table instantly restores them. |
+| Embedding model changed                                   | `embedding.recompute.all`    | Existing job from vector-embeddings.md already handles this. `knowledge_embeddings` included in the sweep via `model_id` mismatch detection.                |
 
 **Priority:** Medium — same as schema embeddings. Not blocking request path (async via BullMQ), but more important than low-priority record embeddings because KB content directly affects customer-facing AI quality.
 
@@ -198,9 +200,9 @@ The flattener walks the TipTap document tree and produces plain text with struct
 // packages/shared/ai/knowledge/flatten-tiptap.ts
 
 interface FlattenedSection {
-  headingPath: string[];    // ["Billing", "Payment Methods"]
-  content: string;          // Plain text of section body
-  tokenEstimate: number;    // Rough count (chars / 4)
+  headingPath: string[]; // ["Billing", "Payment Methods"]
+  content: string; // Plain text of section body
+  tokenEstimate: number; // Rough count (chars / 4)
 }
 
 function flattenTipTapToSections(doc: TipTapDocument): FlattenedSection[] {
@@ -316,7 +318,10 @@ provided content. Keep your response concise and conversational — this is a li
 not a document.`;
 
 const contextBlock = retrievedChunks
-  .map((chunk, i) => `[Source ${i + 1}: ${chunk.articleTitle} > ${chunk.headingPath}]\n${chunk.chunkText}`)
+  .map(
+    (chunk, i) =>
+      `[Source ${i + 1}: ${chunk.articleTitle} > ${chunk.headingPath}]\n${chunk.chunkText}`,
+  )
   .join('\n\n');
 
 const userPrompt = `Knowledge base content:\n${contextBlock}\n\nVisitor question: ${visitorMessage}`;
@@ -326,11 +331,11 @@ const userPrompt = `Knowledge base content:\n${contextBlock}\n\nVisitor question
 
 Live Chat AI auto-responses consume workspace AI credits like any other AI feature:
 
-| Component | Tier | Estimated Credits | Notes |
-|-----------|------|-------------------|-------|
-| Embed visitor message | — | 0 | Embedding is platform infrastructure (vector-embeddings.md) |
-| LLM response generation | `standard` | 1–3 | Short responses from grounded context; standard tier sufficient |
-| Confidence too low (no response) | — | 0 | No LLM call if chunks don't meet threshold |
+| Component                        | Tier       | Estimated Credits | Notes                                                           |
+| -------------------------------- | ---------- | ----------------- | --------------------------------------------------------------- |
+| Embed visitor message            | —          | 0                 | Embedding is platform infrastructure (vector-embeddings.md)     |
+| LLM response generation          | `standard` | 1–3               | Short responses from grounded context; standard tier sufficient |
+| Confidence too low (no response) | —          | 0                 | No LLM call if chunks don't meet threshold                      |
 
 Metered via existing `ai-metering.md` pipeline. Usage appears in Settings > AI Usage as "Live Chat AI Responses."
 
@@ -402,11 +407,13 @@ When a user selects this template in the App creation flow:
 **Step 1 (Choose a Starting Point):** User selects "Documentation / Knowledge Base"
 
 **Step 2 (Connect to Data):** Instead of showing an open table picker, the wizard:
+
 - Lists existing wiki tables in the workspace: "Connect to an existing knowledge base"
 - If none exist: "Create a new Knowledge Base table" (one-click creates a wiki table_type with default fields: Title, Content, Status, Parent, Tags)
 - The selected wiki table becomes the data source. Filter: `status = Published`. Sort: page tree order (parent hierarchy).
 
 **Rendering:** The Documentation template renders as:
+
 - **Sidebar:** Page tree from parent field hierarchy (collapsible, matches wiki view structure)
 - **Content area:** Smart Doc content rendered as HTML via the existing `generateHTML()` pipeline from app-designer.md
 - **URL structure:** `/{app-slug}/{page-slug}` where page-slug derives from article title (auto-generated URL Slug field on wiki table)
@@ -421,18 +428,18 @@ This is the public face of the same content that the Live Chat AI retrieves from
 
 > **Note:** All referenced documents below describe post-MVP features. Cross-reference updates should be made when those documents are reconciled with the glossary.
 
-| Doc | Section | Change |
-|-----|---------|--------|
-| `vector-embeddings.md` | "What Gets Embedded" table | Add row: `Knowledge base articles` / `Article title + heading path + section content (chunked)` / `knowledge_embeddings` / `Smart Doc content field saved (published articles only)` — **post-MVP** |
-| `vector-embeddings.md` | "NOT embedded" note | Remove "full rich text bodies" from the exclusion list, or qualify: "full rich text bodies (except knowledge base articles, which are chunked and embedded via `knowledge_embeddings` — post-MVP)" |
-| `vector-embeddings.md` | "Command Bar Search Pipeline" | Note that Channel 4 also queries `knowledge_embeddings` — KB articles surface in Command Bar search for internal users — **post-MVP** |
-| `embeddable-extensions.md` | Live Chat AI description | Replace with reference to this spec: "AI-powered auto-responses — see `gaps/knowledge-base-live-chat-ai.md` for full pipeline: knowledge base designation, Smart Doc content chunking, embedding schema, confidence-based routing, agent-assist mode" — **post-MVP** |
-| `embeddable-extensions.md` | Website App type "Documentation / Knowledge Base" template | Add note: "Default data source: wiki table_type. See `gaps/knowledge-base-live-chat-ai.md` > Website App Type Help Center Wiring" — **post-MVP** |
-| `smart-docs.md` | Wiki Architecture section | Add: "Wiki tables can be designated as Live Chat AI knowledge sources via the Live Chat widget's KB configuration. Published articles are automatically chunked and embedded for semantic retrieval. See `gaps/knowledge-base-live-chat-ai.md`" — **post-MVP** |
-| `smart-docs.md` | Wiki Table Config | Note optional extension: wiki tables designated as KB sources gain `kb_enabled` visibility in the Smart Doc view toolbar — "This table is a Live Chat AI source" badge, with link to Live Chat settings — **post-MVP** |
-| `agent-architecture.md` | workspace_knowledge section | Add disambiguation: "workspace_knowledge is agent-to-agent institutional memory — distinct from the customer-facing knowledge base in `gaps/knowledge-base-live-chat-ai.md`, which serves Live Chat AI auto-responses and public help centers" — **post-MVP** |
-| `communications.md` | thread_messages model | Add `'ai_assistant'` to `author_type` enum documentation — **post-MVP** |
-| `ai-metering.md` | Credit usage table | Add row for Live Chat AI Responses: standard tier, 1–3 credits per response — **post-MVP** |
+| Doc                        | Section                                                    | Change                                                                                                                                                                                                                                                               |
+| -------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vector-embeddings.md`     | "What Gets Embedded" table                                 | Add row: `Knowledge base articles` / `Article title + heading path + section content (chunked)` / `knowledge_embeddings` / `Smart Doc content field saved (published articles only)` — **post-MVP**                                                                  |
+| `vector-embeddings.md`     | "NOT embedded" note                                        | Remove "full rich text bodies" from the exclusion list, or qualify: "full rich text bodies (except knowledge base articles, which are chunked and embedded via `knowledge_embeddings` — post-MVP)"                                                                   |
+| `vector-embeddings.md`     | "Command Bar Search Pipeline"                              | Note that Channel 4 also queries `knowledge_embeddings` — KB articles surface in Command Bar search for internal users — **post-MVP**                                                                                                                                |
+| `embeddable-extensions.md` | Live Chat AI description                                   | Replace with reference to this spec: "AI-powered auto-responses — see `gaps/knowledge-base-live-chat-ai.md` for full pipeline: knowledge base designation, Smart Doc content chunking, embedding schema, confidence-based routing, agent-assist mode" — **post-MVP** |
+| `embeddable-extensions.md` | Website App type "Documentation / Knowledge Base" template | Add note: "Default data source: wiki table_type. See `gaps/knowledge-base-live-chat-ai.md` > Website App Type Help Center Wiring" — **post-MVP**                                                                                                                     |
+| `smart-docs.md`            | Wiki Architecture section                                  | Add: "Wiki tables can be designated as Live Chat AI knowledge sources via the Live Chat widget's KB configuration. Published articles are automatically chunked and embedded for semantic retrieval. See `gaps/knowledge-base-live-chat-ai.md`" — **post-MVP**       |
+| `smart-docs.md`            | Wiki Table Config                                          | Note optional extension: wiki tables designated as KB sources gain `kb_enabled` visibility in the Smart Doc view toolbar — "This table is a Live Chat AI source" badge, with link to Live Chat settings — **post-MVP**                                               |
+| `agent-architecture.md`    | workspace_knowledge section                                | Add disambiguation: "workspace_knowledge is agent-to-agent institutional memory — distinct from the customer-facing knowledge base in `gaps/knowledge-base-live-chat-ai.md`, which serves Live Chat AI auto-responses and public help centers" — **post-MVP**        |
+| `communications.md`        | thread_messages model                                      | Add `'ai_assistant'` to `author_type` enum documentation — **post-MVP**                                                                                                                                                                                              |
+| `ai-metering.md`           | Credit usage table                                         | Add row for Live Chat AI Responses: standard tier, 1–3 credits per response — **post-MVP**                                                                                                                                                                           |
 
 ---
 
@@ -440,11 +447,11 @@ This is the public face of the same content that the Live Chat AI retrieves from
 
 > **⚠️ ALL PHASES BELOW ARE POST-MVP** per `GLOSSARY.md` MVP Scope Summary.
 
-| Phase | Knowledge Base Work | Glossary MVP Status |
-|-------|-------------------|---------------------|
-| **Post-MVP — Documents** (post-MVP) | Wiki table_type operational (existing scope). Smart Doc content field with TipTap JSON storage. `knowledge_embeddings` and `knowledge_search` tables created (empty — schema only). TipTap flattener utility (`flattenTipTapToSections`) implemented and unit tested. | **Post-MVP** — Wiki / Knowledge Base |
-| **Post-MVP — Custom Apps** (post-MVP) | Website App type "Documentation / Knowledge Base" template wired to wiki table_type. Help center rendering operational via App Designer pipeline. Live Chat widget operational (existing scope). `kb_config` fields added to `chat_widgets` table. Admin UX for "AI Responses" tab in Live Chat settings (configuration only — pipeline not yet active). | **Post-MVP** — App Designer, Website App type, Live Chat widget |
-| **Post-MVP — Native App & Tap to Pay** (post-MVP) | **Activate:** `embedding.knowledge.upsert` BullMQ job processes published wiki articles → chunk → embed → store in `knowledge_embeddings`. `knowledge_search` tsvector populated. Live Chat AI retrieval pipeline operational: embed visitor message → hybrid search (semantic + keyword via RRF) → confidence check → LLM response or human routing. Agent-assist sidebar. Auto-reply delivery via thread_messages. AI credit metering. "Was this helpful?" feedback loop. | **Post-MVP** — Vector embeddings, Live Chat AI |
+| Phase                                             | Knowledge Base Work                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Glossary MVP Status                                             |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Post-MVP — Documents** (post-MVP)               | Wiki table_type operational (existing scope). Smart Doc content field with TipTap JSON storage. `knowledge_embeddings` and `knowledge_search` tables created (empty — schema only). TipTap flattener utility (`flattenTipTapToSections`) implemented and unit tested.                                                                                                                                                                                                       | **Post-MVP** — Wiki / Knowledge Base                            |
+| **Post-MVP — Custom Apps** (post-MVP)             | Website App type "Documentation / Knowledge Base" template wired to wiki table_type. Help center rendering operational via App Designer pipeline. Live Chat widget operational (existing scope). `kb_config` fields added to `chat_widgets` table. Admin UX for "AI Responses" tab in Live Chat settings (configuration only — pipeline not yet active).                                                                                                                    | **Post-MVP** — App Designer, Website App type, Live Chat widget |
+| **Post-MVP — Native App & Tap to Pay** (post-MVP) | **Activate:** `embedding.knowledge.upsert` BullMQ job processes published wiki articles → chunk → embed → store in `knowledge_embeddings`. `knowledge_search` tsvector populated. Live Chat AI retrieval pipeline operational: embed visitor message → hybrid search (semantic + keyword via RRF) → confidence check → LLM response or human routing. Agent-assist sidebar. Auto-reply delivery via thread_messages. AI credit metering. "Was this helpful?" feedback loop. | **Post-MVP** — Vector embeddings, Live Chat AI                  |
 
 ---
 

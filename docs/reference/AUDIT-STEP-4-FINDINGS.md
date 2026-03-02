@@ -10,32 +10,32 @@
 
 ## Summary
 
-| Check | Result | Findings | Fixed |
-|-------|--------|----------|-------|
-| 1. File exists | 1,922 refs checked | 1 (2 lines) | Noted (pending creation) |
-| 2. Section exists | 28 § refs checked | 9 | 9 |
-| 3. Circular references | 163 bidirectional pairs checked | 0 | — |
-| 4. Orphan docs | 63 docs checked | 0 | — |
-| 5. Stale rename references | 63 docs checked | 0 | — |
-| **Totals** | | **10** | **9 fixed, 1 informational** |
+| Check                      | Result                          | Findings    | Fixed                        |
+| -------------------------- | ------------------------------- | ----------- | ---------------------------- |
+| 1. File exists             | 1,922 refs checked              | 1 (2 lines) | Noted (pending creation)     |
+| 2. Section exists          | 28 § refs checked               | 9           | 9                            |
+| 3. Circular references     | 163 bidirectional pairs checked | 0           | —                            |
+| 4. Orphan docs             | 63 docs checked                 | 0           | —                            |
+| 5. Stale rename references | 63 docs checked                 | 0           | —                            |
+| **Totals**                 |                                 | **10**      | **9 fixed, 1 informational** |
 
 ---
 
 ## Findings Table
 
-| # | Source File | Line | References | Issue | Severity |
-|---|------------|------|------------|-------|----------|
-| 1 | `document-designer.md` | 463, 504 | `docx-template-engine-prompts.md` | File marked "pending creation" — does not exist | Info |
-| 2 | `GLOSSARY.md` | 635 | `sync-engine.md` §Plan-Based Record Quotas | Heading does not exist; actual: §Record Quota Enforcement | Moderate |
-| 3 | `GLOSSARY.md` | 636 | `sync-engine.md` §Plan-Based Record Quotas | Same as #2 | Moderate |
-| 4 | `GLOSSARY.md` | 637 | `ai-metering.md` §Credit Allocation | Heading does not exist; actual: §Monthly Credit Budgets by Tier | Moderate |
-| 5 | `GLOSSARY.md` | 638 | `ai-metering.md` §Rate Limiting | No rate limiting heading exists in `ai-metering.md`; closest: §AIService Wrapper Implementation + §Plan Limits for Agents | Moderate |
-| 6 | `GLOSSARY.md` | 639 | `portals.md` §Plan Limits | Heading does not exist; actual: §Portal Client Limits — MVP | Moderate |
-| 7 | `GLOSSARY.md` | 640 | `portals.md` §Plan Limits | Same as #6 | Moderate |
-| 8 | `data-model.md` | 99 | `smart-docs.md` §mergeTag node | Heading does not exist; `mergeTag` is a row in the §Custom EveryStack Node Definitions table | Moderate |
-| 9 | `data-model.md` | 165 | `platform-api.md` §Tenant Creation + `GLOSSARY.md` §Platform-level keys | Both headings wrong; actual: §Tenant Management API and §Platform API | Moderate |
-| 10 | `platform-api.md` | 801 | `portals.md` §Portal Access | Heading does not exist; actual: §`portal_access` Table | Low |
-| 11 | `platform-api.md` | 819 | `smart-docs.md` §mergeTag node | Same as #8 | Low |
+| #   | Source File            | Line     | References                                                              | Issue                                                                                                                     | Severity |
+| --- | ---------------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 1   | `document-designer.md` | 463, 504 | `docx-template-engine-prompts.md`                                       | File marked "pending creation" — does not exist                                                                           | Info     |
+| 2   | `GLOSSARY.md`          | 635      | `sync-engine.md` §Plan-Based Record Quotas                              | Heading does not exist; actual: §Record Quota Enforcement                                                                 | Moderate |
+| 3   | `GLOSSARY.md`          | 636      | `sync-engine.md` §Plan-Based Record Quotas                              | Same as #2                                                                                                                | Moderate |
+| 4   | `GLOSSARY.md`          | 637      | `ai-metering.md` §Credit Allocation                                     | Heading does not exist; actual: §Monthly Credit Budgets by Tier                                                           | Moderate |
+| 5   | `GLOSSARY.md`          | 638      | `ai-metering.md` §Rate Limiting                                         | No rate limiting heading exists in `ai-metering.md`; closest: §AIService Wrapper Implementation + §Plan Limits for Agents | Moderate |
+| 6   | `GLOSSARY.md`          | 639      | `portals.md` §Plan Limits                                               | Heading does not exist; actual: §Portal Client Limits — MVP                                                               | Moderate |
+| 7   | `GLOSSARY.md`          | 640      | `portals.md` §Plan Limits                                               | Same as #6                                                                                                                | Moderate |
+| 8   | `data-model.md`        | 99       | `smart-docs.md` §mergeTag node                                          | Heading does not exist; `mergeTag` is a row in the §Custom EveryStack Node Definitions table                              | Moderate |
+| 9   | `data-model.md`        | 165      | `platform-api.md` §Tenant Creation + `GLOSSARY.md` §Platform-level keys | Both headings wrong; actual: §Tenant Management API and §Platform API                                                     | Moderate |
+| 10  | `platform-api.md`      | 801      | `portals.md` §Portal Access                                             | Heading does not exist; actual: §`portal_access` Table                                                                    | Low      |
+| 11  | `platform-api.md`      | 819      | `smart-docs.md` §mergeTag node                                          | Same as #8                                                                                                                | Low      |
 
 ---
 
@@ -48,9 +48,11 @@
 Two references to `docx-template-engine-prompts.md`, both explicitly marked as "pending creation":
 
 Line 463:
+
 > Engine: EveryStack's homegrown pizzip-based template engine... Build spec: `docx-template-engine-prompts.md` **(pending creation** — covers pizzip XML surgery, tag parser, loop/conditional walker, image replacer, filter pipeline).
 
 Line 504:
+
 > Build prompts will be documented in `docx-template-engine-prompts.md` **(pending creation)**.
 
 **Action:** When the DOCX template engine build spec is created, add it to the tarball and MANIFEST.md. No reference change needed — the intent is correct.
@@ -61,14 +63,14 @@ Line 504:
 
 The "Quota dimensions" table in §Plan Tiers referenced section headings that were renamed during reconciliation. All six have been corrected:
 
-| Row | Old § Reference | New § Reference |
-|-----|----------------|-----------------|
-| Record quota | `sync-engine.md` §Plan-Based Record Quotas | §Record Quota Enforcement |
-| Base connections | `sync-engine.md` §Plan-Based Record Quotas | §Record Quota Enforcement |
-| AI credits | `ai-metering.md` §Credit Allocation | §Monthly Credit Budgets by Tier |
-| AI concurrent | `ai-metering.md` §Rate Limiting | §AIService Wrapper Implementation + §Plan Limits for Agents |
-| Portal count | `portals.md` §Plan Limits | §Portal Client Limits — MVP |
-| Portal access | `portals.md` §Plan Limits | §Portal Client Limits — MVP |
+| Row              | Old § Reference                            | New § Reference                                             |
+| ---------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| Record quota     | `sync-engine.md` §Plan-Based Record Quotas | §Record Quota Enforcement                                   |
+| Base connections | `sync-engine.md` §Plan-Based Record Quotas | §Record Quota Enforcement                                   |
+| AI credits       | `ai-metering.md` §Credit Allocation        | §Monthly Credit Budgets by Tier                             |
+| AI concurrent    | `ai-metering.md` §Rate Limiting            | §AIService Wrapper Implementation + §Plan Limits for Agents |
+| Portal count     | `portals.md` §Plan Limits                  | §Portal Client Limits — MVP                                 |
+| Portal access    | `portals.md` §Plan Limits                  | §Portal Client Limits — MVP                                 |
 
 **Root cause:** Section headings in target docs were updated during the 2026-02-27 reconciliation pass, but the GLOSSARY quota dimension table's § pointers were never refreshed.
 
@@ -110,7 +112,7 @@ The `portal_access` table documentation is under the heading `### \`portal_acces
 
 ### Check 4 — Orphan Docs ✅
 
-Every doc in the tarball (excluding meta-docs: MANIFEST.md, GLOSSARY.md, CLAUDE.md, session-log.md, AUDIT-* files) is referenced by at least one other doc. **Zero orphans.**
+Every doc in the tarball (excluding meta-docs: MANIFEST.md, GLOSSARY.md, CLAUDE.md, session-log.md, AUDIT-\* files) is referenced by at least one other doc. **Zero orphans.**
 
 ### Check 5 — Stale Rename References ✅
 
@@ -120,28 +122,28 @@ Scanned all 63 docs (excluding session-log.md and AUDIT files) for references to
 
 ## Excluded from Findings (Correctly Contextualized)
 
-| Source | Reference | Reason Excluded |
-|--------|-----------|-----------------|
-| `AUDIT-STEP-2-FINDINGS.md` (×6) | `claude.md`, `interface-designer.md`, `gaps/tables-interface-boundaries.md` | Audit findings doc — documents ghost references, not a live cross-ref |
-| `MANIFEST.md` Known Issues (×6) | `interface-designer.md`, `claude.md`, `gaps/tables-interface-boundaries.md` | All in resolved (strikethrough) Known Issues section |
-| `session-log.md` (×3) | `claude.md` | Historical doc — excluded from all checks |
-| `app-designer.md:18` | `interface-designer.md` | Inside reconciliation note: "Renamed file `interface-designer.md` → `app-designer.md`" |
-| `bulk-operations.md:12` | `gaps/tables-interface-boundaries.md` | Inside reconciliation note: "file renamed to align with glossary" |
-| `record-templates.md:5` | `interface-designer.md` | Inside reconciliation note: "Fixed stale cross-reference" |
-| `data-model.md:174` | `portals.md` §Quick Portal → App Portal Conversion | Heading is "Quick Portal → App Portal Conversion (Post-MVP)" — match within tolerance |
+| Source                          | Reference                                                                   | Reason Excluded                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `AUDIT-STEP-2-FINDINGS.md` (×6) | `claude.md`, `interface-designer.md`, `gaps/tables-interface-boundaries.md` | Audit findings doc — documents ghost references, not a live cross-ref                  |
+| `MANIFEST.md` Known Issues (×6) | `interface-designer.md`, `claude.md`, `gaps/tables-interface-boundaries.md` | All in resolved (strikethrough) Known Issues section                                   |
+| `session-log.md` (×3)           | `claude.md`                                                                 | Historical doc — excluded from all checks                                              |
+| `app-designer.md:18`            | `interface-designer.md`                                                     | Inside reconciliation note: "Renamed file `interface-designer.md` → `app-designer.md`" |
+| `bulk-operations.md:12`         | `gaps/tables-interface-boundaries.md`                                       | Inside reconciliation note: "file renamed to align with glossary"                      |
+| `record-templates.md:5`         | `interface-designer.md`                                                     | Inside reconciliation note: "Fixed stale cross-reference"                              |
+| `data-model.md:174`             | `portals.md` §Quick Portal → App Portal Conversion                          | Heading is "Quick Portal → App Portal Conversion (Post-MVP)" — match within tolerance  |
 
 ---
 
 ## Files Modified
 
-| File | Changes |
-|------|---------|
-| `GLOSSARY.md` | Lines 635–640: Six § references corrected to match actual section headings |
-| `data-model.md` | Line 99: §mergeTag node → §Custom EveryStack Node Definitions |
-| `data-model.md` | Line 165: §Tenant Creation → §Tenant Management API; §Platform-level keys → §Platform API |
-| `platform-api.md` | Line 801: §Portal Access → §`portal_access` Table |
-| `platform-api.md` | Line 819: §mergeTag node → §Custom EveryStack Node Definitions |
-| `MANIFEST.md` | Not modified — all changes were character-level, line counts unchanged |
+| File              | Changes                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `GLOSSARY.md`     | Lines 635–640: Six § references corrected to match actual section headings                |
+| `data-model.md`   | Line 99: §mergeTag node → §Custom EveryStack Node Definitions                             |
+| `data-model.md`   | Line 165: §Tenant Creation → §Tenant Management API; §Platform-level keys → §Platform API |
+| `platform-api.md` | Line 801: §Portal Access → §`portal_access` Table                                         |
+| `platform-api.md` | Line 819: §mergeTag node → §Custom EveryStack Node Definitions                            |
+| `MANIFEST.md`     | Not modified — all changes were character-level, line counts unchanged                    |
 
 ---
 

@@ -11,20 +11,20 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| What Cross-Linking Is | 31–46 | Core concept, platform-agnostic relationships, differentiator |
-| Data Model | 47–130 | cross_links table, cross_link_index, field type, card_fields, link_scope_filter |
-| Query-Time Resolution | 131–230 | Level 0–2 resolution, JOIN patterns, depth limits |
-| Link Picker UX | 231–261 | Record search, create-new, multi-select, recent links |
-| Display Value Maintenance | 262–282 | Cached display values, staleness detection, refresh triggers |
-| Cross-Link + Sync Interaction | 283–291 | How cross-links interact with synced tables |
-| Scalability | 292–434 | Tiered integrity sampling, batch processing, index optimization |
-| Creation Constraints | 435–448 | Link limits, depth limits, cycle detection |
-| Cross-Link Creation & Modification Permissions | 449–483 | Who can create/edit/delete cross-links |
-| Impact Analysis | 484–518 | 3-tier consequence model, cascade visualization |
-| "Convert to Native Table" Migration | 519–567 | Converting linked external data to native EveryStack table |
-| Post-MVP Cross-Link Features | 568–573 | Rollups, multi-hop traversal, cascade engineering |
+| Section                                        | Lines   | Covers                                                                          |
+| ---------------------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| What Cross-Linking Is                          | 31–46   | Core concept, platform-agnostic relationships, differentiator                   |
+| Data Model                                     | 47–130  | cross_links table, cross_link_index, field type, card_fields, link_scope_filter |
+| Query-Time Resolution                          | 131–230 | Level 0–2 resolution, JOIN patterns, depth limits                               |
+| Link Picker UX                                 | 231–261 | Record search, create-new, multi-select, recent links                           |
+| Display Value Maintenance                      | 262–282 | Cached display values, staleness detection, refresh triggers                    |
+| Cross-Link + Sync Interaction                  | 283–291 | How cross-links interact with synced tables                                     |
+| Scalability                                    | 292–434 | Tiered integrity sampling, batch processing, index optimization                 |
+| Creation Constraints                           | 435–448 | Link limits, depth limits, cycle detection                                      |
+| Cross-Link Creation & Modification Permissions | 449–483 | Who can create/edit/delete cross-links                                          |
+| Impact Analysis                                | 484–518 | 3-tier consequence model, cascade visualization                                 |
+| "Convert to Native Table" Migration            | 519–567 | Converting linked external data to native EveryStack table                      |
+| Post-MVP Cross-Link Features                   | 568–573 | Rollups, multi-hop traversal, cascade engineering                               |
 
 ---
 
@@ -36,11 +36,11 @@ A cross-link connects a field in one table to records in another table — poten
 
 ### Progressive Disclosure
 
-| Level | User Experience |
-|---|---|
+| Level        | User Experience                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **L1 (80%)** | Create linked record field, pick target table, link records via picker. Display values show automatically. Same-workspace linking feels like Airtable. |
-| **L2 (15%)** | Cross-workspace linking (different workspaces, potentially different sync sources). Scope filters. Relationship types. Reverse field config. |
-| **L3 (5%)** | Display value cascade config, impact analysis modals, integrity sampling, bulk deletion cascades. |
+| **L2 (15%)** | Cross-workspace linking (different workspaces, potentially different sync sources). Scope filters. Relationship types. Reverse field config.           |
+| **L3 (5%)**  | Display value cascade config, impact analysis modals, integrity sampling, bulk deletion cascades.                                                      |
 
 ---
 
@@ -48,25 +48,25 @@ A cross-link connects a field in one table to records in another table — poten
 
 ### `cross_links` Table
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope — cross-links are tenant-scoped, tables in any workspace can link to tables in any other workspace |
-| `name` | VARCHAR | User-facing name (e.g., "Project → Client") |
-| `source_table_id` | UUID | Table that "has" the link field |
-| `source_field_id` | UUID | Link field on source table |
-| `target_table_id` | UUID | Table being linked to |
-| `target_display_field_id` | UUID | Which target field shows as display value |
-| `relationship_type` | VARCHAR | `many_to_one`, `one_to_many` |
-| `reverse_field_id` | UUID (nullable) | Auto-created reverse field on target table |
-| `link_scope_filter` | JSONB (nullable) | Filter constraining linkable target records |
-| `card_fields` | JSONB | Ordered field IDs to display in chips/previews. Default: display field only. |
-| `max_links_per_record` | INTEGER | Default 50, hard cap 500 |
-| `max_depth` | INTEGER | Max resolution depth (default 3) |
-| `created_by` | UUID | |
-| `environment` | VARCHAR | `'live'` (default) \| `'sandbox'`. MVP: always `'live'`. |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                    | Type             | Purpose                                                                                                         |
+| ------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `id`                      | UUID             | Primary key                                                                                                     |
+| `tenant_id`               | UUID             | Tenant scope — cross-links are tenant-scoped, tables in any workspace can link to tables in any other workspace |
+| `name`                    | VARCHAR          | User-facing name (e.g., "Project → Client")                                                                     |
+| `source_table_id`         | UUID             | Table that "has" the link field                                                                                 |
+| `source_field_id`         | UUID             | Link field on source table                                                                                      |
+| `target_table_id`         | UUID             | Table being linked to                                                                                           |
+| `target_display_field_id` | UUID             | Which target field shows as display value                                                                       |
+| `relationship_type`       | VARCHAR          | `many_to_one`, `one_to_many`                                                                                    |
+| `reverse_field_id`        | UUID (nullable)  | Auto-created reverse field on target table                                                                      |
+| `link_scope_filter`       | JSONB (nullable) | Filter constraining linkable target records                                                                     |
+| `card_fields`             | JSONB            | Ordered field IDs to display in chips/previews. Default: display field only.                                    |
+| `max_links_per_record`    | INTEGER          | Default 50, hard cap 500                                                                                        |
+| `max_depth`               | INTEGER          | Max resolution depth (default 3)                                                                                |
+| `created_by`              | UUID             |                                                                                                                 |
+| `environment`             | VARCHAR          | `'live'` (default) \| `'sandbox'`. MVP: always `'live'`.                                                        |
+| `created_at`              | TIMESTAMPTZ      |                                                                                                                 |
+| `updated_at`              | TIMESTAMPTZ      |                                                                                                                 |
 
 ### Link Scope Filters
 
@@ -84,6 +84,7 @@ Every cross-link definition can include a scope filter constraining which target
 **Operators:** `eq`, `neq`, `in`, `not_in`, `contains`, `is_empty`, `is_not_empty`. Same evaluation engine as view filters.
 
 **Where enforced:**
+
 1. **Link picker UI:** Only matching records shown.
 2. **API validation:** Invalid targets rejected on create/modify.
 3. **Sync inbound:** Non-matching links flagged with `scope_mismatch: true` (not silently dropped).
@@ -113,14 +114,14 @@ Every cross-link definition can include a scope filter constraining which target
 
 ### `cross_link_index` Table (Bidirectional Lookup)
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `tenant_id` | UUID | |
-| `cross_link_id` | UUID | Definition |
-| `source_record_id` | UUID | Record holding the link |
-| `source_table_id` | UUID | For cascade grouping |
-| `target_record_id` | UUID | Record being linked to |
-| `created_at` | TIMESTAMPTZ | |
+| Column             | Type        | Purpose                 |
+| ------------------ | ----------- | ----------------------- |
+| `tenant_id`        | UUID        |                         |
+| `cross_link_id`    | UUID        | Definition              |
+| `source_record_id` | UUID        | Record holding the link |
+| `source_table_id`  | UUID        | For cascade grouping    |
+| `target_record_id` | UUID        | Record being linked to  |
+| `created_at`       | TIMESTAMPTZ |                         |
 
 **Indexes:** Composite on `(tenant_id, target_record_id, cross_link_id)` for reverse lookups. Composite on `(tenant_id, source_record_id, cross_link_id)` for forward lookups.
 
@@ -156,8 +157,10 @@ For features traversing links (e.g., "Client's Projects' Invoices"):
 
 ```typescript
 async function resolveLinkedRecords(
-  tenantId: string, recordId: string,
-  crossLinkId: string, maxDepth: number = 3
+  tenantId: string,
+  recordId: string,
+  crossLinkId: string,
+  maxDepth: number = 3,
 ): Promise<LinkedRecordTree> {
   let currentLevel = [recordId];
   const visited = new Set<string>([recordId]); // Cycle detection
@@ -165,13 +168,16 @@ async function resolveLinkedRecords(
 
   for (let depth = 0; depth < maxDepth; depth++) {
     if (currentLevel.length === 0) break;
-    const records = await dbRead.select()
+    const records = await dbRead
+      .select()
       .from(recordsTable)
-      .where(and(
-        eq(recordsTable.tenantId, tenantId),
-        inArray(recordsTable.id, currentLevel),
-        isNull(recordsTable.deletedAt),
-      ));
+      .where(
+        and(
+          eq(recordsTable.tenantId, tenantId),
+          inArray(recordsTable.id, currentLevel),
+          isNull(recordsTable.deletedAt),
+        ),
+      );
 
     const nextLevel: string[] = [];
     for (const record of records) {
@@ -213,18 +219,18 @@ User's field permissions on the **target table** govern what they see — not so
 6. Zero permitted fields → minimal "Linked record" label
 ```
 
-**Card fields are display preference, not permission.** Card is ceiling of what *could* appear; permissions determine what *does* appear.
+**Card fields are display preference, not permission.** Card is ceiling of what _could_ appear; permissions determine what _does_ appear.
 
 **Permission resolution uses cached permission set** — no additional DB queries.
 
 ### Performance at Scale
 
-| Scenario | Query Pattern | Expected |
-|----------|--------------|----------|
+| Scenario                        | Query Pattern                 | Expected     |
+| ------------------------------- | ----------------------------- | ------------ |
 | Grid with cross-link (50K rows) | Read display_value from JSONB | Same as text |
-| Record View with 20 links | Single IN query | <50ms |
-| 2-level traversal, 20→100 | Two batch queries | <200ms |
-| 3-level, 20→100→500 | Three batch queries | <500ms |
+| Record View with 20 links       | Single IN query               | <50ms        |
+| 2-level traversal, 20→100       | Two batch queries             | <200ms       |
+| 3-level, 20→100→500             | Three batch queries           | <500ms       |
 
 ---
 
@@ -331,12 +337,12 @@ async function updateDisplayValues(targetRecordId: string, tenantId: string) {
 
 **Fan-out limits:**
 
-| Source Records | Strategy | Duration |
-|---------------|----------|----------|
-| ≤100 | Single transaction | ~50ms |
-| 100–10K | Chunked async BullMQ | Seconds |
-| 10K–100K | Chunked, low priority, 100ms delay | Minutes |
-| >100K | Admin alerted, background | Tens of minutes |
+| Source Records | Strategy                           | Duration        |
+| -------------- | ---------------------------------- | --------------- |
+| ≤100           | Single transaction                 | ~50ms           |
+| 100–10K        | Chunked async BullMQ               | Seconds         |
+| 10K–100K       | Chunked, low priority, 100ms delay | Minutes         |
+| >100K          | Admin alerted, background          | Tens of minutes |
 
 ### Cascade Concurrency Controls
 
@@ -344,11 +350,11 @@ async function updateDisplayValues(targetRecordId: string, tenantId: string) {
 
 **Priority levels:**
 
-| Trigger Source | Priority | Rationale |
-|---|---|---|
-| User edit in UI | `high` (1) | Immediate propagation expected |
-| Sync batch | `low` (10) | Background |
-| Bulk deletion cleanup | `low` (10) | Background |
+| Trigger Source        | Priority   | Rationale                      |
+| --------------------- | ---------- | ------------------------------ |
+| User edit in UI       | `high` (1) | Immediate propagation expected |
+| Sync batch            | `low` (10) | Background                     |
+| Bulk deletion cleanup | `low` (10) | Background                     |
 
 **Adaptive chunk delay:** 10ms default, increases to 50–100ms under lock contention.
 
@@ -404,17 +410,18 @@ Stale updates become no-ops. No locks — optimistic version check.
 ### Cross-Link Index Sizing
 
 | Tenant Size | Cross-Links | Records | Avg Links | Index Rows |
-|-------------|------------|---------|-----------|------------|
-| Small | 3–5 | 500 | 3 | ~1,500 |
-| Medium | 10–20 | 10K | 5 | ~50K |
-| Large | 30–50 | 100K | 8 | ~800K |
-| Enterprise | 50–100 | 500K | 10 | ~5M |
+| ----------- | ----------- | ------- | --------- | ---------- |
+| Small       | 3–5         | 500     | 3         | ~1,500     |
+| Medium      | 10–20       | 10K     | 5         | ~50K       |
+| Large       | 30–50       | 100K    | 8         | ~800K      |
+| Enterprise  | 50–100      | 500K    | 10        | ~5M        |
 
 Decision point: partition by `tenant_id` if >100M rows.
 
 ### Write Amplification During Sync
 
 500-record sync batch × 10 links each:
+
 - 500 canonical writes
 - 5,000 index writes (diff-only — unchanged links = zero writes)
 - 5,000 cascade checks (content hash eliminates ~70%)
@@ -434,15 +441,15 @@ All cascades deferred to BullMQ after sync commits.
 
 ## Creation Constraints
 
-| Constraint | Limit | Rationale |
-|------------|-------|-----------|
-| Self-links (same table) | Allowed | Common: "Parent Task" linking to another task |
-| Same-record links | Blocked | Validated at server |
-| Max links per record | `max_links_per_record` (default 50, cap 500) | Prevents unbounded fan-out |
-| Max definitions per table | 20 | Prevents complexity explosion |
-| Cycle detection | Allowed with depth limit | `visited` set in resolver |
-| Bidirectional auto-creation | Optional | Manager chooses during setup |
-| Synced table as source | Allowed | Links in canonical overlay, not synced back |
+| Constraint                  | Limit                                        | Rationale                                     |
+| --------------------------- | -------------------------------------------- | --------------------------------------------- |
+| Self-links (same table)     | Allowed                                      | Common: "Parent Task" linking to another task |
+| Same-record links           | Blocked                                      | Validated at server                           |
+| Max links per record        | `max_links_per_record` (default 50, cap 500) | Prevents unbounded fan-out                    |
+| Max definitions per table   | 20                                           | Prevents complexity explosion                 |
+| Cycle detection             | Allowed with depth limit                     | `visited` set in resolver                     |
+| Bidirectional auto-creation | Optional                                     | Manager chooses during setup                  |
+| Synced table as source      | Allowed                                      | Links in canonical overlay, not synced back   |
 
 ---
 
@@ -452,18 +459,20 @@ Cross-links create mutual dependencies between tables. Creator must have authori
 
 ### Creation Permissions
 
-| Scenario | Who Can Create |
-|----------|---------------|
-| Same Manager manages both tables | That Manager |
-| Different Managers with overlap | The overlapping Manager |
-| Different Managers, no overlap | Admin or Owner only |
+| Scenario                         | Who Can Create          |
+| -------------------------------- | ----------------------- |
+| Same Manager manages both tables | That Manager            |
+| Different Managers with overlap  | The overlapping Manager |
+| Different Managers, no overlap   | Admin or Owner only     |
 
 ### Structural vs Operational Changes
 
 **Structural (topology-altering) — same authority as creation:**
+
 - Change target table, relationship type, delete definition, remove reverse field
 
 **Operational (tuning) — Manager of either table:**
+
 - Adjust scope filter, change display field, rename, edit card_fields, adjust max_links
 
 ### Reverse Field Rules
@@ -475,6 +484,7 @@ Cross-links create mutual dependencies between tables. Creator must have authori
 ### Cross-Boundary Deletion
 
 When Manager lacks authority over both tables:
+
 1. Notification to Admin/Owner with Approve/Reject buttons
 2. Approve triggers deletion with full impact
 3. Reject notifies requester
@@ -543,12 +553,12 @@ Step 9: Release lock
 ### Performance
 
 | Records | Duration |
-|---------|----------|
-| 1K | <1s |
-| 10K | ~3s |
-| 50K | ~12s |
-| 100K | ~25s |
-| 500K | ~2min |
+| ------- | -------- |
+| 1K      | <1s      |
+| 10K     | ~3s      |
+| 50K     | ~12s     |
+| 100K    | ~25s     |
+| 500K    | ~2min    |
 
 ### Dual-Write Verification (Optional)
 

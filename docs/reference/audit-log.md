@@ -10,16 +10,16 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section | Lines | Covers |
-|---------|-------|--------|
-| What Gets Audited | 26–48 | Event categories: records, schema, membership, portals; audit coverage table |
-| The Seven-Source Attribution Problem | 49–75 | 7 actor types: user, sync, automation, portal_client, system, agent, api_key |
-| Schema | 76–137 | audit_log table DDL, details JSONB by action type, index strategy |
-| Retention Policy | 138–151 | 90-day hot, 1-year cold, 7-year compliance; tier-based retention |
-| UI Surfaces | 152–180 | Record Activity tab, Workspace Audit Log, Automation History tab |
-| Audit Write Mechanism | 181–330 | Code emission pattern, AuditService API, bulk condensation, 7 actor types, cascades, scale estimates |
-| Implementation Rules | 331–341 | Hard rules for audit write discipline |
-| Phase Implementation | 342–351 | Phase breakdown: MVP — Foundation through Post-MVP |
+| Section                              | Lines   | Covers                                                                                               |
+| ------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
+| What Gets Audited                    | 26–48   | Event categories: records, schema, membership, portals; audit coverage table                         |
+| The Seven-Source Attribution Problem | 49–75   | 7 actor types: user, sync, automation, portal_client, system, agent, api_key                         |
+| Schema                               | 76–137  | audit_log table DDL, details JSONB by action type, index strategy                                    |
+| Retention Policy                     | 138–151 | 90-day hot, 1-year cold, 7-year compliance; tier-based retention                                     |
+| UI Surfaces                          | 152–180 | Record Activity tab, Workspace Audit Log, Automation History tab                                     |
+| Audit Write Mechanism                | 181–330 | Code emission pattern, AuditService API, bulk condensation, 7 actor types, cascades, scale estimates |
+| Implementation Rules                 | 331–341 | Hard rules for audit write discipline                                                                |
+| Phase Implementation                 | 342–351 | Phase breakdown: MVP — Foundation through Post-MVP                                                   |
 
 ---
 
@@ -27,20 +27,20 @@
 
 Every state-changing operation that affects tenant data is logged with who did it, what changed, and how.
 
-| Category | Events |
-|----------|--------|
-| **Records** | `record.created`, `record.updated`, `record.deleted`, `record.restored` |
-| **Schema** | `field.created`, `field.updated`, `field.deleted`, `table.created`, `table.deleted`, `table.converted_to_native`, `table.conversion_reverted`, `view.created`, `view.updated` |
-| **Membership** | `member.invited`, `member.role_changed`, `member.removed` |
-| **Portals** | `portal.published`, `portal.unpublished`, `portal.settings_updated` |
-| **Automations** | `automation.created`, `automation.enabled`, `automation.disabled`, `automation.triggered`, `automation.completed`, `automation.failed`, `automation.quota_exceeded`, `automation.chain_depth_exceeded` |
-| **Documents** | `document.generated`, `template.created`, `template.updated` |
-| **AI** | `ai.action_accepted`, `ai.action_rejected` (when user reviews AI-generated content) |
-| **Auth** | `workspace.created`, `api_key.created`, `api_key.revoked`, `settings.updated` |
-| **Cross-links** | `cross_link.created`, `cross_link.deleted` |
-| **Sync** | `sync.connected`, `sync.disconnected`, `sync.conflict_resolved`, `sync.auth_expired`, `sync.failure_resolved`, `sync.schema_change_accepted`, `sync.schema_change_rejected` |
-| **Approvals (Post-MVP)** | `approval.submitted`, `approval.step_decided`, `approval.completed`, `approval.overridden`, `approval.withdrawn` — supplement `record.updated` entries that capture actual status field value changes. Approval audit entries capture the *process* context. See `approval-workflows.md` > Audit Log Integration. *(Post-MVP per glossary — Approval workflows are post-MVP.)* |
-| **Apps (Post-MVP)** | `transaction.completed`, `transaction.voided`, `cart.abandoned` (if tracking enabled), `kiosk.locked`, `kiosk.unlocked`, `kiosk.user_switched` — app actions use `actor_type: 'user'` (workspace user, not portal_client). Details JSONB includes `appId`, `appSlug`, `transactionTotal`, `lineItemCount`, `paymentMethod`, `stripePaymentIntentId`. See `custom-apps.md` > Audit Trail for App Actions. *(Post-MVP per glossary — Apps and the App Designer are post-MVP.)* |
+| Category                 | Events                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Records**              | `record.created`, `record.updated`, `record.deleted`, `record.restored`                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Schema**               | `field.created`, `field.updated`, `field.deleted`, `table.created`, `table.deleted`, `table.converted_to_native`, `table.conversion_reverted`, `view.created`, `view.updated`                                                                                                                                                                                                                                                                                                 |
+| **Membership**           | `member.invited`, `member.role_changed`, `member.removed`                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Portals**              | `portal.published`, `portal.unpublished`, `portal.settings_updated`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Automations**          | `automation.created`, `automation.enabled`, `automation.disabled`, `automation.triggered`, `automation.completed`, `automation.failed`, `automation.quota_exceeded`, `automation.chain_depth_exceeded`                                                                                                                                                                                                                                                                        |
+| **Documents**            | `document.generated`, `template.created`, `template.updated`                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **AI**                   | `ai.action_accepted`, `ai.action_rejected` (when user reviews AI-generated content)                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Auth**                 | `workspace.created`, `api_key.created`, `api_key.revoked`, `settings.updated`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Cross-links**          | `cross_link.created`, `cross_link.deleted`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Sync**                 | `sync.connected`, `sync.disconnected`, `sync.conflict_resolved`, `sync.auth_expired`, `sync.failure_resolved`, `sync.schema_change_accepted`, `sync.schema_change_rejected`                                                                                                                                                                                                                                                                                                   |
+| **Approvals (Post-MVP)** | `approval.submitted`, `approval.step_decided`, `approval.completed`, `approval.overridden`, `approval.withdrawn` — supplement `record.updated` entries that capture actual status field value changes. Approval audit entries capture the _process_ context. See `approval-workflows.md` > Audit Log Integration. _(Post-MVP per glossary — Approval workflows are post-MVP.)_                                                                                                |
+| **Apps (Post-MVP)**      | `transaction.completed`, `transaction.voided`, `cart.abandoned` (if tracking enabled), `kiosk.locked`, `kiosk.unlocked`, `kiosk.user_switched` — app actions use `actor_type: 'user'` (workspace user, not portal*client). Details JSONB includes `appId`, `appSlug`, `transactionTotal`, `lineItemCount`, `paymentMethod`, `stripePaymentIntentId`. See `custom-apps.md` > Audit Trail for App Actions. *(Post-MVP per glossary — Apps and the App Designer are post-MVP.)\_ |
 
 **What is NOT audited:** Read-only operations (page views, searches), real-time presence events, typing indicators, embedding generation, cache operations.
 
@@ -50,19 +50,20 @@ Every state-changing operation that affects tenant data is logged with who did i
 
 A record can be modified by seven different sources, and the audit log must correctly attribute each:
 
-| Source | `actor_type` | `actor_id` | Example |
-|--------|-------------|-----------|---------|
-| **User** | `user` | User's UUID | Manager edits a cell in the grid |
-| **Sync Engine** | `sync` | Sync connection UUID | Inbound sync updates a record from Airtable |
-| **Automation** | `automation` | Automation definition UUID | An automation updates a field based on a trigger |
-| **Portal Client** | `portal_client` | Portal client UUID | External visitor submits a form via an authenticated portal |
-| **System** | `system` | `null` | Retention policy drops old partitions, data migrations |
-| **Agent** | `agent` | Agent session UUID | Data Steward agent bulk-updates field formatting |
-| **API Key** | `api_key` | API key UUID (`api_keys.id`) | External integration updates records via Platform API |
+| Source            | `actor_type`    | `actor_id`                   | Example                                                     |
+| ----------------- | --------------- | ---------------------------- | ----------------------------------------------------------- |
+| **User**          | `user`          | User's UUID                  | Manager edits a cell in the grid                            |
+| **Sync Engine**   | `sync`          | Sync connection UUID         | Inbound sync updates a record from Airtable                 |
+| **Automation**    | `automation`    | Automation definition UUID   | An automation updates a field based on a trigger            |
+| **Portal Client** | `portal_client` | Portal client UUID           | External visitor submits a form via an authenticated portal |
+| **System**        | `system`        | `null`                       | Retention policy drops old partitions, data migrations      |
+| **Agent**         | `agent`         | Agent session UUID           | Data Steward agent bulk-updates field formatting            |
+| **API Key**       | `api_key`       | API key UUID (`api_keys.id`) | External integration updates records via Platform API       |
 
 **Why this matters:** When a user opens the Activity tab on a record and sees "Status changed to Complete 2 hours ago," they need to know whether a colleague did it, whether it synced from Airtable, whether an automation triggered it, whether a portal visitor submitted data, whether an agent made the change on behalf of a user, or whether an external integration pushed the change via the Platform API. Different sources require different investigation paths.
 
 **Implementation:** The `actor_type` + `actor_id` pair is set by the code path that performs the mutation:
+
 - Server Actions set `actor_type: 'user'` and `actor_id` from `getUserId()`
 - Worker sync jobs set `actor_type: 'sync'` and `actor_id` from the sync connection record
 - Worker automation jobs set `actor_type: 'automation'` and `actor_id` from the automation definition
@@ -77,20 +78,20 @@ A record can be modified by seven different sources, and the audit log must corr
 
 ### `audit_log` Table
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | UUID | Primary key |
-| `tenant_id` | UUID | Tenant scope |
-| `actor_type` | VARCHAR | `'user'`, `'sync'`, `'automation'`, `'portal_client'`, `'system'`, `'agent'`, `'api_key'` |
-| `actor_id` | UUID (nullable) | User ID, sync connection ID, automation ID, API key ID, or null for system |
+| Column        | Type                   | Purpose                                                                                                                                                 |
+| ------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | UUID                   | Primary key                                                                                                                                             |
+| `tenant_id`   | UUID                   | Tenant scope                                                                                                                                            |
+| `actor_type`  | VARCHAR                | `'user'`, `'sync'`, `'automation'`, `'portal_client'`, `'system'`, `'agent'`, `'api_key'`                                                               |
+| `actor_id`    | UUID (nullable)        | User ID, sync connection ID, automation ID, API key ID, or null for system                                                                              |
 | `actor_label` | VARCHAR 255 (nullable) | Human-readable context from `X-Actor-Label` request header. API key mutations only. Not validated by EveryStack. Example: "JobStack: plumber@acme.com". |
-| `action` | VARCHAR | Event name (e.g., `record.updated`) |
-| `entity_type` | VARCHAR | `'record'`, `'field'`, `'table'`, `'portal'`, `'automation'`, etc. |
-| `entity_id` | UUID | ID of the affected entity |
-| `details` | JSONB | Change payload — structure varies by action type |
-| `trace_id` | VARCHAR | Correlation ID linking to request/job logs |
-| `ip_address` | VARCHAR (nullable) | For user-initiated actions only |
-| `created_at` | TIMESTAMPTZ | Immutable — audit logs are never updated |
+| `action`      | VARCHAR                | Event name (e.g., `record.updated`)                                                                                                                     |
+| `entity_type` | VARCHAR                | `'record'`, `'field'`, `'table'`, `'portal'`, `'automation'`, etc.                                                                                      |
+| `entity_id`   | UUID                   | ID of the affected entity                                                                                                                               |
+| `details`     | JSONB                  | Change payload — structure varies by action type                                                                                                        |
+| `trace_id`    | VARCHAR                | Correlation ID linking to request/job logs                                                                                                              |
+| `ip_address`  | VARCHAR (nullable)     | For user-initiated actions only                                                                                                                         |
+| `created_at`  | TIMESTAMPTZ            | Immutable — audit logs are never updated                                                                                                                |
 
 **Partitioning:** `PARTITION BY RANGE (created_at)`, monthly partitions. Old partitions are detached after the retention period, archived to cold storage, then dropped.
 
@@ -99,6 +100,7 @@ A record can be modified by seven different sources, and the audit log must corr
 ### `details` JSONB Structure by Action Type
 
 **`record.updated`:**
+
 ```jsonb
 {
   "table_id": "uuid",
@@ -114,6 +116,7 @@ A record can be modified by seven different sources, and the audit log must corr
 ```
 
 **`member.role_changed`:**
+
 ```jsonb
 {
   "target_user_id": "uuid",
@@ -123,6 +126,7 @@ A record can be modified by seven different sources, and the audit log must corr
 ```
 
 **`automation.triggered`:**
+
 ```jsonb
 {
   "automation_id": "uuid",
@@ -137,13 +141,13 @@ A record can be modified by seven different sources, and the audit log must corr
 
 ## Retention Policy
 
-| Plan | Retention | Archive |
-|------|-----------|---------|
-| Freelancer | 30 days | None |
-| Starter | 90 days | None |
-| Professional | 1 year | Cold storage after 1 year, 3-year total |
-| Business | 2 years | Cold storage after 2 years, 5-year total |
-| Enterprise | Unlimited (live) | Configurable |
+| Plan         | Retention        | Archive                                  |
+| ------------ | ---------------- | ---------------------------------------- |
+| Freelancer   | 30 days          | None                                     |
+| Starter      | 90 days          | None                                     |
+| Professional | 1 year           | Cold storage after 1 year, 3-year total  |
+| Business     | 2 years          | Cold storage after 2 years, 5-year total |
+| Enterprise   | Unlimited (live) | Configurable                             |
 
 **Implementation:** Monthly partitions make retention trivial. Detach partitions older than the plan's retention window. For plans with archival: export partition to Parquet on R2/S3 before dropping.
 
@@ -195,8 +199,8 @@ interface AuditEntry {
   actorType: 'user' | 'sync' | 'automation' | 'portal_client' | 'system' | 'agent' | 'api_key';
   actorId: string | null;
   actorLabel?: string | null; // Human-readable context from X-Actor-Label header (api_key mutations only)
-  action: string;            // e.g., 'record.updated'
-  entityType: string;        // e.g., 'record'
+  action: string; // e.g., 'record.updated'
+  entityType: string; // e.g., 'record'
   entityId: string;
   details: Record<string, unknown>;
   traceId: string;
@@ -204,8 +208,8 @@ interface AuditEntry {
 }
 
 async function writeAuditLog(
-  tx: DrizzleTransaction,     // Same transaction as the mutation
-  entry: AuditEntry
+  tx: DrizzleTransaction, // Same transaction as the mutation
+  entry: AuditEntry,
 ): Promise<void> {
   try {
     await tx.insert(auditLogTable).values({
@@ -291,15 +295,15 @@ Individual record-level audit entries are written only for: user-initiated edits
 
 Seven distinct actor types produce auditable actions. Each has a clear delegation/attribution chain:
 
-| Source | `actor_type` | `actor_id` | Example |
-|--------|-------------|-----------|---------|
-| **User** | `user` | User's UUID | Manager edits a cell |
-| **Sync Engine** | `sync` | Sync connection UUID | Inbound sync updates a record |
-| **Automation** | `automation` | Automation definition UUID | Automation changes a field |
-| **Portal Client** | `portal_client` | Portal client UUID | Visitor submits a form via portal |
-| **System** | `system` | `null` | Retention policy drops old partitions |
-| **Agent** | `agent` | Agent session UUID | Data Steward cleans up duplicates |
-| **API Key** | `api_key` | API key UUID (`api_keys.id`) | External integration pushes data via Platform API |
+| Source            | `actor_type`    | `actor_id`                   | Example                                           |
+| ----------------- | --------------- | ---------------------------- | ------------------------------------------------- |
+| **User**          | `user`          | User's UUID                  | Manager edits a cell                              |
+| **Sync Engine**   | `sync`          | Sync connection UUID         | Inbound sync updates a record                     |
+| **Automation**    | `automation`    | Automation definition UUID   | Automation changes a field                        |
+| **Portal Client** | `portal_client` | Portal client UUID           | Visitor submits a form via portal                 |
+| **System**        | `system`        | `null`                       | Retention policy drops old partitions             |
+| **Agent**         | `agent`         | Agent session UUID           | Data Steward cleans up duplicates                 |
+| **API Key**       | `api_key`       | API key UUID (`api_keys.id`) | External integration pushes data via Platform API |
 
 Portal client audit entries are useful for Managers tracking form submissions. Agent audit entries link to the full session trace — the delegating user, goal, reasoning, and all steps are traceable via `agent_sessions`. See `agent-architecture.md` > Agent Observability. API key audit entries include the optional `actor_label` for human-readable attribution context — see §Schema above.
 
@@ -313,16 +317,16 @@ The following background operations touch records but are **not audited** — th
 - tsvector index updates
 - Portal cache invalidation
 
-**Rationale:** These operations change derived data, not source data. The audit entry for the *source* change (the record edit that triggered the cascade) is the audit trail. Logging every downstream update would create massive volume with no informational value.
+**Rationale:** These operations change derived data, not source data. The audit entry for the _source_ change (the record edit that triggered the cascade) is the audit trail. Logging every downstream update would create massive volume with no informational value.
 
 ### Scale Estimates
 
-| Tenant Size | Est. Audit Entries/Day | Monthly Partition Size |
-|------------|----------------------|----------------------|
-| Small (5 users, 1K records) | ~200–500 | ~50MB |
-| Medium (20 users, 50K records) | ~2,000–10,000 | ~500MB |
-| Large (50 users, 250K records, active sync) | ~10,000–50,000 | ~2GB |
-| Platform total (10K tenants) | ~5M–20M | ~50–100GB per monthly partition |
+| Tenant Size                                 | Est. Audit Entries/Day | Monthly Partition Size          |
+| ------------------------------------------- | ---------------------- | ------------------------------- |
+| Small (5 users, 1K records)                 | ~200–500               | ~50MB                           |
+| Medium (20 users, 50K records)              | ~2,000–10,000          | ~500MB                          |
+| Large (50 users, 250K records, active sync) | ~10,000–50,000         | ~2GB                            |
+| Platform total (10K tenants)                | ~5M–20M                | ~50–100GB per monthly partition |
 
 **Query performance:** The composite indexes on `(tenant_id, entity_type, entity_id, created_at DESC)` ensure per-record Activity tab queries hit a small slice even at large scale. Monthly partitioning means the query planner prunes all partitions outside the date range. The workspace audit log (all events for a tenant) is the heaviest query — paginate with `LIMIT 50` and cursor-based pagination on `created_at`.
 
@@ -341,11 +345,11 @@ The following background operations touch records but are **not audited** — th
 
 ## Phase Implementation
 
-| Phase | Audit Work |
-|-------|-----------|
-| MVP — Foundation | `audit_log` table with monthly partitioning. `writeAuditLog()` helper in `packages/shared/db/audit.ts`. Audit on workspace/table/field CRUD with `actor_type: 'user'`. *(Note: older docs referenced board/base CRUD here — glossary defines flat Workspace → Table hierarchy; board/base pending alignment.)* |
-| MVP — Core UX | Record Activity tab in Record View. Audit on record CRUD with seven-source attribution (user, sync, automation, portal_client, system, agent, api_key). Bulk condensation for sync batches. Agent (`actor_type: 'agent'`) activated post-MVP — schema ready from MVP — Foundation. |
-| Post-MVP — Portals & Apps | Portal publish/unpublish auditing. |
-| Post-MVP — Automations | Automation execution auditing. Workspace audit log admin UI. |
-| Post-MVP — Comms & Polish | Full audit coverage. CSV export. Retention policy enforcement. |
-| Post-MVP — Custom Apps | **App audit actions (Post-MVP):** `transaction.completed`, `transaction.voided`, `cart.abandoned`, `kiosk.locked`, `kiosk.unlocked`, `kiosk.user_switched`. App-specific `details` JSONB (appId, appSlug, transactionTotal, paymentMethod, stripePaymentIntentId). See `custom-apps.md`. |
+| Phase                     | Audit Work                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVP — Foundation          | `audit_log` table with monthly partitioning. `writeAuditLog()` helper in `packages/shared/db/audit.ts`. Audit on workspace/table/field CRUD with `actor_type: 'user'`. _(Note: older docs referenced board/base CRUD here — glossary defines flat Workspace → Table hierarchy; board/base pending alignment.)_ |
+| MVP — Core UX             | Record Activity tab in Record View. Audit on record CRUD with seven-source attribution (user, sync, automation, portal_client, system, agent, api_key). Bulk condensation for sync batches. Agent (`actor_type: 'agent'`) activated post-MVP — schema ready from MVP — Foundation.                             |
+| Post-MVP — Portals & Apps | Portal publish/unpublish auditing.                                                                                                                                                                                                                                                                             |
+| Post-MVP — Automations    | Automation execution auditing. Workspace audit log admin UI.                                                                                                                                                                                                                                                   |
+| Post-MVP — Comms & Polish | Full audit coverage. CSV export. Retention policy enforcement.                                                                                                                                                                                                                                                 |
+| Post-MVP — Custom Apps    | **App audit actions (Post-MVP):** `transaction.completed`, `transaction.voided`, `cart.abandoned`, `kiosk.locked`, `kiosk.unlocked`, `kiosk.user_switched`. App-specific `details` JSONB (appId, appSlug, transactionTotal, paymentMethod, stripePaymentIntentId). See `custom-apps.md`.                       |

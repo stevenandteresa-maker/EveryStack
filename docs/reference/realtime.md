@@ -43,14 +43,14 @@ interface PresenceState {
 
 ## Room Model
 
-| Room Pattern | Purpose | Join Trigger | Leave Trigger |
-|-------------|---------|-------------|---------------|
-| `table:{tableId}` | Grid live updates, cell edit broadcasting | User opens table view | User navigates away |
-| `record:{recordId}` | Record View presence, field edit conflicts | User opens Record View | User closes Record View |
-| `thread:{threadId}` | Chat / Record Thread message delivery, typing indicators | User opens thread | User navigates away |
-| `workspace:{workspaceId}` | Workspace-wide notifications, sync status | User enters workspace | User switches workspace |
-| `user:{userId}` | Personal notifications, cross-workspace alerts | User connects | User disconnects |
-| `portal:{portalId}:page:{pageSlug}` | Portal real-time updates **(post-MVP: App Designer portals with pages)** | Visitor loads page | Visitor navigates away |
+| Room Pattern                        | Purpose                                                                  | Join Trigger           | Leave Trigger           |
+| ----------------------------------- | ------------------------------------------------------------------------ | ---------------------- | ----------------------- |
+| `table:{tableId}`                   | Grid live updates, cell edit broadcasting                                | User opens table view  | User navigates away     |
+| `record:{recordId}`                 | Record View presence, field edit conflicts                               | User opens Record View | User closes Record View |
+| `thread:{threadId}`                 | Chat / Record Thread message delivery, typing indicators                 | User opens thread      | User navigates away     |
+| `workspace:{workspaceId}`           | Workspace-wide notifications, sync status                                | User enters workspace  | User switches workspace |
+| `user:{userId}`                     | Personal notifications, cross-workspace alerts                           | User connects          | User disconnects        |
+| `portal:{portalId}:page:{pageSlug}` | Portal real-time updates **(post-MVP: App Designer portals with pages)** | Visitor loads page     | Visitor navigates away  |
 
 **Tenant isolation:** Room names prefixed internally with `t:{tenantId}:`. Connection validated against Clerk session before room join.
 
@@ -76,14 +76,14 @@ Socket.IO connection handshake includes the Clerk session token in the `auth` pa
 
 ### Reconnection Strategy
 
-| Parameter | Value |
-|-----------|-------|
-| Initial delay | 1,000ms |
-| Backoff multiplier | 2x |
-| Max delay | 30,000ms (30s) |
-| Jitter | ±20% (prevents thundering herd on server restart) |
+| Parameter          | Value                                                   |
+| ------------------ | ------------------------------------------------------- |
+| Initial delay      | 1,000ms                                                 |
+| Backoff multiplier | 2x                                                      |
+| Max delay          | 30,000ms (30s)                                          |
+| Jitter             | ±20% (prevents thundering herd on server restart)       |
 | Max retry attempts | Unlimited (connection is restored when network returns) |
-| Auth re-validation | On every reconnect (Clerk token may have expired) |
+| Auth re-validation | On every reconnect (Clerk token may have expired)       |
 
 **Reconnection sequence:**
 
@@ -135,12 +135,12 @@ Socket.io scales horizontally via `@socket.io/redis-adapter`. Events published o
 
 ### Connection Capacity
 
-| Scale Point | Concurrent Connections | Instances (est.) |
-|------------|----------------------|-------------------|
-| 100 tenants | ~200–500 | 1 |
-| 1,000 tenants | ~2,000–5,000 | 2 |
-| 10,000 tenants | ~10,000–30,000 | 4–8 |
-| 50,000+ tenants | ~50,000–150,000 | 16+ |
+| Scale Point     | Concurrent Connections | Instances (est.) |
+| --------------- | ---------------------- | ---------------- |
+| 100 tenants     | ~200–500               | 1                |
+| 1,000 tenants   | ~2,000–5,000           | 2                |
+| 10,000 tenants  | ~10,000–30,000         | 4–8              |
+| 50,000+ tenants | ~50,000–150,000        | 16+              |
 
 **Memory:** ~10–20KB per connection. 10,000 connections ≈ 200MB. CPU for message fan-out is the bottleneck, not memory.
 
@@ -180,7 +180,7 @@ Typing indicators:
   → 'typing.stop' after 3 seconds of no keystrokes
 ```
 
-**Delivery guarantee:** Messages persisted to Postgres *before* real-time event. If delivery fails, message appears on next page load or reconnect catch-up.
+**Delivery guarantee:** Messages persisted to Postgres _before_ real-time event. If delivery fails, message appears on next page load or reconnect catch-up.
 
 ---
 
@@ -188,10 +188,10 @@ Typing indicators:
 
 **Approach:** Hocuspocus — TipTap's open-source collaboration backend using CRDT (Yjs).
 
-| Option | Description | Tradeoff |
-|--------|-------------|----------|
+| Option            | Description                                  | Tradeoff                                    |
+| ----------------- | -------------------------------------------- | ------------------------------------------- |
 | **A: Integrated** | Hocuspocus runs within the real-time service | Simpler deployment; couples to main service |
-| **B: Separate** | Fourth service with own WebSocket endpoint | Independent scaling; isolated traffic |
+| **B: Separate**   | Fourth service with own WebSocket endpoint   | Independent scaling; isolated traffic       |
 
 **Recommended:** Option A initially, Option B if collaboration creates contention with chat/presence.
 
@@ -201,20 +201,20 @@ Typing indicators:
 
 ## Deployment
 
-| Environment | Configuration |
-|-------------|--------------|
-| Development | Third Docker Compose service. Same Redis instance. |
-| Railway/Render | Third deployed service. WebSocket support verified. Sticky sessions. |
-| AWS | ECS/Fargate + ALB (sticky sessions) or NLB. Same VPC. Auto-scale on connection count. |
+| Environment    | Configuration                                                                         |
+| -------------- | ------------------------------------------------------------------------------------- |
+| Development    | Third Docker Compose service. Same Redis instance.                                    |
+| Railway/Render | Third deployed service. WebSocket support verified. Sticky sessions.                  |
+| AWS            | ECS/Fargate + ALB (sticky sessions) or NLB. Same VPC. Auto-scale on connection count. |
 
 ---
 
 ## Phase Implementation
 
-| Phase | Real-Time Work |
-|-------|---------------|
-| MVP — Foundation | `RealtimeService` interface. Socket.io scaffold with Clerk auth, Redis adapter, room join/leave, basic presence. |
-| MVP — Sync | Sync status push: worker → Redis → real-time → client. Replaces TanStack Query polling. |
-| MVP — Core UX | Grid live updates, table/record presence indicators. |
-| Post-MVP — Comms & Polish | Chat / DM delivery, typing indicators, Record Thread presence, notification delivery. |
-| Post-MVP | Cursor broadcasting, Hocuspocus for Smart Doc co-editing, App Designer portal real-time updates. |
+| Phase                     | Real-Time Work                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| MVP — Foundation          | `RealtimeService` interface. Socket.io scaffold with Clerk auth, Redis adapter, room join/leave, basic presence. |
+| MVP — Sync                | Sync status push: worker → Redis → real-time → client. Replaces TanStack Query polling.                          |
+| MVP — Core UX             | Grid live updates, table/record presence indicators.                                                             |
+| Post-MVP — Comms & Polish | Chat / DM delivery, typing indicators, Record Thread presence, notification delivery.                            |
+| Post-MVP                  | Cursor broadcasting, Hocuspocus for Smart Doc co-editing, App Designer portal real-time updates.                 |
