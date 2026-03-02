@@ -105,3 +105,21 @@ export type { Notification, NewNotification } from './notifications';
 
 export { userNotificationPreferences, userNotificationPreferencesRelations } from './user-notification-preferences';
 export type { UserNotificationPreference, NewUserNotificationPreference } from './user-notification-preferences';
+
+export { documentTemplates, documentTemplatesRelations } from './document-templates';
+export type { DocumentTemplate, NewDocumentTemplate } from './document-templates';
+
+export { generatedDocuments, generatedDocumentsRelations } from './generated-documents';
+export type { GeneratedDocument, NewGeneratedDocument } from './generated-documents';
+
+export { automations, automationsRelations } from './automations';
+export type { Automation, NewAutomation } from './automations';
+
+export { automationRuns, automationRunsRelations } from './automation-runs';
+export type { AutomationRun, NewAutomationRun } from './automation-runs';
+
+export { webhookEndpoints, webhookEndpointsRelations } from './webhook-endpoints';
+export type { WebhookEndpoint, NewWebhookEndpoint } from './webhook-endpoints';
+
+export { webhookDeliveryLog, webhookDeliveryLogRelations } from './webhook-delivery-log';
+export type { WebhookDeliveryLog, NewWebhookDeliveryLog } from './webhook-delivery-log';
