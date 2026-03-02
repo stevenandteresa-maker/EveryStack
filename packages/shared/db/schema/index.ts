@@ -69,3 +69,15 @@ export type { Form, NewForm } from './forms';
 
 export { formSubmissions, formSubmissionsRelations } from './form-submissions';
 export type { FormSubmission, NewFormSubmission } from './form-submissions';
+
+export { syncedFieldMappings, syncedFieldMappingsRelations } from './synced-field-mappings';
+export type { SyncedFieldMapping, NewSyncedFieldMapping } from './synced-field-mappings';
+
+export { syncConflicts, syncConflictsRelations } from './sync-conflicts';
+export type { SyncConflict, NewSyncConflict } from './sync-conflicts';
+
+export { syncFailures, syncFailuresRelations } from './sync-failures';
+export type { SyncFailure, NewSyncFailure } from './sync-failures';
+
+export { syncSchemaChanges, syncSchemaChangesRelations } from './sync-schema-changes';
+export type { SyncSchemaChange, NewSyncSchemaChange } from './sync-schema-changes';

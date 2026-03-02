@@ -43,6 +43,13 @@
       "when": 1772461441563,
       "tag": "0005_tough_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772461751552,
+      "tag": "0006_daily_hannibal_king",
+      "breakpoints": true
     }
   ]
 }
