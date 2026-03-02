@@ -8,6 +8,12 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}', '__tests__/**/*.test.ts'],
     exclude: ['e2e/**'],
     setupFiles: ['./vitest.setup.ts'],
+    env: {
+      DATABASE_URL:
+        'postgres://everystack_test:test_password@localhost:6433/everystack_test',
+      DATABASE_READ_URL:
+        'postgres://everystack_test:test_password@localhost:6433/everystack_test',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
@@ -20,6 +26,7 @@ export default defineConfig({
     testTimeout: 10_000,
     hookTimeout: 30_000,
     pool: 'forks',
+    fileParallelism: false,
   },
   resolve: {
     alias: {

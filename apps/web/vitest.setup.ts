@@ -16,13 +16,19 @@ beforeAll(async () => {
 afterEach(async () => {
   if (!hasTestDb) return;
   const db = getTestDb();
+  // Use a single TRUNCATE for all tables to avoid deadlocks between forked processes.
+  // Individual per-table TRUNCATE with CASCADE causes lock contention.
   await db.execute(sql`
     DO $$ DECLARE
-      r RECORD;
+      tables_to_truncate TEXT;
     BEGIN
-      FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-        EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
-      END LOOP;
+      SELECT string_agg(quote_ident(tablename), ', ')
+        INTO tables_to_truncate
+        FROM pg_tables
+       WHERE schemaname = 'public';
+      IF tables_to_truncate IS NOT NULL THEN
+        EXECUTE 'TRUNCATE TABLE ' || tables_to_truncate || ' CASCADE';
+      END IF;
     END $$;
   `);
 });
