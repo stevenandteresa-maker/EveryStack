@@ -1,0 +1,39 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "typecheck": {},
+    "check:i18n": {},
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "test:coverage-check": {
+      "dependsOn": ["test"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "test:ai-eval": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:migrate:check": {
+      "cache": false,
+      "dependsOn": ["db:migrate"]
+    },
+    "db:seed-staging": {
+      "cache": false
+    }
+  }
+}

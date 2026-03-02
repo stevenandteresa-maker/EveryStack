@@ -1,0 +1,595 @@
+# EveryStack — Data Model & Field System
+
+> **Reference doc.** Database schema, field system architecture, field types, cross-linking, bidirectional sync.
+> Canonical source for all database table definitions. See `GLOSSARY.md` for concept definitions and naming.
+> Cross-references: `sync-engine.md` (sync details), `cross-linking.md` (link architecture), `permissions.md` (roles, field access), `automations.md` (triggers/actions), `ai-metering.md` (AI usage tables), `smart-docs.md` (doc gen merge tags), `platform-api.md` (Platform API — api_keys, api_request_log, actor_type: 'api_key').
+> Last updated: 2026-02-28 — Added `api_keys` and `api_request_log` tables (Platform section). Updated `audit_log.actor_type` enum to include 'api_key' (7-source). Added `actor_label` column. Full architectural audit (Issues #1–16). Hierarchy rewrite (tenant → boards → workspaces → tables). Permission model two-layer annotation. Missing MVP tables added. Cross-link schema corrected. Broken file paths fixed. Environment column documented.
+
+---
+
+## Section Index
+
+> **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
+
+| Section | Lines | Covers |
+|---------|-------|--------|
+| Database Schema — MVP Entities | 24–129 | All MVP tables: users, tenants, workspaces, tables, fields, records, views, portals, forms, sync, comms, AI, API, audit |
+| Post-MVP Entities (Parked) | 130–190 | Apps, app_pages, app_blocks, portal_clients, formula_graph, vector tables |
+| Field System Architecture | 191–488 | FieldTypeRegistry, 40 field types, canonical JSONB shapes, MVP field categories |
+| Cross-Linking Architecture | 489–508 | Cross-link data model, index table, query patterns |
+| Bidirectional Sync Architecture | 509–574 | Platform type mapping, sync direction, field eligibility, outbound sync flow |
+
+---
+
+## Database Schema — MVP Entities
+
+### User, Tenant & Workspace
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `users` | id, clerk_id, email, name, avatar_url, preferences (JSONB — includes `locale`, `theme`), created_at, updated_at | Global identity. No tenant_id. Authenticated via Clerk. |
+| `tenants` | id, name, plan, default_locale, settings (JSONB — branding_accent_color, logo_url, email_branding; see settings.md §Branding), created_at, updated_at | Organization / account. Billing boundary, RLS isolation unit. One tenant contains many workspaces. |
+| `tenant_memberships` | id, tenant_id (→ tenants.id), user_id (→ users.id), role (owner\|admin\|member), status (active\|invited\|suspended), invited_by (nullable → users.id), created_at, updated_at | Org-level membership and role. Owner/Admin roles are tenant-scoped (org-wide authority). `member` is the default for users who get workspace-specific roles via `workspace_memberships`. `invited` status enables invite-before-workspace-assignment flow. |
+| `boards` | id, tenant_id, name, icon (nullable), color (nullable), sort_order, created_at | Optional organizational grouping of workspaces within a tenant. Permission convenience — adding a user to a board bulk-grants workspace access. |
+| `board_memberships` | id, board_id, user_id, default_workspace_role (manager\|team_member\|viewer), granted_at | Board-level user access. Adding a user to a board cascades workspace access grants (auto-creates `workspace_memberships` rows for each workspace in that board). Only workspace-level roles — Owner/Admin are tenant-level. |
+| `workspaces` | id, tenant_id, board_id (nullable → boards.id), name, icon (nullable), color (nullable), slug, sort_order, settings (JSONB), created_by (→ users.id), created_at, updated_at | Container for tables, views, portals, forms, automations, and documents. Nullable board_id — null means ungrouped. One-to-many from tenants. |
+| `workspace_memberships` | id, user_id, tenant_id, workspace_id (→ workspaces.id), role (manager\|team_member\|viewer), joined_at, last_accessed_at, status_emoji (nullable), status_text (nullable), status_clear_at (nullable) | Per-workspace role assignment. Owner/Admin roles live on `tenant_memberships` (org-wide), not here. Workspace roles control data access within a specific workspace. Custom presence status. |
+
+### Data Layer (Tables, Fields, Records)
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `base_connections` | id, tenant_id, platform (airtable\|notion\|smartsuite), external_base_id, external_base_name, oauth_tokens, sync_config (JSONB — see sync-engine.md §Table Selection Model for shape), sync_direction (inbound_only\|bidirectional), conflict_resolution (VARCHAR DEFAULT 'last_write_wins' — 'last_write_wins'\|'manual'. last_write_wins = inbound platform value overwrites local; manual = conflicts queued for Manager resolution via sync_conflicts table. See sync-engine.md §Conflict Resolution), last_sync_at, sync_status (active\|paused\|error\|auth_required\|converted\|converted_dual_write\|converted_finalized), health (JSONB — see sync-engine.md §Connection Health for shape), created_by (→ users.id), created_at, updated_at | OAuth connection to external platform. `external_base_id`/`external_base_name` identify the remote base. `sync_config` stores per-table selection and filters. `health` stores connection health metrics (last_success_at, consecutive_failures, next_retry_at, last_error, records_synced, records_failed). Bidirectional sync default. |
+| `tables` | id, workspace_id (→ workspaces.id), tenant_id, name, table_type (ENUM: table\|projects\|calendar\|documents\|wiki), tab_color (VARCHAR 20, nullable), environment, created_by (→ users.id), created_at, updated_at | Table schema. `tenant_id` denormalized for RLS. `tab_color` renders as 3px left-edge stripe on sidebar tab. |
+| `fields` | id, table_id, tenant_id, name, field_type (VARCHAR), field_sub_type (nullable), is_primary (boolean), is_system (boolean), required (boolean), unique (boolean), read_only (boolean), config (JSONB), display (JSONB), permissions (JSONB — Layer 1: Global field defaults, see permissions.md two-layer model), default_value (JSONB nullable), description (TEXT nullable), sort_order (INTEGER), external_field_id (nullable), environment, created_at, updated_at | First-class field definitions. One row per field. Type-specific behavior in `config` JSONB. |
+| `records` | tenant_id, id, table_id, canonical_data (JSONB), sync_metadata (JSONB), search_vector (tsvector), deleted_at, created_by, updated_by, created_at, updated_at | Data rows. Composite PK (tenant_id, id). Field values keyed by field id in canonical_data JSONB. Hash-partitioned by tenant_id. |
+| `cross_links` | id, tenant_id, name, source_table_id, source_field_id (→ fields.id), target_table_id, target_display_field_id (→ fields.id), relationship_type (many_to_one\|one_to_many), reverse_field_id (→ fields.id, nullable), link_scope_filter (JSONB), card_fields (JSONB — ordered field IDs for chip/preview display, default: display field only), max_links_per_record (default 50), max_depth (default 3), environment, created_by, created_at, updated_at | Cross-link definitions. Tenant-scoped — tables in any workspace can link to tables in any other workspace within the same tenant. |
+| `cross_link_index` | tenant_id, cross_link_id, source_record_id, source_table_id, target_record_id, created_at | Record-to-record link pairs. Indexed on (tenant_id, target_record_id, cross_link_id) and (tenant_id, source_record_id, cross_link_id). |
+
+### Views
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `views` | id, tenant_id, table_id, name, view_type (VARCHAR: grid\|card — MVP; kanban\|list\|gantt\|calendar\|gallery\|smart_doc — reserved post-MVP), config (JSONB), permissions (JSONB — ViewPermissions: roles, specificUsers, excludedUsers, fieldPermissions. Layer 2: View contextual overrides, see permissions.md), is_shared (boolean), publish_state (VARCHAR DEFAULT 'live' — 'live'\|'draft'), environment, position, created_by, created_at, updated_at | Table Views — saved filter/sort/group/field-visibility configs. Shared Views visible to team, My Views visible to creator only. Config JSONB holds filters, sorts, field visibility, frozen columns, etc. `publish_state` governs draft/live authoring workflow (orthogonal to `environment` sandbox isolation). MVP implementation should only create/accept `grid` and `card`. |
+| `user_view_preferences` | id, view_id, user_id, overrides (JSONB), updated_at | Per-user personal overrides on shared views (filter, sort, field order). |
+| `record_view_configs` | id, tenant_id, table_id, name, layout (JSONB — columns, field arrangement, widths, heights, tabs), is_default (boolean), created_by, created_at, updated_at | Saved Record View layouts. The shared layout primitive under Record Views, Portals, and Forms. Layout JSONB defines which fields appear, their column span (1–4), height, order, and tab groupings. Multiple configs per table; assignable to individual Table Views. No `environment` column — sandbox isolation is implicit through field_id references in layout JSONB (configs referencing sandbox-only fields are naturally sandbox-scoped). |
+| `record_templates` | id, tenant_id, table_id, name (VARCHAR 255), description (TEXT nullable), icon (VARCHAR 50 nullable), color (VARCHAR 20 nullable), canonical_data (JSONB — pre-filled values keyed by fields.id, supports dynamic tokens), linked_records (JSONB nullable — pre-link specs keyed by Linked Record field ID), is_default (boolean default false — one per table max), available_in (VARCHAR[] default '{all}' — contexts: all, grid, table_view, portal, automation, quick_entry, command_bar, api), section_id (nullable → sections.id), sort_order, created_by, publish_state (VARCHAR DEFAULT 'live' — 'live'\|'draft'), environment (VARCHAR DEFAULT 'live' — 'live'\|'sandbox', post-MVP), created_at, updated_at | Pre-filled record creation templates. canonical_data uses same shape as records.canonical_data. `publish_state` governs the draft/live authoring workflow; `environment` participates in the standard sandbox isolation model (same as tables, fields, etc.). Indexes: (tenant_id, table_id, environment), (tenant_id, table_id, publish_state). Unique partial on (tenant_id, table_id) WHERE is_default = true. |
+
+### Portals & Forms
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `portals` | id, tenant_id, table_id, record_view_config_id (→ record_view_configs.id), name, slug (unique), auth_type (magic_link\|password), status (draft\|published\|archived), settings (JSONB — branding, editable_fields[], linked_record_display), created_by, created_at, updated_at | Quick Portals — externally-shared Record View of a single record. Auth via magic link or email+password. Default read-only, selectively editable fields configured in settings. |
+| `portal_access` | id, tenant_id, portal_id, record_id, email, auth_hash (nullable — for password auth), token (nullable — for magic link), token_expires_at, last_accessed_at, created_at | Per-record access credentials. One row per client per record. Magic link tokens are single-use, regenerable. `tenant_id` denormalized for RLS (consistent with all tenant-scoped tables). |
+| `portal_sessions` | id, auth_type ('quick'\|'app'), auth_id (UUID — → portal_access.id when auth_type='quick', → portal_clients.id when auth_type='app'), portal_id (→ portals.id or apps.id), tenant_id, created_at, expires_at (30 days from creation), revoked_at (nullable — set when manually revoked by Manager) | Server-side session store for portal auth. Polymorphic: `auth_type` determines which auth table `auth_id` references. Session ID stored in httpOnly cookie. Indexes: (auth_type, auth_id), (portal_id). |
+| `forms` | id, tenant_id, table_id, record_view_config_id (→ record_view_configs.id), name, slug (unique), status (draft\|published\|archived), settings (JSONB — success_message, redirect_url, turnstile_enabled, notification_emails[], required_field_overrides), created_by, created_at, updated_at | Quick Forms — Record View layout that creates new records on submit. Public or link-gated. Both Quick Forms and App Forms (post-MVP, via App Designer) coexist permanently. |
+| `form_submissions` | id, form_id, tenant_id, record_id (→ records.id — the created record), submitted_at, ip_address, user_agent | Submission log for analytics and spam review. |
+
+### Sync
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `synced_field_mappings` | id, tenant_id, base_connection_id, table_id, field_id, external_field_id, external_field_type, status (active\|type_mismatch\|disconnected), created_at | Per-field sync mapping and status tracking. `tenant_id` denormalized for RLS. |
+| `sync_conflicts` | id, tenant_id, record_id, field_id, local_value (JSONB), remote_value (JSONB), base_value (JSONB), platform (VARCHAR), status (pending\|resolved), resolved_by (nullable), created_at, resolved_at (nullable) | Field-level conflict records for manual resolution. 90-day retention for resolved. |
+| `sync_failures` | id, tenant_id, base_connection_id, record_id (nullable — null if failure was record-independent), direction (inbound\|outbound), error_code (VARCHAR: validation, schema_mismatch, payload_too_large, platform_rejected, unknown), error_message (TEXT), platform_record_id (VARCHAR nullable), payload (JSONB — the data that failed, for retry), retry_count (INTEGER, max 3), status (pending\|retrying\|resolved\|skipped\|requires_manual_resolution), created_at, resolved_at (nullable), resolved_by (nullable → users.id) | Per-record sync error tracking. 30-day retention for resolved; pending retained indefinitely. |
+| `sync_schema_changes` | id, tenant_id, base_connection_id, change_type (VARCHAR: field_type_changed, field_deleted, field_added, field_renamed), field_id (nullable — null for new fields), platform_field_id (VARCHAR), old_schema (JSONB), new_schema (JSONB), impact (JSONB — { formulaCount, automationCount, portalFieldCount, crossLinkCount }), status (pending\|accepted\|rejected), created_at, resolved_at (nullable), resolved_by (nullable → users.id) | Platform schema change detection for Manager review. Webhook-triggered where available, otherwise detected during sync poll. |
+
+### Communications
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `threads` | id, tenant_id, scope_type (record\|dm\|group_dm), scope_id, visibility (internal\|client_visible), name (nullable — group_dm display name), created_by, created_at | Conversation container. scope_type=record for Record Threads, scope_type=dm/group_dm for Quick Panel Chat. `visibility` controls portal client access — default `internal`. VARCHAR scope_type allows future extension — reserved post-MVP values: `base` (Post-MVP — Comms & Polish), `table` (Post-MVP — Comms & Polish), `external` (Post-MVP — Custom Apps & Live Chat). See `communications.md`. |
+| `thread_participants` | id, thread_id, user_id, joined_at, last_read_at, muted (boolean) | Thread membership + unread tracking. |
+| `thread_messages` | id, thread_id, author_id (nullable — null for system messages), author_type (user\|portal_client\|system), message_type (message\|system), content (TipTap JSON), parent_message_id (nullable — threaded replies), mentions (JSONB), attachments (JSONB — [{file_url, filename, file_type, size}]), reactions (JSONB — {emoji: [user_ids]}), pinned_at (nullable), pinned_by (nullable — user_id who pinned), edited_at (nullable), deleted_at (nullable — soft delete), created_at | Messages within a thread. `message_type` distinguishes user messages from system-generated (join, pin, field change). System messages have `author_type = 'system'` and null `author_id`. See `communications.md` for post-MVP message_type additions. |
+| `user_saved_messages` | id, user_id, message_id (→ thread_messages.id), tenant_id, note (TEXT nullable — personal annotation), saved_at | Private message bookmarks. Users save messages from any thread for quick access via My Office "Saved" tab or Command Bar. See `communications.md`. |
+
+### Personal (Quick Panel Data)
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `user_tasks` | id, user_id, title, completed, due_date, sort_order, parent_task_id, linked_record_id, linked_tenant_id | Private personal tasks with subtask support. Quick Panel Tasks. |
+| `user_events` | id, user_id, title, start_time, end_time, all_day, location, notes, color, show_as (busy\|free), recurrence_rule (JSONB), reminder_minutes (INTEGER[]), created_at | Private personal calendar events. Quick Panel Calendar. |
+| `notifications` | id, user_id, tenant_id, type, source_thread_id, source_message_id, read, created_at | Notification feed. |
+| `user_notification_preferences` | id, user_id, tenant_id, preferences (JSONB), updated_at | Per-user, per-workspace notification settings. |
+
+### Document Generation
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `document_templates` | id, tenant_id, table_id, name, content (JSONB — TipTap JSON with merge tags), settings (JSONB — page_size, orientation, margins, header, footer), version, environment (VARCHAR DEFAULT 'live' — 'live'\|'sandbox', post-MVP), created_by, created_at, updated_at | Merge-tag document templates. Rich text with merge tag nodes (`{tableId, fieldId, fallback}` — displayed as `{field_name}` pills in editor, resolved by field ID at render time). See `smart-docs.md` §Custom EveryStack Node Definitions. |
+| `generated_documents` | id, tenant_id, template_id, source_record_id, file_url (S3/R2), file_type (pdf), generated_by, generated_at, automation_run_id (nullable), ai_drafted (boolean, default false) | Output document tracking. Links generated files to source template and record. |
+
+### Automations
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `automations` | id, tenant_id, workspace_id (→ workspaces.id), name, trigger (JSONB — type, config, table_id), steps (JSONB[] — ordered action list), status (active\|paused\|draft), run_count, last_run_at, error_count, environment (VARCHAR DEFAULT 'live' — 'live'\|'sandbox', post-MVP), created_by, created_at, updated_at | Automation definitions. MVP: linear trigger → action flows (no branching). Steps array is ordered — executed sequentially. `workspace_id` denormalized for sidebar queries and permission checks (avoids JSONB extraction + join through trigger.config.table_id → tables.workspace_id). |
+| `automation_runs` | id, automation_id, trigger_record_id, status (running\|completed\|failed), started_at, completed_at, error_message, step_log (JSONB) | Execution history per run. |
+| `webhook_endpoints` | id, tenant_id, workspace_id (→ workspaces.id), url (VARCHAR 2048), signing_secret (VARCHAR 64), subscribed_events (TEXT[] — from 13-event MVP catalog, see `automations.md` §Webhook Architecture), description (TEXT nullable), status (active\|disabled), consecutive_failures (INTEGER default 0), created_by (→ users.id), created_at, updated_at | Registered webhook endpoints for workspace-level event delivery. Auto-disabled at 10 consecutive failures. See `automations.md` §Webhook Architecture. |
+| `webhook_delivery_log` | id, tenant_id, webhook_endpoint_id (→ webhook_endpoints.id), event (VARCHAR 64), delivery_id (UUID), payload (JSONB), status_code (INTEGER nullable), duration_ms (INTEGER nullable), status (pending\|success\|failed), retry_count (INTEGER default 0, max 5), error_message (TEXT nullable), created_at | Per-delivery record for webhook event deliveries. 30-day retention for completed; pending retained until resolved. See `automations.md` §Delivery Pipeline. |
+
+### AI
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `ai_usage_log` | id, tenant_id, user_id, feature (VARCHAR 64), model (VARCHAR 32), input_tokens, output_tokens, cached_input (default 0), cost_usd (NUMERIC 10,6), credits_charged (NUMERIC 10,2), status (success\|error\|timeout\|rate_limited), duration_ms, metadata (JSONB), created_at | All AI metering. Zero credits on errors. Time-partitioned monthly. See `ai-metering.md`. |
+| `ai_credit_ledger` | id, tenant_id, period_start (DATE), period_end (DATE), credits_total (INTEGER), credits_used (NUMERIC 10,2 default 0), credits_remaining (GENERATED), updated_at | Monthly credit budget per tenant. See `ai-metering.md`. |
+
+### Platform
+
+| Entity | Key Columns | Purpose |
+|--------|-------------|---------|
+| `sections` | id, tenant_id, user_id (nullable — null for shared), context (VARCHAR: view_switcher\|automations\|cross_links\|documents\|sidebar_tables), context_parent_id (UUID nullable), name, sort_order, collapsed (boolean), created_by, created_at | Universal list organizer. Items reference via nullable `section_id` FK. |
+| `user_recent_items` | id, user_id, item_type, item_id, tenant_id, accessed_at | Powers Command Bar recents. Capped per user. |
+| `command_bar_sessions` | id, user_id, tenant_id, context (JSONB), messages (JSONB), result_set (JSONB), created_at | AI search sessions in Command Bar. |
+| `audit_log` | id, tenant_id, actor_type (user\|sync\|automation\|portal_client\|system\|agent\|api_key), actor_id, actor_label (VARCHAR 255 nullable — human-readable context from `X-Actor-Label` header, API key mutations only), action, entity_type, entity_id, details (JSONB — structure varies by action type; see audit-log.md §details JSONB Structure), trace_id, ip_address (nullable), created_at | Immutable audit trail. Partitioned by created_at (monthly). See `audit-log.md` for full schema, indexes, retention policy, and seven-source attribution model. |
+| `api_keys` | id, tenant_id, name (VARCHAR 255), key_hash (VARCHAR 64 — SHA-256), key_prefix (VARCHAR 16 — first 16 chars for display), scopes (TEXT[] — data:read, data:write, schema:read, schema:write, automation:read, automation:write, automation:trigger, portal:read, portal:write, document:read, document:write, ai:use, admin), rate_limit_tier (VARCHAR 32 — basic\|standard\|high\|enterprise, default 'standard'), last_used_at (TIMESTAMPTZ nullable), expires_at (TIMESTAMPTZ nullable — null = never), status (VARCHAR 16 — active\|revoked, default 'active'), created_by (→ users.id), revoked_at (TIMESTAMPTZ nullable), created_at. Indexes: (tenant_id), (key_hash). | Service-level API keys for Platform API authentication. Tenant-scoped. See `platform-api.md` §Authentication. |
+| `api_request_log` | id, tenant_id, api_key_id (→ api_keys.id), method (VARCHAR 8), path (VARCHAR 512), status_code (INTEGER), duration_ms (INTEGER), request_size (INTEGER — bytes), response_size (INTEGER — bytes), created_at. Monthly partitioned by created_at. 30-day retention. | Platform API usage tracking and rate limit enforcement analytics. See `platform-api.md`. |
+| `feature_suggestions` | id, user_id, tenant_id, title, description, category, user_priority, context (JSONB), status, vote_count, created_at | User-submitted feature requests. |
+| `feature_votes` | id, suggestion_id, user_id, created_at | One vote per user per suggestion. |
+
+---
+
+## Post-MVP Entities (Parked)
+
+These tables exist in the full architecture but are **not built for MVP**. Listed here so Claude Code knows the extension points exist but does not create these tables.
+
+| Entity | Purpose | Reference |
+|--------|---------|-----------|
+| `apps` | App Designer outputs (custom portals, websites, internal apps) | `app-designer.md` |
+| `app_pages` | Pages within an App | `app-designer.md` |
+| `app_blocks` | UI blocks within App pages | `app-designer.md` |
+| `portal_domains` | Custom domain mapping for portals/apps | `app-designer.md` |
+| `portal_events` | Portal/app analytics | `app-designer.md` |
+| `pm_table_config` | Project management field mapping | `project-management.md` |
+| `record_dependencies` | Gantt task dependencies | `project-management.md` |
+| `resource_profiles` | Per-user capacity/cost | `project-management.md` |
+| `workspace_calendars`, `calendar_exceptions` | Working day definitions | `project-management.md` |
+| `pm_baselines`, `pm_baseline_snapshots` | Plan-vs-actual tracking | `project-management.md` |
+| `wiki_table_config` | Wiki field mapping | `personal-notes-capture.md` |
+| `time_entries`, `billing_rates`, `time_tracking_config` | Time tracking and billing | `project-management.md` |
+| `documents_table_config` | Asset management field mapping | Post-MVP |
+| `calendar_table_config` | Calendar/booking field mapping | `booking-scheduling.md` |
+| `booking_availability`, `meeting_polls`, `meeting_poll_responses`, `booking_links`, `booking_templates` | Booking/scheduling system | `booking-scheduling.md` |
+| `meeting_table_config` | Meeting management field mapping | `meetings.md` |
+| `invoice_table_config`, `expense_table_config` | Accounting config overlays | `accounting-integration.md` |
+| `financial_snapshots`, `financial_summary` | Accounting report cache | `accounting-integration.md` |
+| `asset_versions` | File versioning with AI descriptions | `document-intelligence.md` |
+| `metric_snapshots` | Time-series ad platform metrics | Post-MVP |
+| `extraction_templates` | Document-to-record extraction | `document-intelligence.md` |
+| `file_embeddings` | Vector embeddings for file content | `vector-embeddings.md` |
+| `smart_doc_content`, `smart_doc_versions`, `smart_doc_snapshots`, `smart_doc_backlinks` | Smart Doc wiki mode | `personal-notes-capture.md` |
+| `automation_waiting` | Wait-for-event steps in automations | `approval-workflows.md` |
+| `channel_connections`, `external_contacts` | Omnichannel messaging | Post-MVP |
+| `ai_daily_caps`, `ai_reconciliation_log`, `ai_usage_daily_summary` | Advanced AI metering | `ai-metering.md` (Post-MVP — Comms & Polish) |
+| `platform_keys` | Platform-level API keys (`esk_platform_` prefix) for vertical operators. NOT tenant-scoped — exists outside any tenant. Columns: id, name (VARCHAR 255), key_hash (VARCHAR — bcrypt of full key), prefix (VARCHAR 20 — first 12 chars for identification), permissions (JSONB — e.g. `{canCreateTenants: true}`), issued_to (VARCHAR — operator name/email), created_at, last_used_at, revoked_at (nullable). Can create Tenants but cannot access any Tenant's data. | `platform-api.md` §Tenant Management API, `GLOSSARY.md` §Platform API |
+| `agent_sessions` | AI agent execution sessions. **Schema created in MVP — Foundation (empty table, no runtime code).** Columns: id, tenant_id, delegating_user_id, agent_type, status (planning\|executing\|awaiting_approval\|completed\|failed\|cancelled), goal, config (JSONB), scope (JSONB), working_memory (JSONB), plan (JSONB), cost_credits, mutations_count, parent_session_id (nullable), started_at, completed_at, completion_summary. Runtime built post-MVP. | `agent-architecture.md` |
+| `agent_type_configs` | Per-workspace customization of agent type defaults (approval mode, scope overrides). Post-MVP runtime. | `agent-architecture.md` |
+| `approval_rules` | Approval workflow rule definitions per table/status field | `approval-workflows.md` |
+| `approval_requests` | Active approval request instances tied to records | `approval-workflows.md` |
+| `approval_step_instances` | Individual step decisions within multi-step approval flows | `approval-workflows.md` |
+| `chat_visitors` | Pre-chat visitor identity for live chat widget | `embeddable-extensions.md` |
+| `chat_widgets` | Live chat widget configuration per portal/app | `embeddable-extensions.md` |
+| `commerce_transactions` | Stripe payment records for commerce embeds | `embeddable-extensions.md` |
+| `connected_calendars` | OAuth-connected calendar accounts (Google, Outlook) | `email.md` |
+| `connected_mailboxes` | OAuth-connected email accounts for send-as and inbound | `email.md` |
+| `email_events` | Resend webhook tracking (opens, clicks, bounces) | `email.md` |
+| `email_templates` | Reusable email templates with merge tags | `email.md` |
+| `email_suppression_list` | Bounce/complaint suppression for email compliance | `email.md` |
+| `formula_dependencies` | Formula field dependency graph for cascade recalculation | `formula-engine.md` |
+| `knowledge_embeddings` | Vector embeddings for knowledge base content | `gaps/knowledge-base-live-chat-ai.md` |
+| `portal_magic_links` | Magic link tokens for App Portal authentication | `app-designer.md` |
+| `record_embeddings` | Vector embeddings for record content (semantic search) | `vector-embeddings.md` |
+| `workspace_knowledge` | Agent-to-agent institutional memory store | `agent-architecture.md` |
+
+**Legacy tables (do not build):**
+- `interface_definitions` — Replaced by `apps` (post-MVP). MVP portals use `portals` table.
+- `pages` — Replaced by `app_pages` (post-MVP).
+- `blocks` — Replaced by `app_blocks` (post-MVP).
+- `interface_views`, `interface_tabs`, `user_interface_customizations` — Old "Interfaces" concept. Replaced by Table Views (`views` table) + Record View configs (`record_view_configs`). See GLOSSARY.md.
+- `portal_clients` — Not in MVP. Quick Portals use `portal_access` (per-record explicit grants). Post-MVP App Portals introduce `portal_clients` for identity-based scoping — see `app-designer.md`. Optional conversion: Manager can upgrade a Quick Portal to an App Portal — see `portals.md` §Quick Portal → App Portal Conversion for migration mechanics. Both portal types coexist permanently.
+- `template_definitions` — Replaced by `document_templates` (simpler merge-tag model for MVP).
+- `boards` (old version) — Replaced. Old `boards` were "organizational groupings of bases." New `boards` table (see User, Tenant & Workspace section) is an optional workspace grouping within a tenant.
+- `bases` — Removed entirely. The `bases` concept (native or connected base) is replaced by `base_connections` (sync credentials) and `workspaces` (organizational containers).
+
+**`environment` column (on tables, fields, cross_links, views, record_templates, automations, document_templates):**
+VARCHAR — `'live'` (default) | `'sandbox'`. MVP: always `'live'`. Post-MVP: enables workspace sandbox for schema experimentation before promotion to live. Note: `record_templates` also has a separate `publish_state` column (`'live'`|`'draft'`) for the draft/live authoring workflow — this is orthogonal to the environment/sandbox concept.
+
+**⚠️ QUERY RULE (enforced from MVP — Foundation):** Every query that touches `tables`, `fields`, `cross_links`, `views`, `record_templates`, `automations`, or `document_templates` MUST include `WHERE environment = 'live'` (or parameterized equivalent). This applies to all read and write paths — API, sync, portals, forms, automations, bulk operations. RLS policies must also filter by environment. This is a near-zero cost in MVP (the column is always `'live'`) but means zero migration when sandbox ships post-MVP — sandbox is just "start writing `'sandbox'` rows" and existing queries automatically exclude them.
+
+```typescript
+// Example: every query includes environment filter
+const fields = await db.query(`
+  SELECT * FROM fields
+  WHERE table_id = $1 AND tenant_id = $2 AND environment = 'live'
+`, [tableId, tenantId]);
+```
+
+**Do NOT skip the environment filter** even though the value is always `'live'` in MVP. Retrofitting it into every query later would be a painful migration.
+
+---
+
+## Field System Architecture
+
+Fields are the building blocks of every table. Each field has a definition (stored in `fields` table) and field values (stored in `records.canonical_data` JSONB keyed by field ID). The field system uses a **registry pattern** — each field type registers its config shape, renderers, operators, validation, and serialization methods, making new types fully modular.
+
+### Field Definition Structure
+
+Every field definition row in `fields`:
+
+```
+{
+  id: "fld_abc123",           // stable UUID (never changes, even if renamed)
+  table_id: "tbl_xyz",
+  tenant_id: "tnt_123",      // denormalized for RLS
+  name: "Client Name",
+  field_type: "text",        // type key from taxonomy
+  field_sub_type: null,       // variant (e.g., smart_doc → wiki)
+  is_primary: false,          // record title field (one per table, always text)
+  is_system: false,
+  required: false,
+  unique: false,
+  read_only: false,
+  config: { ... },            // type-specific configuration
+  display: { ... },           // rendering hints (width, alignment, format, display_style)
+  permissions: {
+    member_edit: true,         // Layer 1: Global field defaults. View-level overrides can only further restrict.
+    portal_visible: false,
+    portal_editable: false
+  },
+  default_value: null,
+  description: null,
+  sort_order: 0,
+  external_field_id: null,    // maps to source platform field (synced tables only)
+  environment: "live",
+}
+```
+
+Record values in `records.canonical_data` JSONB, keyed by field ID:
+```
+{
+  "fld_abc123": "Acme Corp",
+  "fld_def456": 15000.00,
+  "fld_ghi789": ["opt_1", "opt_3"]
+}
+```
+
+### System Fields
+
+Every table automatically gets these fields. They cannot be deleted but are **hidden by default** — shown on demand via view settings.
+
+| Field | Key | Auto-Populated | Notes |
+|---|---|---|---|
+| Record Title | `record_title` | No — user enters | Primary field. Always text. Frozen left in table view. Cannot be deleted or type-changed. `is_primary: true`. |
+| Auto Number | `auto_number` | Sequential on create | Configurable prefix + padding (e.g., "INV-0001"). |
+| Record ID | `record_id` | UUID on create | System UUID for integrations/API. |
+| Created Time | `created_at` | Timestamp on create | When record was created. |
+| Last Modified Time | `updated_at` | Timestamp on update | When any field was last changed. |
+| Created By | `created_by` | User ID on create | Who created the record. |
+| Last Modified By | `updated_by` | User ID on update | Who last edited. |
+
+### Conditional Field Display Logic
+
+Fields can be shown or hidden based on other field values. Configured per field:
+
+```
+display: {
+  conditional_visibility: {
+    enabled: true,
+    conditions: [
+      { field_id: "fld_status", operator: "equals", value: "Rejected" }
+    ],
+    logic: "all"  // all | any
+  }
+}
+```
+
+When conditions aren't met, the field is hidden in Record View. Still queryable via API and automations.
+
+### Field Type Taxonomy
+
+**MVP field types** across 8 categories. Post-MVP types listed separately.
+
+#### Category 1: Text
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Text** | `text` | string | `max_length`, `placeholder` | Single line. Primary field is always this type. |
+| **Text Area** | `text_area` | string | `max_length`, `min_rows`, `max_rows`, `placeholder` | Multi-line plain text. |
+| **Smart Doc** | `smart_doc` | TipTap JSON (or ref to `smart_doc_content`) | `sub_type` (wiki — post-MVP), `default_content` | Rich text powered by TipTap. |
+
+#### Category 2: Number
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Number** | `number` | number | `precision`, `negative_allowed`, `thousands_separator`, `format` (plain\|formatted) | General purpose numeric. |
+| **Currency** | `currency` | number | `currency_code`, `precision`, `symbol_position` (before\|after) | Number with currency formatting. |
+| **Percent** | `percent` | number (decimal: 0.75 = 75%) | `precision`, `display` (0–100 or 0.00–1.00) | Plain percentage. |
+| **Rating** | `rating` | integer | `max` (1–10, default 5), `icon` (star\|heart\|flag\|thumbs), `color` | Visual interactive icon rating. |
+| **Duration** | `duration` | number (stored as minutes) | `display_format` (h:mm\|d h m\|minutes_only), `input_mode` (picker\|manual) | Time spans. |
+| **Progress** | `progress` | number (0–100) | `source` (manual), `display` (progress_bar\|number\|both), `color_ranges` (JSONB) | MVP: manual only. Post-MVP: computed from checklist/children/formula. |
+| **Auto Number** | `auto_number` | integer (auto-increment) | `prefix`, `start_at`, `padding` (digits) | Read-only. System field. |
+
+#### Category 3: Selection
+
+| Field Type | Key | Storage | Config | Display Styles |
+|---|---|---|---|---|
+| **Single Select** | `single_select` | string (option ID) | `options` [{id, label, color, level (nullable)}], `allow_new`, `default_option_id` | `full_bar` \| `colored_pill` \| `dot_text` \| `plain` \| `priority` |
+| **Multiple Select** | `multiple_select` | string[] (option IDs) | Same as single + `max_selections` | `full_bar` \| `colored_pill` \| `dot_text` \| `plain` |
+| **Status** | `status` | string (option ID) | `options` [{id, label, color, category}], `categories` (not_started\|in_progress\|done\|closed), `done_values`, `default_option_id` | `full_bar` \| `colored_pill` \| `dot_text` \| `plain` |
+| **Tag** | `tag` | string[] (tag values) | `suggestions`, `allow_new` (boolean), `color_mode` (auto\|manual) | `colored_pill` \| `dot_text` \| `plain` |
+
+**Selection display styles:**
+
+| Style | Rendering |
+|---|---|
+| `full_bar` | Entire cell filled with option's color, white text |
+| `colored_pill` | Rounded pill with background color + contrasting text |
+| `dot_text` | Small colored dot (8px) left of plain text |
+| `plain` | Just the text, no color indicator |
+| `priority` | Icon + colored label (Single Select only) |
+
+**Status categories** provide semantic meaning: completion tracking, conditional formatting, Kanban view columns (post-MVP).
+
+#### Category 4: Date & Time
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Date** | `date` | ISO 8601 string | `include_time`, `time_format` (12h\|24h), `date_format`, `timezone` (user\|workspace\|fixed), `default_value` (none\|today\|custom) | Standard date or datetime. |
+| **Date Range** | `date_range` | {start, end} object | Same as date + `inclusive_end` | Start/end pair. |
+| **Due Date** | `due_date` | ISO 8601 string | Same as date + `show_remaining`, `overdue_color`, `warning_days` | Date with countdown/overdue semantics. Color-coded by proximity. |
+| **Time** | `time` | string (HH:MM) | `format` (12h\|24h), `minute_increment` (1\|5\|15\|30) | Time-only, no date. |
+| **Created Time** | `created_at` | ISO 8601 | `date_format`, `include_time` | System field. Read-only. |
+| **Last Modified Time** | `updated_at` | ISO 8601 | `date_format`, `include_time` | System field. Read-only. |
+
+#### Category 5: People & Contact
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **People** | `people` | string[] (user IDs) | `max_people` (1 = single, null = unlimited), `notify_on_assign`, `roles_filter` | Workspace members. Powers `$me` token, assignee fields. |
+| **Created By** | `created_by` | string (user ID) | none | System field. Read-only. |
+| **Last Modified By** | `updated_by` | string (user ID) | none | System field. Read-only. |
+| **Email** | `email` | string | `validation` (strict\|loose), `allow_multiple`, `launch_compose` | Validated email. Powers automation sends, portal matching. |
+| **Phone** | `phone` | object or object[] | `default_country_code`, `allow_multiple`, `types[]`, `actions` config | Structured phone with action buttons (call, SMS, WhatsApp, copy). |
+| **URL** | `url` | string | `open_in_new_tab`, `show_favicon`, `validation` | Clickable web link. |
+| **Address** | `address` | JSONB {street, street2, city, state, postal_code, country, lat, lng} | `autocomplete` (google_places\|none), `required_parts`, `show_map` | Google Places autocomplete via backend proxy. Rate-limited per workspace per plan. |
+| **Full Name** | `full_name` | JSONB {prefix, first, middle, last, suffix} | `required_parts`, `display_format` | Structured name. Better for sorting, mail merge. |
+| **Social** | `social` | JSONB {platform: url} | `platforms` (linkedin\|twitter\|instagram\|facebook\|tiktok\|youtube\|github\|custom) | Social profile links with platform icons. |
+
+**People display styles:**
+
+| Style | Rendering |
+|---|---|
+| `avatar_name` | Avatar circle + full name (default) |
+| `avatar_only` | Circular avatar photo/initials. Multiple stack/overlap. |
+| `colored_pill` | Pill with user's assigned color + name |
+| `grey_avatar_pill` | Grey rounded pill with small avatar + name inside |
+| `name_only` | Plain text, no avatar |
+
+#### Category 6: Boolean & Interactive
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Checkbox** | `checkbox` | boolean | `label`, `color`, `display_mode` (checkbox\|toggle) | Yes/no toggle. |
+| **Button** | `button` | null (no stored value) | `label`, `icon`, `color`, `style` (primary\|outline\|text), `action_type` (automation\|url\|command), `automation_id`, `url_template` (with merge fields), `confirmation` | Triggers automation, opens URL, or runs command. |
+| **Checklist** | `checklist` | JSONB [{id, title, assignee_id, due_date, completed}] | `allow_assignees`, `allow_due_dates`, `show_progress` | Embedded sub-tasks within a record. Assigned items surface in Quick Panel Tasks. |
+| **Signature** | `signature` | JSONB { signature_data, signer_name, signer_email, signed_at, signer_ip, user_agent, consent_text, document_hash } | `required_for_status`, `signer_field_id`, `consent_text_template` | Electronic signature capture with legal metadata. |
+
+#### Category 7: Relational
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Linked Record** | `linked_record` | string[] (record IDs) | `target_table_id`, `cross_link_id`, `relationship` (one_to_many\|many_to_one), `max_links`, `display_field_id`, `allow_create`, `filters` | **MVP.** Cross-link field. Bidirectional — auto-creates inverse field + `cross_link` definition. |
+
+**Post-MVP relational types:**
+
+| Field Type | Key | Notes |
+|---|---|---|
+| **Lookup** | `lookup` | Read-only values from linked records. |
+| **Rollup** | `rollup` | Aggregate values across linked records. |
+| **Count** | `count` | Count of linked records. |
+| **Formula** | `formula` | Calculated from other fields. Cached with invalidation. |
+| **Dependency** | `dependency` | PM Gantt dependency field. |
+| **Sub-Items** | `sub_items` | Child records inline. Max 3 levels. |
+
+#### Category 8: Files
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Files & Images** | `files` | JSONB [{url, filename, file_type, size, thumbnail_url}] | `max_files`, `allowed_types` (any\|images_only\|documents_only), `max_file_size` | Single field type. Auto-detects MIME type: images → thumbnails, documents → icon + filename. |
+
+#### Category 9: Identification
+
+| Field Type | Key | Storage | Config | Notes |
+|---|---|---|---|---|
+| **Barcode** | `barcode` | string | `format` (auto\|upc\|ean\|code128\|qr\|code39), `allow_manual_entry`, `unique` | Stores barcode/QR values. Field type available from MVP; mobile scanning post-MVP. |
+
+#### Deferred Field Types
+
+| Field Type | Notes |
+|---|---|
+| **Vote** | Team voting on records. Post-MVP. |
+
+### Field Type Registry
+
+Central mapping of field type keys to capabilities. Fully modular — adding a new field type requires registering one entry.
+
+```
+FieldTypeRegistry = {
+  text: {
+    category: "text",
+    label: "Text",
+    icon: "type",
+    storage_type: "string",
+    supports_default: true,
+    supports_unique: true,
+    supports_required: true,
+    filter_operators: ["equals", "not_equals", "contains", "not_contains",
+                       "starts_with", "ends_with", "is_empty", "is_not_empty"],
+    sort_type: "alphabetical",
+    cell_renderer: TextCellRenderer,
+    cell_editor: TextCellEditor,
+    detail_renderer: TextDetailRenderer,
+    validate: (value, config) => ...,
+    toTemplateValue: (value, config) => ...,
+    toExportValue: (value, config) => ...,
+  },
+  // ... one entry per field type
+}
+```
+
+**Filter operators by field type:**
+
+| Field Type | Operators |
+|---|---|
+| Text, Text Area, Email, URL | equals, not_equals, contains, not_contains, starts_with, ends_with, is_empty, is_not_empty |
+| Number, Currency, Percent, Rating, Duration | equals, not_equals, greater_than, less_than, between, is_empty, is_not_empty |
+| Date, Due Date, Created Time, Last Modified | is, before, after, within_past_N_days, within_next_N_days, is_empty |
+| Single Select, Status | is, is_any_of, is_none_of, is_empty |
+| Multiple Select, Tag | includes, does_not_include, is_empty, has_any_of, has_all_of |
+| People | includes, does_not_include, is_empty, is_me ($me token) |
+| Checkbox | is_checked, is_not_checked |
+| Linked Record | links_to, does_not_link_to, is_empty, is_not_empty |
+
+**Field type picker (Progressive Disclosure):**
+- **Common types shown by default** (~12): Text, Number, Date, Single Select, Multiple Select, Status, People, Checkbox, Email, Phone, URL, Files
+- **"Show All" reveals full taxonomy** organized by category
+
+### Field Rendering Across Contexts
+
+| Context | Rendering | Editing |
+|---|---|---|
+| **Table View (grid)** | Compact cell renderer per type. Manager-configurable display styles for selects and people fields. | Inline editor per type: text input, dropdown, date picker, toggle. Auto-save on blur. |
+| **Table View (card)** | Summary card with primary field + configured display fields. | Tap/click to open Record View. |
+| **Record View** | Field canvas layout — label-value pairs arranged in columns (1–4). More space for structured fields. | Inline editable on click. |
+| **Portal** | Same as Record View but with portal permissions applied. Fields default read-only, selectively editable per `permissions.portal_editable`. | Portal-appropriate input components. |
+| **Form** | Same layout as Record View but with empty input fields. Validation messages shown inline. | Type-appropriate input components. |
+| **Filters & Sorts** | Type-appropriate operators from registry. | Value pickers match field type. |
+| **Automations** | Merge fields (resolved by field ID, displayed as `{field_name}`), condition operands, action value pickers. | Type-aware value inputs in automation builder. |
+| **Doc Gen** | Fields render as placeholder values via `toTemplateValue()`. People → names. Selects → labels. Dates → formatted strings. | N/A (output only). |
+
+### Validation
+
+Runs at the API layer — shared validation module used by API, portals, forms, automations, and imports:
+
+1. **Type check** — value matches expected storage type
+2. **Required** — non-empty when `required: true`
+3. **Unique** — no duplicates when `unique: true` (per-table scope)
+4. **Config constraints** — max_length, min/max values, allowed_types, max_files, etc.
+5. **Conditional required** — field required only when conditional_visibility conditions are met
+
+### JSONB Constraint Enforcement Strategy
+
+All record data lives in `records.canonical_data` JSONB. This gives EveryStack cross-platform flexibility (any field shape, any source) but means standard SQL column constraints (UNIQUE, NOT NULL, CHECK, FK) don't apply automatically. The platform enforces every constraint explicitly:
+
+**Uniqueness (`unique: true` fields) — database-level enforcement:**
+Uniqueness is the one constraint that MUST be enforced at the database level to prevent race conditions (two simultaneous writes creating duplicate values). Implementation: Postgres partial expression index created dynamically when a field's `unique` flag is set to true. One index per unique field per table. This makes duplicates impossible regardless of how the data is written (API, sync, bulk import, automation). Index is dropped when `unique` flag is removed.
+
+```sql
+-- Created when fields.unique = true, dropped when false
+CREATE UNIQUE INDEX CONCURRENTLY ux_records_{table_id}_{field_id}
+  ON records ((canonical_data ->> '{field_id}'))
+  WHERE table_id = '{table_id}' AND deleted_at IS NULL;
+```
+
+**All other constraints — application-level enforcement:**
+These constraints don't have race conditions (they depend on the value itself, not the state of other rows), so application-layer validation is safe and simpler:
+
+| Constraint | Enforcement | Notes |
+|-----------|-------------|-------|
+| Required fields | Shared validation module | Reject write if non-empty check fails |
+| Type validation | Shared validation module | Value must match `FieldTypeRegistry` expected type |
+| Range constraints | Shared validation module | min/max values, max_length, max_files |
+| Linked record FK | Application-layer existence check | Verify target record exists before writing link — not a SQL FK because cross-links span JSONB |
+| Conditional required | Shared validation module | Evaluate visibility conditions, then apply required check |
+
+**Key principle:** The shared validation module is the single enforcement point — every write path (API, portal, form, automation, sync, bulk import) passes through it. No write path bypasses validation.
+
+---
+
+## Cross-Linking Architecture
+
+**Scope:** Cross-links are tenant-scoped — any table can link to any other table within the same tenant, across any workspace. A field in a "Clients" table (Workspace A) can link to a "Projects" table (Workspace B), even if those tables are synced from different platforms.
+
+**Linked Record field creation flow:**
+1. Manager+ adds a Linked Record field on Table A
+2. Picks target table (from any workspace within the tenant)
+3. System creates: `cross_link` definition, the field on Table A, and the inverse Linked Record field on Table B
+4. Done — one step, both sides live immediately
+
+**MVP cross-link behavior:**
+- Display linked record data in grid cells (compact chips showing primary field value)
+- Display linked record data in Record View (clickable pills with optional detail expansion)
+- Single-hop lookups: show fields from the directly linked record
+- No rollups, no formulas, no cascade engineering (all post-MVP)
+
+Full architecture details in `cross-linking.md`.
+
+---
+
+## Bidirectional Sync Architecture
+
+**Supported platforms (MVP):**
+
+| Platform | Direction | Trigger | Rate Limit |
+|---|---|---|---|
+| **Airtable** | Bidirectional | Webhooks (primary) + polling fallback | 5 req/sec |
+| **Notion** | Bidirectional | Polling only (no webhooks) | 3 req/sec |
+| **SmartSuite** | Bidirectional | Polling only (no webhooks) | 10 req/sec (per API key) |
+
+**Notion property type mapping:**
+
+| Notion Property | EveryStack Field | Notes |
+|---|---|---|
+| Title | Text (primary) | Clean |
+| Rich text | Text Area | Strip to plain text for MVP |
+| Number | Number | Clean |
+| Select | Single Select | Sync options |
+| Multi-select | Multiple Select | Sync options |
+| Date | Date / Date-Time | Clean |
+| Checkbox | Checkbox | Clean |
+| URL, Email, Phone | URL, Email, Phone | Clean |
+| People | People | Map by email |
+| Files & media | Files & Images | Sync URLs |
+| Relation | Linked Record | If both databases synced |
+| Rollup | Rollup | Post-MVP |
+| Status | Status | Map groups + options |
+| Created time / Last edited time | Created Time / Last Modified Time | Read-only |
+| Created by / Last edited by | Created By / Last Modified By | Read-only |
+| Unique ID | Auto-Number | Read-only |
+| Formula, Verification, Button | ❌ Not synced | Computed/interactive |
+
+**Sync direction** configured per `base_connection`:
+
+| Direction | Behavior | Default For |
+|---|---|---|
+| `inbound_only` | Pull from platform. Synced fields read-only in EveryStack. | Read-only data sources |
+| `bidirectional` | Pull and push. Edits write back to source. New records push to source. | Airtable, Notion, SmartSuite |
+
+**Field sync eligibility:**
+- **Platform-native fields** (`external_field_id` is set): eligible for outbound sync
+- **EveryStack-only fields** (`external_field_id` is null): never pushed — local enrichment
+- **Computed fields** (Lookup, Rollup, Formula, Count): never pushed — derived
+- **System fields**: never pushed
+
+**Field type mismatch handling:**
+When a source platform field type changes (e.g., Airtable text → number):
+1. **Detection:** Sync cycle compares source schema against `synced_field_mappings`. Type change → status: `type_mismatch`.
+2. **Scope:** Sync pauses for that field only. All other fields continue.
+3. **Notification:** In-app notification + warning badge on connection settings.
+4. **Resolution (3 options with impact preview):**
+   - **Match source (recommended if >90% values coerce):** Convert EveryStack field type. Non-convertible values preserved in backup field.
+   - **Keep my type + coerce:** Keep EveryStack type. Incoming values coerced.
+   - **Disconnect this field:** Stop syncing. Keep existing data.
+
+**Outbound sync flow:**
+1. User edits a synced field value in EveryStack
+2. Change saved locally immediately (optimistic UX)
+3. BullMQ job queued: `sync_outbound` with record ID, field(s) changed, new values
+4. Job calls source platform API
+5. Success: `sync_status` → `synced`, `last_synced_at` updated
+6. Failure: `sync_status` → `pending` or `conflict`, user notified
+
+**Conflict resolution:** Last-write-wins by default. Optional manual resolution mode creates `sync_conflicts` records for diff review.
+
+Full sync architecture details in `sync-engine.md`.
