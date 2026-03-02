@@ -107,12 +107,18 @@ importers:
       '@types/node':
         specifier: ^22.15.3
         version: 22.19.13
+      '@vitest/coverage-v8':
+        specifier: ^4.0.18
+        version: 4.0.18(vitest@4.0.18(@types/node@22.19.13)(tsx@4.21.0))
       tsx:
         specifier: ^4.19.4
         version: 4.21.0
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@types/node@22.19.13)(tsx@4.21.0)
 
   packages/shared:
     dependencies:
