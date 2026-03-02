@@ -1,0 +1,19 @@
+{
+  "name": "@everystack/shared",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./db": "./db/index.ts",
+    "./sync": "./sync/index.ts",
+    "./ai": "./ai/index.ts",
+    "./testing": "./testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "lint": "echo 'lint not configured yet'"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
