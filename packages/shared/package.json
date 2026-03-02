@@ -10,7 +10,8 @@
     "./testing": "./testing/index.ts",
     "./logging": "./logging/index.ts",
     "./telemetry": "./telemetry/index.ts",
-    "./errors": "./errors/index.ts"
+    "./errors": "./errors/index.ts",
+    "./webhooks": "./webhooks/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -43,6 +44,7 @@
     "drizzle-orm": "^0.45.1",
     "pino": "^10.3.1",
     "postgres": "^3.4.8",
+    "svix": "^1.86.0",
     "uuidv7": "^1.1.0"
   }
 }

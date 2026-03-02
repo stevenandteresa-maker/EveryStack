@@ -15,14 +15,20 @@ vi.mock('@everystack/shared/db', () => ({
   updateUserFromClerk: (...args: unknown[]) => mockUpdateUserFromClerk(...args),
 }));
 
-const mockVerify = vi.fn();
-vi.mock('svix', () => {
-  return {
-    Webhook: class MockWebhook {
-      verify = mockVerify;
-    },
-  };
-});
+const mockVerifyClerkWebhook = vi.fn();
+vi.mock('@everystack/shared/webhooks', () => ({
+  verifyClerkWebhook: (...args: unknown[]) => mockVerifyClerkWebhook(...args),
+}));
+
+const mockLoggerWarn = vi.fn();
+vi.mock('@everystack/shared/logging', () => ({
+  webLogger: { warn: mockLoggerWarn },
+}));
+
+const mockCaptureMessage = vi.fn();
+vi.mock('@sentry/nextjs', () => ({
+  captureMessage: mockCaptureMessage,
+}));
 
 // ---- Helpers ---------------------------------------------------------------
 
@@ -65,7 +71,7 @@ describe('POST /api/webhooks/clerk', () => {
     process.env.CLERK_WEBHOOK_SECRET = 'whsec_test_secret';
   });
 
-  it('returns 400 when svix headers are missing', async () => {
+  it('returns 401 when svix headers are missing', async () => {
     const { POST } = await import('./route');
     const request = makeRequest('{}', {
       'svix-id': '',
@@ -79,26 +85,60 @@ describe('POST /api/webhooks/clerk', () => {
     };
 
     const response = await POST(request);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
 
     const json = await response.json();
     expect(json.error.code).toBe('VALIDATION_FAILED');
     expect(json.error.message).toContain('Missing webhook signature headers');
   });
 
-  it('returns 400 when signature verification fails', async () => {
+  it('logs warning and reports to Sentry when headers are missing', async () => {
     const { POST } = await import('./route');
-    mockVerify.mockImplementation(() => {
-      throw new Error('Invalid signature');
-    });
+    const request = makeRequest('{}');
+    (request as unknown as { headers: { get: (n: string) => string | null } }).headers.get = (name: string) => {
+      if (name.startsWith('svix-')) return null;
+      return 'application/json';
+    };
+
+    await POST(request);
+
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      { reason: 'missing_headers' },
+      'Clerk webhook signature verification failed',
+    );
+    expect(mockCaptureMessage).toHaveBeenCalledWith(
+      'Clerk webhook: missing signature headers',
+      'warning',
+    );
+  });
+
+  it('returns 401 when signature verification fails', async () => {
+    const { POST } = await import('./route');
+    mockVerifyClerkWebhook.mockReturnValue(null);
 
     const request = makeRequest('{}');
     const response = await POST(request);
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
     const json = await response.json();
     expect(json.error.code).toBe('VALIDATION_FAILED');
     expect(json.error.message).toContain('Invalid webhook signature');
+  });
+
+  it('logs warning and reports to Sentry when signature is invalid', async () => {
+    const { POST } = await import('./route');
+    mockVerifyClerkWebhook.mockReturnValue(null);
+
+    await POST(makeRequest('{}'));
+
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      { reason: 'invalid_signature' },
+      'Clerk webhook signature verification failed',
+    );
+    expect(mockCaptureMessage).toHaveBeenCalledWith(
+      'Clerk webhook: invalid signature',
+      'warning',
+    );
   });
 
   it('returns 500 when webhook secret is not configured', async () => {
@@ -118,7 +158,7 @@ describe('POST /api/webhooks/clerk', () => {
     const eventData = makeClerkUserData();
     const event = { type: 'user.created', data: eventData };
 
-    mockVerify.mockReturnValue(event);
+    mockVerifyClerkWebhook.mockReturnValue(event);
 
     const request = makeRequest(JSON.stringify(event));
     const response = await POST(request);
@@ -139,7 +179,7 @@ describe('POST /api/webhooks/clerk', () => {
     });
     const event = { type: 'user.created', data: eventData };
 
-    mockVerify.mockReturnValue(event);
+    mockVerifyClerkWebhook.mockReturnValue(event);
 
     const request = makeRequest(JSON.stringify(event));
     await POST(request);
@@ -161,7 +201,7 @@ describe('POST /api/webhooks/clerk', () => {
     });
     const event = { type: 'user.updated', data: eventData };
 
-    mockVerify.mockReturnValue(event);
+    mockVerifyClerkWebhook.mockReturnValue(event);
 
     const request = makeRequest(JSON.stringify(event));
     const response = await POST(request);
@@ -177,7 +217,7 @@ describe('POST /api/webhooks/clerk', () => {
     const { POST } = await import('./route');
     const event = { type: 'session.created', data: {} };
 
-    mockVerify.mockReturnValue(event);
+    mockVerifyClerkWebhook.mockReturnValue(event);
 
     const request = makeRequest(JSON.stringify(event));
     const response = await POST(request);
@@ -187,19 +227,23 @@ describe('POST /api/webhooks/clerk', () => {
     expect(json.received).toBe(true);
   });
 
-  it('passes svix headers correctly for verification', async () => {
+  it('passes correct arguments to verifyClerkWebhook', async () => {
     const { POST } = await import('./route');
     const event = { type: 'user.created', data: makeClerkUserData() };
-    mockVerify.mockReturnValue(event);
+    mockVerifyClerkWebhook.mockReturnValue(event);
 
     const body = JSON.stringify(event);
     const request = makeRequest(body);
     await POST(request);
 
-    expect(mockVerify).toHaveBeenCalledWith(body, {
-      'svix-id': 'msg_test123',
-      'svix-timestamp': '1234567890',
-      'svix-signature': 'v1,valid_sig',
-    });
+    expect(mockVerifyClerkWebhook).toHaveBeenCalledWith(
+      body,
+      {
+        'svix-id': 'msg_test123',
+        'svix-timestamp': '1234567890',
+        'svix-signature': 'v1,valid_sig',
+      },
+      'whsec_test_secret',
+    );
   });
 });
