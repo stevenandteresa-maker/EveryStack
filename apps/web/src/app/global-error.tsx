@@ -3,8 +3,6 @@
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';
 
-import { getTraceId } from '@everystack/shared/logging';
-
 export default function GlobalError({
   error,
   reset,
@@ -12,18 +10,18 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const traceId = getTraceId();
+  const errorRef = error.digest;
 
   useEffect(() => {
     Sentry.captureException(error, {
       tags: {
-        trace_id: traceId !== 'no-trace' ? traceId : undefined,
+        error_digest: errorRef,
       },
     });
-  }, [error, traceId]);
+  }, [error, errorRef]);
 
-  const reportUrl = traceId !== 'no-trace'
-    ? `mailto:support@everystack.io?subject=Error Report&body=Trace ID: ${traceId}`
+  const reportUrl = errorRef
+    ? `mailto:support@everystack.io?subject=Error Report&body=Error Reference: ${errorRef}`
     : undefined;
 
   return (
@@ -48,9 +46,9 @@ export default function GlobalError({
             An unexpected error occurred. Please try again, or contact support if
             the problem persists.
           </p>
-          {traceId !== 'no-trace' && (
+          {errorRef && (
             <p style={{ color: '#999', fontSize: '12px', marginBottom: '16px' }}>
-              Trace ID: {traceId}
+              Error Reference: {errorRef}
             </p>
           )}
           <div style={{ display: 'flex', gap: '12px' }}>
