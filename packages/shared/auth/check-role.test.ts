@@ -208,7 +208,7 @@ describe('requireRole', () => {
     ).rejects.toThrow(PermissionDeniedError);
   });
 
-  it('thrown error has correct code and httpStatus', async () => {
+  it('thrown error has correct code and statusCode', async () => {
     tenantQueryResult = [];
     const { requireRole } = await import('./check-role');
 
@@ -216,9 +216,9 @@ describe('requireRole', () => {
       await requireRole('user-1', 'tenant-1', undefined, 'admin', 'workspace', 'manage');
       expect.fail('should have thrown');
     } catch (err: unknown) {
-      const error = err as { code: string; httpStatus: number };
+      const error = err as { code: string; statusCode: number };
       expect(error.code).toBe('PERMISSION_DENIED');
-      expect(error.httpStatus).toBe(403);
+      expect(error.statusCode).toBe(403);
     }
   });
 

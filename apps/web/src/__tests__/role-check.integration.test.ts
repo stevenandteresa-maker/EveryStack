@@ -178,7 +178,7 @@ describe('Role check integration: getAuthContext → requireRole', { timeout: 30
     } catch (err: unknown) {
       const error = err as InstanceType<typeof PermissionDeniedError>;
       expect(error.code).toBe('PERMISSION_DENIED');
-      expect(error.httpStatus).toBe(403);
+      expect(error.statusCode).toBe(403);
       expect(error.details).toEqual({
         action: 'manage',
         resource: 'workspace',

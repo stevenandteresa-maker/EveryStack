@@ -1,33 +1,19 @@
-/**
- * Base application error matching the AppError interface from CLAUDE.md.
- * Thrown by Server Actions, caught by the global error boundary.
- */
-export class AppError extends Error {
-  readonly code: string;
-  readonly details?: Record<string, unknown>;
-  readonly traceId?: string;
+// ---------------------------------------------------------------------------
+// Re-export shared error classes for use within the web app.
+// The canonical definitions live in @everystack/shared/errors.
+// ---------------------------------------------------------------------------
 
-  constructor(
-    code: string,
-    message: string,
-    details?: Record<string, unknown>,
-    traceId?: string,
-  ) {
-    super(message);
-    this.name = 'AppError';
-    this.code = code;
-    this.details = details;
-    this.traceId = traceId;
-  }
-}
+export {
+  AppError,
+  ValidationError,
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  RateLimitedError,
+  InternalError,
+  getHttpStatus,
+  toErrorResponse,
+  wrapUnknownError,
+} from '@everystack/shared/errors';
 
-/**
- * Resource not found. Returns 404 — also used for cross-tenant access
- * attempts to prevent tenant enumeration.
- */
-export class NotFoundError extends AppError {
-  constructor(message = 'Not found', details?: Record<string, unknown>) {
-    super('NOT_FOUND', message, details);
-    this.name = 'NotFoundError';
-  }
-}
+export type { ErrorResponse, ErrorCode } from '@everystack/shared/errors';

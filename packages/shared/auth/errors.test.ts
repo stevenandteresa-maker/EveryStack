@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PermissionDeniedError } from './errors';
+import { AppError, ForbiddenError } from '../errors';
 
 describe('PermissionDeniedError', () => {
   it('extends Error', () => {
@@ -10,6 +11,15 @@ describe('PermissionDeniedError', () => {
     expect(err).toBeInstanceOf(Error);
   });
 
+  it('extends ForbiddenError and AppError', () => {
+    const err = new PermissionDeniedError('Forbidden', {
+      action: 'edit',
+      resource: 'record',
+    });
+    expect(err).toBeInstanceOf(ForbiddenError);
+    expect(err).toBeInstanceOf(AppError);
+  });
+
   it('has code PERMISSION_DENIED', () => {
     const err = new PermissionDeniedError('Forbidden', {
       action: 'delete',
@@ -18,12 +28,12 @@ describe('PermissionDeniedError', () => {
     expect(err.code).toBe('PERMISSION_DENIED');
   });
 
-  it('has httpStatus 403', () => {
+  it('has statusCode 403', () => {
     const err = new PermissionDeniedError('Forbidden', {
       action: 'read',
       resource: 'workspace',
     });
-    expect(err.httpStatus).toBe(403);
+    expect(err.statusCode).toBe(403);
   });
 
   it('sets name to PermissionDeniedError', () => {
