@@ -50,6 +50,13 @@
       "when": 1772461751552,
       "tag": "0006_daily_hannibal_king",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772462157177,
+      "tag": "0007_create_communications",
+      "breakpoints": true
     }
   ]
 }

@@ -81,3 +81,15 @@ export type { SyncFailure, NewSyncFailure } from './sync-failures';
 
 export { syncSchemaChanges, syncSchemaChangesRelations } from './sync-schema-changes';
 export type { SyncSchemaChange, NewSyncSchemaChange } from './sync-schema-changes';
+
+export { threads, threadsRelations } from './threads';
+export type { Thread, NewThread } from './threads';
+
+export { threadParticipants, threadParticipantsRelations } from './thread-participants';
+export type { ThreadParticipant, NewThreadParticipant } from './thread-participants';
+
+export { threadMessages, threadMessagesRelations } from './thread-messages';
+export type { ThreadMessage, NewThreadMessage } from './thread-messages';
+
+export { userSavedMessages, userSavedMessagesRelations } from './user-saved-messages';
+export type { UserSavedMessage, NewUserSavedMessage } from './user-saved-messages';
