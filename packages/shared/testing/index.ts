@@ -1,1 +1,7 @@
-export { getTestDb } from './factories';
+export {
+  getTestDb,
+  createTestTenant,
+  createTestUser,
+  createTestWorkspace,
+  createTestRecord,
+} from './factories';
