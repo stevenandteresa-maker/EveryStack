@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-02
-**Branch:** `feat/phase-1e-testing-infrastructure`
-**Latest tag:** `v0.1.3-phase-1d`
-**Total commits:** 10 (on main + current branch)
+**Last updated:** 2026-03-03
+**Branch:** `main`
+**Latest tag:** `v0.1.5-phase-1f`
+**Total commits:** 17 (on main)
 
 ---
 
@@ -88,14 +88,14 @@ Pino logging with PII redaction, OpenTelemetry tracing, Sentry error tracking, s
 
 **Patterns established:** All errors extend `AppError` with code/statusCode/traceId. PII redacted in logs. AsyncLocalStorage for trace propagation across async boundaries. Different security policies for platform vs portal routes.
 
-### Phase 1E — Testing Infrastructure (In Progress)
+### Phase 1E — Testing Infrastructure (Complete)
 
 Vitest monorepo config, Docker test services, comprehensive test data factories.
 
 **Key files:**
 - `vitest.workspace.ts` — Root workspace referencing 4 package configs
 - `packages/shared/vitest.config.ts` — Forks pool, V8 coverage (db: 90/85%, sync: 90/85%)
-- `apps/web/vitest.config.ts` — Forks pool, coverage (data: 95/90%, actions: 90/85%)
+- `apps/web/vitest.config.ts` — Forks pool, coverage (data: 95/90%, actions: 90/85%), env fallbacks for CI
 - `apps/worker/vitest.config.ts` — Coverage (jobs: 85/80%)
 - `apps/realtime/vitest.config.ts` — passWithNoTests: true
 - `apps/web/vitest.setup.ts` — Auto-runs migrations in beforeAll, truncates all tables in afterEach
@@ -103,10 +103,34 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 - `packages/shared/testing/factories.ts` — 19 factory functions with auto-parent creation
 - `packages/shared/testing/factories.test.ts` — Factory unit tests
 
-**Done:** Vitest configs (4), Docker test services, 19 factories, factory tests, integration tests (auth-flow, role-check, webhook).
-**Remaining:** Additional integration test patterns, E2E scaffold, coverage threshold enforcement validation.
+**Patterns established:** Vitest configs (4), Docker test services, 19 factories, factory tests, integration tests (auth-flow, role-check, webhook).
 
-**Existing test files (20):** auth-flow, role-check, webhook integration tests; unit tests for roles, check-role, errors, user-operations, factories, pii-registry, verify-encryption, logger, trace-context, otel, verify-signature, sentry, middleware, job-wrapper.
+### Phase 1F — Design System Foundation & i18n (Complete)
+
+Tailwind token system, shadcn/ui primitives, application shell, i18n framework.
+
+**Key files:**
+- `apps/web/tailwind.config.ts` — CSS custom properties, DM Sans/JetBrains Mono fonts, Obsidian Teal surface tokens, accent/data-color layers, responsive breakpoints (phone/tablet/desktop)
+- `apps/web/src/app/globals.css` — CSS custom properties for surface tokens, accent color, sidebar colors
+- `apps/web/src/lib/design-system/colors.ts` — 8 workspace accent colors, 13-color data palette, contrast map, `applyAccentColor()`, `getDataColor()`, `getContrastText()`
+- `apps/web/src/lib/design-system/typography.ts` — 9-step type scale (page-title through timestamp)
+- `apps/web/src/lib/design-system/breakpoints.ts` — 3 semantic breakpoints (phone <768, tablet >=768, desktop >=1440)
+- `apps/web/src/lib/design-system/index.ts` — Re-exports all design system constants
+- `apps/web/src/lib/fonts.ts` — DM Sans + JetBrains Mono via next/font/google
+- `apps/web/src/components/ui/` — 16 shadcn/ui primitives (badge, button, card, command, dialog, dropdown-menu, input, label, popover, scroll-area, select, separator, sheet, skeleton, tabs, tooltip)
+- `apps/web/src/components/layout/app-shell.tsx` — Root layout: dark sidebar + accent header + white content
+- `apps/web/src/components/layout/sidebar.tsx` — Collapsible sidebar (48px/280px), workspace nav
+- `apps/web/src/components/layout/header.tsx` — Accent-colored header (52px), command bar placeholder
+- `apps/web/src/components/layout/main-content.tsx` — White content area
+- `apps/web/src/stores/sidebar-store.ts` — Zustand store for sidebar collapsed state
+- `apps/web/messages/en.json` — English translations
+- `apps/web/messages/es.json` — Spanish translations
+- `apps/web/src/i18n/request.ts` — next-intl request config (non-routing locale strategy)
+- `apps/web/src/test-utils/intl-wrapper.tsx` — IntlWrapper for component testing with translations
+- `scripts/check-i18n.ts` — AST-based CI script enforcing zero hardcoded English strings in UI code
+- `apps/web/components.json` — shadcn/ui CLI config
+
+**Patterns established:** Three-layer color architecture (workspace accent, semantic/process, data palette). CSS custom properties for all tokens. `applyAccentColor()` for runtime theme switching. next-intl with non-routing locale strategy. `check:i18n` CI gate active. IntlWrapper for test isolation.
 
 ---
 
@@ -114,7 +138,7 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 
 **Sync Engine** — `packages/shared/sync/field-registry.ts` is empty. No platform adapters (Airtable, Notion, SmartSuite). No `toCanonical()`/`fromCanonical()` transforms. Schema tables exist but no sync logic.
 
-**UI / Design System** — No Tailwind config, no `globals.css`, no CSS variables. No shadcn/ui components installed. `apps/web/src/components/` is empty. No Zustand stores, no TanStack Query/Virtual. The home page is just `<h1>EveryStack is running.</h1>`.
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 16 shadcn/ui primitives are installed. Application shell (sidebar, header, content) exists. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
 
 **Views / Grid / Card** — No view rendering code. Schema for `views` exists but no UI.
 
@@ -134,7 +158,7 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 
 **Platform API** — `apps/web/src/app/api/health/route.ts` exists. No v1 data endpoints.
 
-**i18n** — `scripts/check-i18n.ts` is a stub that always passes. No translation framework, no locale files.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
 **Realtime** — `apps/realtime/src/index.ts` logs a startup message. No Socket.io server, no Redis adapter.
 
@@ -167,6 +191,11 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 | **Tags** | `v0.1.X-phase-YZ` |
 | **Security headers** | CSP + HSTS + X-Frame-Options. Platform (strict) vs Portal (embeddable) |
 | **Webhook verification** | Svix for Clerk, generic HMAC for others |
+| **Design tokens** | CSS custom properties in globals.css. Three-layer color: accent, semantic, data palette |
+| **Typography** | DM Sans (UI), JetBrains Mono (code). 9-step scale in `design-system/typography.ts` |
+| **UI primitives** | 16 shadcn/ui components in `components/ui/`. Extend via composition, never recreate |
+| **i18n** | next-intl, non-routing locale strategy. All user-facing text through `useTranslations()`. `check:i18n` CI gate |
+| **Shell layout** | Dark sidebar (48/280px) + accent header (52px) + white content. `block-size: 100dvh` |
 
 ---
 

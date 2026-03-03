@@ -34,50 +34,83 @@ progressive disclosure philosophy across all user-facing features.
 
 ### Typography
 
-| Role | Font | Usage |
-|------|------|-------|
-| **UI text** | DM Sans | All labels, headings, body text, navigation |
-| **Code / data** | JetBrains Mono | Field values, JSON, code blocks, monospace contexts |
+| Role | Font | Loaded via |
+|------|------|------------|
+| **UI text** | DM Sans | `apps/web/src/lib/fonts.ts` (next/font/google) |
+| **Code / data** | JetBrains Mono | `apps/web/src/lib/fonts.ts` (next/font/google) |
 
-**Scale:** Use Tailwind text utilities. Default body is `text-sm` (14px).
-Headings follow standard Tailwind scale. Never use arbitrary font sizes.
+**9-step type scale** (defined in `apps/web/src/lib/design-system/typography.ts`):
+
+| Step | Size | Weight | Line Height | Usage |
+|------|------|--------|-------------|-------|
+| `page-title` | 28px | 700 | 36px | Page headings |
+| `h1` | 24px | 700 | 32px | Section headings |
+| `h2` | 20px | 600 | 28px | Subsection headings |
+| `h3` | 18px | 600 | 24px | Card titles |
+| `body-lg` | 16px | 400 | 24px | Emphasized body |
+| `body` | 14px | 400 | 20px | Default body text |
+| `body-sm` | 13px | 400 | 18px | Secondary text |
+| `caption` | 12px | 400 | 16px | Labels, helper text |
+| `timestamp` | 11px | 400 | 14px | Timestamps, metadata |
+
+**Rule:** No arbitrary font sizes. All text uses one of these 9 steps via Tailwind classes or the `TYPOGRAPHY_SCALE` constant.
 
 ### Three-Layer Color Architecture
 
-EveryStack uses three independent color layers that compose without conflict:
+Defined in `apps/web/src/lib/design-system/colors.ts`. Three independent layers that compose without conflict:
 
-**Layer 1 — Workspace Theme (Global):**
-- Set per workspace in Settings
-- Controls the app shell: sidebar, top bar, primary buttons
-- CSS variables: `--workspace-primary`, `--workspace-primary-foreground`
-- Users choose from preset palettes (not arbitrary colors)
+**Layer 1 — Workspace Accent (8 colors):**
+- Set per workspace in Settings, applied to the header bar
+- CSS variable: `--workspace-accent` (set via `applyAccentColor(hex)`)
+- 8 curated colors: Teal (#0D9488), Ocean Blue (#1D4ED8), Indigo (#4338CA), Deep Purple (#7C3AED), Rose (#BE123C), Amber (#B45309), Forest (#15803D), Slate (#334155)
+- All pass >= 4.5:1 contrast ratio with white text (WCAG AA)
+- Default: Teal (#0D9488)
 
-**Layer 2 — Semantic UI (Fixed):**
-- Status colors, validation, alerts, badges — never change per workspace
-- `text-destructive` (red), `text-warning` (amber), `text-success` (green)
-- These are hard-coded in the design system, not themeable
+**Layer 2 — Semantic / Process States (Fixed):**
+- Error: #DC2626, Warning: #D97706, Success: #059669
+- Exposed as `PROCESS_STATE_COLORS` constant
+- Hard-coded in the design system, not themeable
 
-**Layer 3 — Data Colors (User-Assigned):**
-- Field group colors, status option colors, calendar event colors
-- Users pick from a curated palette of 12 colors
-- Applied via `data-color` attribute, not Tailwind classes
-- Must contrast against both light and dark backgrounds
+**Layer 3 — Data Colors (13-color palette):**
+- For statuses, tags, select options, row tints
+- Each color has two tones: `light` (pastel fill) and `saturated` (badge/dot)
+- 13 colors: Red, Orange, Amber, Yellow, Lime, Green, Teal, Cyan, Blue, Indigo, Purple, Pink, Gray
+- Access via `getDataColor(index)` (cycles through palette)
+- Text contrast via `getContrastText(bgColor)` — precomputed lookup, no runtime calculation
 
-**Rule:** Never mix layers. A workspace theme color should never be used for
-data annotation, and a semantic color should never be user-configurable.
+**Surface tokens** (CSS custom properties in `globals.css`):
+- `--background`, `--foreground`, `--card`, `--muted`, `--accent`, `--border`, etc.
+- Sidebar uses dedicated tokens: `--sidebar-background: #1E293B`, `--sidebar-foreground`, etc.
+
+**Rule:** Never mix layers. A workspace accent color should never be used for data annotation, and a semantic color should never be user-configurable.
 
 ### Spacing Scale
 
-Use Tailwind's default spacing scale. Key patterns:
+Base unit: 4px. All spacing multiples of 4. Use Tailwind's default spacing scale:
 - **Card padding:** `p-4` (16px)
 - **Section gaps:** `gap-6` (24px)
 - **Inline element gaps:** `gap-2` (8px)
 - **Modal padding:** `p-6` (24px)
 - **Grid cell padding:** `px-3 py-2` (12px / 8px)
+- **Touch targets:** minimum 44x44px (WCAG 2.5.8)
 
-### shadcn/ui Components
+### Responsive Breakpoints
 
-EveryStack uses shadcn/ui as the component primitive layer:
+Defined in `apps/web/src/lib/design-system/breakpoints.ts` and registered as Tailwind screen aliases:
+
+| Name | Range | Purpose |
+|------|-------|---------|
+| `phone` | < 768px | Operate & Consume |
+| `tablet` | >= 768px | Build & Operate |
+| `desktop` | >= 1440px | Build |
+
+Use semantic breakpoint names (`phone:`, `tablet:`, `desktop:`) alongside standard Tailwind (`sm`, `md`, `lg`, `xl`).
+
+### shadcn/ui Components (16 installed)
+
+Located at `apps/web/src/components/ui/`. Configured via `apps/web/components.json`.
+
+**Installed primitives:** Badge, Button, Card, Command, Dialog, DropdownMenu, Input, Label, Popover, ScrollArea, Select, Separator, Sheet, Skeleton, Tabs, Tooltip.
 
 ```typescript
 import { Button } from '@/components/ui/button';
@@ -91,12 +124,66 @@ import {
 } from '@/components/ui/dropdown-menu';
 ```
 
+**Customizations applied:**
+- Button: EveryStack-specific variant classes, accent color integration
+- Card: Radius matched to design tokens
+- Badge: Sizing aligned to data palette
+- Input: Focus ring using accent color
+
 **Rules:**
 - Always use shadcn/ui primitives when they exist — never build custom
   buttons, inputs, dialogs, dropdowns, or tooltips from scratch
 - Extend with composition, not duplication
 - shadcn components are in `apps/web/src/components/ui/`
 - EveryStack-specific compound components are in `apps/web/src/components/`
+
+### Application Shell Layout
+
+Defined in `apps/web/src/components/layout/`:
+
+| Component | File | Description |
+|-----------|------|-------------|
+| `AppShell` | `app-shell.tsx` | Root: sidebar + header + content, `block-size: 100dvh` |
+| `Sidebar` | `sidebar.tsx` | Dark (#1E293B), collapsible 48px/280px, workspace nav |
+| `Header` | `header.tsx` | Accent-colored, 52px height, command bar placeholder |
+| `MainContent` | `main-content.tsx` | White content area, scrollable |
+
+**Sidebar store:** `apps/web/src/stores/sidebar-store.ts` (Zustand) — `collapsed` state + `setCollapsed` / `toggleCollapsed`.
+
+**Layout rule:** No dark/light mode toggle. Hybrid layout: always-dark sidebar, white content, admin-chosen accent header.
+
+### i18n Patterns
+
+Framework: next-intl with non-routing locale strategy.
+
+**Key files:**
+- `apps/web/messages/en.json` — English translations (source of truth)
+- `apps/web/messages/es.json` — Spanish translations
+- `apps/web/src/i18n/request.ts` — Locale request config
+- `apps/web/src/test-utils/intl-wrapper.tsx` — IntlWrapper for component tests
+- `scripts/check-i18n.ts` — AST-based CI gate (`pnpm turbo check:i18n`)
+
+**Usage in components:**
+```tsx
+import { useTranslations } from 'next-intl';
+
+function MyComponent() {
+  const t = useTranslations('namespace');
+  return <h1>{t('title')}</h1>;
+}
+```
+
+**Testing with translations:**
+```tsx
+import { IntlWrapper } from '@/test-utils/intl-wrapper';
+
+render(<IntlWrapper><MyComponent /></IntlWrapper>);
+```
+
+**Rules:**
+- No hardcoded English strings in UI code — CI enforces this
+- All user-facing text through `useTranslations()`
+- Namespace keys match component/feature names
 
 ---
 
@@ -299,8 +386,11 @@ test('Grid view renders records with correct field values', async ({ page }) => 
 - [ ] Layout is responsive (stacks on mobile breakpoints)
 - [ ] Progressive disclosure: default state is Simple Mode
 - [ ] Text uses DM Sans / JetBrains Mono (no other fonts)
+- [ ] Font sizes from 9-step typography scale only (no arbitrary sizes)
+- [ ] All user-facing strings use `useTranslations()` (no hardcoded English)
+- [ ] `pnpm turbo check:i18n` passes
 - [ ] Interactive elements have focus indicators
-- [ ] Loading states exist for async operations
+- [ ] Loading states use skeleton screens (not spinners)
 - [ ] Empty states exist for zero-data scenarios
 - [ ] E2E test covers the critical user path
 - [ ] No mobile-specific UI outside Phase 3H
