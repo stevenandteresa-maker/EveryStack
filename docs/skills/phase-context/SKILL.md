@@ -100,10 +100,18 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 - `apps/realtime/vitest.config.ts` — passWithNoTests: true
 - `apps/web/vitest.setup.ts` — Auto-runs migrations in beforeAll, truncates all tables in afterEach
 - `docker-compose.test.yml` — tmpfs PostgreSQL (5434), PgBouncer (6433), Redis (6380)
-- `packages/shared/testing/factories.ts` — 19 factory functions with auto-parent creation
+- `packages/shared/testing/factories.ts` — 19 factory functions with auto-parent creation (`createTestTenant`, `createTestUser`, `createTestWorkspace`, `createTestRecord`, `createTestTable`, `createTestField`, `createTestBase`, `createTestView`, `createTestCrossLink`, `createTestRecordViewConfig`, `createTestPortal`, `createTestForm`, `createTestAutomation`, `createTestDocumentTemplate`, `createTestThread`, `createTestApiKey`)
+- `packages/shared/testing/tenant-isolation.ts` — `testTenantIsolation()` helper — **mandatory for every `/data` function** (see CLAUDE.md non-negotiable rules)
+- `packages/shared/testing/mock-clerk.ts` — `mockClerkSession()`, `mockClerkSessionWithUser()`, `clearClerkMocks()`, `getMockAuthContext()`, `getMockRole()`, `hasMockSession()`
+- `packages/shared/testing/mock-apis.ts` — MSW handlers per platform (`airtableHandlers`, `notionHandlers`, `smartsuiteHandlers`), `mockApiServer`, `setupMockApis()`
+- `packages/shared/testing/mock-uuid.ts` — `createMockUUIDs()` for deterministic UUIDs in tests
+- `packages/shared/testing/performance.ts` — `expectQueryTime()` for query performance assertions
+- `packages/shared/testing/a11y.ts` — `checkAccessibility()` wrapper around axe-core
 - `packages/shared/testing/factories.test.ts` — Factory unit tests
 
-**Patterns established:** Vitest configs (4), Docker test services, 19 factories, factory tests, integration tests (auth-flow, role-check, webhook).
+**All utilities exported from `@everystack/shared/testing`** — import from the package, not individual files.
+
+**Patterns established:** Vitest configs (4), Docker test services, 19 factories with auto-parent creation, tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook.
 
 ### Phase 1F — Design System Foundation & i18n (Complete)
 
