@@ -15,22 +15,33 @@ function requireEnv(name: string): string {
   return value;
 }
 
-// Write primary (via PgBouncer)
-const writeClient = postgres(requireEnv('DATABASE_URL'), {
-  // PgBouncer transaction mode: disable prepared statements
-  prepare: false,
-});
+// ---------------------------------------------------------------------------
+// Lazy client initialization — prevents build-time errors when env vars are
+// not available (e.g. during `next build` static page collection).
+// ---------------------------------------------------------------------------
 
-// Read replica (via PgBouncer) — MVP: same instance as write
-const readClient = postgres(requireEnv('DATABASE_READ_URL'), {
-  prepare: false,
-});
+let _writeClient: PostgresJsDatabase | null = null;
+let _readClient: PostgresJsDatabase | null = null;
 
 /** Drizzle client for write operations (primary, via PgBouncer). */
-export const db = drizzle(writeClient);
+export const db: PostgresJsDatabase = new Proxy({} as PostgresJsDatabase, {
+  get(_target, prop, receiver) {
+    if (!_writeClient) {
+      _writeClient = drizzle(postgres(requireEnv('DATABASE_URL'), { prepare: false }));
+    }
+    return Reflect.get(_writeClient, prop, receiver);
+  },
+});
 
 /** Drizzle client for read operations (replica, via PgBouncer). */
-export const dbRead = drizzle(readClient);
+export const dbRead: PostgresJsDatabase = new Proxy({} as PostgresJsDatabase, {
+  get(_target, prop, receiver) {
+    if (!_readClient) {
+      _readClient = drizzle(postgres(requireEnv('DATABASE_READ_URL'), { prepare: false }));
+    }
+    return Reflect.get(_readClient, prop, receiver);
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Tenant-aware database access
