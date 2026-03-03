@@ -33,3 +33,15 @@ export {
 } from './mock-clerk';
 
 export { createMockUUIDs } from './mock-uuid';
+
+export {
+  airtableHandlers,
+  notionHandlers,
+  smartsuiteHandlers,
+  mockApiServer,
+  setupMockApis,
+} from './mock-apis';
+
+export { expectQueryTime } from './performance';
+
+export { checkAccessibility } from './a11y';
