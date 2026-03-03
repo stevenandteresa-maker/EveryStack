@@ -10,12 +10,16 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 import { automations } from './automations';
 
 export const automationRuns = pgTable(
   'automation_runs',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     automationId: uuid('automation_id')
       .notNull()
       .references(() => automations.id, { onDelete: 'cascade' }),
@@ -32,6 +36,10 @@ export const automationRuns = pgTable(
 );
 
 export const automationRunsRelations = relations(automationRuns, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [automationRuns.tenantId],
+    references: [tenants.id],
+  }),
   automation: one(automations, {
     fields: [automationRuns.automationId],
     references: [automations.id],

@@ -33,6 +33,7 @@ export const syncedFieldMappings = pgTable(
     externalFieldType: varchar('external_field_type', { length: 255 }).notNull(),
     status: varchar('status', { length: 50 }).default('active').notNull(), // active | type_mismatch | disconnected
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('synced_field_mappings_tenant_connection_idx').on(table.tenantId, table.baseConnectionId),

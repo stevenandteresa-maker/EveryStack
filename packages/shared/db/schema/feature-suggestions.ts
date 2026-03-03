@@ -35,6 +35,7 @@ export const featureSuggestions = pgTable(
     status: varchar('status', { length: 32 }).default('open').notNull(),
     voteCount: integer('vote_count').default(0).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('feature_suggestions_tenant_status_idx').on(table.tenantId, table.status),

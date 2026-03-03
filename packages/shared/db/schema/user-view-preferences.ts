@@ -8,6 +8,7 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 import { views } from './views';
 import { users } from './users';
 
@@ -15,6 +16,9 @@ export const userViewPreferences = pgTable(
   'user_view_preferences',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     viewId: uuid('view_id')
       .notNull()
       .references(() => views.id, { onDelete: 'cascade' }),
@@ -22,6 +26,7 @@ export const userViewPreferences = pgTable(
       .notNull()
       .references(() => users.id),
     overrides: jsonb('overrides').$type<Record<string, unknown>>().default({}).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
@@ -30,6 +35,10 @@ export const userViewPreferences = pgTable(
 );
 
 export const userViewPreferencesRelations = relations(userViewPreferences, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [userViewPreferences.tenantId],
+    references: [tenants.id],
+  }),
   view: one(views, {
     fields: [userViewPreferences.viewId],
     references: [views.id],

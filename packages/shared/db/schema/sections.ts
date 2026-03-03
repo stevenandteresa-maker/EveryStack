@@ -31,6 +31,7 @@ export const sections = pgTable(
       .notNull()
       .references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('sections_tenant_context_parent_idx').on(table.tenantId, table.context, table.contextParentId),

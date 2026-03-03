@@ -43,7 +43,7 @@ export const records = pgTable(
     canonicalData: jsonb('canonical_data').$type<Record<string, unknown>>().default({}).notNull(),
     syncMetadata: jsonb('sync_metadata').$type<Record<string, unknown>>(),
     searchVector: tsvector('search_vector'),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdBy: uuid('created_by').references(() => users.id),
     updatedBy: uuid('updated_by').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -51,7 +51,7 @@ export const records = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.tenantId, table.id], name: 'records_pkey' }),
-    index('records_tenant_table_deleted_idx').on(table.tenantId, table.tableId, table.deletedAt),
+    index('records_tenant_table_archived_idx').on(table.tenantId, table.tableId, table.archivedAt),
     index('records_tenant_id_idx').on(table.tenantId, table.id),
   ],
 );

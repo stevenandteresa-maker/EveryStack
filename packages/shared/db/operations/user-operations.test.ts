@@ -12,16 +12,13 @@ vi.mock('../client', () => ({
 }));
 
 // Mock the uuid module to return predictable UUIDs
-const mockUUIDs = [
-  '01900000-0000-7000-8000-000000000001', // userId
-  '01900000-0000-7000-8000-000000000002', // tenantId
-  '01900000-0000-7000-8000-000000000003', // workspaceId
-  '01900000-0000-7000-8000-000000000004', // slug suffix (from generateSlug)
-];
+import { createMockUUIDs } from '../../testing/mock-uuid';
+
+const MOCK_UUIDS = createMockUUIDs(4);
 let uuidIndex = 0;
 
 vi.mock('../uuid', () => ({
-  generateUUIDv7: () => mockUUIDs[uuidIndex++] ?? 'fallback-uuid',
+  generateUUIDv7: () => MOCK_UUIDS[uuidIndex++] ?? 'fallback-uuid',
 }));
 
 vi.mock('../rls', () => ({
@@ -84,9 +81,9 @@ describe('createUserWithTenant', () => {
     );
 
     // Returns the correct IDs
-    expect(result.userId).toBe('01900000-0000-7000-8000-000000000001');
-    expect(result.tenantId).toBe('01900000-0000-7000-8000-000000000002');
-    expect(result.workspaceId).toBe('01900000-0000-7000-8000-000000000003');
+    expect(result.userId).toBe(MOCK_UUIDS[0]!);
+    expect(result.tenantId).toBe(MOCK_UUIDS[1]!);
+    expect(result.workspaceId).toBe(MOCK_UUIDS[2]!);
 
     // Five inserts in the transaction
     expect(insertedRows).toHaveLength(5);
@@ -94,7 +91,7 @@ describe('createUserWithTenant', () => {
     // 1. User
     expect(insertedRows[0]?.table).toBe('users');
     expect(insertedRows[0]?.values).toMatchObject({
-      id: '01900000-0000-7000-8000-000000000001',
+      id: MOCK_UUIDS[0]!,
       clerkId: 'user_clerk123',
       email: 'test@example.com',
       name: 'John Doe',
@@ -103,7 +100,7 @@ describe('createUserWithTenant', () => {
     // 2. Tenant
     expect(insertedRows[1]?.table).toBe('tenants');
     expect(insertedRows[1]?.values).toMatchObject({
-      id: '01900000-0000-7000-8000-000000000002',
+      id: MOCK_UUIDS[1]!,
       name: "John Doe's Workspace",
       plan: 'freelancer',
     });
@@ -111,8 +108,8 @@ describe('createUserWithTenant', () => {
     // 3. Tenant membership
     expect(insertedRows[2]?.table).toBe('tenant_memberships');
     expect(insertedRows[2]?.values).toMatchObject({
-      tenantId: '01900000-0000-7000-8000-000000000002',
-      userId: '01900000-0000-7000-8000-000000000001',
+      tenantId: MOCK_UUIDS[1]!,
+      userId: MOCK_UUIDS[0]!,
       role: 'owner',
       status: 'active',
     });
@@ -120,10 +117,10 @@ describe('createUserWithTenant', () => {
     // 4. Workspace
     expect(insertedRows[3]?.table).toBe('workspaces');
     expect(insertedRows[3]?.values).toMatchObject({
-      id: '01900000-0000-7000-8000-000000000003',
-      tenantId: '01900000-0000-7000-8000-000000000002',
+      id: MOCK_UUIDS[2]!,
+      tenantId: MOCK_UUIDS[1]!,
       name: 'My Workspace',
-      createdBy: '01900000-0000-7000-8000-000000000001',
+      createdBy: MOCK_UUIDS[0]!,
     });
     // Slug should be a non-empty string
     expect(insertedRows[3]?.values.slug).toBeTruthy();
@@ -132,9 +129,9 @@ describe('createUserWithTenant', () => {
     // 5. Workspace membership
     expect(insertedRows[4]?.table).toBe('workspace_memberships');
     expect(insertedRows[4]?.values).toMatchObject({
-      userId: '01900000-0000-7000-8000-000000000001',
-      tenantId: '01900000-0000-7000-8000-000000000002',
-      workspaceId: '01900000-0000-7000-8000-000000000003',
+      userId: MOCK_UUIDS[0]!,
+      tenantId: MOCK_UUIDS[1]!,
+      workspaceId: MOCK_UUIDS[2]!,
       role: 'manager',
     });
   });
@@ -151,7 +148,7 @@ describe('createUserWithTenant', () => {
 
     expect(setTenantContext).toHaveBeenCalledWith(
       expect.anything(),
-      '01900000-0000-7000-8000-000000000002',
+      MOCK_UUIDS[1]!,
     );
   });
 

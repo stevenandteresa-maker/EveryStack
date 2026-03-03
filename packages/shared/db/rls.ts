@@ -15,12 +15,10 @@ import { sql } from 'drizzle-orm';
 
 /**
  * All tables with a direct `tenant_id` column that have RLS policies.
- * These are the 41 tenant-scoped tables in the MVP schema.
+ * These are the 48 tenant-scoped tables in the MVP schema.
  *
  * Tables WITHOUT RLS (no tenant_id): users, tenants
- * Tables protected by parent joins (no direct RLS):
- *   board_memberships, user_view_preferences, thread_participants,
- *   thread_messages, user_tasks, user_events, automation_runs, feature_votes
+ * Tables protected by parent joins (no direct RLS): feature_votes
  */
 export const TENANT_SCOPED_TABLES = [
   // Tier 1 — Foundation
@@ -28,6 +26,7 @@ export const TENANT_SCOPED_TABLES = [
 
   // Tier 2 — Workspace & Boards
   'boards',
+  'board_memberships',
   'workspaces',
   'workspace_memberships',
 
@@ -62,16 +61,22 @@ export const TENANT_SCOPED_TABLES = [
 
   // Tier 7 — Communications
   'threads',
+  'thread_participants',
+  'thread_messages',
   'user_saved_messages',
 
   // Tier 8 — Notifications & Preferences
   'notifications',
   'user_notification_preferences',
+  'user_view_preferences',
+  'user_tasks',
+  'user_events',
 
   // Tier 9 — Documents & Automations
   'document_templates',
   'generated_documents',
   'automations',
+  'automation_runs',
 
   // Tier 10 — Webhooks
   'webhook_endpoints',

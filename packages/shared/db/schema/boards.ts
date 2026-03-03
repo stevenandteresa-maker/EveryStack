@@ -23,6 +23,7 @@ export const boards = pgTable(
     color: varchar('color', { length: 20 }),
     sortOrder: integer('sort_order'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('boards_tenant_sort_idx').on(table.tenantId, table.sortOrder),
