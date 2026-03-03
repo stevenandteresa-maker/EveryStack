@@ -23,4 +23,13 @@ export type { TestApiKeyResult } from './factories';
 export { testTenantIsolation } from './tenant-isolation';
 export type { TenantIsolationOptions } from './tenant-isolation';
 
+export {
+  mockClerkSession,
+  mockClerkSessionWithUser,
+  clearClerkMocks,
+  getMockAuthContext,
+  getMockRole,
+  hasMockSession,
+} from './mock-clerk';
+
 export { createMockUUIDs } from './mock-uuid';
