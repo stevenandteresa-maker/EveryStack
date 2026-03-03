@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
     environment: 'node',
@@ -10,8 +12,11 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     env: {
       DATABASE_URL:
+        process.env.DATABASE_URL ??
         'postgres://everystack_test:test_password@localhost:6433/everystack_test',
       DATABASE_READ_URL:
+        process.env.DATABASE_READ_URL ??
+        process.env.DATABASE_URL ??
         'postgres://everystack_test:test_password@localhost:6433/everystack_test',
     },
     coverage: {
