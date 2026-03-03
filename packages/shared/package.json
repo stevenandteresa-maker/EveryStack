@@ -25,7 +25,7 @@
     "db:migrate": "drizzle-kit migrate --config db/drizzle.config.ts",
     "db:migrate:check": "echo 'No migration check yet' && exit 0",
     "db:generate": "drizzle-kit generate --config db/drizzle.config.ts",
-    "db:seed-staging": "echo 'No staging seed yet' && exit 0"
+    "db:seed-staging": "tsx db/scripts/seed-staging.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

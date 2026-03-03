@@ -8,7 +8,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 // ---------------------------------------------------------------------------
 
 export const airtableHandlers = [
-  http.get('https://api.airtable.com/v0/:baseId/:tableId', ({ params }) => {
+  http.get('https://api.airtable.com/v0/:baseId/:tableId', ({ params: _params }) => {
     return HttpResponse.json({
       records: [
         {
