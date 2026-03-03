@@ -1,9 +1,12 @@
 'use client';
 
 import { Search, User } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 export function Header() {
+  const t = useTranslations('shell.header');
+
   return (
     <header
       data-testid="header"
@@ -15,15 +18,11 @@ export function Header() {
     >
       {/* Left: Breadcrumb placeholder */}
       <div className="hidden tablet:flex items-center gap-2 text-white/80 text-body-sm min-w-0">
-        <span className="truncate">Workspace</span>
-        <span className="text-white/50">/</span>
-        <span className="truncate text-white">Page</span>
+        <span className="truncate">&nbsp;</span>
       </div>
 
-      {/* Mobile: Page title */}
-      <div className="tablet:hidden text-white font-semibold text-body truncate">
-        Page
-      </div>
+      {/* Mobile: spacer */}
+      <div className="tablet:hidden" />
 
       {/* Center: Command Bar compact placeholder */}
       <div
@@ -37,9 +36,9 @@ export function Header() {
         style={{ width: 300, height: 36 }}
       >
         <Search size={16} className="shrink-0" />
-        <span className="flex-1 truncate">Search...</span>
+        <span className="flex-1 truncate">{t('commandBarPlaceholder')}</span>
         <kbd className="text-caption bg-[var(--panel-bg)] rounded px-1.5 py-0.5 font-mono">
-          ⌘K
+          {t('commandBarShortcut')}
         </kbd>
       </div>
 
@@ -47,7 +46,7 @@ export function Header() {
       <button
         type="button"
         className="tablet:hidden touch-target flex items-center justify-center text-white"
-        aria-label="Search"
+        aria-label={t('search')}
       >
         <Search size={20} />
       </button>

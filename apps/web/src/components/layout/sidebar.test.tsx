@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Sidebar } from './sidebar';
 import { useSidebarStore } from '@/stores/sidebar-store';
+import { IntlWrapper } from '@/test-utils/intl-wrapper';
 
 describe('Sidebar', () => {
   beforeEach(() => {
@@ -12,7 +13,7 @@ describe('Sidebar', () => {
   });
 
   it('renders in collapsed state by default', () => {
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
     const sidebar = screen.getByTestId('sidebar');
     expect(sidebar).toBeInTheDocument();
     expect(sidebar.style.width).toBe('var(--sidebar-width-collapsed)');
@@ -20,7 +21,7 @@ describe('Sidebar', () => {
 
   it('expands to 280px when toggle is clicked', async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);
@@ -32,7 +33,7 @@ describe('Sidebar', () => {
   it('collapses back when toggle is clicked again', async () => {
     const user = userEvent.setup();
     useSidebarStore.setState({ collapsed: false });
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);
@@ -42,15 +43,15 @@ describe('Sidebar', () => {
   });
 
   it('shows navigation items with accessible labels', () => {
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
     expect(screen.getByLabelText('Home')).toBeInTheDocument();
     expect(screen.getByLabelText('Workspaces')).toBeInTheDocument();
     expect(screen.getByLabelText('Settings')).toBeInTheDocument();
   });
 
-  it('shows labels when expanded', async () => {
+  it('shows labels when expanded', () => {
     useSidebarStore.setState({ collapsed: false });
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getAllByText('Workspaces').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Settings')).toBeInTheDocument();
@@ -59,7 +60,7 @@ describe('Sidebar', () => {
 
   it('persists state to localStorage via Zustand', async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    render(<IntlWrapper><Sidebar /></IntlWrapper>);
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);

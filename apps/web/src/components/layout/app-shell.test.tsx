@@ -2,22 +2,23 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AppShell } from './app-shell';
+import { IntlWrapper } from '@/test-utils/intl-wrapper';
 
 describe('AppShell', () => {
   it('renders without crashing', () => {
-    render(<AppShell>Content</AppShell>);
+    render(<IntlWrapper><AppShell>Content</AppShell></IntlWrapper>);
     expect(screen.getByTestId('app-shell')).toBeInTheDocument();
   });
 
   it('contains sidebar, header, and main content areas', () => {
-    render(<AppShell>Test content</AppShell>);
+    render(<IntlWrapper><AppShell>Test content</AppShell></IntlWrapper>);
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('header')).toBeInTheDocument();
     expect(screen.getByTestId('main-content')).toBeInTheDocument();
   });
 
   it('renders children inside main content', () => {
-    render(<AppShell><div data-testid="child">Hello</div></AppShell>);
+    render(<IntlWrapper><AppShell><div data-testid="child">Hello</div></AppShell></IntlWrapper>);
     const main = screen.getByTestId('main-content');
     expect(main).toContainElement(screen.getByTestId('child'));
   });

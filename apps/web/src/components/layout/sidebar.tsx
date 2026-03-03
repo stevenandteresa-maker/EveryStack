@@ -8,20 +8,22 @@ import {
   PanelLeftOpen,
   User,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/stores/sidebar-store';
 
 const NAV_ITEMS = [
-  { icon: Home, label: 'Home' },
-  { icon: Layers, label: 'Workspaces' },
+  { icon: Home, labelKey: 'home' },
+  { icon: Layers, labelKey: 'workspaces' },
 ] as const;
 
 const BOTTOM_ITEMS = [
-  { icon: Settings, label: 'Settings' },
+  { icon: Settings, labelKey: 'settings' },
 ] as const;
 
 export function Sidebar() {
   const { collapsed, toggle } = useSidebarStore();
+  const t = useTranslations('shell.sidebar');
 
   return (
     <aside
@@ -34,9 +36,9 @@ export function Sidebar() {
     >
       {/* Navigation items */}
       <nav className="flex-1 flex flex-col gap-1 pt-2 px-1">
-        {NAV_ITEMS.map(({ icon: Icon, label }) => (
+        {NAV_ITEMS.map(({ icon: Icon, labelKey }) => (
           <button
-            key={label}
+            key={labelKey}
             type="button"
             className={cn(
               'touch-target-lg flex items-center gap-3 rounded px-2.5 py-2',
@@ -44,11 +46,11 @@ export function Sidebar() {
               'transition-colors duration-150',
               collapsed && 'justify-center',
             )}
-            aria-label={label}
+            aria-label={t(labelKey)}
           >
             <Icon size={20} className="shrink-0" />
             {!collapsed && (
-              <span className="text-body truncate">{label}</span>
+              <span className="text-body truncate">{t(labelKey)}</span>
             )}
           </button>
         ))}
@@ -57,7 +59,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="mt-4 px-2.5">
             <span className="text-caption font-semibold uppercase tracking-wider text-[var(--sidebar-text-muted)]">
-              Workspaces
+              {t('workspaces')}
             </span>
           </div>
         )}
@@ -65,9 +67,9 @@ export function Sidebar() {
 
       {/* Bottom area: settings, toggle, avatar */}
       <div className="flex flex-col gap-1 pb-2 px-1">
-        {BOTTOM_ITEMS.map(({ icon: Icon, label }) => (
+        {BOTTOM_ITEMS.map(({ icon: Icon, labelKey }) => (
           <button
-            key={label}
+            key={labelKey}
             type="button"
             className={cn(
               'touch-target-lg flex items-center gap-3 rounded px-2.5 py-2',
@@ -75,11 +77,11 @@ export function Sidebar() {
               'transition-colors duration-150',
               collapsed && 'justify-center',
             )}
-            aria-label={label}
+            aria-label={t(labelKey)}
           >
             <Icon size={20} className="shrink-0" />
             {!collapsed && (
-              <span className="text-body truncate">{label}</span>
+              <span className="text-body truncate">{t(labelKey)}</span>
             )}
           </button>
         ))}
@@ -95,7 +97,7 @@ export function Sidebar() {
             'transition-colors duration-150',
             collapsed && 'justify-center',
           )}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('expand') : t('collapse')}
         >
           {collapsed ? (
             <PanelLeftOpen size={20} className="shrink-0" />
@@ -103,7 +105,7 @@ export function Sidebar() {
             <PanelLeftClose size={20} className="shrink-0" />
           )}
           {!collapsed && (
-            <span className="text-body truncate">Collapse</span>
+            <span className="text-body truncate">{t('collapseLabel')}</span>
           )}
         </button>
 
@@ -119,7 +121,7 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <span className="text-body-sm text-[var(--sidebar-text-muted)] truncate">
-              Account
+              {t('account')}
             </span>
           )}
         </div>

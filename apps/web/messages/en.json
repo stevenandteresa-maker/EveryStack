@@ -1,4 +1,8 @@
 {
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to EveryStack."
+  },
   "common": {
     "appName": "EveryStack",
     "loading": "Loading...",
@@ -16,11 +20,14 @@
       "workspaces": "Workspaces",
       "settings": "Settings",
       "expand": "Expand sidebar",
-      "collapse": "Collapse sidebar"
+      "collapse": "Collapse sidebar",
+      "collapseLabel": "Collapse",
+      "account": "Account"
     },
     "header": {
       "commandBarPlaceholder": "Search...",
-      "commandBarShortcut": "⌘K"
+      "commandBarShortcut": "⌘K",
+      "search": "Search"
     }
   }
 }

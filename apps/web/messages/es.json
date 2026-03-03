@@ -1,4 +1,8 @@
 {
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido a EveryStack."
+  },
   "common": {
     "appName": "EveryStack",
     "loading": "Cargando...",
@@ -16,11 +20,14 @@
       "workspaces": "Espacios de trabajo",
       "settings": "Configuración",
       "expand": "Expandir barra lateral",
-      "collapse": "Contraer barra lateral"
+      "collapse": "Contraer barra lateral",
+      "collapseLabel": "Contraer",
+      "account": "Cuenta"
     },
     "header": {
       "commandBarPlaceholder": "Buscar...",
-      "commandBarShortcut": "⌘K"
+      "commandBarShortcut": "⌘K",
+      "search": "Buscar"
     }
   }
 }
