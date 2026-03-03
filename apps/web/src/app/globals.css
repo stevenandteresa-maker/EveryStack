@@ -2,38 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Surface colors — fixed hybrid layout */
-  --sidebar-bg: #0F1419;
-  --sidebar-bg-hover: #1E2730;
-  --sidebar-text: #F1F5F9;
-  --sidebar-text-muted: #94A3B8;
-  --sidebar-active: rgba(255, 255, 255, 0.12);
-  --content-bg: #FFFFFF;
-  --panel-bg: #F1F5F9;
-  --card-bg: #FFFFFF;
-  --border-default: #E2E8F0;
-  --border-subtle: #F1F5F9;
-  --bg-elevated: #FFFFFF;
+@layer base {
+  :root {
+    /* ── EveryStack Surface Colors — fixed hybrid layout ── */
+    --sidebar-bg: #0F1419;
+    --sidebar-bg-hover: #1E2730;
+    --sidebar-text: #F1F5F9;
+    --sidebar-text-muted: #94A3B8;
+    --sidebar-active: rgba(255, 255, 255, 0.12);
+    --content-bg: #FFFFFF;
+    --panel-bg: #F1F5F9;
+    --card-bg: #FFFFFF;
+    --border-default: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --bg-elevated: #FFFFFF;
 
-  /* Text colors */
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-tertiary: #94A3B8;
+    /* ── EveryStack Text Colors ── */
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-tertiary: #94A3B8;
 
-  /* Semantic state colors */
-  --success: #059669;
-  --warning: #D97706;
-  --error: #DC2626;
+    /* ── EveryStack Semantic State Colors ── */
+    --success: #059669;
+    --warning: #D97706;
+    --error: #DC2626;
 
-  /* Workspace accent — default Teal, overridden per-tenant */
-  --accent: #0D9488;
+    /* ── Workspace Accent — default Teal, overridden per-tenant ── */
+    --accent: #0D9488;
 
-  /* Elevation */
-  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+    /* ── EveryStack Elevation ── */
+    --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
 
-  /* Layout dimensions */
-  --sidebar-width-collapsed: 48px;
-  --sidebar-width-expanded: 280px;
-  --header-height: 52px;
+    /* ── EveryStack Layout Dimensions ── */
+    --sidebar-width-collapsed: 48px;
+    --sidebar-width-expanded: 280px;
+    --header-height: 52px;
+
+    /* ── shadcn/ui Required Variables ── */
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 215 20.2% 65.1%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
