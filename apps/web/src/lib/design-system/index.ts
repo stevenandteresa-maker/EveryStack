@@ -9,3 +9,15 @@ export {
   getContrastText,
   PROCESS_STATE_COLORS,
 } from './colors';
+
+export {
+  type TypographyStep,
+  type TypographyStepName,
+  TYPOGRAPHY_SCALE,
+} from './typography';
+
+export {
+  type Breakpoint,
+  type BreakpointName,
+  BREAKPOINTS,
+} from './breakpoints';

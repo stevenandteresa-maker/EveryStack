@@ -71,3 +71,51 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * ── Touch Target Utilities ──
+ * WCAG 2.5.8 minimum touch targets for interactive elements.
+ * 44px = standard minimum, 48px = action buttons, 56px = primary actions (FAB, submit, send).
+ */
+@layer utilities {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .touch-target-lg {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .touch-target-primary {
+    min-width: 56px;
+    min-height: 56px;
+  }
+
+  .tap-gap {
+    gap: 8px;
+  }
+}
+
+/*
+ * ── CSS Logical Properties Convention ──
+ *
+ * Prefer logical properties over physical direction properties for RTL readiness:
+ *
+ *   Physical (avoid)         →  Logical (prefer)
+ *   margin-left              →  margin-inline-start
+ *   margin-right             →  margin-inline-end
+ *   padding-left             →  padding-inline-start
+ *   padding-right            →  padding-inline-end
+ *   padding-top/bottom       →  padding-block-start/end (or padding-block)
+ *   left / right             →  inset-inline-start / inset-inline-end
+ *   text-align: left         →  text-align: start
+ *   border-left              →  border-inline-start
+ *
+ *   Tailwind equivalents:
+ *     ml-* → ms-*    mr-* → me-*    pl-* → ps-*    pr-* → pe-*
+ *
+ * Exception: sidebar and fixed shell chrome may use physical properties
+ * where layout direction is intentionally fixed.
+ */

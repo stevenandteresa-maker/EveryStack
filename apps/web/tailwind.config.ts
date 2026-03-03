@@ -9,6 +9,21 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        tablet: '768px',
+        desktop: '1440px',
+      },
+      fontSize: {
+        'page-title': ['28px', { lineHeight: '36px', fontWeight: '700' }],
+        h1: ['24px', { lineHeight: '32px', fontWeight: '700' }],
+        h2: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        h3: ['18px', { lineHeight: '24px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px' }],
+        body: ['14px', { lineHeight: '20px' }],
+        'body-sm': ['13px', { lineHeight: '18px' }],
+        caption: ['12px', { lineHeight: '16px' }],
+        timestamp: ['11px', { lineHeight: '14px' }],
+      },
       colors: {
         /* ── EveryStack tokens ── */
         sidebar: {
