@@ -57,12 +57,9 @@ vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
 }));
 
-const MOCK_UUIDS = [
-  '01900000-0001-7000-8000-000000000001', // userId
-  '01900000-0001-7000-8000-000000000002', // tenantId
-  '01900000-0001-7000-8000-000000000003', // workspaceId
-  '01900000-0001-7000-8000-000000000004', // slug suffix
-];
+import { createMockUUIDs } from '../../../../packages/shared/testing/mock-uuid';
+
+const MOCK_UUIDS = createMockUUIDs(4, 100);
 let uuidCallIndex = 0;
 
 vi.mock('../../../../packages/shared/db/uuid', () => ({

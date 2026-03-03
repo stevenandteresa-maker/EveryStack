@@ -4,6 +4,7 @@ import {
   index,
   integer,
   pgTable,
+  timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -11,12 +12,16 @@ import { relations } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 import { users } from './users';
 
 export const userTasks = pgTable(
   'user_tasks',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
@@ -30,6 +35,8 @@ export const userTasks = pgTable(
     ),
     linkedRecordId: uuid('linked_record_id'),
     linkedTenantId: uuid('linked_tenant_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('user_tasks_user_completed_idx').on(table.userId, table.completed),
@@ -39,6 +46,10 @@ export const userTasks = pgTable(
 );
 
 export const userTasksRelations = relations(userTasks, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [userTasks.tenantId],
+    references: [tenants.id],
+  }),
   user: one(users, {
     fields: [userTasks.userId],
     references: [users.id],

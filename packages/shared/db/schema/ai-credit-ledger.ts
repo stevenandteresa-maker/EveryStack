@@ -29,6 +29,7 @@ export const aiCreditLedger = pgTable(
     creditsUsed: numeric('credits_used', { precision: 10, scale: 2 }).default('0').notNull(),
     creditsRemaining: numeric('credits_remaining', { precision: 10, scale: 2 })
       .generatedAlwaysAs(sql`credits_total - credits_used`),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [

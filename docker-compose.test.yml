@@ -12,29 +12,26 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: everystack_test
     ports:
-      - "5433:5432"
+      - "5434:5432"
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U everystack_test -d everystack_test"]
       interval: 2s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   pgbouncer-test:
-    image: bitnami/pgbouncer:latest
+    image: edoburu/pgbouncer:latest
     container_name: everystack-pgbouncer-test
     environment:
-      POSTGRESQL_HOST: postgres-test
-      POSTGRESQL_PORT: 5432
-      POSTGRESQL_USERNAME: everystack_test
-      POSTGRESQL_PASSWORD: test_password
-      POSTGRESQL_DATABASE: everystack_test
-      PGBOUNCER_POOL_MODE: transaction
-      PGBOUNCER_MAX_CLIENT_CONN: "100"
-      PGBOUNCER_DEFAULT_POOL_SIZE: "10"
+      DATABASE_URL: postgres://everystack_test:test_password@postgres-test:5432/everystack_test
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "100"
+      DEFAULT_POOL_SIZE: "10"
+      AUTH_TYPE: scram-sha-256
     ports:
-      - "6433:6432"
+      - "6433:5432"
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -50,4 +47,4 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
       timeout: 5s
-      retries: 5
+      retries: 10

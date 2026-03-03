@@ -77,7 +77,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://everystack_test:test_password@localhost:6433/everystack_test
+      DATABASE_URL: postgresql://everystack_test:test_password@localhost:5433/everystack_test
       DATABASE_URL_DIRECT: postgresql://everystack_test:test_password@localhost:5433/everystack_test
       REDIS_URL: redis://localhost:6380
       NODE_ENV: test

@@ -9,6 +9,7 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 import { threads } from './threads';
 import { users } from './users';
 
@@ -16,6 +17,9 @@ export const threadParticipants = pgTable(
   'thread_participants',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     threadId: uuid('thread_id')
       .notNull()
       .references(() => threads.id, { onDelete: 'cascade' }),
@@ -33,6 +37,10 @@ export const threadParticipants = pgTable(
 );
 
 export const threadParticipantsRelations = relations(threadParticipants, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [threadParticipants.tenantId],
+    references: [tenants.id],
+  }),
   thread: one(threads, {
     fields: [threadParticipants.threadId],
     references: [threads.id],

@@ -9,7 +9,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "check:i18n": "echo 'No i18n strings yet' && exit 0",
-    "test": "echo 'No tests yet'",
+    "test": "vitest run",
     "test:coverage-check": "echo 'No coverage thresholds yet'"
   },
   "dependencies": {
@@ -17,7 +17,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   }
 }

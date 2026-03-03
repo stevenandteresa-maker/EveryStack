@@ -22,6 +22,7 @@ export const userNotificationPreferences = pgTable(
       .notNull()
       .references(() => tenants.id),
     preferences: jsonb('preferences').$type<Record<string, unknown>>().default({}).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [

@@ -12,12 +12,16 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 import { users } from './users';
 
 export const userEvents = pgTable(
   'user_events',
   {
     id: uuid('id').primaryKey().$defaultFn(generateUUIDv7),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
@@ -32,6 +36,7 @@ export const userEvents = pgTable(
     recurrenceRule: jsonb('recurrence_rule').$type<Record<string, unknown>>(),
     reminderMinutes: integer('reminder_minutes').array(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
     index('user_events_user_time_idx').on(table.userId, table.startTime, table.endTime),
@@ -40,6 +45,10 @@ export const userEvents = pgTable(
 );
 
 export const userEventsRelations = relations(userEvents, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [userEvents.tenantId],
+    references: [tenants.id],
+  }),
   user: one(users, {
     fields: [userEvents.userId],
     references: [users.id],
