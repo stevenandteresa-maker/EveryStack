@@ -12,8 +12,11 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     env: {
       DATABASE_URL:
+        process.env.DATABASE_URL ??
         'postgres://everystack_test:test_password@localhost:6433/everystack_test',
       DATABASE_READ_URL:
+        process.env.DATABASE_READ_URL ??
+        process.env.DATABASE_URL ??
         'postgres://everystack_test:test_password@localhost:6433/everystack_test',
     },
     coverage: {

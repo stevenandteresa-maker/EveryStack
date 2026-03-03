@@ -79,6 +79,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://everystack_test:test_password@localhost:5433/everystack_test
       DATABASE_URL_DIRECT: postgresql://everystack_test:test_password@localhost:5433/everystack_test
+      DATABASE_READ_URL: postgresql://everystack_test:test_password@localhost:5433/everystack_test
       REDIS_URL: redis://localhost:6380
       NODE_ENV: test
 
