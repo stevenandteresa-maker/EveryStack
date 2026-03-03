@@ -76,14 +76,14 @@ describe('applyAccentColor', () => {
     });
   });
 
-  it('sets the --accent CSS custom property on document root', () => {
+  it('sets the --workspace-accent CSS custom property on document root', () => {
     applyAccentColor('#1D4ED8');
-    expect(setPropertySpy).toHaveBeenCalledWith('--accent', '#1D4ED8');
+    expect(setPropertySpy).toHaveBeenCalledWith('--workspace-accent', '#1D4ED8');
   });
 
   it('works with the default accent color', () => {
     applyAccentColor(DEFAULT_ACCENT_COLOR);
-    expect(setPropertySpy).toHaveBeenCalledWith('--accent', '#0D9488');
+    expect(setPropertySpy).toHaveBeenCalledWith('--workspace-accent', '#0D9488');
   });
 });
 

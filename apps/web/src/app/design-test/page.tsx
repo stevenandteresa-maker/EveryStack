@@ -129,7 +129,7 @@ export default function DesignTestPage() {
 
         <h3 className="text-h3 text-[var(--text-primary)] mb-3">Accent (Teal default)</h3>
         <div className="flex gap-3">
-          <div className="px-6 py-3 rounded bg-[var(--accent)] text-white text-body font-semibold">
+          <div className="px-6 py-3 rounded bg-[var(--workspace-accent)] text-white text-body font-semibold">
             Accent Header Bar
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function DesignTestPage() {
           <p>--border-default, --border-subtle, --bg-elevated</p>
           <p>--text-primary, --text-secondary, --text-tertiary</p>
           <p>--success, --warning, --error</p>
-          <p>--accent</p>
+          <p>--workspace-accent</p>
           <p>--shadow-elevated</p>
           <p>--sidebar-width-collapsed, --sidebar-width-expanded</p>
           <p>--header-height</p>

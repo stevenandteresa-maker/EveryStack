@@ -1,0 +1,26 @@
+{
+  "common": {
+    "appName": "EveryStack",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search...",
+    "noResults": "No results found"
+  },
+  "shell": {
+    "sidebar": {
+      "home": "Home",
+      "workspaces": "Workspaces",
+      "settings": "Settings",
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar"
+    },
+    "header": {
+      "commandBarPlaceholder": "Search...",
+      "commandBarShortcut": "⌘K"
+    }
+  }
+}

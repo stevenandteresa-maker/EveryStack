@@ -28,7 +28,7 @@
     --error: #DC2626;
 
     /* ── Workspace Accent — default Teal, overridden per-tenant ── */
-    --accent: #0D9488;
+    --workspace-accent: #0D9488;
 
     /* ── EveryStack Elevation ── */
     --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);

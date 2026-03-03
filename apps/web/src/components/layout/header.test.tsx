@@ -8,7 +8,7 @@ describe('Header', () => {
     render(<Header />);
     const header = screen.getByTestId('header');
     expect(header).toBeInTheDocument();
-    expect(header.style.backgroundColor).toBe('var(--accent)');
+    expect(header.style.backgroundColor).toBe('var(--workspace-accent)');
   });
 
   it('renders at 52px height', () => {

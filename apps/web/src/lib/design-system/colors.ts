@@ -37,11 +37,11 @@ export const WORKSPACE_ACCENT_COLORS: readonly AccentColor[] = [
 export const DEFAULT_ACCENT_COLOR = '#0D9488';
 
 /**
- * Sets the `--accent` CSS custom property on the document root.
+ * Sets the `--workspace-accent` CSS custom property on the document root.
  * Called when the workspace accent color is loaded or changed.
  */
 export function applyAccentColor(hex: string): void {
-  document.documentElement.style.setProperty('--accent', hex);
+  document.documentElement.style.setProperty('--workspace-accent', hex);
 }
 
 // ---------------------------------------------------------------------------

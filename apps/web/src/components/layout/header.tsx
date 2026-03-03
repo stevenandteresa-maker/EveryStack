@@ -10,7 +10,7 @@ export function Header() {
       className="flex items-center justify-between px-4 shrink-0"
       style={{
         height: 'var(--header-height)',
-        backgroundColor: 'var(--accent)',
+        backgroundColor: 'var(--workspace-accent)',
       }}
     >
       {/* Left: Breadcrumb placeholder */}
