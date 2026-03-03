@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surface colors — fixed hybrid layout */
+  --sidebar-bg: #0F1419;
+  --sidebar-bg-hover: #1E2730;
+  --sidebar-text: #F1F5F9;
+  --sidebar-text-muted: #94A3B8;
+  --sidebar-active: rgba(255, 255, 255, 0.12);
+  --content-bg: #FFFFFF;
+  --panel-bg: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --border-default: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --bg-elevated: #FFFFFF;
+
+  /* Text colors */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+
+  /* Semantic state colors */
+  --success: #059669;
+  --warning: #D97706;
+  --error: #DC2626;
+
+  /* Workspace accent — default Teal, overridden per-tenant */
+  --accent: #0D9488;
+
+  /* Elevation */
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Layout dimensions */
+  --sidebar-width-collapsed: 48px;
+  --sidebar-width-expanded: 280px;
+  --header-height: 52px;
+}
