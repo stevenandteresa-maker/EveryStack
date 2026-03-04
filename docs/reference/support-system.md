@@ -1,8 +1,8 @@
 # EveryStack — Support System
 
-> **New document: 2026-03-04** — Specifies the end-to-end user support system: the in-app Help Panel (user-facing), the AI-first support pipeline, the support staff console, and plan-based support tiers. Replaces and supersedes the support queue section in `platform-owner-console.md` (lines 346–390), which should be updated to reference this doc.
+> **New document: 2026-03-04** — Specifies the end-to-end user support system: the in-app Help Panel (user-facing), the AI-first support pipeline, the support agent console, and plan-based support tiers. Replaces and supersedes the support queue section in `platform-owner-console.md` (lines 346–390), which should be updated to reference this doc.
 >
-> Cross-references: `platform-owner-console.md` (admin console, /admin route, support staff schema), `data-model.md` (support_requests, support_request_messages schema), `design-system.md` (sidebar icon rail, help button placement), `my-office.md` (sidebar icon ordering), `settings.md` (Help & Support settings section), `agent-architecture.md` (AI agent execution model — post-MVP), `gaps/knowledge-base-live-chat-ai.md` (AI knowledge base retrieval — post-MVP), `ai-metering.md` (AI credit costs for support AI), `GLOSSARY.md` (plan tiers), `communications.md` (thread model), `observability.md` (support queue monitoring)
+> Cross-references: `platform-owner-console.md` (admin console, /admin route, support agent schema), `data-model.md` (support_requests, support_request_messages schema), `design-system.md` (sidebar icon rail, help button placement), `my-office.md` (sidebar icon ordering), `settings.md` (Help & Support settings section), `agent-architecture.md` (AI agent execution model — post-MVP), `gaps/knowledge-base-live-chat-ai.md` (AI knowledge base retrieval — post-MVP), `ai-metering.md` (AI credit costs for support AI), `GLOSSARY.md` (plan tiers), `communications.md` (thread model), `observability.md` (support queue monitoring)
 > Last updated: 2026-03-04 — Initial specification.
 
 ---
@@ -15,7 +15,7 @@
 |---------|-------|--------|
 | Design Philosophy | 35–55 | AI-first model, three-tier escalation, human access guarantee |
 | Help Button & Panel | 56–130 | Sidebar placement, three-state panel UX, mobile behavior |
-| Three-Tier Support Model | 131–175 | Tier 1 (AI), Tier 2 (support staff), Tier 3 (Steven/escalation) |
+| Three-Tier Support Model | 131–175 | Tier 1 (AI), Tier 2 (support agent), Tier 3 (Steven/escalation) |
 | AI Support Agent — Confirmation Flow | 176–245 | Rephrase-and-confirm pattern, confidence scoring, auto-send threshold |
 | AI Support Agent — Capabilities | 246–305 | What the AI can do: KB retrieval, account context, billing queries, triage |
 | Support Staff Console | 306–380 | Scoped /admin access, ticket view, draft approval, tenant context |
@@ -34,7 +34,7 @@
 
 **Confidence-gated auto-send.** After confirmation, if the AI's resolution confidence is ≥95%, it sends the reply autonomously. Below 95%, it drafts the reply and queues it for a human support agent to review, edit, and send. This keeps AI quality high — humans only see borderline cases, not obvious answers.
 
-**Urgency-flagged human escalation.** For non-enterprise plans, human involvement is not on a fixed SLA — it's triggered by urgency signals. The AI and the request category inform an urgency score. High-urgency requests (billing failures, data loss, sync completely down) surface immediately in the support staff queue. Low-urgency requests (feature questions, UI confusion) may be fully AI-resolved without human eyes.
+**Urgency-flagged human escalation.** For non-enterprise plans, human involvement is not on a fixed SLA — it's triggered by urgency signals. The AI and the request category inform an urgency score. High-urgency requests (billing failures, data loss, sync completely down) surface immediately in the support agent queue. Low-urgency requests (feature questions, UI confusion) may be fully AI-resolved without human eyes.
 
 **Enterprise is contract-defined.** Enterprise support terms (dedicated contact, on-call availability, response SLAs) are negotiated per contract. The platform supports the operational infrastructure for these arrangements; the specific terms are not hardcoded.
 
@@ -435,7 +435,7 @@ Agents can reply by email — replies are parsed and added to `support_request_m
 
 ## Support Staff EveryStack Workspace
 
-For deeper case management beyond ticket triage, support staff use a dedicated **Support workspace** inside Steven's internal EveryStack account (the Platform Workspace described in `platform-owner-console.md`).
+For deeper case management beyond ticket triage, support agent use a dedicated **Support workspace** inside Steven's internal EveryStack account (the Platform Workspace described in `platform-owner-console.md`).
 
 This workspace grows in capability as EveryStack features mature.
 
@@ -526,7 +526,7 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS
 Add `'ai_auto'` and `'ai_draft'` to the existing `author_type` values (`'user'` | `'platform_admin'`):
 - `'ai_auto'` — message sent autonomously by AI (confidence ≥95%)
 - `'ai_draft'` — message drafted by AI, pending human review (never shown to user directly)
-- `'support_agent'` — message sent by a support staff member
+- `'support_agent'` — message sent by a support agent member
 
 **`support_requests` table — new columns:**
 ```sql
@@ -623,24 +623,24 @@ CREATE TABLE tenant_enterprise_config (
 
 The following can be built during the current MVP phase sequence (alongside or after 1G):
 
-| Component | Dependency | Phase |
+| Component | Dependency | Scope |
 |-----------|-----------|-------|
-| Schema migration (all tables above) | None — additive only | Add to the existing platform-owner-console schema migration (Prompt 1) |
-| Help button placement in sidebar | Phase 1F (design system) complete ✅ | Update design-system.md + my-office.md now; implement in 1G (Runtime Services) or a dedicated UI phase |
-| Tab 3: Contact Support (form + history) | support_requests schema | Buildable in MVP — Core UX phase |
-| Support Staff Console (/admin/support) | support_requests schema + is_support_agent | Phase 2A (Platform Owner Console build) |
-| Basic Tab 2: Browse Help (static links) | None | Simple static content, can be MVP |
-| Email notifications for support | Resend (Phase 1G or later) | Alongside email infrastructure |
+| Schema migration (all tables above) | None — additive only | MVP — Foundation (complete — migrations 0016 + 0017) |
+| Help button placement in sidebar | Design system complete | MVP — Core UX |
+| Tab 3: Contact Support (form + history) | support_requests schema | MVP — Core UX |
+| Support Staff Console (/admin/support) | support_requests schema + is_support_agent | Post-MVP — Platform Operations |
+| Basic Tab 2: Browse Help (static links) | None | MVP — Core UX |
+| Email notifications for support | Resend email infrastructure | MVP — Core UX (alongside email setup) |
 
 ### What Is Post-MVP
 
-| Component | Dependency | Phase |
+| Component | Dependency | Scope |
 |-----------|-----------|-------|
 | Tab 1: AI Ask (full AI chat) | AI agent runtime + KB | Post-MVP — AI Features |
 | AI confidence scoring via KB retrieval | Vector embeddings + wiki | Post-MVP — Documents + AI |
 | Tab 2: Browse Help (embedded KB) | Wiki + App Designer | Post-MVP — Custom Apps |
-| Enterprise SLA countdown timers | tenant_enterprise_config | Phase 2A or later |
-| Feature request voting (public) | App Designer / portal | Post-MVP |
+| Enterprise SLA countdown timers | tenant_enterprise_config | Post-MVP — Platform Operations |
+| Feature request voting (public) | App Designer / portal | Post-MVP — Custom Apps |
 | Support analytics dashboard | Post-MVP | Post-MVP — Comms & Polish |
 
 ### MVP Interim: Tab 1 Without Full AI
@@ -651,4 +651,4 @@ Until the AI agent runtime is built, Tab 1 is not empty — it shows a **simplif
 - Summarizes their input and asks them to confirm
 - Submits as a `support_requests` row with pre-structured content
 
-This gives users a better experience than a blank form, and it generates well-structured tickets for support staff. When the AI is ready, it replaces this static triage flow with no UX disruption — same confirmation pattern, just powered by a real language model.
+This gives users a better experience than a blank form, and it generates well-structured tickets for support agent. When the AI is ready, it replaces this static triage flow with no UX disruption — same confirmation pattern, just powered by a real language model.

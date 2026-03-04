@@ -14,7 +14,7 @@ import { tenants } from './tenants';
 import { users } from './users';
 
 /**
- * Feature requests logged by the support AI or manually by support staff.
+ * Feature requests logged by the support AI or manually by support agent.
  *
  * source values: support_ai | manual
  * status values: new | under_review | planned | shipped | declined
@@ -36,8 +36,8 @@ export const featureRequests = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
-    index('idx_feature_requests_status').on(table.status, table.createdAt.desc()),
-    index('idx_feature_requests_tenant').on(table.tenantId),
+    index('feature_requests_status_created_at_idx').on(table.status, table.createdAt.desc()),
+    index('feature_requests_tenant_id_idx').on(table.tenantId),
   ],
 );
 

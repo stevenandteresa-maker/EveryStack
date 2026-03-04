@@ -36,7 +36,7 @@ export const supportRequestMessages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    index('idx_srm_request_id').on(table.supportRequestId, table.createdAt),
+    index('support_request_messages_request_id_created_at_idx').on(table.supportRequestId, table.createdAt),
   ],
 );
 

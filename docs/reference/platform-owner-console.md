@@ -1,6 +1,6 @@
 # EveryStack — Platform Owner Console
 
-> **New document: 2026-03-04** — Specifies the operator-facing tooling for Steven (EveryStack platform owner) to manage the EveryStack business. Not a tenant-facing feature. Two-layer architecture: a thin `/admin` route for system-level ops + a dedicated Platform Workspace inside EveryStack for business operations. Identified as a gap during Phase 1F review.
+> **New document: 2026-03-04** — Specifies the operator-facing tooling for Steven (EveryStack platform owner) to manage the EveryStack business. Not a tenant-facing feature. Two-layer architecture: a thin `/admin` route for system-level ops + a dedicated Platform Workspace inside EveryStack for business operations. Identified as a gap during MVP — Foundation design review.
 >
 > Cross-references: `data-model.md` (tenants, users, support_requests schema), `support-system.md` (full support system spec — AI triage, support staff console, plan-based tiers), `settings.md` (tenant-facing Billing & Plan section), `compliance.md` (audit logging, data access), `operations.md` (incident response), `observability.md` (platform health dashboards), `permissions.md` (platform_admin role), `GLOSSARY.md` (plan tiers, tenant definition)
 > Update: 2026-03-04 — Support queue section updated to reference support-system.md (full support system spec broken out into dedicated doc). support-system.md added to cross-references.
@@ -119,7 +119,7 @@ CREATE INDEX idx_support_requests_priority ON support_requests (priority, status
 CREATE TABLE support_request_messages (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   support_request_id  UUID NOT NULL REFERENCES support_requests(id) ON DELETE CASCADE,
-  author_type         VARCHAR(20) NOT NULL,  -- 'user' | 'platform_admin'
+  author_type         VARCHAR(20) NOT NULL,  -- 'user' | 'platform_admin' | 'ai_auto' | 'ai_draft' | 'support_agent' (see support-system.md)
   author_user_id      UUID REFERENCES users(id) ON DELETE SET NULL,
   body                TEXT NOT NULL,
   is_internal_note    BOOLEAN NOT NULL DEFAULT false,  -- TRUE = only visible to platform admin
@@ -487,35 +487,35 @@ Steven's EveryStack account is a real tenant (`tenants.is_internal = true`) used
 
 ---
 
-## Phase Implementation
+## Build Sequencing
 
-### What Must Happen Now (Pre-Phase 1G)
+### Schema — MVP — Foundation
 
-The schema additions in this doc are additive — they don't change existing columns or RLS behavior. They must be applied as a migration **before Phase 1G** because:
+The schema additions in this doc are additive — they don't change existing columns or RLS behavior. They must be applied as a migration before MVP — Core UX work begins because:
 
 1. `tenants.stripe_customer_id` and `subscription_status` will be needed as soon as Stripe billing is wired up
 2. `users.is_platform_admin` must exist before the `/admin` middleware can be implemented
 3. `support_requests` can be added now at zero cost — no behavior changes, just schema
 
-**Claude Code task:** Apply the schema migration. See Prompt 1 in the companion Claude Code prompts.
+**Status:** Schema migration applied (migrations 0016 + 0017).
 
-### The `/admin` Route — Build Phase
+### The `/admin` Route — Post-MVP — Platform Operations
 
-The `/admin` route is its own dedicated build phase: **Phase 2A — Platform Owner Console**. It is not part of the current MVP feature build sequence (1A–1G) because:
+The `/admin` route is its own dedicated build scope: **Post-MVP — Platform Operations**. It is not part of the current MVP feature build sequence because:
 
 - It has no bearing on tenant-facing functionality
-- It requires Stripe to be wired up first (Phase 1H or 2A precondition)
+- It requires Stripe to be wired up first (prerequisite: Stripe billing integration)
 - It can be built at any point once the schema exists
 
-**Phase 2A scope:** Build all `/admin` routes described in this doc. Estimated build: 1 phase.
+**Scope:** Build all `/admin` routes described in this doc. Estimated build: 1 phase.
 
-**Phase 2A prerequisites:**
-- Schema migration from this doc (Prompt 1)
+**Prerequisites:**
+- Schema migration from this doc (complete)
 - Stripe billing integration (sets `stripe_customer_id`, `subscription_status`, `trial_ends_at`)
 
 ### Platform Workspace — Setup
 
-The Platform Workspace can be created at any time after Phase 1G (Core UX). No code required — Steven creates it manually as a normal EveryStack workspace on his account, then marks `tenants.is_internal = true` via a one-time SQL statement.
+The Platform Workspace can be created at any time after MVP — Core UX is complete. No code required — Steven creates it manually as a normal EveryStack workspace on his account, then marks `tenants.is_internal = true` via a one-time SQL statement.
 
 ### Settings Update Required
 

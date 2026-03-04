@@ -35,7 +35,7 @@ export const tenantFeatureFlags = pgTable(
   },
   (table) => [
     uniqueIndex('tenant_feature_flags_tenant_flag_idx').on(table.tenantId, table.flagName),
-    index('idx_tenant_flags').on(table.tenantId),
+    index('tenant_feature_flags_tenant_id_idx').on(table.tenantId),
   ],
 );
 

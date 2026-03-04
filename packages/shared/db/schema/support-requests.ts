@@ -42,7 +42,7 @@ export const supportRequests = pgTable(
 
     // Support System — urgency, AI session, assignment, resolution tracking
     urgencyScore: smallint('urgency_score').default(0).notNull(),
-    aiSessionId: uuid('ai_session_id'),
+    aiSessionId: uuid('ai_session_id'), // FK added via migration 0017 — not declared here to avoid circular import with ai-support-sessions
     assignedTo: uuid('assigned_to').references(() => users.id),
     resolvedBy: varchar('resolved_by', { length: 20 }),
     tier: varchar('tier', { length: 20 }).default('standard').notNull(),
@@ -51,9 +51,9 @@ export const supportRequests = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
   (table) => [
-    index('idx_support_requests_tenant').on(table.tenantId),
-    index('idx_support_requests_status').on(table.status, table.createdAt.desc()),
-    index('idx_support_requests_priority').on(table.priority, table.status),
+    index('support_requests_tenant_id_idx').on(table.tenantId),
+    index('support_requests_status_created_at_idx').on(table.status, table.createdAt.desc()),
+    index('support_requests_priority_status_idx').on(table.priority, table.status),
   ],
 );
 

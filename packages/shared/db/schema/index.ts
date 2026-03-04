@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Schema barrel file — all 50 MVP Drizzle table definitions
+// Schema barrel file — all 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
 // Usage: import { users, tenants, workspaces } from '@everystack/shared/db/schema';
 // ---------------------------------------------------------------------------
 

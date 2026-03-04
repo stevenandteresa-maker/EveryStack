@@ -59,8 +59,8 @@ export const aiSupportSessions = pgTable(
     completedAt: timestamp('completed_at', { withTimezone: true }),
   },
   (table) => [
-    index('idx_ai_support_tenant').on(table.tenantId),
-    index('idx_ai_support_request').on(table.supportRequestId),
+    index('ai_support_sessions_tenant_id_idx').on(table.tenantId),
+    index('ai_support_sessions_support_request_id_idx').on(table.supportRequestId),
   ],
 );
 

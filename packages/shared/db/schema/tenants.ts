@@ -60,10 +60,10 @@ export const tenants = pgTable(
   (table) => [
     uniqueIndex('tenants_clerk_org_id_idx').on(table.clerkOrgId),
     index('tenants_name_idx').on(table.name),
-    index('idx_tenants_stripe_customer').on(table.stripeCustomerId).where(sql`${table.stripeCustomerId} IS NOT NULL`),
-    index('idx_tenants_subscription_status').on(table.subscriptionStatus),
-    index('idx_tenants_trial_ends').on(table.trialEndsAt).where(sql`${table.trialEndsAt} IS NOT NULL`),
-    index('idx_tenants_churn_risk').on(table.churnRiskFlag).where(sql`${table.churnRiskFlag} IS NOT NULL`),
+    index('tenants_stripe_customer_id_idx').on(table.stripeCustomerId).where(sql`${table.stripeCustomerId} IS NOT NULL`),
+    index('tenants_subscription_status_idx').on(table.subscriptionStatus),
+    index('tenants_trial_ends_at_idx').on(table.trialEndsAt).where(sql`${table.trialEndsAt} IS NOT NULL`),
+    index('tenants_churn_risk_flag_idx').on(table.churnRiskFlag).where(sql`${table.churnRiskFlag} IS NOT NULL`),
   ],
 );
 
