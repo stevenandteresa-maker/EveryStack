@@ -6,9 +6,9 @@ description: Current build state for EveryStack. Load this skill at the start of
 # EveryStack — Phase Context
 
 **Last updated:** 2026-03-04
-**Branch:** `docs/scope-updates` (PR #13 → main)
-**Latest tag:** `v0.1.5-phase-1f`
-**Total commits:** 22 (17 on main + 5 on docs/scope-updates)
+**Branch:** `main`
+**Latest tag:** `v0.1.6-phase-1g`
+**Total commits:** 30 (22 prior + 8 Phase 1G)
 
 ---
 
@@ -111,6 +111,12 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 
 **All utilities exported from `@everystack/shared/testing`** — import from the package, not individual files.
 
+**Shared package imports added in 1G:**
+- `@everystack/shared/realtime` — RealtimeService, EventPublisher, REALTIME_EVENTS, types
+- `@everystack/shared/redis` — createRedisClient, getRedisConfig
+- `@everystack/shared/queue` — QUEUE_NAMES, BaseJobData, job data types, QueueJobDataMap
+- `@everystack/shared/storage` — StorageClient, R2StorageClient, keys, MIME, magic bytes, limits, sanitize, serve, audit
+
 **Patterns established:** Vitest configs (4), Docker test services, 19 factories with auto-parent creation, tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook.
 
 ### Phase 1F — Design System Foundation & i18n (Complete)
@@ -139,6 +145,100 @@ Tailwind token system, shadcn/ui primitives, application shell, i18n framework.
 - `apps/web/components.json` — shadcn/ui CLI config
 
 **Patterns established:** Three-layer color architecture (workspace accent, semantic/process, data palette). CSS custom properties for all tokens. `applyAccentColor()` for runtime theme switching. next-intl with non-routing locale strategy. `check:i18n` CI gate active. IntlWrapper for test isolation.
+
+### Phase 1G — Runtime Services (Complete)
+
+Real-time server, background worker, file storage/upload pipeline.
+
+**Realtime Server (`apps/realtime/src/`):**
+- `index.ts` — Entry point, calls `startServer()`
+- `server.ts` — Socket.io server with Redis adapter (`@socket.io/redis-adapter`), CORS, graceful shutdown (10s)
+- `middleware/auth.ts` — Clerk JWT auth on connection, resolves user/tenant, populates `socket.data`
+- `handlers/room-handler.ts` — `room:join` / `room:leave` event handlers with callback support
+- `handlers/authorize-room-join.ts` — Query-based room authorization for 5 resource types (user, workspace, table, record, thread)
+- `subscribers/redis-event-subscriber.ts` — Pattern-subscribes to `realtime:t:*`, forwards events to Socket.io rooms, supports user exclusion
+- `socket-io-realtime-service.ts` — Implements `RealtimeService` interface (joinRoom, leaveRoom, emitToRoom, emitToUser, broadcast)
+
+**Background Worker (`apps/worker/src/`):**
+- `index.ts` — Worker bootstrap: OpenTelemetry init, queue init, processor creation, recurring job scheduling (orphan cleanup daily 3AM UTC), graceful shutdown
+- `queues.ts` — Lazy-creates and caches BullMQ Queue instances for all 6 queues
+- `lib/base-processor.ts` — Abstract `BaseProcessor<TData>`: trace propagation via AsyncLocalStorage, Pino child logger, Sentry capture, configurable concurrency
+- `lib/graceful-shutdown.ts` — `setupGracefulShutdown()`: ordered handler execution, SIGTERM/SIGINT hooks, 30s forced exit
+- `lib/clamav-client.ts` — ClamAV INSTREAM protocol over TCP, 8KB chunks, dev-mode fallback (skipped)
+- `processors/file-processing-router.ts` — Dispatches `file-processing` queue jobs by name to concrete processors
+- `processors/file-thumbnail.ts` — Sharp: auto-rotate EXIF, resize to 200px + 800px WebP, blurhash (4×3), skips >50MP and infected files
+- `processors/file-scan.ts` — Streams file to ClamAV; infected → quarantine (copy + delete original + audit log + event)
+- `processors/file-orphan-cleanup.ts` — Hard-deletes soft-deleted files >30 days; removes original + thumbnails from storage in batches of 1000
+
+**Upload Endpoints (`apps/web/src/app/api/upload/`):**
+- `presign/route.ts` — POST: validates MIME + extension, checks per-plan file size + storage quota, creates `files` row (scanStatus: pending), returns presigned PUT URL (1hr expiry)
+- `complete/[fileId]/route.ts` — POST: HEAD object to verify upload, magic byte verification, SVG sanitization, enqueues `file.scan` + `file.thumbnail` jobs, publishes `FILE_UPLOADED` event
+
+**Web Realtime & Queue Clients (`apps/web/src/lib/`):**
+- `queue.ts` — Lightweight BullMQ Queue client for web app job enqueueing (lazy-loads, caches per queue name)
+- `realtime/client.ts` — Singleton Socket.io client with Clerk JWT auth, exponential backoff reconnection (1s→30s, ±20% jitter)
+- `realtime/use-realtime-connection.ts` — React hook: manages connection lifecycle via Clerk auth, tracks connection status
+- `realtime/index.ts` — Public exports
+
+**Shared Realtime (`packages/shared/realtime/`):**
+- `service.ts` — Transport-agnostic `RealtimeService` interface (joinRoom, leaveRoom, getRoomMembers, emitToRoom, emitToUser, broadcast)
+- `publisher.ts` — `createEventPublisher(redis)`: publishes to `realtime:t:{tenantId}:{channel}`, supports `excludeUserId`
+- `events.ts` — `REALTIME_EVENTS` constant: 16 event types (record.created/updated/deleted, sync.*, schema.*, file.*, notification.created)
+- `types.ts` — PresenceState, RoomMember, RoomMetadata, RoomPattern types
+
+**Shared Redis (`packages/shared/redis/`):**
+- `client.ts` — `createRedisClient(name)` / `getRedisConfig()`: ioredis with `maxRetriesPerRequest: null` (BullMQ), `lazyConnect: true`, env-based config
+- `index.ts` — Public exports
+
+**Shared Queue (`packages/shared/queue/`):**
+- `constants.ts` — `QUEUE_NAMES`: sync, file-processing, email, automation, document-gen, cleanup
+- `types.ts` — `BaseJobData` (tenantId, traceId, triggeredBy) + 7 job data types + `QueueJobDataMap` with compile-time exhaustiveness check
+- `index.ts` — Public exports
+
+**Shared Storage (`packages/shared/storage/`):**
+- `client.ts` — `StorageClient` interface: presignPut, presignGet, delete, deleteMany, headObject, getStream, put
+- `r2-client.ts` — `R2StorageClient`: S3-compatible via `@aws-sdk/client-s3` (works with R2 and MinIO)
+- `config.ts` — `getStorageConfig()` from env vars (STORAGE_PROVIDER, S3_ACCESS_KEY, etc.), MinIO dev fallback
+- `keys.ts` — Tenant-scoped key builders: `fileOriginalKey`, `fileThumbnailKey`, `quarantineKey`, `portalAssetKey`, `docGenOutputKey`, `templateKey`
+- `mime.ts` — `ALLOWED_MIME_TYPES` (19 types), `isAllowedMimeType()`, `isAllowedExtension()`, `THUMBNAIL_MIME_TYPES`
+- `magic-bytes.ts` — `MAGIC_SIGNATURES` array, `verifyMagicBytes()` (first 8KB), RIFF/MP4/OOXML disambiguation
+- `limits.ts` — `FILE_LIMITS` per plan (Freelancer 25MB→Enterprise 500MB), `getFileLimits(planSlug)`
+- `sanitize.ts` — `sanitizeFilename()` (path traversal, shell chars, 255 limit), `sanitizeSvg()` (strips scripts, event handlers, javascript: URIs)
+- `serve.ts` — `getFileDownloadUrl()` (presigned GET, blocks pending/infected), `getThumbnailUrl()` (CDN URL)
+- `audit.ts` — `FILE_AUDIT_ACTIONS` enum, `writeFileAuditLog()` (tracks uploads, scans, quarantines, deletes)
+- `index.ts` — Public exports for all storage modules
+
+**Database Schema:**
+- `packages/shared/db/schema/files.ts` — `files` table: id, tenantId, uploadedBy, storageKey, originalFilename, mimeType, sizeBytes, checksumSha256, scanStatus (pending/clean/infected/skipped), contextType (record_attachment/smart_doc/doc_gen_output/portal_asset/email_attachment/chat_attachment/template), contextId, thumbnailKey, metadata (JSONB: blurhash, dimensions), createdAt, archivedAt. Indexes on (tenant, context), (tenant, scan_status), archivedAt partial.
+
+**Docker Compose:**
+- `docker-compose.yml` — Added MinIO (ports 9000–9001), ClamAV (optional profile), Realtime service, Worker service
+
+**Tests (Phase 1G — 30 test files):**
+- `apps/realtime/src/__tests__/socket-io-realtime-service.test.ts` (7 tests)
+- `apps/realtime/src/middleware/__tests__/auth.test.ts` (6 tests)
+- `apps/realtime/src/handlers/__tests__/room-handler.test.ts` (8 tests)
+- `apps/realtime/src/subscribers/__tests__/redis-event-subscriber.test.ts` (9 tests)
+- `apps/worker/src/lib/__tests__/base-processor.test.ts`
+- `apps/worker/src/lib/__tests__/graceful-shutdown.test.ts`
+- `apps/worker/src/processors/__tests__/file-thumbnail.test.ts`
+- `apps/worker/src/processors/__tests__/file-scan.test.ts`
+- `apps/worker/src/processors/__tests__/file-orphan-cleanup.test.ts`
+- `apps/web/src/app/api/upload/__tests__/presign.test.ts`
+- `apps/web/src/app/api/upload/__tests__/complete.test.ts`
+- `apps/web/src/lib/realtime/__tests__/client.test.ts`
+- `packages/shared/realtime/__tests__/publisher.test.ts`
+- `packages/shared/realtime/__tests__/types.test.ts`
+- `packages/shared/queue/__tests__/constants.test.ts`
+- `packages/shared/storage/__tests__/keys.test.ts`
+- `packages/shared/storage/__tests__/mime.test.ts`
+- `packages/shared/storage/__tests__/magic-bytes.test.ts`
+- `packages/shared/storage/__tests__/limits.test.ts`
+- `packages/shared/storage/__tests__/sanitize.test.ts`
+- `packages/shared/storage/__tests__/serve.test.ts`
+- `packages/shared/storage/__tests__/r2-client.test.ts`
+
+**Patterns established:** `BaseProcessor` abstract class for all worker jobs. `createEventPublisher()` for all real-time events. `StorageClient` interface for provider-agnostic storage. Tenant-scoped storage keys (`t/{tenantId}/...`). Magic byte verification on upload complete. ClamAV quarantine flow with audit trail. `setupGracefulShutdown()` for ordered cleanup. 6 BullMQ queues with typed job data. `useRealtimeConnection()` React hook for Socket.io lifecycle.
 
 ### Scope Updates (PR #13 — docs/scope-updates)
 
@@ -212,9 +312,11 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
-**Realtime** — `apps/realtime/src/index.ts` logs a startup message. No Socket.io server, no Redis adapter.
+**Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, and event publishing are fully operational. No presence tracking yet (stubs exist, marked for MVP — Core UX).
 
-**Worker Jobs** — `apps/worker/src/index.ts` is a skeleton. Job wrapper infra exists but no BullMQ queue setup or job processors.
+**Worker Jobs** — BullMQ worker with 6 queues and 3 file processors (thumbnail, scan, orphan cleanup) operational. Sync, email, automation, and document-gen processors not yet implemented.
+
+**File Storage** — StorageClient interface, R2/MinIO client, presigned upload pipeline, MIME/magic byte validation, thumbnail generation, virus scanning, and orphan cleanup are operational. No file attachment UI yet (no record attachment picker, no file browser).
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
@@ -246,6 +348,15 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **Tags** | `v0.1.X-phase-YZ` |
 | **Security headers** | CSP + HSTS + X-Frame-Options. Platform (strict) vs Portal (embeddable) |
 | **Webhook verification** | Svix for Clerk, generic HMAC for others |
+| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. 16 event types in `REALTIME_EVENTS` |
+| **Room authorization** | Tenant-scoped rooms (`t:{tenantId}:{resourceType}:{resourceId}`). 5 resource types with query-based authorization |
+| **Worker processors** | Extend `BaseProcessor<TData>`. Trace propagation + Pino child logger + Sentry. `processJob(job, logger)` abstract method |
+| **Graceful shutdown** | `setupGracefulShutdown()` with ordered handlers. Realtime: 10s, Worker: 30s forced exit |
+| **Queue definitions** | 6 queues in `QUEUE_NAMES`. All job data extends `BaseJobData` (tenantId, traceId, triggeredBy). `QueueJobDataMap` for type safety |
+| **Storage keys** | Tenant-scoped: `t/{tenantId}/files/{fileId}/original/{filename}`. Use `fileOriginalKey()`, `fileThumbnailKey()`, etc. |
+| **File uploads** | Presign → client PUT → complete (magic bytes + scan + thumbnail). Never stream through server |
+| **File scanning** | ClamAV INSTREAM via TCP. Infected → quarantine + audit log. Dev fallback: skipped |
+| **Redis clients** | `createRedisClient(name)` with `maxRetriesPerRequest: null` for BullMQ. Separate clients for pub/sub (subscribe mode) |
 | **Design tokens** | CSS custom properties in globals.css. Three-layer color: accent, semantic, data palette |
 | **Typography** | DM Sans (UI), JetBrains Mono (code). 9-step scale in `design-system/typography.ts` |
 | **UI primitives** | 16 shadcn/ui components in `components/ui/`. Extend via composition, never recreate |
