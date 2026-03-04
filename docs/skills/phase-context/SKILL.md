@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-03
-**Branch:** `main`
+**Last updated:** 2026-03-04
+**Branch:** `docs/scope-updates` (PR #13 → main)
 **Latest tag:** `v0.1.5-phase-1f`
-**Total commits:** 17 (on main)
+**Total commits:** 22 (17 on main + 5 on docs/scope-updates)
 
 ---
 
@@ -34,20 +34,20 @@ Monorepo scaffold with Turborepo + pnpm workspaces, CI pipeline, and dev environ
 
 ### Phase 1B — Database (Complete)
 
-Full Drizzle ORM schema (50 tables), 12 SQL migrations, RLS, connection pooling, tenant routing.
+Full Drizzle ORM schema (59 tables), 16 SQL migrations, RLS, connection pooling, tenant routing.
 
 **Key files:**
 - `packages/shared/db/client.ts` — `getDbForTenant(tenantId, intent)` routing, PgBouncer clients
-- `packages/shared/db/rls.ts` — `setTenantContext()`, 41 tenant-scoped tables with RLS policies
+- `packages/shared/db/rls.ts` — `setTenantContext()`, 47 tenant-scoped tables with RLS policies, `RLS_EXCLUDED_COLUMNS`
 - `packages/shared/db/uuid.ts` — `generateUUIDv7()` (all PKs are UUIDv7)
-- `packages/shared/db/schema/` — 50 Drizzle table definitions (see schema index below)
-- `packages/shared/db/migrations/` — 12 migrations (0000–0011), including RLS enablement
-- `packages/shared/db/operations/user-operations.ts` — `createUserWithTenant()`, `updateUserFromClerk()`
+- `packages/shared/db/schema/` — 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
+- `packages/shared/db/migrations/` — 16 migrations (0000–0015 original + 0015–0018 scope updates)
+- `packages/shared/db/operations/user-operations.ts` — `createUserWithTenant()` (now provisions personal tenant), `updateUserFromClerk()`
 - `packages/shared/db/drizzle.config.ts` — Migration config (uses DATABASE_URL_DIRECT for DDL)
 
 **Schema highlights:** `records` hash-partitioned into 16 partitions by `tenant_id`. `audit_log`, `ai_usage_log`, `api_request_log` time-partitioned monthly. Canonical JSONB pattern: `records.canonical_data` keyed by `fields.id`.
 
-**Patterns established:** `getDbForTenant()` for all DB access, `setTenantContext()` before RLS queries, UUIDv7 everywhere, composite PKs on partitioned tables, no raw SQL outside migrations.
+**Patterns established:** `getDbForTenant()` for all DB access, `setTenantContext()` before RLS queries, UUIDv7 everywhere, composite PKs on partitioned tables, no raw SQL outside migrations. Admin-only tables intentionally skip RLS (accessed only via `/admin` routes).
 
 ### Phase 1C — Auth & Tenant Isolation (Complete)
 
@@ -140,6 +140,46 @@ Tailwind token system, shadcn/ui primitives, application shell, i18n framework.
 
 **Patterns established:** Three-layer color architecture (workspace accent, semantic/process, data palette). CSS custom properties for all tokens. `applyAccentColor()` for runtime theme switching. next-intl with non-routing locale strategy. `check:i18n` CI gate active. IntlWrapper for test isolation.
 
+### Scope Updates (PR #13 — docs/scope-updates)
+
+Schema expansions, personal tenant provisioning, Platform Owner Console, Support System, and comprehensive naming/convention audit.
+
+**New schemas (9 tables):**
+- `packages/shared/db/schema/support-requests.ts` — Support tickets with priority/status/category
+- `packages/shared/db/schema/support-request-messages.ts` — Threaded messages on support requests
+- `packages/shared/db/schema/ai-support-sessions.ts` — AI support session audit trail
+- `packages/shared/db/schema/feature-requests.ts` — Aggregated feature request log
+- `packages/shared/db/schema/admin-impersonation-sessions.ts` — "View as Tenant" admin sessions
+- `packages/shared/db/schema/tenant-feature-flags.ts` — Per-tenant feature flag overrides
+- `packages/shared/db/schema/tenant-enterprise-config.ts` — Enterprise SLA config
+- `packages/shared/db/schema/platform-notices.ts` — Platform-wide announcements
+- `packages/shared/db/schema/user-dismissed-notices.ts` — User notice dismissal tracking
+
+**New migrations (4):**
+- `0015_update_thread_participants_for_external_contacts.sql` — `participant_type`, `external_contact_id` columns, identity check constraint
+- `0016_platform_owner_console.sql` — Platform Owner Console tables + tenant billing columns
+- `0017_support_system.sql` — Support System tables
+- `0018_rename_indexes_consistency.sql` — Index naming consistency pass
+
+**Schema modifications:**
+- `tenants.ts` — Added billing/subscription columns (`stripe_customer_id`, `subscription_status`, `trial_ends_at`, `plan_override`, `support_tier`), churn tracking (`churn_risk_flag`, `first_active_at`, `last_active_at`, `admin_notes`), `is_internal` flag
+- `users.ts` — Added `is_platform_admin`, `is_support_agent` boolean columns
+- `thread-participants.ts` — Made `user_id` nullable, added `participant_type` + `external_contact_id` for external contacts
+
+**Key logic changes:**
+- `user-operations.ts` — `createUserWithTenant()` now auto-provisions a personal tenant (reserved stub, no UI surface). Returns `personalTenantId`.
+- `rls.ts` — Updated to 47 tenant-scoped tables. Added `RLS_EXCLUDED_COLUMNS` (hides `is_platform_admin`, `is_support_agent` from tenant queries). Documented 6 admin-only tables that intentionally skip RLS.
+
+**New reference docs:**
+- `docs/reference/platform-owner-console.md` — Full spec for platform admin dashboard
+- `docs/reference/support-system.md` — 3-tier support architecture (AI → human → admin escalation)
+
+**Audit fixes (commit 175468c):**
+- Naming conventions standardized across all reference docs
+- Schema drift corrections between Drizzle schemas and data-model.md
+- RLS documentation aligned with actual policies
+- Scope labels standardized (no more phase numbers in reference docs)
+
 ---
 
 ## What Does NOT Exist Yet
@@ -158,11 +198,15 @@ Tailwind token system, shadcn/ui primitives, application shell, i18n framework.
 
 **Automations** — Schema for `automations` + `automation_runs` exists, no execution engine.
 
-**Communications** — Schema for `threads` + `thread_messages` exists, no chat UI or real-time messaging.
+**Communications** — Schema for `threads` + `thread_messages` + `thread_participants` (with external contact support) exists, no chat UI or real-time messaging.
 
 **Documents / PDF** — Schema for `document_templates` + `generated_documents` exists, no Gotenberg integration, no merge-tag engine.
 
 **AI Features** — `packages/shared/ai/index.ts` is empty. No AIService, no providers, no prompts, no tools.
+
+**Platform Owner Console** — Schemas and reference doc exist (`platform-owner-console.md`). No admin UI, no Stripe integration, no impersonation flow.
+
+**Support System** — Schemas and reference doc exist (`support-system.md`). No support UI, no AI support chatbot, no escalation flow.
 
 **Platform API** — `apps/web/src/app/api/health/route.ts` exists. No v1 data endpoints.
 
@@ -185,7 +229,10 @@ Tailwind token system, shadcn/ui primitives, application shell, i18n framework.
 | **Primary keys** | UUIDv7 via `generateUUIDv7()` — no serial/auto-increment anywhere |
 | **ORM** | Drizzle ORM exclusively. No raw SQL outside migrations |
 | **Tenant routing** | `getDbForTenant(tenantId, intent)` for every query |
-| **RLS** | `setTenantContext(db, tenantId)` before tenant-scoped operations |
+| **RLS** | `setTenantContext(db, tenantId)` before tenant-scoped operations. 47 tenant-scoped tables. 6 admin-only tables skip RLS intentionally |
+| **RLS column exclusion** | `RLS_EXCLUDED_COLUMNS` in `rls.ts` — hide `is_platform_admin`, `is_support_agent` from tenant queries |
+| **Admin tables** | Admin-only tables (support_requests, admin_impersonation_sessions, etc.) have no RLS — accessed only via `/admin` routes |
+| **Personal tenants** | Auto-provisioned on user creation. `settings.personal = true`. Reserved stub, no UI surface yet |
 | **Error handling** | All errors extend `AppError` with code/statusCode/details/traceId |
 | **Logging** | Pino with PII redaction. `webLogger`/`workerLogger`/`realtimeLogger` |
 | **Tracing** | AsyncLocalStorage via `runWithTraceContext()`. TraceId flows to logs + OTel spans |

@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createRedisClient } from '@everystack/shared/redis';
 import { realtimeLogger } from '@everystack/shared/logging';
+import { authenticateSocket } from './middleware/auth';
 
 const logger = realtimeLogger;
 
@@ -37,6 +38,37 @@ export function createRealtimeServer() {
   ]).then(() => {
     io.adapter(createAdapter(pubClient, subClient));
     logger.info('Redis adapter attached');
+  });
+
+  // Authenticate every socket connection via Clerk JWT
+  io.use(authenticateSocket);
+
+  // Connection lifecycle
+  io.on('connection', (socket) => {
+    const userId = socket.data['userId'] as string;
+    const tenantId = socket.data['tenantId'] as string;
+
+    logger.info(
+      { socketId: socket.id, userId, tenantId },
+      'Client connected',
+    );
+
+    // Auto-join personal room for direct user notifications
+    void socket.join(`t:${tenantId}:user:${userId}`);
+
+    socket.on('disconnect', (reason) => {
+      logger.info(
+        { socketId: socket.id, userId, tenantId, reason },
+        'Client disconnected',
+      );
+    });
+
+    socket.on('error', (err) => {
+      logger.error(
+        { socketId: socket.id, userId, tenantId, err },
+        'Socket error',
+      );
+    });
   });
 
   return { httpServer, io, pubClient, subClient, adapterReady };
