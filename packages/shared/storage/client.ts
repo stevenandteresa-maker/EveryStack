@@ -69,4 +69,7 @@ export interface StorageClient {
 
   /** Get the object body as a readable stream. */
   getStream(key: string): Promise<ReadableStream>;
+
+  /** Upload content directly (server-side). Used for generated content like thumbnails. */
+  put(key: string, body: Uint8Array, contentType: string): Promise<void>;
 }

@@ -26,6 +26,7 @@ export interface FileScanJobData extends BaseJobData {
 
 export interface FileOrphanCleanupJobData extends BaseJobData {
   olderThanMs: number;
+  batchSize: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -61,11 +62,11 @@ export interface DocumentGenJobData extends BaseJobData {
  */
 export interface QueueJobDataMap {
   sync: SyncJobData;
-  'file-processing': FileThumbnailJobData | FileScanJobData | FileOrphanCleanupJobData;
+  'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;
   automation: AutomationJobData;
   'document-gen': DocumentGenJobData;
-  cleanup: BaseJobData;
+  cleanup: FileOrphanCleanupJobData;
 }
 
 /** Compile-time check: QueueJobDataMap must cover every QueueName. */

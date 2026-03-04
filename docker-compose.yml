@@ -131,8 +131,25 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  clamav:
+    image: clamav/clamav:latest
+    container_name: everystack-clamav
+    profiles:
+      - scanning
+    ports:
+      - "${CLAMAV_PORT:-3310}:3310"
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck || true"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  clamav_data:
 

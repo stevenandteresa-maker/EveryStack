@@ -128,6 +128,17 @@ export class R2StorageClient implements StorageClient {
     }
   }
 
+  async put(key: string, body: Uint8Array, contentType: string): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    });
+
+    await this.s3.send(command);
+  }
+
   async getStream(key: string): Promise<ReadableStream> {
     const command = new GetObjectCommand({
       Bucket: this.bucket,
