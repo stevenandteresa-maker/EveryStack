@@ -14,7 +14,8 @@
     "./webhooks": "./webhooks/index.ts",
     "./compliance": "./compliance/index.ts",
     "./redis": "./redis/index.ts",
-    "./realtime": "./realtime/index.ts"
+    "./realtime": "./realtime/index.ts",
+    "./queue": "./queue/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

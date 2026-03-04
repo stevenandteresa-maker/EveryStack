@@ -1,17 +1,23 @@
 import { workerLogger } from '@everystack/shared/logging';
 import { initWorkerTelemetry, shutdownWorkerTelemetry } from './lib/otel-init';
+import { initializeQueues, closeAllQueues } from './queues';
+import {
+  registerShutdownHandler,
+  setupGracefulShutdown,
+} from './lib/graceful-shutdown';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
 
-// TODO [Phase 1G]: Replace with BullMQ worker setup and Redis connection
-workerLogger.info('Starting EveryStack worker...');
+// Create all 6 BullMQ queues
+initializeQueues();
 
-async function shutdown(signal: string) {
-  workerLogger.info({ signal }, 'Received shutdown signal, shutting down gracefully...');
-  await shutdownWorkerTelemetry();
-  process.exit(0);
-}
+// Register shutdown handlers (order matters — processors first, then queues, then telemetry)
+registerShutdownHandler(closeAllQueues);
+registerShutdownHandler(shutdownWorkerTelemetry);
 
-process.on('SIGTERM', () => void shutdown('SIGTERM'));
-process.on('SIGINT', () => void shutdown('SIGINT'));
+// Set up SIGTERM/SIGINT handling
+setupGracefulShutdown(workerLogger);
+
+// TODO [Phase 1G]: Import and start job processors here
+workerLogger.info('worker ready — listening for jobs');

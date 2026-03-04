@@ -85,6 +85,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: everystack-worker
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      NODE_ENV: development
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
