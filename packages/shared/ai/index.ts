@@ -82,3 +82,9 @@ export { AI_FEATURES } from './metering/features';
 export type { ModelRate } from './metering/rates';
 export { AI_RATES, isKnownModel } from './metering/rates';
 export { calculateCost } from './metering/cost-calculator';
+
+// Metering — usage logging and credit ledger
+export type { UsageLogEntry } from './metering/usage-logger';
+export { logAIUsage } from './metering/usage-logger';
+export type { BudgetStatus, AlertAction } from './metering/credit-ledger';
+export { checkBudget, deductCredits, checkAlertThresholds } from './metering/credit-ledger';
