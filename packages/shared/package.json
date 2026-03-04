@@ -52,6 +52,7 @@
     "@opentelemetry/sdk-node": "^0.212.0",
     "@opentelemetry/sdk-trace-base": "^2.5.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
+    "ai": "^6.0.112",
     "drizzle-orm": "^0.45.1",
     "ioredis": "^5.10.0",
     "pino": "^10.3.1",

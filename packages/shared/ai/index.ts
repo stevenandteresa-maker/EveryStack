@@ -92,3 +92,7 @@ export { checkBudget, deductCredits, checkAlertThresholds } from './metering/cre
 // AIService — single entry point for all AI calls
 export type { AIServiceRequest, AIServiceResponse, AIServiceContext } from './service';
 export { AIService, FEATURE_TASK_MAP } from './service';
+
+// Streaming — stream adapter and BullMQ AI job types
+export type { StreamResult, AIJobPayload, AIJobResult } from './streaming';
+export { createAIStream } from './streaming';
