@@ -68,3 +68,10 @@ export {
   BasicPromptCompiler,
   compilerForProvider,
 } from './prompts/compiler';
+
+// Tool registry
+export {
+  ToolRegistry,
+  createDefaultToolRegistry,
+  TOOL_NAMES,
+} from './tools/registry';
