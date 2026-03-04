@@ -12,7 +12,9 @@
     "./telemetry": "./telemetry/index.ts",
     "./errors": "./errors/index.ts",
     "./webhooks": "./webhooks/index.ts",
-    "./compliance": "./compliance/index.ts"
+    "./compliance": "./compliance/index.ts",
+    "./redis": "./redis/index.ts",
+    "./realtime": "./realtime/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -46,6 +48,7 @@
     "@opentelemetry/sdk-trace-base": "^2.5.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "drizzle-orm": "^0.45.1",
+    "ioredis": "^5.10.0",
     "pino": "^10.3.1",
     "postgres": "^3.4.8",
     "svix": "^1.86.0",

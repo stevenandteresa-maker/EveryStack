@@ -67,6 +67,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  realtime:
+    build:
+      context: .
+      dockerfile: apps/realtime/Dockerfile
+    container_name: everystack-realtime
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REALTIME_PORT: "3002"
+      WEB_APP_URL: "http://localhost:3000"
+      NODE_ENV: development
+    ports:
+      - "${REALTIME_PORT:-3002}:3002"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
