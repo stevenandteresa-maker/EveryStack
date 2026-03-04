@@ -16,8 +16,11 @@ import { users } from './users';
 /**
  * Messages within a support request thread.
  *
- * author_type values: user | platform_admin
- * is_internal_note: TRUE = only visible to platform admin
+ * author_type values: user | platform_admin | ai_auto | ai_draft | support_agent
+ *   - ai_auto: message sent autonomously by AI (confidence ≥95%)
+ *   - ai_draft: message drafted by AI, pending human review (never shown to user directly)
+ *   - support_agent: message sent by a support staff member (is_support_agent = true)
+ * is_internal_note: TRUE = only visible to platform admin / support agent
  */
 export const supportRequestMessages = pgTable(
   'support_request_messages',

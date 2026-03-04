@@ -2,8 +2,8 @@
 
 > **New document: 2026-03-04** — Specifies the operator-facing tooling for Steven (EveryStack platform owner) to manage the EveryStack business. Not a tenant-facing feature. Two-layer architecture: a thin `/admin` route for system-level ops + a dedicated Platform Workspace inside EveryStack for business operations. Identified as a gap during Phase 1F review.
 >
-> Cross-references: `data-model.md` (tenants, users, support_requests schema), `settings.md` (tenant-facing Billing & Plan section), `compliance.md` (audit logging, data access), `operations.md` (incident response), `observability.md` (platform health dashboards), `permissions.md` (platform_admin role), `GLOSSARY.md` (plan tiers, tenant definition)
-> Last updated: 2026-03-04 — Initial specification.
+> Cross-references: `data-model.md` (tenants, users, support_requests schema), `support-system.md` (full support system spec — AI triage, support staff console, plan-based tiers), `settings.md` (tenant-facing Billing & Plan section), `compliance.md` (audit logging, data access), `operations.md` (incident response), `observability.md` (platform health dashboards), `permissions.md` (platform_admin role), `GLOSSARY.md` (plan tiers, tenant definition)
+> Update: 2026-03-04 — Support queue section updated to reference support-system.md (full support system spec broken out into dedicated doc). support-system.md added to cross-references.
 
 ---
 
@@ -20,7 +20,7 @@
 | /admin Route — Tenant Detail | 196–270 | Per-tenant view: profile, usage, billing actions, impersonation, feature flags |
 | /admin Route — Revenue Dashboard | 271–315 | MRR, trial conversion, churn, Stripe data aggregation |
 | /admin Route — Sync Health | 316–345 | Cross-tenant sync failure visibility |
-| /admin Route — Support Queue | 346–390 | Inbound support request triage, reply, escalation |
+| /admin Route — Support Queue | 346–390 | References `support-system.md` — key points for /admin implementation |
 | /admin Route — Broadcast Messaging | 391–420 | In-app and email broadcasts to tenant segments |
 | /admin Route — Feature Flags | 421–455 | Per-tenant feature flag overrides |
 | Platform Workspace | 456–530 | EveryStack-as-a-business: tables, views, automations, use cases |
@@ -362,33 +362,13 @@ A table of all tenants with at least one active `base_connections` row:
 
 **Route:** `GET /admin/support`
 
-Inbound support requests from all tenants, unified queue.
+See `support-system.md` for the full support system specification. The support queue described here is the Tier 2 support staff view within `/admin`. Key points for the `/admin` implementation:
 
-### Queue View
-
-Filterable by status (open / in_progress / waiting / resolved), priority, and category. Sorted by priority then created date. Unread indicator (new requests since last admin visit, tracked via `admin_last_viewed_support_at` on users).
-
-### Request Detail
-
-- Tenant context: name, plan, member who submitted
-- Full message thread (user messages + admin replies)
-- Internal notes (never shown to user)
-- Status and priority controls
-- Quick-access to the tenant's detail page
-
-### Replying
-
-Admin reply is added to `support_request_messages` with `author_type: 'platform_admin'`. A transactional email is sent to the submitting user via Resend with the reply body and a link back to their request.
-
-### User-Facing: Submitting a Request
-
-Users submit support requests from **Settings > Help & Support** (new Settings section — see Settings doc update note). The form captures:
-- Category (billing / bug / feature request / other)
-- Subject
-- Body
-- Automatically attaches: tenant ID, user ID, browser/OS, current URL
-
-Submission creates a `support_requests` row and sends a confirmation email to the user.
+- Support staff access is gated by `users.is_support_agent = true` (distinct from `is_platform_admin`)
+- Support agents see: ticket queue, AI draft + confidence score, tenant account context (read-only), reply/escalate controls
+- Support agents cannot: access billing data, impersonate users, or use other admin functions
+- The queue view, ticket detail layout, and email notification behavior are fully specified in `support-system.md` lines 306–380
+- The `ai_support_sessions` table provides the full audit trail for AI interactions on each ticket
 
 ---
 

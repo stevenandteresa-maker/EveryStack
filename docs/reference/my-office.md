@@ -2,8 +2,10 @@
 
 > **Reference doc.** My Office widget grid, Quick Panel architecture, sidebar icon rail, personal tasks, personal calendar, personal events, mobile My Office.
 > See `GLOSSARY.md` for concept definitions, naming, and layout dimensions.
-> Cross-references: `data-model.md` (user_events, user_tasks schema), `communications.md` (Chat/DMs, Record Thread), `command-bar.md` (personal tasks via /todo), `mobile.md` (mobile navigation, bottom tabs)
+> Cross-references: `data-model.md` (user_events, user_tasks schema), `communications.md` (Chat/DMs, Record Thread), `command-bar.md` (personal tasks via /todo), `mobile.md` (mobile navigation, bottom tabs), `support-system.md` (Help Panel, sidebar Help button)
 > Last updated: 2026-02-28 — Expandable sidebar architecture. Notes deferred to post-MVP. Workspaces widget with Board container tiles. Quick Panel context-dependent behavior documented.
+>
+> Update: 2026-03-04 — Added Help button (❓) to sidebar icon rail above avatar. See `support-system.md` for full Help Panel spec.
 
 ## Section Index
 
@@ -99,6 +101,7 @@ The sidebar is **collapsed by default (48px icon rail)** and **expandable to ~28
 | 💬   | Chat / DMs Quick Panel (context-dependent)                                              | Count (unread messages)           |
 | 📅   | Calendar Quick Panel (context-dependent)                                                | Dot (upcoming events)             |
 | ⟷    | Expand/collapse toggle                                                                  | —                                 |
+| ❓   | Help Panel — opens the three-state Help Panel (Ask AI / Browse Help / Contact Support)  | Dot (unread support reply)        |
 | 👤   | Avatar / settings                                                                       | —                                 |
 
 **Expanded state (~280px):** Icon rail + content zone. Shows Quick Panel labels and the Workspace tree (Boards → Workspaces). Same content as mobile hamburger drawer.
@@ -355,7 +358,9 @@ Same structure as expanded desktop sidebar (~280px): Quick Panel labels (Tasks, 
 │ ☑   │  ☐ Update doc│  Tue 21      │  Mike   9:45 │
 │ 💬   │  ☐ Client... │  Wed 22 ████ │  Jess   Yest │
 │ 📅   │              │              │              │
-│      │     Customize your office →  │              │
+│ ⟷    │     Customize your office →  │              │
+│ ❓   │              │              │              │
+│ 👤   │              │              │              │
 └──────┴──────────────┴──────────────┴──────────────┘
 ```
 

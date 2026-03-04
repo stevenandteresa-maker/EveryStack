@@ -120,6 +120,13 @@
       "when": 1772580000000,
       "tag": "0016_platform_owner_console",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1772590000000,
+      "tag": "0017_support_system",
+      "breakpoints": true
     }
   ]
 }

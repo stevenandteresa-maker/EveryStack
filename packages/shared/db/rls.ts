@@ -106,7 +106,7 @@ export type TenantScopedTable = (typeof TENANT_SCOPED_TABLES)[number];
  * exclude these columns from the result set.
  */
 export const RLS_EXCLUDED_COLUMNS = {
-  users: ['is_platform_admin'],
+  users: ['is_platform_admin', 'is_support_agent'],
 } as const;
 
 /**

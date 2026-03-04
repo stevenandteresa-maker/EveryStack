@@ -230,3 +230,16 @@ export type { PlatformNotice, NewPlatformNotice } from './platform-notices';
 
 export { userDismissedNotices, userDismissedNoticesRelations } from './user-dismissed-notices';
 export type { UserDismissedNotice, NewUserDismissedNotice } from './user-dismissed-notices';
+
+// ---------------------------------------------------------------------------
+// Tier 15 — Support System
+// ---------------------------------------------------------------------------
+
+export { aiSupportSessions, aiSupportSessionsRelations } from './ai-support-sessions';
+export type { AiSupportSession, NewAiSupportSession } from './ai-support-sessions';
+
+export { featureRequests, featureRequestsRelations } from './feature-requests';
+export type { FeatureRequest, NewFeatureRequest } from './feature-requests';
+
+export { tenantEnterpriseConfig, tenantEnterpriseConfigRelations } from './tenant-enterprise-config';
+export type { TenantEnterpriseConfig, NewTenantEnterpriseConfig } from './tenant-enterprise-config';

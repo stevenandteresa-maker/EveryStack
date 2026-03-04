@@ -41,6 +41,10 @@ export const tenants = pgTable(
     planOverrideReason: text('plan_override_reason'),
     planOverrideExpiresAt: timestamp('plan_override_expires_at', { withTimezone: true }),
 
+    // Support System — plan-derived but manually overridable by platform admin
+    // Values: standard | priority | enterprise
+    supportTier: varchar('support_tier', { length: 20 }).default('standard').notNull(),
+
     // Platform Owner Console — internal & churn tracking
     isInternal: boolean('is_internal').default(false).notNull(),
     churnRiskFlag: varchar('churn_risk_flag', { length: 20 }),

@@ -22,6 +22,8 @@ export const users = pgTable(
     preferences: jsonb('preferences').$type<{ locale?: string; theme?: string }>().default({}).notNull(),
     // Platform Owner Console — never return in tenant-scoped queries (see RLS_EXCLUDED_COLUMNS)
     isPlatformAdmin: boolean('is_platform_admin').default(false).notNull(),
+    // Support System — never return in tenant-scoped queries (see RLS_EXCLUDED_COLUMNS)
+    isSupportAgent: boolean('is_support_agent').default(false).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },

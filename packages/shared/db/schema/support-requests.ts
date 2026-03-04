@@ -1,6 +1,7 @@
 import {
   index,
   pgTable,
+  smallint,
   text,
   timestamp,
   uuid,
@@ -20,6 +21,8 @@ import { users } from './users';
  * status values: open | in_progress | waiting | resolved | closed
  * priority values: low | normal | high | urgent
  * source values: in_app | email | manual
+ * resolved_by values: ai_auto | support_agent | platform_admin | user
+ * tier values: standard | priority | enterprise
  */
 export const supportRequests = pgTable(
   'support_requests',
@@ -36,6 +39,14 @@ export const supportRequests = pgTable(
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     resolutionNotes: text('resolution_notes'),
     source: varchar('source', { length: 20 }).default('in_app').notNull(),
+
+    // Support System — urgency, AI session, assignment, resolution tracking
+    urgencyScore: smallint('urgency_score').default(0).notNull(),
+    aiSessionId: uuid('ai_session_id'),
+    assignedTo: uuid('assigned_to').references(() => users.id),
+    resolvedBy: varchar('resolved_by', { length: 20 }),
+    tier: varchar('tier', { length: 20 }).default('standard').notNull(),
+
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },
@@ -54,6 +65,12 @@ export const supportRequestsRelations = relations(supportRequests, ({ one }) => 
   submitter: one(users, {
     fields: [supportRequests.submittedByUser],
     references: [users.id],
+    relationName: 'supportRequestSubmitter',
+  }),
+  assignee: one(users, {
+    fields: [supportRequests.assignedTo],
+    references: [users.id],
+    relationName: 'supportRequestAssignee',
   }),
 }));
 

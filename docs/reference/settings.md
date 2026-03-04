@@ -2,9 +2,10 @@
 
 > **Reconciliation: 2026-02-27** — Aligned with GLOSSARY.md (source of truth). Changes: (1) Replaced "portal designer" with "portal configuration panel" — MVP portals are Record View configurations with auth wrappers, not App Designer outputs. (2) Tagged "portal custom domain list" in Branding as post-MVP. (3) Tagged "CockroachDB region selection" in Advanced as post-MVP.
 > **Update: 2026-03-04** — Added Help & Support section (support request submission, request history, status page link). Cross-reference to platform-owner-console.md added.
+> **Update: 2026-03-04** — Help & Support section updated to note the sidebar Help button as primary entry point. Cross-reference to support-system.md added.
 
 > **Reference doc (Tier 3).** Workspace settings page layout, navigation, section taxonomy, setting ownership (who can change what), mobile behavior.
-> Cross-references: `CLAUDE.md` (workspace roles, permission model), `design-system.md` (progressive disclosure, responsive architecture), `permissions.md` (role-based access), `ai-metering.md` (AI credit visibility, plan limits), `communications.md` (notification preferences), `booking-scheduling.md` (working hours, default calendar), `compliance.md` (data privacy settings, GDPR), `command-bar.md` (`/settings` slash command), `my-office.md` (personal preferences vs workspace settings), `platform-owner-console.md` (support queue, admin reply flow)
+> Cross-references: `CLAUDE.md` (workspace roles, permission model), `design-system.md` (progressive disclosure, responsive architecture), `permissions.md` (role-based access), `ai-metering.md` (AI credit visibility, plan limits), `communications.md` (notification preferences), `booking-scheduling.md` (working hours, default calendar), `compliance.md` (data privacy settings, GDPR), `command-bar.md` (`/settings` slash command), `my-office.md` (personal preferences vs workspace settings), `platform-owner-console.md` (support queue, admin reply flow), `support-system.md` (Help Panel specification, AI support agent, escalation flow)
 > Last updated: 2026-02-27 — Glossary reconciliation (see note above). Prior: 2026-02-23 — Added accent color picker to Branding section; removed dark/light mode from personal preferences (no toggle — single fixed appearance). Prior: Initial specification from UX audit finding D5-3.
 
 ---
@@ -34,7 +35,7 @@ Sections are grouped by audience — settings a Manager touches monthly at top, 
 | **Integrations**    | Plug          | Manager+ (connect), Admin+ (disconnect) | Connected services overview (sync platforms, email, payments, storage, calendar). Quick status view — detailed config in Automation Builder's Integrations tab                                   |
 | **Branding**        | Palette       | Manager+                                | **Accent color picker** (8 curated colors — applies to header bar), workspace logo, default portal theme, email template branding (logo, colors, footer), portal custom domain list _(post-MVP)_ |
 | **Notifications**   | Bell          | All roles (personal)                    | Per-user notification preferences: in-app, email digest frequency, push notification categories, mute schedule. Personal setting — not workspace-wide.                                           |
-| **Help & Support**  | Question mark circle | All roles                          | Submit a support request (billing, bug, feature request, other). View history of submitted requests and admin replies. Link to status page (external).                                            |
+| **Help & Support**  | Question mark circle | All roles                          | Access the Help Panel features: submit a support request, view request history, browse help articles. The Help button in the sidebar (above avatar) is the primary entry point.                    |
 | **Data & Privacy**  | Shield        | Admin+                                  | Data retention policies, export workspace data, GDPR tools (PII registry link, right-to-erasure), audit log access, API key management                                                           |
 | **Advanced**        | Terminal      | Owner only                              | Danger zone: transfer ownership, delete workspace. Environment configuration (if applicable). CockroachDB region selection _(post-MVP — Enterprise)_                                             |
 
@@ -110,6 +111,8 @@ All settings changes write to `audit_log`: `action: 'settings.updated'`, `metada
 ---
 
 ## Help & Support
+
+> **Note:** The in-app Help Panel (accessible via the Help button in the sidebar) is the primary support entry point — it is always accessible and does not require navigating to Settings. The Help & Support section in Settings provides access to the same request submission form and request history, but the sidebar Help button is the canonical location. See `support-system.md` for the full Help Panel specification.
 
 Accessible by all roles. Personal scope — each user sees only their own requests.
 
