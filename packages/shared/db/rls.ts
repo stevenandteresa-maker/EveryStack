@@ -98,6 +98,18 @@ export const TENANT_SCOPED_TABLES = [
 export type TenantScopedTable = (typeof TENANT_SCOPED_TABLES)[number];
 
 /**
+ * Columns that must NEVER be returned in tenant-scoped queries.
+ * These contain platform-level administrative data that should not
+ * be visible to regular tenant users.
+ *
+ * When building select queries for user-facing surfaces, explicitly
+ * exclude these columns from the result set.
+ */
+export const RLS_EXCLUDED_COLUMNS = {
+  users: ['is_platform_admin'],
+} as const;
+
+/**
  * Sets the tenant context for the current transaction via PostgreSQL GUC.
  *
  * MUST be called at the start of every database transaction that touches

@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   jsonb,
   pgTable,
@@ -19,6 +20,8 @@ export const users = pgTable(
     name: varchar('name', { length: 255 }).notNull(),
     avatarUrl: varchar('avatar_url', { length: 2048 }),
     preferences: jsonb('preferences').$type<{ locale?: string; theme?: string }>().default({}).notNull(),
+    // Platform Owner Console — never return in tenant-scoped queries (see RLS_EXCLUDED_COLUMNS)
+    isPlatformAdmin: boolean('is_platform_admin').default(false).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
   },

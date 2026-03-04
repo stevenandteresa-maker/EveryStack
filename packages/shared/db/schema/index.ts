@@ -208,3 +208,25 @@ export type { FeatureSuggestion, NewFeatureSuggestion } from './feature-suggesti
 
 export { featureVotes, featureVotesRelations } from './feature-votes';
 export type { FeatureVote, NewFeatureVote } from './feature-votes';
+
+// ---------------------------------------------------------------------------
+// Tier 14 — Platform Owner Console
+// ---------------------------------------------------------------------------
+
+export { supportRequests, supportRequestsRelations } from './support-requests';
+export type { SupportRequest, NewSupportRequest } from './support-requests';
+
+export { supportRequestMessages, supportRequestMessagesRelations } from './support-request-messages';
+export type { SupportRequestMessage, NewSupportRequestMessage } from './support-request-messages';
+
+export { adminImpersonationSessions, adminImpersonationSessionsRelations } from './admin-impersonation-sessions';
+export type { AdminImpersonationSession, NewAdminImpersonationSession } from './admin-impersonation-sessions';
+
+export { tenantFeatureFlags, tenantFeatureFlagsRelations } from './tenant-feature-flags';
+export type { TenantFeatureFlag, NewTenantFeatureFlag } from './tenant-feature-flags';
+
+export { platformNotices, platformNoticesRelations } from './platform-notices';
+export type { PlatformNotice, NewPlatformNotice } from './platform-notices';
+
+export { userDismissedNotices, userDismissedNoticesRelations } from './user-dismissed-notices';
+export type { UserDismissedNotice, NewUserDismissedNotice } from './user-dismissed-notices';
