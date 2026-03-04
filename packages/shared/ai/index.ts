@@ -75,3 +75,10 @@ export {
   createDefaultToolRegistry,
   TOOL_NAMES,
 } from './tools/registry';
+
+// Metering — features, rates, cost calculator
+export type { AIFeature } from './metering/features';
+export { AI_FEATURES } from './metering/features';
+export type { ModelRate } from './metering/rates';
+export { AI_RATES, isKnownModel } from './metering/rates';
+export { calculateCost } from './metering/cost-calculator';
