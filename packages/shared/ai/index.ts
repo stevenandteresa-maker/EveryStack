@@ -96,3 +96,20 @@ export { AIService, FEATURE_TASK_MAP } from './service';
 // Streaming — stream adapter and BullMQ AI job types
 export type { StreamResult, AIJobPayload, AIJobResult } from './streaming';
 export { createAIStream } from './streaming';
+
+// Data contract — canonical JSONB ↔ AI translation
+export { canonicalToAIContext } from './data-contract';
+export { aiToCanonical } from './data-contract';
+export type {
+  AIDataContractFieldType,
+  AIFieldConfig,
+  TextFieldConfig,
+  NumberFieldConfig,
+  SelectOption,
+  SingleSelectFieldConfig,
+  CheckboxFieldConfig,
+  AIToCanonicalResult,
+  AIToCanonicalSuccess,
+  AIToCanonicalError,
+} from './data-contract';
+export { isAIToCanonicalSuccess, isAIToCanonicalError } from './data-contract';
