@@ -50,6 +50,12 @@ vi.mock('../../../../packages/shared/db/rls', () => ({
 
 vi.mock('@everystack/shared/logging', () => ({
   webLogger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -59,7 +65,7 @@ vi.mock('@sentry/nextjs', () => ({
 
 import { createMockUUIDs } from '../../../../packages/shared/testing/mock-uuid';
 
-const MOCK_UUIDS = createMockUUIDs(4, 100);
+const MOCK_UUIDS = createMockUUIDs(6, 100);
 let uuidCallIndex = 0;
 
 vi.mock('../../../../packages/shared/db/uuid', () => ({
@@ -133,7 +139,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
     process.env.CLERK_WEBHOOK_SECRET = WEBHOOK_SECRET;
   });
 
-  it('creates all 5 expected rows in a single transaction with valid signature', async () => {
+  it('creates all 7 expected rows in a single transaction with valid signature', async () => {
     const event = makeClerkEvent();
     const body = JSON.stringify(event);
     const headers = generateSvixHeaders(body);
@@ -143,8 +149,8 @@ describe('Webhook integration: user.created with real Svix verification', { time
 
     expect(response.status).toBe(201);
 
-    // Five inserts in the transaction
-    expect(insertedRows).toHaveLength(5);
+    // Seven inserts in the transaction
+    expect(insertedRows).toHaveLength(7);
 
     // 1. User
     expect(insertedRows[0]?.values).toMatchObject({
@@ -185,6 +191,22 @@ describe('Webhook integration: user.created with real Svix verification', { time
       workspaceId: MOCK_UUIDS[2],
       role: 'manager',
     });
+
+    // 6. Personal tenant
+    expect(insertedRows[5]?.values).toMatchObject({
+      id: MOCK_UUIDS[3],
+      name: "New User's Personal Space",
+      plan: 'freelancer',
+      settings: { personal: true, auto_provisioned: true },
+    });
+
+    // 7. Personal tenant membership (owner, active)
+    expect(insertedRows[6]?.values).toMatchObject({
+      tenantId: MOCK_UUIDS[3],
+      userId: MOCK_UUIDS[0],
+      role: 'owner',
+      status: 'active',
+    });
   });
 
   it('returns 400 with invalid signature (real Svix rejects)', async () => {
@@ -220,9 +242,15 @@ describe('Webhook integration: user.created with real Svix verification', { time
     const { setTenantContext } = await import(
       '../../../../packages/shared/db/rls'
     );
+    // Called for primary tenant and personal tenant
+    expect(setTenantContext).toHaveBeenCalledTimes(2);
     expect(setTenantContext).toHaveBeenCalledWith(
       expect.anything(), // transaction client
-      MOCK_UUIDS[1],    // tenantId
+      MOCK_UUIDS[1],    // primary tenantId
+    );
+    expect(setTenantContext).toHaveBeenCalledWith(
+      expect.anything(), // transaction client
+      MOCK_UUIDS[3],    // personalTenantId
     );
   });
 });

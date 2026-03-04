@@ -23,6 +23,8 @@ export const tenants = pgTable(
         branding_accent_color?: string;
         logo_url?: string;
         email_branding?: Record<string, unknown>;
+        personal?: boolean;
+        auto_provisioned?: boolean;
       }>()
       .default({})
       .notNull(),
