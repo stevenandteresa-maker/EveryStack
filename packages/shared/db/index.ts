@@ -31,6 +31,10 @@ export {
   crossLinksRelations,
   crossLinkIndex,
   crossLinkIndexRelations,
+  threads,
+  threadsRelations,
+  files,
+  filesRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -46,4 +50,6 @@ export type {
   DbRecord, NewDbRecord,
   CrossLink, NewCrossLink,
   CrossLinkIndex, NewCrossLinkIndex,
+  Thread, NewThread,
+  FileRecord, NewFileRecord,
 } from './schema';

@@ -14,7 +14,11 @@
   },
   "dependencies": {
     "@everystack/shared": "workspace:*",
-    "@sentry/node": "^10.41.0"
+    "@sentry/node": "^10.41.0",
+    "blurhash": "^2.0.5",
+    "bullmq": "^5.70.1",
+    "ioredis": "^5.10.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

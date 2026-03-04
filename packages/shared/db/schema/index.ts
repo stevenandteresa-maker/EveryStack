@@ -232,7 +232,14 @@ export { userDismissedNotices, userDismissedNoticesRelations } from './user-dism
 export type { UserDismissedNotice, NewUserDismissedNotice } from './user-dismissed-notices';
 
 // ---------------------------------------------------------------------------
-// Tier 15 — Support System
+// Tier 15 — Files & Storage
+// ---------------------------------------------------------------------------
+
+export { files, filesRelations } from './files';
+export type { FileRecord, NewFileRecord } from './files';
+
+// ---------------------------------------------------------------------------
+// Tier 16 — Support System
 // ---------------------------------------------------------------------------
 
 export { aiSupportSessions, aiSupportSessionsRelations } from './ai-support-sessions';

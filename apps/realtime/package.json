@@ -13,9 +13,13 @@
     "test:coverage-check": "echo 'No coverage thresholds yet'"
   },
   "dependencies": {
-    "@everystack/shared": "workspace:*"
+    "@everystack/shared": "workspace:*",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "ioredis": "^5.10.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@clerk/backend": "^3.0.1",
     "@types/node": "^22.15.3",
     "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.19.4",
