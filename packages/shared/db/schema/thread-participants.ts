@@ -1,12 +1,14 @@
 import {
   boolean,
+  check,
   index,
   pgTable,
   timestamp,
   uniqueIndex,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
 import { tenants } from './tenants';
@@ -24,8 +26,9 @@ export const threadParticipants = pgTable(
       .notNull()
       .references(() => threads.id, { onDelete: 'cascade' }),
     userId: uuid('user_id')
-      .notNull()
       .references(() => users.id),
+    participantType: varchar('participant_type', { length: 50 }).default('user').notNull(),
+    externalContactId: uuid('external_contact_id'),
     joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
     lastReadAt: timestamp('last_read_at', { withTimezone: true }),
     muted: boolean('muted').default(false).notNull(),
@@ -33,6 +36,10 @@ export const threadParticipants = pgTable(
   (table) => [
     uniqueIndex('thread_participants_thread_user_idx').on(table.threadId, table.userId),
     index('thread_participants_user_idx').on(table.userId),
+    check(
+      'thread_participants_identity_check',
+      sql`${table.userId} IS NOT NULL OR ${table.externalContactId} IS NOT NULL`,
+    ),
   ],
 );
 

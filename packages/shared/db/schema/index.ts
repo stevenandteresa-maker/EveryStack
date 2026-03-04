@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Schema barrel file — all 50 MVP Drizzle table definitions
+// Schema barrel file — all 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
 // Usage: import { users, tenants, workspaces } from '@everystack/shared/db/schema';
 // ---------------------------------------------------------------------------
 
@@ -208,3 +208,38 @@ export type { FeatureSuggestion, NewFeatureSuggestion } from './feature-suggesti
 
 export { featureVotes, featureVotesRelations } from './feature-votes';
 export type { FeatureVote, NewFeatureVote } from './feature-votes';
+
+// ---------------------------------------------------------------------------
+// Tier 14 — Platform Owner Console
+// ---------------------------------------------------------------------------
+
+export { supportRequests, supportRequestsRelations } from './support-requests';
+export type { SupportRequest, NewSupportRequest } from './support-requests';
+
+export { supportRequestMessages, supportRequestMessagesRelations } from './support-request-messages';
+export type { SupportRequestMessage, NewSupportRequestMessage } from './support-request-messages';
+
+export { adminImpersonationSessions, adminImpersonationSessionsRelations } from './admin-impersonation-sessions';
+export type { AdminImpersonationSession, NewAdminImpersonationSession } from './admin-impersonation-sessions';
+
+export { tenantFeatureFlags, tenantFeatureFlagsRelations } from './tenant-feature-flags';
+export type { TenantFeatureFlag, NewTenantFeatureFlag } from './tenant-feature-flags';
+
+export { platformNotices, platformNoticesRelations } from './platform-notices';
+export type { PlatformNotice, NewPlatformNotice } from './platform-notices';
+
+export { userDismissedNotices, userDismissedNoticesRelations } from './user-dismissed-notices';
+export type { UserDismissedNotice, NewUserDismissedNotice } from './user-dismissed-notices';
+
+// ---------------------------------------------------------------------------
+// Tier 15 — Support System
+// ---------------------------------------------------------------------------
+
+export { aiSupportSessions, aiSupportSessionsRelations } from './ai-support-sessions';
+export type { AiSupportSession, NewAiSupportSession } from './ai-support-sessions';
+
+export { featureRequests, featureRequestsRelations } from './feature-requests';
+export type { FeatureRequest, NewFeatureRequest } from './feature-requests';
+
+export { tenantEnterpriseConfig, tenantEnterpriseConfigRelations } from './tenant-enterprise-config';
+export type { TenantEnterpriseConfig, NewTenantEnterpriseConfig } from './tenant-enterprise-config';

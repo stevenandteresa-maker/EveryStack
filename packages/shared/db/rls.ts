@@ -15,10 +15,20 @@ import { sql } from 'drizzle-orm';
 
 /**
  * All tables with a direct `tenant_id` column that have RLS policies.
- * These are the 48 tenant-scoped tables in the MVP schema.
+ * These are the 47 tenant-scoped tables in the MVP schema.
  *
- * Tables WITHOUT RLS (no tenant_id): users, tenants
+ * Tables WITHOUT RLS (no tenant_id): users, tenants, platform_notices,
+ *   user_dismissed_notices, support_request_messages
  * Tables protected by parent joins (no direct RLS): feature_votes
+ *
+ * Admin-only tables (have tenant_id but intentionally NO RLS — only
+ * accessed via /admin routes, never from tenant-scoped code paths):
+ *   - support_requests (nullable tenant_id, cross-tenant admin access)
+ *   - admin_impersonation_sessions (admin "View as Tenant" sessions)
+ *   - ai_support_sessions (AI support audit trail, admin-only)
+ *   - tenant_feature_flags (per-tenant overrides, admin-managed)
+ *   - tenant_enterprise_config (enterprise SLA config, admin-managed)
+ *   - feature_requests (aggregated feature request log, admin-only)
  */
 export const TENANT_SCOPED_TABLES = [
   // Tier 1 — Foundation
@@ -96,6 +106,18 @@ export const TENANT_SCOPED_TABLES = [
 ] as const;
 
 export type TenantScopedTable = (typeof TENANT_SCOPED_TABLES)[number];
+
+/**
+ * Columns that must NEVER be returned in tenant-scoped queries.
+ * These contain platform-level administrative data that should not
+ * be visible to regular tenant users.
+ *
+ * When building select queries for user-facing surfaces, explicitly
+ * exclude these columns from the result set.
+ */
+export const RLS_EXCLUDED_COLUMNS = {
+  users: ['is_platform_admin', 'is_support_agent'],
+} as const;
 
 /**
  * Sets the tenant context for the current transaction via PostgreSQL GUC.

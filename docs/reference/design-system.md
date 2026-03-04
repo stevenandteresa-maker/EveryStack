@@ -13,11 +13,13 @@
 > - Updated Foundations dimensions: removed legacy 360px right panel, added Record View overlay (60%) and Quick Panel (25%, between sidebar and main content) dimensions
 > - "right panel chat" → **Record Thread panel** in Record View responsive table
 > - Updated cross-references
+>
+> Update: 2026-03-04 — Added Help button to sidebar icon rail, positioned above avatar. Cross-reference to `support-system.md` added.
 
 > **Reference doc.** Color model, typography, spacing, component specs, application shell, responsive architecture, progressive disclosure, creation flow patterns.
 > See `GLOSSARY.md` for concept definitions and MVP scope.
-> Cross-references: `tables-and-views.md` (Grid view, Card view, Record View), `communications.md` (TipTap env 1 chat editor), `command-bar.md` (Command Bar compact/full specs), `mobile.md` (device tiers, ergonomic constraints, primary surfaces)
-> Last updated: 2026-02-27
+> Cross-references: `tables-and-views.md` (Grid view, Card view, Record View), `communications.md` (TipTap env 1 chat editor), `command-bar.md` (Command Bar compact/full specs), `mobile.md` (device tiers, ergonomic constraints, primary surfaces), `support-system.md` (Help Panel, sidebar Help button)
+> Last updated: 2026-03-04
 
 ## Section Index
 
@@ -47,7 +49,7 @@
 - **Fonts:** DM Sans (UI/headings), JetBrains Mono (code/technical)
 - **Base unit:** 4px — all spacing multiples of 4
 - **Border radius:** 8px standard, 12px large cards, 4px badges
-- **Sidebar:** ~48px icon rail (collapsed) / ~280px two-zone expanded (icon rail + content zone). Expand toggle above avatar. Expanded state shows Quick Panel labels + Workspace tree (Boards → Workspaces).
+- **Sidebar:** ~48px icon rail (collapsed) / ~280px two-zone expanded (icon rail + content zone). Icon rail order (top to bottom): 🏠 My Office, ☑ Tasks, 💬 Chat, 📅 Calendar, ⟷ Expand/collapse toggle, ❓ Help, 👤 Avatar. Expanded state shows Quick Panel labels + Workspace tree (Boards → Workspaces). See `support-system.md` for Help Panel spec.
 - **Record View overlay:** 60% of main panel width (from right). With Record Thread: 55% + 25%.
 - **Quick Panel (between sidebar and main content):** 25% of main panel width (push-style, workspace context). Sidebar remains collapsed at 48px; panel pushes main content right to 75%. In My Office context: 2/3 main panel rearrangement.
 - **Header:** 52px height, workspace accent color background, white text/icons
@@ -209,12 +211,26 @@ All primitives are **shadcn/ui**, customized via Tailwind + CSS custom propertie
 
 | Zone                                  | Desktop (≥1440)                                                                                         | Tablet (≥768)                                | Mobile (<768)                                                                                       |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Left Sidebar                          | ~48px icon rail, expands to ~280px via toggle button (above avatar). Always dark.                       | ~48px icon rail, expand on tap               | Hidden, hamburger drawer (~280px, dark)                                                             |
+| Left Sidebar                          | ~48px icon rail (🏠 ☑ 💬 📅 ⟷ ❓ 👤), expands to ~280px via toggle. Always dark. See icon rail table below. | ~48px icon rail, expand on tap               | Hidden, hamburger drawer (~280px, dark)                                                             |
 | Header                                | 52px, accent bg, breadcrumbs + Command Bar + avatar                                                     | Condensed breadcrumbs + Command Bar + avatar | Page title + hamburger + search icon                                                                |
 | Main Panel                            | White, fills remaining space                                                                            | Fills remaining space                        | Full width                                                                                          |
 | Record View / Record Thread (overlay) | Record View 60% from right. +Record Thread = 55% + 25%. Main dimmed behind.                             | Same proportions, overlay with scrim         | Full-screen sheet. Record Thread via bottom tabs.                                                   |
 | Quick Panels                          | Workspace context: 25% side panel, main pushes to 75%. My Office context: 2/3 main panel rearrangement. | Same                                         | Bottom tab bar (Chat, Tasks, Calendar)                                                              |
 | Bottom Nav                            | N/A                                                                                                     | N/A                                          | 56px fixed — Workspace: Home, Chat, Calendar, Workspaces, More; My Office: Tasks, Chat, Calendar, + |
+
+### Sidebar Icon Rail
+
+Icons ordered top to bottom. See `my-office.md` for Quick Panel behavior, `support-system.md` for Help Panel spec.
+
+| Icon | Action                                                                                  | Badge                             |
+| ---- | --------------------------------------------------------------------------------------- | --------------------------------- |
+| 🏠   | My Office — navigates to My Office (or expands sidebar if already there)                | —                                 |
+| ☑    | Tasks Quick Panel                                                                       | Count (new assignments + overdue) |
+| 💬   | Chat / DMs Quick Panel                                                                  | Count (unread messages)           |
+| 📅   | Calendar Quick Panel                                                                    | Dot (upcoming events)             |
+| ⟷    | Expand/collapse toggle — toggles sidebar between 48px and ~280px                        | —                                 |
+| ❓   | Help Panel — opens the three-state Help Panel (Ask AI / Browse Help / Contact Support)  | Dot (unread support reply)        |
+| 👤   | Avatar / settings                                                                       | —                                 |
 
 ---
 

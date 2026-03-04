@@ -213,6 +213,7 @@ Clerk handles all platform user authentication. EveryStack does NOT implement cu
 - Server Actions for mutations, `data/` functions for queries
 - Use `@` path alias for imports within `apps/web/src/`
 - Use `@everystack/db`, `@everystack/sync`, etc. for shared package imports
+- Thread table column types: `author_type`, `message_type`, and `scope_type` on thread tables are VARCHAR — never convert to Postgres ENUM. Any code that branches on these values must include a default/fallback branch. TypeScript types for these fields should use `string` with inline comments listing known values, not exhaustive union types. This ensures new values (e.g. `external_inbound`, `activity_log`) can be added post-MVP without requiring type or migration changes.
 
 ### Component Conventions
 

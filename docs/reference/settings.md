@@ -1,9 +1,11 @@
 # EveryStack — Settings Architecture
 
 > **Reconciliation: 2026-02-27** — Aligned with GLOSSARY.md (source of truth). Changes: (1) Replaced "portal designer" with "portal configuration panel" — MVP portals are Record View configurations with auth wrappers, not App Designer outputs. (2) Tagged "portal custom domain list" in Branding as post-MVP. (3) Tagged "CockroachDB region selection" in Advanced as post-MVP.
+> **Update: 2026-03-04** — Added Help & Support section (support request submission, request history, status page link). Cross-reference to platform-owner-console.md added.
+> **Update: 2026-03-04** — Help & Support section updated to note the sidebar Help button as primary entry point. Cross-reference to support-system.md added.
 
 > **Reference doc (Tier 3).** Workspace settings page layout, navigation, section taxonomy, setting ownership (who can change what), mobile behavior.
-> Cross-references: `CLAUDE.md` (workspace roles, permission model), `design-system.md` (progressive disclosure, responsive architecture), `permissions.md` (role-based access), `ai-metering.md` (AI credit visibility, plan limits), `communications.md` (notification preferences), `booking-scheduling.md` (working hours, default calendar), `compliance.md` (data privacy settings, GDPR), `command-bar.md` (`/settings` slash command), `my-office.md` (personal preferences vs workspace settings)
+> Cross-references: `CLAUDE.md` (workspace roles, permission model), `design-system.md` (progressive disclosure, responsive architecture), `permissions.md` (role-based access), `ai-metering.md` (AI credit visibility, plan limits), `communications.md` (notification preferences), `booking-scheduling.md` (working hours, default calendar), `compliance.md` (data privacy settings, GDPR), `command-bar.md` (`/settings` slash command), `my-office.md` (personal preferences vs workspace settings), `platform-owner-console.md` (support queue, admin reply flow), `support-system.md` (Help Panel specification, AI support agent, escalation flow)
 > Last updated: 2026-02-27 — Glossary reconciliation (see note above). Prior: 2026-02-23 — Added accent color picker to Branding section; removed dark/light mode from personal preferences (no toggle — single fixed appearance). Prior: Initial specification from UX audit finding D5-3.
 
 ---
@@ -33,6 +35,7 @@ Sections are grouped by audience — settings a Manager touches monthly at top, 
 | **Integrations**    | Plug          | Manager+ (connect), Admin+ (disconnect) | Connected services overview (sync platforms, email, payments, storage, calendar). Quick status view — detailed config in Automation Builder's Integrations tab                                   |
 | **Branding**        | Palette       | Manager+                                | **Accent color picker** (8 curated colors — applies to header bar), workspace logo, default portal theme, email template branding (logo, colors, footer), portal custom domain list _(post-MVP)_ |
 | **Notifications**   | Bell          | All roles (personal)                    | Per-user notification preferences: in-app, email digest frequency, push notification categories, mute schedule. Personal setting — not workspace-wide.                                           |
+| **Help & Support**  | Question mark circle | All roles                          | Access the Help Panel features: submit a support request, view request history, browse help articles. The Help button in the sidebar (above avatar) is the primary entry point.                    |
 | **Data & Privacy**  | Shield        | Admin+                                  | Data retention policies, export workspace data, GDPR tools (PII registry link, right-to-erasure), audit log access, API key management                                                           |
 | **Advanced**        | Terminal      | Owner only                              | Danger zone: transfer ownership, delete workspace. Environment configuration (if applicable). CockroachDB region selection _(post-MVP — Enterprise)_                                             |
 
@@ -47,7 +50,7 @@ Every section follows the same layout:
 
 ### Progressive Disclosure in Settings
 
-- **Level 1:** General, Members & Roles, Notifications. These are the sections most users ever touch.
+- **Level 1:** General, Members & Roles, Notifications, Help & Support. These are the sections most users ever touch.
 - **Level 2:** Billing, AI & Credits, Integrations, Branding. Manager/Admin territory.
 - **Level 3:** Data & Privacy, Advanced. Rare, high-impact settings.
 
@@ -60,6 +63,8 @@ The sidebar shows all sections (no hiding), but sections the user can't access d
 Settings that affect the entire workspace (General, Members, Billing, Branding, Data) live in the workspace Settings page. Settings that affect only the current user (Notifications, display preferences) could live either in Settings or in the user's profile menu.
 
 **Decision:** Notifications live in Settings (under the user's personal section) because they're workspace-scoped (different notification preferences per workspace). Display preferences (language, date format override) live in the user profile menu (top-right avatar → Preferences) because they're global across all workspaces. Note: there is no dark/light mode toggle — the platform has a single fixed appearance (see `design-system.md > Color Model`).
+
+Help & Support is personal — each user's submitted requests are scoped to them, not the workspace.
 
 ---
 
@@ -76,6 +81,7 @@ Settings are stored in two locations:
 | Billing & Plan                                       | `tenants.plan` + Stripe metadata                  | `tenants`                       |
 | AI & Credits                                         | `ai_usage_log` aggregates + `tenants.plan` limits | Multiple                        |
 | Member management                                    | `workspace_memberships`                           | `workspace_memberships`         |
+| Support requests                                     | Per-user, per-tenant                              | `support_requests`, `support_request_messages` |
 
 **Server Actions:** Each settings section has a dedicated Server Action (e.g., `updateWorkspaceGeneral`, `updateBranding`, `updateNotificationPreferences`). Server Actions validate input, check role permissions, write to DB, and publish a real-time event (`workspace.settings_updated`) so other connected admins see changes immediately.
 
@@ -101,6 +107,47 @@ When a user navigates to a settings section that requires a higher plan tier (e.
 ### Audit Logging
 
 All settings changes write to `audit_log`: `action: 'settings.updated'`, `metadata: { section, field, oldValue, newValue }`. Workspace name changes, role changes, and member additions/removals are always logged. Notification preference changes are NOT logged (personal, high-frequency, low-impact).
+
+---
+
+## Help & Support
+
+> **Note:** The in-app Help Panel (accessible via the Help button in the sidebar) is the primary support entry point — it is always accessible and does not require navigating to Settings. The Help & Support section in Settings provides access to the same request submission form and request history, but the sidebar Help button is the canonical location. See `support-system.md` for the full Help Panel specification.
+
+Accessible by all roles. Personal scope — each user sees only their own requests.
+
+### Submit a Request
+
+Form fields:
+
+- **Category** — Dropdown: Billing / Bug / Feature Request / Account / Other
+- **Subject** — Text input, max 255 characters
+- **Body** — Textarea, required
+
+**On submit:** Creates a `support_requests` row, sends confirmation email to user via Resend, shows in-app confirmation toast.
+
+### My Requests
+
+List of submitted requests, newest first. Each row:
+
+| Column   | Value                                              |
+| -------- | -------------------------------------------------- |
+| Subject  | Request subject line                               |
+| Category | Billing / Bug / Feature Request / Account / Other  |
+| Status   | Open / In Progress / Waiting / Resolved            |
+| Created  | Date submitted                                     |
+
+Click a row to open thread view showing the full message exchange with platform admin replies. See `platform-owner-console.md` § Support Queue for the admin-side queue and reply flow.
+
+### Status Page Link
+
+External link to platform status page. URL configured via `NEXT_PUBLIC_STATUS_PAGE_URL` environment variable. Hidden entirely if the env var is not set.
+
+### Behavior Notes
+
+- The form auto-attaches `tenant_id`, `user_id`, `current_url`, and `user_agent` from request context — never shown to the user but available to the platform admin.
+- **Notification:** User receives an email when a platform admin replies, using the existing Resend email pipeline.
+- **No delete/withdraw** — once submitted, requests are permanent (they are part of the support record).
 
 ---
 

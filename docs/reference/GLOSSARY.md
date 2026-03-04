@@ -95,7 +95,7 @@ The platform-level tools (Chat/DMs, Tasks, Calendar) accessible via sidebar icon
 
 A persistent left-edge navigation column. **Collapsed by default (48px icon rail)**, expandable to **~280px** via a dedicated toggle button (above avatar).
 
-**Collapsed state (48px):** Icons only — My Office (🏠), Chat (💬), Tasks (✅), Calendar (📅), expand toggle (⟷), avatar (👤).
+**Collapsed state (48px):** Icons only — My Office (🏠), Tasks (✅), Chat (💬), Calendar (📅), expand toggle (⟷), Help (❓), avatar (👤).
 
 **Expanded state (~280px):** Icon rail + content zone. Shows Quick Panel labels and the Workspace tree (Boards → Workspaces).
 
@@ -108,7 +108,41 @@ A persistent left-edge navigation column. **Collapsed by default (48px icon rail
 - On My Office: rearranges widget grid (selected widget to 2/3, others stack in 1/3).
 - In a workspace: opens 25% side panel to the right of the sidebar, pushing main content right.
 
+**Help icon (❓, above expand toggle):** Opens the Help Panel — a slide-out panel with three tabs: Ask AI (post-MVP), Browse Help, and Contact Support. Present on every page. See: Help Panel.
+
 **Table View navigation:** NOT in the sidebar. Table views are accessed from the table's own Grid toolbar. The sidebar handles cross-workspace navigation + personal productivity; the table toolbar handles workspace-internal navigation.
+
+### Help Panel
+
+A slide-out panel accessible via the Help icon in the sidebar icon rail. Three tabs:
+
+- **Tab 1 — Ask AI:** AI-first support chat that rephrases-and-confirms before answering. Post-MVP (requires AI agent runtime). MVP interim: simplified smart triage form with category-based follow-up questions.
+- **Tab 2 — Browse Help:** Links to documentation, getting started guides, keyboard shortcuts. MVP: static link list. Post-MVP: embedded knowledge base.
+- **Tab 3 — Contact Support:** Submit a support request (creates a `support_requests` row) and view history of prior requests. MVP.
+
+**What it is:** The user-facing entry point for all help and support.
+**What it is NOT:** A Quick Panel. The Help Panel is not a productivity tool — it does not rearrange the My Office widget grid or open a side panel in workspace context. It is always a slide-out overlay. See: `support-system.md` for full specification.
+
+### Platform Owner Console
+
+The operator-facing tooling for managing the EveryStack business. Not a tenant-facing feature. Two layers:
+
+- **`/admin` route:** System-level operator ops (tenant management, billing actions, impersonation, feature flags, support triage, platform health). Always available — bypasses RLS, reads directly from DB and Stripe. Gated by `users.is_platform_admin = true`. Scope: Post-MVP — Platform Operations.
+- **Platform Workspace:** A real EveryStack workspace (`tenants.is_internal = true`) used to operate EveryStack as a business using EveryStack itself. Dogfooding layer. Created manually once MVP — Core UX is complete.
+
+See: `platform-owner-console.md` for full specification.
+
+### Support Agent
+
+A platform user with `users.is_support_agent = true`. Support agents have scoped access to `/admin/support` (ticket queue, AI drafts, tenant context) but cannot access billing data, impersonate users, or use other admin functions. Distinct from `is_platform_admin`. See: `support-system.md`.
+
+### Support Tier
+
+A per-tenant setting (`tenants.support_tier`) that determines support routing and response expectations. Three values:
+
+- **standard:** AI-first triage, human escalation via urgency signals (default for Freelancer/Starter/Professional plans)
+- **priority:** Faster human response, priority queue placement (Business plan)
+- **enterprise:** Contract-defined SLA, dedicated contact, on-call support (Enterprise plan, negotiated per contract)
 
 ---
 
