@@ -88,3 +88,7 @@ export type { UsageLogEntry } from './metering/usage-logger';
 export { logAIUsage } from './metering/usage-logger';
 export type { BudgetStatus, AlertAction } from './metering/credit-ledger';
 export { checkBudget, deductCredits, checkAlertThresholds } from './metering/credit-ledger';
+
+// AIService — single entry point for all AI calls
+export type { AIServiceRequest, AIServiceResponse, AIServiceContext } from './service';
+export { AIService, FEATURE_TASK_MAP } from './service';
