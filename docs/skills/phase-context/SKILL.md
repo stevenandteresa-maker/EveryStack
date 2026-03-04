@@ -7,8 +7,8 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 **Last updated:** 2026-03-04
 **Branch:** `main`
-**Latest tag:** `v0.1.6-phase-1g`
-**Total commits:** 30 (22 prior + 8 Phase 1G)
+**Latest tag:** `v0.1.7-phase-1h`
+**Total commits:** 42 (30 prior + 12 Phase 1H)
 
 ---
 
@@ -116,6 +116,9 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 - `@everystack/shared/redis` — createRedisClient, getRedisConfig
 - `@everystack/shared/queue` — QUEUE_NAMES, BaseJobData, job data types, QueueJobDataMap
 - `@everystack/shared/storage` — StorageClient, R2StorageClient, keys, MIME, magic bytes, limits, sanitize, serve, audit
+
+**Shared package imports added in 1H:**
+- `@everystack/shared/ai` — AIService, AnthropicAdapter, SelfHostedAdapter, PromptRegistry, ToolRegistry, AI_FEATURES, AI_RATES, calculateCost, logAIUsage, checkBudget, deductCredits, canonicalToAIContext, aiToCanonical, createAIStream, provider errors, all types
 
 **Patterns established:** Vitest configs (4), Docker test services, 19 factories with auto-parent creation, tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook.
 
@@ -240,6 +243,76 @@ Real-time server, background worker, file storage/upload pipeline.
 
 **Patterns established:** `BaseProcessor` abstract class for all worker jobs. `createEventPublisher()` for all real-time events. `StorageClient` interface for provider-agnostic storage. Tenant-scoped storage keys (`t/{tenantId}/...`). Magic byte verification on upload complete. ClamAV quarantine flow with audit trail. `setupGracefulShutdown()` for ordered cleanup. 6 BullMQ queues with typed job data. `useRealtimeConnection()` React hook for Socket.io lifecycle.
 
+### Phase 1H — AI Service Layer (Complete)
+
+Provider-agnostic AI abstraction. Feature code uses capability tiers (`fast`/`standard`/`advanced`), never providers or models. `@anthropic-ai/sdk` confined to a single adapter file.
+
+**Core Types & Config (`packages/shared/ai/`):**
+- `types.ts` — `CapabilityTier`, `ProviderId`, `AIMessage`, `CompiledAIRequest`, `TokenUsage`, `CreditCost`, `AIResponse`, `AIStreamChunk`, `ToolDefinition`, `AIToolCall`, `AgentConfig`, `EmbeddingProvider`
+- `config/routing.ts` — `CAPABILITY_ROUTING`, `FEATURE_ROUTING`, `FALLBACK_CHAINS`, `resolveRoute()`, `resolveRouteByTier()`, `getFallbackChain()`. Maps capability tiers and AI features to provider/model pairs
+- `index.ts` — Barrel export (all types, classes, and functions re-exported via `@everystack/shared/ai`)
+
+**Provider Adapters (`packages/shared/ai/providers/`):**
+- `adapter.ts` — `AIProviderAdapter` interface: `complete()`, `stream()`, `countTokens()`, `getCapabilities()`
+- `anthropic.ts` — `AnthropicAdapter`: wraps `@anthropic-ai/sdk` (the ONLY file that imports it). Supports tool use, structured output, token counting, streaming
+- `self-hosted.ts` — `SelfHostedAdapter`: skeleton for OpenAI-compatible self-hosted models (Post-MVP)
+- `errors.ts` — `AIProviderError`, `AIProviderAuthError`, `AIProviderRateLimitError`, `AIProviderTimeoutError`
+
+**Prompt System (`packages/shared/ai/prompts/`):**
+- `registry.ts` — `PromptRegistry`: stores versioned `PromptTemplate` objects with monotonically increasing versions. `compile()` resolves tier → provider/model → compiler
+- `compiler.ts` — `AnthropicPromptCompiler` (XML tags + cache_control), `BasicPromptCompiler` (plain text), `compilerForProvider()` factory
+- `templates/` — Directory for versioned prompt template files (empty, ready for feature prompts)
+
+**Tool System (`packages/shared/ai/tools/`):**
+- `registry.ts` — `ToolRegistry` with 8 tool stubs in `TOOL_NAMES`: `search_records`, `get_record`, `update_record`, `create_record`, `get_field_options`, `get_linked_records`, `summarize_records`, `suggest_values`. `createDefaultToolRegistry()` factory
+
+**Metering (`packages/shared/ai/metering/`):**
+- `features.ts` — `AI_FEATURES` enum: 13 features (natural_language_search, smart_fill, record_summarization, document_ai_draft, field_suggestions, link_suggestions, automation_builder, support_chatbot, smart_categorize, data_validation, anomaly_detection, template_generation, bulk_operations)
+- `rates.ts` — `AI_RATES`: per-model token pricing (input/output per 1M tokens), `isKnownModel()`
+- `cost-calculator.ts` — `calculateCost()`: tokens × rate → credit cost
+- `usage-logger.ts` — `logAIUsage()`: writes to `ai_usage_log` table
+- `credit-ledger.ts` — `checkBudget()`, `deductCredits()`, `checkAlertThresholds()`: budget enforcement with 4 alert tiers (50%/75%/90%/100%)
+
+**AIService (`packages/shared/ai/service.ts`):**
+- `AIService` singleton: 6-step flow — budget check → route resolution → prompt compile → provider execute → usage log → credit deduct
+- `FEATURE_TASK_MAP`: maps AI features to task types for routing
+- `AIServiceRequest`/`AIServiceResponse`/`AIServiceContext` types
+
+**Streaming (`packages/shared/ai/streaming/`):**
+- `stream-adapter.ts` — `createAIStream()`: wraps provider streaming into Vercel AI SDK `createDataStreamResponse` format
+- `ai-job-types.ts` — `AIJobPayload`/`AIJobResult` types for BullMQ async AI jobs
+- `index.ts` — Public exports
+
+**Data Contract (`packages/shared/ai/data-contract/`):**
+- `canonical-to-ai.ts` — `canonicalToAIContext()`: translates canonical JSONB records into AI-friendly context with field metadata
+- `ai-to-canonical.ts` — `aiToCanonical()`: validates and converts AI output back to canonical JSONB format. Returns `AIToCanonicalSuccess | AIToCanonicalError`
+- `types.ts` — `AIDataContractFieldType` union, per-field-type configs (`TextFieldConfig`, `NumberFieldConfig`, `SingleSelectFieldConfig`, `CheckboxFieldConfig`)
+- `index.ts` — Public exports with type guards (`isAIToCanonicalSuccess`, `isAIToCanonicalError`)
+
+**SSE Route (`apps/web/src/app/api/ai/chat/`):**
+- `route.ts` — POST handler: Clerk auth, Zod validation, AIService integration, SSE streaming response
+
+**Tests (Phase 1H — 14 test files, 320+ tests):**
+- `packages/shared/ai/__tests__/types.test.ts` (16 tests)
+- `packages/shared/ai/__tests__/service.test.ts` (38 tests)
+- `packages/shared/ai/config/__tests__/routing.test.ts` (34 tests)
+- `packages/shared/ai/providers/__tests__/anthropic.test.ts` (24 tests)
+- `packages/shared/ai/providers/__tests__/self-hosted.test.ts` (6 tests)
+- `packages/shared/ai/providers/__tests__/errors.test.ts` (7 tests)
+- `packages/shared/ai/prompts/__tests__/registry.test.ts` (40 tests)
+- `packages/shared/ai/tools/__tests__/registry.test.ts` (20 tests)
+- `packages/shared/ai/metering/__tests__/cost-calculator.test.ts` (12 tests)
+- `packages/shared/ai/metering/__tests__/usage-logger.test.ts` (10 tests)
+- `packages/shared/ai/metering/__tests__/credit-ledger.test.ts` (18 tests)
+- `packages/shared/ai/streaming/__tests__/stream-adapter.test.ts` (7 tests)
+- `packages/shared/ai/data-contract/__tests__/canonical-to-ai.test.ts` (27 tests)
+- `packages/shared/ai/data-contract/__tests__/ai-to-canonical.test.ts` (58 tests)
+- `apps/web/src/app/api/ai/chat/__tests__/route.test.ts` (coverage via web test suite)
+
+**Coverage:** config: 100%, metering: 100%, prompts: 100%, data-contract: 96%, tools: 93%, providers: 88%, streaming: 81%.
+
+**Patterns established:** `AIService` singleton for all AI calls. Capability tiers (`fast`/`standard`/`advanced`) — never reference providers in feature code. `PromptRegistry` with versioned templates and provider-specific compilers. `ToolRegistry` with scope-based filtering. Budget check before execution, usage logging after. `canonicalToAIContext()`/`aiToCanonical()` for JSONB ↔ AI translation. `createAIStream()` for SSE responses. `@anthropic-ai/sdk` in exactly one file.
+
 ### Scope Updates (PR #13 — docs/scope-updates)
 
 Schema expansions, personal tenant provisioning, Platform Owner Console, Support System, and comprehensive naming/convention audit.
@@ -302,7 +375,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **Documents / PDF** — Schema for `document_templates` + `generated_documents` exists, no Gotenberg integration, no merge-tag engine.
 
-**AI Features** — `packages/shared/ai/index.ts` is empty. No AIService, no providers, no prompts, no tools.
+**AI Features** — AIService, providers, prompts, tools, metering, streaming, and data contract are operational. No AI feature UI yet (no Smart Fill panel, no NL Search bar, no Record Summarization widget). Prompt templates directory is empty (ready for feature-specific prompts). Vector embeddings and DuckDB Context Layer are Post-MVP.
 
 **Platform Owner Console** — Schemas and reference doc exist (`platform-owner-console.md`). No admin UI, no Stripe integration, no impersonation flow.
 
@@ -362,6 +435,14 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **UI primitives** | 16 shadcn/ui components in `components/ui/`. Extend via composition, never recreate |
 | **i18n** | next-intl, non-routing locale strategy. All user-facing text through `useTranslations()`. `check:i18n` CI gate |
 | **Shell layout** | Dark sidebar (48/280px) + accent header (52px) + white content. `block-size: 100dvh` |
+| **AI service** | `AIService.getInstance()` singleton. 6-step flow: budget check → route → compile → execute → log → deduct |
+| **AI capability tiers** | `fast`/`standard`/`advanced` — feature code never references providers or models directly |
+| **AI provider isolation** | `@anthropic-ai/sdk` imported ONLY in `packages/shared/ai/providers/anthropic.ts` |
+| **AI prompts** | `PromptRegistry` with monotonically increasing versions. `AnthropicPromptCompiler` (XML + cache_control) and `BasicPromptCompiler` |
+| **AI tools** | `ToolRegistry` with 8 stubs. `createDefaultToolRegistry()` factory. Scope-based filtering |
+| **AI metering** | `calculateCost()` for token pricing. `checkBudget()` before execution. `logAIUsage()` + `deductCredits()` after. 4 alert tiers (50/75/90/100%) |
+| **AI data contract** | `canonicalToAIContext()` (JSONB → AI) and `aiToCanonical()` (AI → JSONB). Per-field-type configs. Type guards for success/error results |
+| **AI streaming** | `createAIStream()` wraps into Vercel AI SDK `createDataStreamResponse`. `AIJobPayload`/`AIJobResult` for async BullMQ jobs |
 
 ---
 
