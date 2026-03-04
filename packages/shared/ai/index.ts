@@ -53,3 +53,18 @@ export {
   resolveRouteByTier,
   getFallbackChain,
 } from './config/routing';
+
+// Prompt registry and compiler
+export type {
+  VariableDefinition,
+  PromptExample,
+  TestedModel,
+  PromptTemplate,
+} from './prompts/registry';
+export { PromptRegistry } from './prompts/registry';
+export type { CompilerModelConfig, PromptCompiler } from './prompts/compiler';
+export {
+  AnthropicPromptCompiler,
+  BasicPromptCompiler,
+  compilerForProvider,
+} from './prompts/compiler';
