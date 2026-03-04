@@ -29,3 +29,15 @@ export type {
   ProviderCapabilities,
   AIProviderAdapter,
 } from './providers/adapter';
+
+// Routing configuration and resolution
+export type { AITaskType, ProviderModelConfig } from './config/routing';
+export {
+  AI_TASK_TYPES,
+  CAPABILITY_ROUTING,
+  FEATURE_ROUTING,
+  FALLBACK_CHAINS,
+  resolveRoute,
+  resolveRouteByTier,
+  getFallbackChain,
+} from './config/routing';
