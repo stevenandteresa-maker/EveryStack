@@ -33,6 +33,8 @@ export {
   crossLinkIndexRelations,
   threads,
   threadsRelations,
+  files,
+  filesRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -49,4 +51,5 @@ export type {
   CrossLink, NewCrossLink,
   CrossLinkIndex, NewCrossLinkIndex,
   Thread, NewThread,
+  FileRecord, NewFileRecord,
 } from './schema';
