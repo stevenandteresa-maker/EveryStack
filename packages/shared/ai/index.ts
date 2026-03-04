@@ -30,6 +30,18 @@ export type {
   AIProviderAdapter,
 } from './providers/adapter';
 
+// Provider error types
+export {
+  AIProviderError,
+  AIProviderAuthError,
+  AIProviderRateLimitError,
+  AIProviderTimeoutError,
+} from './providers/errors';
+
+// Provider adapters
+export { AnthropicAdapter } from './providers/anthropic';
+export { SelfHostedAdapter } from './providers/self-hosted';
+
 // Routing configuration and resolution
 export type { AITaskType, ProviderModelConfig } from './config/routing';
 export {
