@@ -4,6 +4,8 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createRedisClient } from '@everystack/shared/redis';
 import { realtimeLogger } from '@everystack/shared/logging';
 import { authenticateSocket } from './middleware/auth';
+import { registerRoomHandlers } from './handlers/room-handler';
+import { startRedisEventSubscriber } from './subscribers/redis-event-subscriber';
 
 const logger = realtimeLogger;
 
@@ -32,6 +34,9 @@ export function createRealtimeServer() {
   const pubClient = createRedisClient('realtime-pub');
   const subClient = createRedisClient('realtime-sub');
 
+  // Dedicated Redis client for event subscriber (subscribe mode — cannot run other commands)
+  const eventSubClient = createRedisClient('realtime-event-sub');
+
   const adapterReady = Promise.all([
     pubClient.connect(),
     subClient.connect(),
@@ -56,6 +61,9 @@ export function createRealtimeServer() {
     // Auto-join personal room for direct user notifications
     void socket.join(`t:${tenantId}:user:${userId}`);
 
+    // Register room:join and room:leave handlers
+    registerRoomHandlers(socket);
+
     socket.on('disconnect', (reason) => {
       logger.info(
         { socketId: socket.id, userId, tenantId, reason },
@@ -71,7 +79,7 @@ export function createRealtimeServer() {
     });
   });
 
-  return { httpServer, io, pubClient, subClient, adapterReady };
+  return { httpServer, io, pubClient, subClient, eventSubClient, adapterReady };
 }
 
 /**
@@ -79,10 +87,14 @@ export function createRealtimeServer() {
  * Called from index.ts entry point.
  */
 export async function startServer() {
-  const { httpServer, io, pubClient, subClient, adapterReady } =
+  const { httpServer, io, pubClient, subClient, eventSubClient, adapterReady } =
     createRealtimeServer();
 
   await adapterReady;
+
+  // Start Redis event subscriber with dedicated client
+  await eventSubClient.connect();
+  await startRedisEventSubscriber(eventSubClient, io);
 
   httpServer.listen(REALTIME_PORT, () => {
     logger.info({ port: REALTIME_PORT }, 'Realtime server listening');
@@ -94,7 +106,7 @@ export async function startServer() {
 
     io.close();
 
-    await Promise.all([pubClient.quit(), subClient.quit()]).catch((err) => {
+    await Promise.all([pubClient.quit(), subClient.quit(), eventSubClient.quit()]).catch((err) => {
       logger.warn({ err }, 'Error closing Redis connections');
     });
 
