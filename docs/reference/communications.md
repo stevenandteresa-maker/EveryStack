@@ -4,6 +4,7 @@
 > See `GLOSSARY.md` for concept definitions (Record Thread, Quick Panel, Chat Editor).
 > Cross-references: `data-model.md` (threads, thread_messages, thread_participants schema), `tables-and-views.md` (Record View + Record Thread layout), `my-office.md` (Chat widget / Quick Panel), `email.md` (email architecture — separate from chat)
 > Last updated: 2026-02-27 — Aligned with GLOSSARY.md. Scoped to MVP: Record Thread + DMs + group DMs. Removed base/table thread scopes (post-MVP). Removed omnichannel external messaging (Post-MVP — Custom Apps & Live Chat). Removed activity logging (Post-MVP — Comms & Polish). Removed slash commands in chat. Preserved Chat Editor spec and notification system.
+> **Update: 2026-03-05 (CP-001-D)** — Replaced `visibility` column with `thread_type` discriminator. Documented two-thread model per record: internal thread (workspace only) + client thread (workspace + portal client). Client thread notification requirement added to MVP scope.
 
 ---
 
@@ -58,11 +59,11 @@
 
 ## Thread Scopes (MVP)
 
-| scope_type | Participants                                             | Use Case                                 |
-| ---------- | -------------------------------------------------------- | ---------------------------------------- |
-| `record`   | Thread participants + portal clients (if client_visible) | Contextual comments on a specific record |
-| `dm`       | 2 users (1:1)                                            | "Quick question about the client dinner" |
-| `group_dm` | 3–8 users (fixed cap)                                    | "Design team sync"                       |
+| scope_type | Participants                                                                                                  | Use Case                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `record`   | **Internal thread:** workspace users only. **Client thread:** workspace users + portal client (when enabled). | Contextual comments on a specific record |
+| `dm`       | 2 users (1:1)                                                                                                 | "Quick question about the client dinner" |
+| `group_dm` | 3–8 users (fixed cap)                                                                                         | "Design team sync"                       |
 
 **Post-MVP scopes:**
 
@@ -82,7 +83,21 @@ The Record Thread is a **contextual conversation attached to a record**. Every r
 - **Mobile:** Bottom tab contextual swap — "Thread" tab on record detail. See `mobile.md`.
 - **Chat Quick Panel:** Record thread notifications appear in the Chat feed.
 
-**Visibility:** Threads default to `internal` (workspace members only). Manager can mark a thread as `client_visible` — portal clients with access to that record can then see and post to it.
+**Two-Thread Model (CP-001-D):** Every record has exactly two threads, distinguished by `thread_type`:
+
+| | **Internal Thread** (`thread_type = 'internal'`) | **Client Thread** (`thread_type = 'client'`) |
+|---|---|---|
+| **Creation** | Auto-created with every record | Created when Manager enables Client Messaging in portal settings |
+| **Who can read** | All workspace users with record access (MVP) | Workspace users + portal client |
+| **Who can write** | All workspace users with record access (MVP) | Workspace users + portal client |
+| **Visible in portal** | Never — does not exist in portal data layer | Yes — rendered as messaging panel when enabled |
+| **Post-MVP upgrade** | No change | Manager designates specific users as client thread participants |
+
+**Why two threads, not one with a toggle:** Internal team communication and client-facing communication are fundamentally different surfaces. A single thread with a visibility toggle creates a high-risk accidental leak scenario — a team member posts an internal note, someone toggles visibility, client sees it. Two separate threads eliminates this entirely.
+
+**Client thread notification (MVP scope):** Portal clients must be notified via email (Resend) when a workspace user posts a reply to the client thread. Without this, the client has no way to know a reply was posted. Same delivery pipeline as magic link emails.
+
+**Workspace Record View UX:** Record View shows both threads, distinguished by tabs — "Team Notes" (internal) and "Client Messages" (client thread). A persistent indicator in the client thread tab makes clear the message is client-visible. New message from portal client triggers notification to workspace users with record access.
 
 ### DMs
 
@@ -96,7 +111,7 @@ DMs are workspace-scoped (you DM a teammate within a workspace context).
 
 ### Data Model
 
-**`threads` table:** `scope_type`, `scope_id`, `tenant_id`, `visibility` (internal | client_visible), `name` (nullable — for group_dm display), `created_by`, `created_at`.
+**`threads` table:** `scope_type`, `scope_id`, `tenant_id`, `thread_type` (VARCHAR — 'internal' | 'client', default 'internal'), `name` (nullable — for group_dm display), `created_by`, `created_at`. UNIQUE(scope_type, scope_id, thread_type) — one of each type per scope.
 
 **`thread_participants` table:** `thread_id`, `user_id`, `joined_at`, `last_read_at` (unread tracking), `muted` (boolean). Required for DMs/group DMs (defines membership). For record threads, explicit entries created on first interaction for unread tracking.
 
@@ -346,7 +361,8 @@ Typing `@` triggers contextual autocomplete dropdown:
 
 **Contextual filtering:**
 
-- Record thread: Workspace members + portal clients (if client_visible)
+- Record thread (internal): Workspace members only
+- Record thread (client): Workspace members + portal clients
 - DM/Group DM: Participants only
 
 **Rendering:** Selected mention → teal pill (`@Sarah Chen`), non-editable inline. Backspace deletes whole pill.
@@ -419,7 +435,7 @@ Bold, Italic, Underline, Strike, Code (inline marks), BulletList, OrderedList, B
 - Record Thread (alongside Record View)
 - DMs and Group DMs (Chat Quick Panel)
 - My Office Chat widget (reply inline)
-- Portal client messages (client_visible threads)
+- Portal client messages (client thread, `thread_type = 'client'`)
 
 ---
 

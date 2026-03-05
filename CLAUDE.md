@@ -383,6 +383,7 @@ When working on a feature:
 | Sync engine                    | `sync-engine.md`                                                                              |
 | Permissions                    | `permissions.md`                                                                              |
 | UI/design                      | `design-system.md`                                                                            |
+| Navigation/sidebar             | `navigation.md`                                                                               |
 | AI features                    | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md` |
 | Testing                        | `testing.md`                                                                                  |
 | Cross-linking                  | `cross-linking.md`                                                                            |

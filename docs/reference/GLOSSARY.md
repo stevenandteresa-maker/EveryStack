@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-01
+> Last updated: 2026-03-05 — Applied CP-001 (portal URL pattern update) and CP-002 (personal tenant, agency model, effective_memberships, cross-tenant linking prohibition).
 
 ---
 
@@ -258,7 +258,7 @@ A client-facing view of workspace data, shared externally with its own auth and 
 
 **Permissions:** Default read-only. Manager can selectively make specific fields editable.
 
-**Access:** Standalone URL (e.g., `portal.everystack.app/{slug}`) or magic link sent to client.
+**Access:** Standalone URL: `portal.everystack.app/{tenant-slug}/{portal-slug}` (tenant-scoped slugs — CP-001-A). Multi-record URL: `portal.everystack.app/{tenant-slug}/{portal-slug}/{record-slug}`. Or magic link sent to client.
 
 **What a Quick Portal is:** A Record View shared externally with auth and permissions.
 **What a Quick Portal is NOT:** A multi-page website, a dashboard showing multiple records, or a custom spatial layout. Those are App Portals built in the App Designer.
@@ -594,6 +594,22 @@ Every field resolves to one of three states per user: **read-write**, **read-onl
 ### Tenant (Technical)
 
 The top-level organizational entity — the company/account. The billing boundary, identity boundary, and RLS isolation unit. All data queries include `tenant_id` for isolation. Multi-tenancy is enforced at every layer. One tenant contains many workspaces.
+
+**Identity model (CP-002):** A user holds a persistent platform identity (`users` table) and can hold roles across one or more tenants. The correct model is:
+
+```
+User → persistent platform identity
+  → holds roles across one or more Tenants (via tenant_memberships or tenant_relationships)
+  → accesses Workspaces based on those roles
+```
+
+**Personal Tenant:** Every user receives a personal tenant on first login, auto-provisioned. Stored in `users.personal_tenant_id`. Rules: it is a normal tenant the user owns — no special type flag. Hidden in tenant switcher until it contains at least one workspace. Identity-bound — cannot be transferred. Workspaces inside a personal tenant can be transferred to another tenant.
+
+**Agency Tenant / Client Tenant (CP-002):** A formal tenant-to-tenant relationship via `tenant_relationships` table. An agency tenant holds authorised access to one or more client tenants. Agency members access client tenants without being added to the client's `tenant_memberships`. See `permissions.md` § Agency Access Model.
+
+**`effective_memberships` view (CP-002):** A database view that unions direct `tenant_memberships` and agency-delegated access from `tenant_relationships`. All auth middleware queries this view, never the underlying tables directly.
+
+**Cross-tenant linking — permanently forbidden:** Cross-workspace record linking is only permitted between workspaces sharing the same `tenant_id`. Forbidden between different tenants (even with agency relationship), between shared and personal workspaces, and between personal workspaces of different users. Enforced at database, API, and UI layers.
 
 **Corrected hierarchy:**
 

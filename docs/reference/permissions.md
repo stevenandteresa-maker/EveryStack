@@ -4,6 +4,7 @@
 > See `GLOSSARY.md` for concept definitions and MVP scope.
 > Cross-references: `data-model.md` (views schema, record_view_configs), `cross-linking.md` (cross-link permission resolution, creation/modification permissions), `tables-and-views.md` (Table View field overrides, My Views / Shared Views), `portals.md` (portal auth and field grants)
 > Last updated: 2026-02-28 — Two-layer permission model documented. Board permission level added. Environment terminology fixed. Terminology updated (My Views).
+> **Update: 2026-03-05 (CP-002)** — Auth resolution updated to use `effective_memberships` database view (unions `tenant_memberships` + `tenant_relationships`). Agency access level derivation documented. All middleware must query the view, never underlying tables directly.
 
 > **Reconciliation Note (2026-02-27):**
 >
@@ -287,9 +288,10 @@ Fields stored as keys in `canonical_data` JSONB (not physical columns), so field
 ### Internal Users
 
 ```
-1. Is user a member of this tenant? → Check tenant_memberships. No row or status != 'active': no access.
-2. Check tenant_memberships.role:
-   → Owner or Admin: return all fields in all workspaces, read-write. Done.
+1. Is user a member of this tenant? → Check effective_memberships view (unions tenant_memberships + tenant_relationships). No row: no access.
+   → If source = 'agency': user is accessing via agency relationship. Role derived from tenant_relationships.access_level (admin→Admin, builder→Manager, read_only→Viewer).
+2. Check effective role:
+   → Owner or Admin (direct or agency-admin): return all fields in all workspaces, read-write. Done.
    → Member: continue to workspace-level resolution.
 3. Does user have workspace access? → Check workspace_memberships (direct) or board_memberships (cascaded). No: no access.
 4. Identify user's workspace role from workspace_memberships.
@@ -476,7 +478,29 @@ Permission checks operate **within** a tenant boundary that is enforced at a low
 
 | Phase                         | Permission Work                                                                                                                                                                                                                        |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **MVP — Foundation (MVP)**    | Workspace role stored on `workspace_memberships`. Owner/Admin/Manager only (no TM/Viewers yet). All users see all data. Role checked for workspace management operations. Permission denial error shape and audit logging implemented. |
+| **MVP — Foundation (MVP)**    | Workspace role stored on `workspace_memberships`. Owner/Admin/Manager only (no TM/Viewers yet). All users see all data. Role checked for workspace management operations. Permission denial error shape and audit logging implemented. Auth middleware uses `effective_memberships` view (CP-002 retrofit). |
 | **MVP — Core UX**             | Full model: `views.permissions` JSONB with fieldPermissions. Resolution algorithm. Config UI (role grid, individual overrides). Caching (session + Redis). Real-time invalidation. Security tests.                                     |
 | **Post-MVP — Portals & Apps** | Portal field permissions via portal configuration on `portals` table. Security tests: cross-client isolation, field leakage.                                                                                                           |
 | **Post-MVP**                  | App Designer portal permissions via `app_blocks.data_binding` JSONB. Multi-page, multi-record, client identity scoping.                                                                                                                |
+
+---
+
+## Agency Access Model (CP-002)
+
+Agency members access client tenants via `tenant_relationships` rows, resolved through the `effective_memberships` view. They are NOT added to the client tenant's `tenant_memberships`.
+
+### Access Level Derivation
+
+| `tenant_relationships.access_level` | Synthesized Role | Effective Permissions |
+|---|---|---|
+| `admin` | Admin-equivalent | Full workspace access in client tenant. Cannot modify tenant ownership or billing. |
+| `builder` | Manager-equivalent | Create/manage tables, views, portals, automations within client tenant workspaces. |
+| `read_only` | Viewer-equivalent | Read-only access to client tenant workspaces. |
+
+### Agency Access Rules
+
+- Agency members do **not** appear in client tenant membership lists.
+- Revoking the `tenant_relationships` row cleanly removes all agency access in one action.
+- Audit logs show `[Agency Name] on behalf of [User]` — never raw individual names when `metadata.hide_member_identity = true` (white-label mode).
+- Agency members cannot modify client tenant settings, billing, or ownership — even with `admin` access level.
+- **Persistent "Acting as Agency" banner:** When an agency member operates inside a client tenant, a shell-level banner shows which agency they represent, which client tenant they are in, and a one-click exit back to their agency tenant. This banner cannot be dismissed.

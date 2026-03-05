@@ -19,7 +19,7 @@
 > **Reference doc.** Color model, typography, spacing, component specs, application shell, responsive architecture, progressive disclosure, creation flow patterns.
 > See `GLOSSARY.md` for concept definitions and MVP scope.
 > Cross-references: `tables-and-views.md` (Grid view, Card view, Record View), `communications.md` (TipTap env 1 chat editor), `command-bar.md` (Command Bar compact/full specs), `mobile.md` (device tiers, ergonomic constraints, primary surfaces), `support-system.md` (Help Panel, sidebar Help button)
-> Last updated: 2026-03-04
+> Last updated: 2026-03-05 — Added `--shell-accent` per-tenant token, portal accent token, agency banner spec, shell repainting on tenant switch (CP-002).
 
 ## Section Index
 
@@ -108,6 +108,36 @@ Selected during workspace setup (Settings > General > Branding). Applies **only 
 **Where accent appears:** Header bar background, workspace logo badge in sidebar.
 
 **Where accent does NOT appear:** Buttons, links, badges, pills, sidebar active state.
+
+### Shell Accent Token — Per-Tenant (CP-002)
+
+`--shell-accent` is set per tenant from `tenants.settings.branding_accent_color`. When the user switches tenants, the shell repaints:
+
+1. **Optimistic repaint:** UI repaints header and sidebar accent immediately on tenant switch selection.
+2. **Clerk `setActive()` fires** — authoritative source of truth, re-issues JWT for new tenant context.
+3. **Redis cache updates** with new active tenant.
+4. **If Clerk fails:** Shell reverts to previous tenant's accent with toast error.
+
+**Personal tenant:** Fixed warm neutral accent (never reused by org tenants). Provides an immediate visual signal that the user is in personal context.
+
+### Portal Accent Token (CP-002)
+
+`--portal-accent` is a system-owned, non-customisable token for portal entries displayed in the sidebar of authenticated users. Rules:
+
+- The portal accent colour is owned by EveryStack — the granting tenant cannot set or influence it.
+- Prevents a tenant from mimicking the user's own tenant colours to create confusion.
+- When inside a portal context (via sidebar), the shell does NOT repaint to a new accent colour (that signal is reserved for tenant switching).
+- A persistent but subdued portal indicator sits in the sidebar header showing the portal name and icon.
+
+### Agency Banner (CP-002)
+
+Whenever an agency member operates inside a client tenant, a visually unmistakable persistent banner appears at the shell layer. Not a badge — a full-width element showing:
+
+- Which agency the member represents
+- Which client tenant they are currently inside
+- A one-click exit back to their own agency tenant
+
+This banner cannot be dismissed or minimised. It protects both parties: the agency member maintains context clarity, the client tenant has audit transparency.
 
 ### Data Color Palette
 

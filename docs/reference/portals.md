@@ -5,6 +5,7 @@
 > **Reference doc (Tier 3).** Client-facing portals — **MVP-focused.** This doc covers the MVP Quick Portal implementation: Record View + auth wrapper, `portals` and `portal_access` tables, magic link and password auth, session management, record scoping, rate limiting, caching, audit logging, GDPR, client management, and plan limits. For post-MVP App Portals (App Designer, block model, themes, multi-page layouts, data binding, analytics, payments, PWA, SEO, custom domains), see `app-designer.md`. Both portal types coexist permanently.
 > Cross-references: `GLOSSARY.md` (source of truth — naming, scope, architecture), `data-model.md` (schema — `portals` and `portal_access` table definitions), `app-designer.md` (App Designer — post-MVP visual page builder, App Portal spec), `CLAUDE.md` (root — permissions, i18n), `automations.md` (Form Submitted trigger), `compliance.md` (PII registry, GDPR)
 > Last updated: 2026-02-28 (update 3) — Full restructure. Schema aligned with data-model.md. `portal_clients` → `portal_access`. MVP/post-MVP cleanly separated. Post-MVP App Designer content moved to Part 2 summary referencing `app-designer.md`.
+> **Update: 2026-03-05 (CP-001)** — Applied Portal Architecture Refinements. Slug uniqueness now tenant-scoped (UNIQUE(tenant_id, slug)), URL pattern: `portal.everystack.app/{tenant-slug}/{portal-slug}/{record-slug}`. `portal_access` gained: `record_slug`, `revoked_at`/`revoked_reason` (record deletion cascade), `linked_record_id` (post-MVP conversion forward-infrastructure). Two-thread model per record (CP-001-D): internal + client threads via `thread_type` discriminator. Client Messaging toggle in portal settings. Multi-record list view with `summaryFields[]` (CP-001-E). Confirmed: `record.updated` is sufficient for portal write-backs — no separate trigger (CP-001-C).
 
 ---
 
@@ -52,10 +53,12 @@ Quick Portals are the MVP portal implementation. A Quick Portal is an **external
 
 **MVP permissions:** Default read-only. Manager can selectively make specific fields editable.
 
-**MVP access:** Standalone URL (e.g., `portal.everystack.app/{slug}`) or magic link sent to client.
+**MVP access:** Standalone URL (e.g., `portal.everystack.app/{tenant-slug}/{portal-slug}`) or magic link sent to client. Tenant-scoped slugs — every tenant has its own namespace.
 
 **What a Quick Portal is (MVP):** A Record View shared externally with auth and permissions.
 **What a Quick Portal is NOT (MVP):** A multi-page website, a dashboard showing multiple records, or a custom spatial layout. Those are post-MVP Apps built in the App Designer. See: `app-designer.md`.
+
+**Authenticated user portal display (CP-002):** When an authenticated EveryStack user has been granted portal access by another tenant, the portal appears natively in their sidebar under a dedicated "Portals" section divider — visually distinct from workspace items. See `navigation.md` for display rules. All data boundary rules remain intact — the portal is a display convenience, not a data bridge.
 
 ---
 
@@ -74,15 +77,15 @@ Per data-model.md: Quick Portals — externally-shared Record View of a single r
 | `table_id`              | UUID             | FK to tables — which table this portal shows records from                                                                                 |
 | `record_view_config_id` | UUID             | FK to `record_view_configs` — links to the shared Record View layout. Same layout primitive used by Record Views, Portals, and Forms.     |
 | `name`                  | VARCHAR          | Display name                                                                                                                              |
-| `slug`                  | VARCHAR (unique) | URL slug (`portal.everystack.app/{slug}`)                                                                                                 |
+| `slug`                  | VARCHAR          | URL slug. UNIQUE(tenant_id, slug) — tenant-scoped, not platform-global. URL: `portal.everystack.app/{tenant-slug}/{portal-slug}`.         |
 | `auth_type`             | VARCHAR          | `'magic_link'` or `'password'`. Manager's choice per portal.                                                                              |
 | `status`                | VARCHAR          | `'draft'`, `'published'`, `'archived'`                                                                                                    |
-| `settings`              | JSONB            | Branding (logo, colors), `editable_fields[]` (field IDs that clients can edit), `linked_record_display` config. See Settings JSONB below. |
+| `settings`              | JSONB            | Branding (logo, colors), `editable_fields[]` (field IDs that clients can edit), `linked_record_display` config, `listView` config (multi-record summary), `clientMessaging` toggle. See Settings JSONB below. |
 | `created_by`            | UUID             | FK to users — Manager who created the portal                                                                                              |
 | `created_at`            | TIMESTAMPTZ      |                                                                                                                                           |
 | `updated_at`            | TIMESTAMPTZ      |                                                                                                                                           |
 
-**Indexes:** `UNIQUE (slug)`, `(tenant_id, status)`, `(record_view_config_id)`.
+**Indexes:** `UNIQUE (tenant_id, slug)`, `(tenant_id, status)`, `(record_view_config_id)`.
 
 **Settings JSONB shape:**
 
@@ -98,6 +101,10 @@ interface PortalSettings {
     showLinkedFields: boolean; // Whether to show single-hop lookup fields
     linkedFieldIds?: string[]; // Which linked fields to display (null = all visible)
   };
+  listView?: {
+    summaryFields: string[]; // Field IDs shown on multi-record list rows, max 3 (CP-001-E)
+  };
+  clientMessaging?: boolean; // Enable client thread on portal (CP-001-D). Off by default.
 }
 ```
 
@@ -105,24 +112,51 @@ interface PortalSettings {
 
 Per data-model.md: Per-record access credentials. One row per client per record. Magic link tokens are single-use, regenerable. **This is the auth table for Quick Portals.** App Portals (post-MVP) use `portal_clients` for identity-based scoping instead — see `app-designer.md`. Both portal types coexist permanently.
 
-| Column             | Type                   | Purpose                                                                                                       |
-| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `id`               | UUID                   | Primary key                                                                                                   |
-| `tenant_id`        | UUID                   | Tenant scope — denormalized for RLS (consistent with all tenant-scoped tables).                               |
-| `portal_id`        | UUID                   | FK to portals                                                                                                 |
-| `record_id`        | UUID                   | FK to records — the specific record this client can access. **This IS the record scoping mechanism for MVP.** |
-| `email`            | VARCHAR                | Client's email address (PII — registered in compliance registry)                                              |
-| `auth_hash`        | VARCHAR (nullable)     | bcrypt hash. Set when portal uses password auth (`auth_type = 'password'`). NULL for magic-link-only portals. |
-| `token`            | VARCHAR (nullable)     | Magic link token. Single-use, regenerable. Generated via `crypto.randomBytes(32).toString('base64url')`.      |
-| `token_expires_at` | TIMESTAMPTZ (nullable) | Magic link token expiry (15 minutes from creation).                                                           |
-| `last_accessed_at` | TIMESTAMPTZ (nullable) | Updated on each successful access.                                                                            |
-| `created_at`       | TIMESTAMPTZ            |                                                                                                               |
+| Column              | Type                   | Purpose                                                                                                                                                                             |
+| ------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | UUID                   | Primary key                                                                                                                                                                         |
+| `tenant_id`         | UUID                   | Tenant scope — denormalized for RLS (consistent with all tenant-scoped tables).                                                                                                     |
+| `portal_id`         | UUID                   | FK to portals                                                                                                                                                                       |
+| `record_id`         | UUID                   | FK to records — the specific record this client can access. **This IS the record scoping mechanism for MVP.**                                                                       |
+| `email`             | VARCHAR                | Client's email address (PII — registered in compliance registry)                                                                                                                    |
+| `auth_hash`         | VARCHAR (nullable)     | bcrypt hash. Set when portal uses password auth (`auth_type = 'password'`). NULL for magic-link-only portals.                                                                       |
+| `token`             | VARCHAR (nullable)     | Magic link token. Single-use, regenerable. Generated via `crypto.randomBytes(32).toString('base64url')`.                                                                            |
+| `token_expires_at`  | TIMESTAMPTZ (nullable) | Magic link token expiry (15 minutes from creation).                                                                                                                                 |
+| `record_slug`       | VARCHAR                | Client-safe slug for portal URLs. UNIQUE(portal_id, record_slug). Generated server-side on creation — raw record UUID never exposed in portal URLs. Not user-configurable at MVP.   |
+| `revoked_at`        | TIMESTAMPTZ (nullable) | Set when access is revoked (record deleted, Manager revoked, portal archived).                                                                                                      |
+| `revoked_reason`    | VARCHAR (nullable)     | `'record_deleted'` \| `'manager_revoked'` \| `'portal_archived'`. Set with `revoked_at`.                                                                                            |
+| `linked_record_id`  | UUID (nullable)        | FK → records.id. Optional link to a contact/client record in a workspace table. Encourages Manager to link clients on invite for post-MVP App Portal conversion. Not required at MVP. |
+| `last_accessed_at`  | TIMESTAMPTZ (nullable) | Updated on each successful access.                                                                                                                                                  |
+| `created_at`        | TIMESTAMPTZ            |                                                                                                                                                                                     |
 
-**Indexes:** `UNIQUE (portal_id, email)`, `(portal_id, record_id)`.
+**Indexes:** `UNIQUE (portal_id, email)`, `UNIQUE (portal_id, record_slug)`, `(portal_id, record_id)`.
 
 **Key design insight:** `portal_access.record_id` directly links each client to a specific record. For MVP (one portal = one record per client), this is the entire scoping mechanism — no separate `scoping_config` JSONB needed. The portal data resolver simply filters: `WHERE records.id = portal_access.record_id`.
 
-**Multi-record access:** If a client needs access to multiple records on the same portal, they have multiple `portal_access` rows (same portal_id, same email, different record_id). The portal renders a list of accessible records, each clickable to view. This extends naturally from the one-record model without schema changes.
+**Multi-record access:** If a client needs access to multiple records on the same portal, they have multiple `portal_access` rows (same portal_id, same email, different record_id). Entry behavior is conditional:
+
+- **One record:** Portal URL goes directly to the record view.
+- **Multiple records:** Portal URL renders a list page first, each row clickable to drill into record view.
+
+**List view (CP-001-E):** Manager designates up to 3 fields as summary fields in portal settings (`listView.summaryFields[]`). List row shows: record name + summary fields. If `summaryFields` is empty, record name only. Post-MVP upgrade: full column layout builder.
+
+**URL structure:**
+
+```
+portal.everystack.app/{tenant-slug}/{portal-slug}
+  → list page (if multiple records) OR direct record view (if one record)
+
+portal.everystack.app/{tenant-slug}/{portal-slug}/{record-slug}
+  → individual record view
+```
+
+**Record deletion cascade (CP-001-B):** When a workspace record is deleted:
+1. System checks for `portal_access` rows referencing the record.
+2. If found: modal warns the Manager — "N portal clients have access to this record. Deleting it will revoke their access." — with explicit confirm.
+3. On confirm: record soft-deleted, `portal_access.revoked_at` set, `revoked_reason = 'record_deleted'`.
+4. Portal client visits URL → session check passes → data resolver finds `revoked_at` is set → renders graceful "This portal is no longer available" page.
+
+**Revocation audit:** Portal admin panel Clients tab shows revoked clients with reason and timestamp. Audit log records cascade revocation with `actor_type = 'system'`.
 
 ### `portal_sessions` Table
 
@@ -294,6 +328,23 @@ List of `portal_access` rows for this portal. Columns: email, record name, last 
 ### Access Tab
 
 Authentication method selector (magic link or email+password), session timeout override (default 30 days), custom login page message.
+
+### Client Messaging (CP-001-D)
+
+Portal settings gains a **Client Messaging** toggle (off by default). When enabled, a client thread (`thread_type = 'client'`) is created for each portal record. The portal page renders a messaging panel below the record field canvas.
+
+- Workspace users + portal client can read and write to the client thread.
+- The internal thread (`thread_type = 'internal'`) is never visible to portal clients — it does not exist in the portal's data layer.
+- Client thread notification: when a workspace user posts a reply, the portal client receives an email notification via Resend. Without this, the client has no way to know a reply exists.
+- When a portal client posts a new message, workspace users with record access receive an in-app notification.
+
+See `communications.md` for the full two-thread model specification.
+
+### Client Identity Linking (CP-001-F)
+
+On the portal client invite flow, after the Manager enters the client email and selects the record, an optional step: "Link this client to a contact record (optional — helps with future portal upgrades)." Autocomplete search on workspace tables. Manager can skip.
+
+`portal_access.linked_record_id` (UUID nullable FK → records.id) stores this link. **This field is entirely optional at MVP.** The portal works identically with or without it. It is purely forward-infrastructure for the post-MVP Quick Portal → App Portal conversion path, where it accelerates identity matching.
 
 ---
 
@@ -536,7 +587,8 @@ Optional upgrade path. Both portal types coexist permanently — conversion is a
 1. Manager initiates conversion from portal admin panel → "Upgrade to App Portal" button.
 2. **Select identity table:** Manager picks a table that represents client identities (e.g., Contacts, Clients). This becomes the `portal_clients.linked_record_id` target.
 3. **Client matching:** For each `portal_access` row, the system matches the email to a record in the identity table.
-   - **Matched** → creates a `portal_clients` row with `linked_record_id` pointing to that contact record.
+   - **Already linked (CP-001-F):** If `portal_access.linked_record_id` is set, use it directly — no matching needed. This is why the MVP invite-time linking nudge dramatically improves the conversion experience.
+   - **Matched by email** → creates a `portal_clients` row with `linked_record_id` pointing to that contact record.
    - **Unmatched** → Manager prompted per client: create a new contact record, manually map to an existing record, or skip (client will not be migrated).
 4. **Scoping config:** Manager configures per-table scoping fields — how the system derives "which records belong to this client" from the identity link.
 5. **Session migration:** `portal_sessions.auth_type` switches from `'quick'` to `'app'`. Existing sessions are preserved — clients don't need to re-authenticate.
