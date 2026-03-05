@@ -11,6 +11,7 @@ export {
   createTestCrossLink,
   createTestRecordViewConfig,
   createTestPortal,
+  createTestPortalAccess,
   createTestForm,
   createTestAutomation,
   createTestDocumentTemplate,

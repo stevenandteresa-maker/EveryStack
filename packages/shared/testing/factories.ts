@@ -22,6 +22,7 @@ import {
   views,
   crossLinks,
   portals,
+  portalAccess,
   forms,
   automations,
   documentTemplates,
@@ -50,6 +51,8 @@ import type {
   CrossLink,
   NewPortal,
   Portal,
+  NewPortalAccess,
+  PortalAccess,
   NewForm,
   Form,
   NewAutomation,
@@ -492,6 +495,39 @@ export async function createTestPortal(
 }
 
 /**
+ * Creates a portal access row with sensible defaults.
+ * Auto-creates a portal (and therefore table, record view config, tenant) when portalId is not provided.
+ * Generates a record_slug when not provided.
+ */
+export async function createTestPortalAccess(
+  overrides?: Partial<NewPortalAccess>,
+): Promise<PortalAccess> {
+  const db = getTestDb();
+  const suffix = randomSuffix();
+
+  let tenantId = overrides?.tenantId;
+  let portalId = overrides?.portalId;
+
+  if (!portalId) {
+    const portal = await createTestPortal(tenantId ? { tenantId } : undefined);
+    portalId = portal.id;
+    tenantId = tenantId ?? portal.tenantId;
+  }
+
+  const values: NewPortalAccess = {
+    id: generateUUIDv7(),
+    tenantId: tenantId!,
+    portalId,
+    recordId: overrides?.recordId ?? generateUUIDv7(),
+    email: `client-${suffix}@example.com`,
+    recordSlug: `rec-${suffix}`,
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(portalAccess).values(values).returning());
+}
+
+/**
  * Creates a form with sensible defaults.
  * Auto-creates a table, record view config, and user when not provided.
  */
@@ -642,6 +678,7 @@ export async function createTestThread(
     tenantId,
     scopeType: 'record',
     scopeId: generateUUIDv7(),
+    threadType: 'internal',
     createdBy,
     ...overrides,
   };

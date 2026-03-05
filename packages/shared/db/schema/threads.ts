@@ -2,6 +2,7 @@ import {
   index,
   pgTable,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -18,9 +19,11 @@ export const threads = pgTable(
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.id),
+    // Known values: 'record', 'dm', 'group_dm'
     scopeType: varchar('scope_type', { length: 50 }).notNull(),
     scopeId: uuid('scope_id').notNull(),
-    visibility: varchar('visibility', { length: 50 }).default('internal').notNull(),
+    // Known values: 'internal', 'client'
+    threadType: varchar('thread_type', { length: 50 }).default('internal').notNull(),
     name: varchar('name', { length: 255 }),
     createdBy: uuid('created_by')
       .notNull()
@@ -31,6 +34,7 @@ export const threads = pgTable(
   (table) => [
     index('threads_tenant_scope_idx').on(table.tenantId, table.scopeType, table.scopeId),
     index('threads_tenant_scope_type_idx').on(table.tenantId, table.scopeType),
+    uniqueIndex('threads_scope_thread_type_idx').on(table.scopeType, table.scopeId, table.threadType),
   ],
 );
 
