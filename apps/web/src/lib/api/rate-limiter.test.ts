@@ -43,10 +43,26 @@ import {
 
 let redis: Redis;
 
-beforeEach(async () => {
-  redis = new Redis({
+function getRedisConfig(): { host: string; port: number } {
+  const redisUrl = process.env['REDIS_URL'];
+  if (redisUrl) {
+    const parsed = new URL(redisUrl);
+    return {
+      host: parsed.hostname || 'localhost',
+      port: Number(parsed.port) || 6379,
+    };
+  }
+  return {
     host: process.env['REDIS_HOST'] ?? 'localhost',
     port: Number(process.env['REDIS_PORT'] ?? '6379'),
+  };
+}
+
+beforeEach(async () => {
+  const config = getRedisConfig();
+  redis = new Redis({
+    host: config.host,
+    port: config.port,
     maxRetriesPerRequest: null,
     lazyConnect: false,
   });

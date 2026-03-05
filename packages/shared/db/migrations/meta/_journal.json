@@ -134,6 +134,20 @@
       "when": 1772600000000,
       "tag": "0018_rename_indexes_consistency",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1772610000000,
+      "tag": "0019_make_audit_log_actor_id_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1772620000000,
+      "tag": "0020_add_clerk_org_id_to_tenants",
+      "breakpoints": true
     }
   ]
 }
