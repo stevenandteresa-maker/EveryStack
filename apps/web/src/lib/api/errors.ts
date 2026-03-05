@@ -44,6 +44,8 @@ export interface ApiErrorBody {
 /**
  * Build a Platform API error response with the correct status, body shape,
  * and X-API-Version header.
+ *
+ * Aliased as `createApiErrorResponse` for discoverability.
  */
 export function apiError(
   status: number,
@@ -72,6 +74,11 @@ export function apiError(
     headers: { [API_VERSION_HEADER]: API_VERSION },
   });
 }
+
+/**
+ * Alias for `apiError` — named for discoverability in consuming code.
+ */
+export const createApiErrorResponse = apiError;
 
 // ---------------------------------------------------------------------------
 // Convenience helpers

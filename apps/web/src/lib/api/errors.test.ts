@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   apiError,
+  createApiErrorResponse,
   apiBadRequest,
   apiUnauthorized,
   apiForbidden,
@@ -233,6 +234,19 @@ describe('API Error Utilities', () => {
 
     it('includes X-API-Version header', () => {
       expect(getVersionHeader(apiInternalError('req_test'))).toBe(API_VERSION);
+    });
+  });
+
+  describe('createApiErrorResponse alias', () => {
+    it('is the same function as apiError', () => {
+      expect(createApiErrorResponse).toBe(apiError);
+    });
+
+    it('produces identical output to apiError', async () => {
+      const res = createApiErrorResponse(422, 'VALIDATION_FAILED', 'Bad data');
+      expect(res.status).toBe(422);
+      const body = await parseBody(res);
+      expect(body).toEqual({ error: { code: 'VALIDATION_FAILED', message: 'Bad data' } });
     });
   });
 
