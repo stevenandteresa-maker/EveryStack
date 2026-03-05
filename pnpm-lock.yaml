@@ -208,6 +208,9 @@ importers:
       eslint-config-next:
         specifier: ^16.1.6
         version: 16.1.6(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.3(jiti@1.21.7))(typescript@5.9.3)
+      ioredis:
+        specifier: ^5.10.0
+        version: 5.10.0
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
