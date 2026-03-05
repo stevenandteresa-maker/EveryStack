@@ -65,6 +65,10 @@ export {
   threadsRelations,
   files,
   filesRelations,
+  apiKeys,
+  apiKeysRelations,
+  auditLog,
+  auditLogRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -82,4 +86,6 @@ export type {
   CrossLinkIndex, NewCrossLinkIndex,
   Thread, NewThread,
   FileRecord, NewFileRecord,
+  ApiKey, NewApiKey,
+  AuditLog, NewAuditLog,
 } from './schema';
