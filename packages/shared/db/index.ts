@@ -69,6 +69,8 @@ export {
   apiKeysRelations,
   auditLog,
   auditLogRelations,
+  apiRequestLog,
+  apiRequestLogRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -88,4 +90,5 @@ export type {
   FileRecord, NewFileRecord,
   ApiKey, NewApiKey,
   AuditLog, NewAuditLog,
+  ApiRequestLog, NewApiRequestLog,
 } from './schema';
