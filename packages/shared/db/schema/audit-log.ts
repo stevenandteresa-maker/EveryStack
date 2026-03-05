@@ -28,7 +28,7 @@ export const auditLog = pgTable(
       .notNull()
       .references(() => tenants.id),
     actorType: varchar('actor_type', { length: 32 }).notNull(),
-    actorId: uuid('actor_id').notNull(),
+    actorId: uuid('actor_id'),
     actorLabel: varchar('actor_label', { length: 255 }),
     action: varchar('action', { length: 64 }).notNull(),
     entityType: varchar('entity_type', { length: 64 }).notNull(),

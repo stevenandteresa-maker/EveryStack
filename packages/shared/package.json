@@ -34,6 +34,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
+    "@sentry/node": "^10.41.0",
     "@types/node": "^22.15.3",
     "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.31.9",
@@ -58,6 +59,7 @@
     "pino": "^10.3.1",
     "postgres": "^3.4.8",
     "svix": "^1.86.0",
-    "uuidv7": "^1.1.0"
+    "uuidv7": "^1.1.0",
+    "zod": "^4.3.6"
   }
 }

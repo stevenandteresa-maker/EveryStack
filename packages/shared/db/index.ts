@@ -1,4 +1,18 @@
 export { db, dbRead, getDbForTenant } from './client';
+export {
+  writeAuditLog,
+  writeAuditLogBatch,
+  auditEntrySchema,
+  AUDIT_ACTOR_TYPES,
+  AUDIT_RETENTION_DAYS,
+} from './audit';
+export type {
+  AuditActorType,
+  AuditEntry,
+  AuditBatchDetails,
+  AuditBatchEntry,
+  DrizzleTransaction,
+} from './audit';
 export { createUserWithTenant, updateUserFromClerk } from './operations/user-operations';
 export type { CreateUserWithTenantResult } from './operations/user-operations';
 export type { DbIntent, DrizzleClient } from './client';
