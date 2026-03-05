@@ -19,6 +19,22 @@ export type { DbIntent, DrizzleClient } from './client';
 export { generateUUIDv7, isValidUUID } from './uuid';
 export { setTenantContext, TENANT_SCOPED_TABLES, RLS_EXCLUDED_COLUMNS } from './rls';
 export type { TenantScopedTable } from './rls';
+export {
+  API_KEY_PREFIXES,
+  API_KEY_SCOPES,
+  RATE_LIMIT_TIERS,
+  generateApiKey,
+  hashApiKey,
+  verifyApiKeyHash,
+  apiKeyCreateSchema,
+} from './api-key-utils';
+export type {
+  ApiKeyEnvironment,
+  ApiKeyScope,
+  RateLimitTier,
+  GeneratedApiKey,
+  ApiKeyCreateInput,
+} from './api-key-utils';
 export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc } from 'drizzle-orm';
 export {
   users,
