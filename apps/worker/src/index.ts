@@ -13,6 +13,7 @@ import { FileThumbnailProcessor } from './processors/file-thumbnail';
 import { FileScanProcessor } from './processors/file-scan';
 import { FileOrphanCleanupProcessor } from './processors/file-orphan-cleanup';
 import { FileProcessingRouter } from './processors/file-processing-router';
+import { InitialSyncProcessor } from './processors/sync/initial-sync';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -43,12 +44,17 @@ fileRouter.start();
 // Cleanup queue: handles file.orphan_cleanup jobs
 orphanProcessor.start();
 
+// Sync queue: handles initial sync and incremental sync jobs
+const initialSyncProcessor = new InitialSyncProcessor(eventPublisher);
+initialSyncProcessor.start();
+
 // ---------------------------------------------------------------------------
 // Shutdown handlers (order: processors → queues → telemetry → redis)
 // ---------------------------------------------------------------------------
 
 registerShutdownHandler(async () => fileRouter.close());
 registerShutdownHandler(async () => orphanProcessor.close());
+registerShutdownHandler(async () => initialSyncProcessor.close());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);
 registerShutdownHandler(async () => {

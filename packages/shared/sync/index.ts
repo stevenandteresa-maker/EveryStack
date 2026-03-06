@@ -133,4 +133,29 @@ export {
   applyLocalFilters,
   getLocalOnlyFilters,
   canPushDown,
+  AirtableApiClient,
+  AIRTABLE_API_BASE_URL,
 } from './adapters/airtable';
+export type {
+  AirtableApiRecord,
+  AirtableListRecordsResponse,
+  ListRecordsOptions,
+} from './adapters/airtable';
+
+// Airtable OAuth
+export {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  getAirtableAuthUrl,
+  exchangeCodeForTokens,
+  refreshAirtableToken,
+  listAirtableBases,
+  listAirtableTables,
+  estimateAirtableRecordCount,
+} from './adapters/airtable/oauth';
+export type {
+  AirtableTokens,
+  AirtableBase,
+  AirtableTableMeta,
+  AirtableFieldMeta,
+} from './adapters/airtable/oauth';

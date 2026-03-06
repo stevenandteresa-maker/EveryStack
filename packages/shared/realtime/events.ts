@@ -13,6 +13,8 @@ export const REALTIME_EVENTS = {
 
   // Sync events
   SYNC_STARTED: 'sync.started',
+  SYNC_SCHEMA_READY: 'sync.schema_ready',
+  SYNC_PROGRESS: 'sync.progress',
   SYNC_BATCH_COMPLETE: 'sync.batch_complete',
   SYNC_COMPLETED: 'sync.completed',
   SYNC_FAILED: 'sync.failed',

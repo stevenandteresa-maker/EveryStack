@@ -37,6 +37,10 @@ export interface SyncJobData extends BaseJobData {
   connectionId: string;
 }
 
+export interface InitialSyncJobData extends SyncJobData {
+  workspaceId: string;
+}
+
 export interface EmailJobData extends BaseJobData {
   to: string;
   templateId: string;
@@ -61,7 +65,7 @@ export interface DocumentGenJobData extends BaseJobData {
  * Used for type-safe queue/worker generics.
  */
 export interface QueueJobDataMap {
-  sync: SyncJobData;
+  sync: SyncJobData | InitialSyncJobData;
   'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;
   automation: AutomationJobData;

@@ -28,6 +28,14 @@ export {
   canPushDown,
 } from './filter-pushdown';
 
+// Re-export API client
+export { AirtableApiClient, AIRTABLE_API_BASE_URL } from './api-client';
+export type {
+  AirtableApiRecord,
+  AirtableListRecordsResponse,
+  ListRecordsOptions,
+} from './api-client';
+
 const logger = createLogger({ service: 'sync' });
 
 /**
