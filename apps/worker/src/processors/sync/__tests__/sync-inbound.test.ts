@@ -13,6 +13,7 @@ const {
   mockToCanonical,
   mockDetectConflicts,
   mockWriteConflictRecords,
+  mockApplyLastWriteWins,
   mockWaitForCapacity,
   mockSelect,
   mockInsert,
@@ -42,6 +43,19 @@ const {
       convergentFieldIds: [],
     }),
     mockWriteConflictRecords: vi.fn().mockResolvedValue(undefined),
+    mockApplyLastWriteWins: vi.fn().mockResolvedValue({
+      updatedCanonical: {},
+      updatedSyncMetadata: {
+        platform_record_id: 'rec_resolved',
+        last_synced_at: '2026-01-15T11:00:00.000Z',
+        last_synced_values: {},
+        sync_status: 'active',
+        sync_direction: 'inbound',
+        orphaned_at: null,
+        orphaned_reason: null,
+      },
+      resolvedCount: 0,
+    }),
     mockWaitForCapacity: vi.fn().mockResolvedValue(undefined),
     mockSelect,
     mockInsert,
@@ -61,6 +75,7 @@ vi.mock('@everystack/shared/db', () => ({
     externalBaseId: 'external_base_id', syncConfig: 'sync_config',
     oauthTokens: 'oauth_tokens', lastSyncAt: 'last_sync_at',
     syncStatus: 'sync_status', health: 'health',
+    conflictResolution: 'conflict_resolution',
   },
   records: {
     id: 'id', tenantId: 'tenant_id', tableId: 'table_id',
@@ -113,6 +128,7 @@ vi.mock('@everystack/shared/sync', () => {
     }),
     detectConflicts: mockDetectConflicts,
     writeConflictRecords: mockWriteConflictRecords,
+    applyLastWriteWins: mockApplyLastWriteWins,
   };
 });
 
@@ -318,7 +334,7 @@ describe('InboundSyncProcessor', () => {
     expect(mockTransaction).toHaveBeenCalled();
   });
 
-  it('writes sync_conflicts when conflicts detected', async () => {
+  it('calls applyLastWriteWins when conflicts detected (default LWW mode)', async () => {
     const connection = setupConnectionQuery();
 
     setupChainedSelectMock([
@@ -349,15 +365,36 @@ describe('InboundSyncProcessor', () => {
       convergentFieldIds: [],
     });
 
+    mockApplyLastWriteWins.mockResolvedValueOnce({
+      updatedCanonical: { f1: { type: 'text', value: 'Remote' } },
+      updatedSyncMetadata: {
+        platform_record_id: 'recABC',
+        last_synced_at: '2026-01-15T11:00:00.000Z',
+        last_synced_values: { f1: { value: { type: 'text', value: 'Remote' }, synced_at: '2026-01-15T11:00:00.000Z' } },
+        sync_status: 'active',
+        sync_direction: 'inbound',
+        orphaned_at: null,
+        orphaned_reason: null,
+      },
+      resolvedCount: 1,
+    });
+
     await processor.processJob(createMockJob(), mockLogger as never);
 
-    expect(mockWriteConflictRecords).toHaveBeenCalledWith(
+    // Default mode is last_write_wins — should call applyLastWriteWins
+    expect(mockApplyLastWriteWins).toHaveBeenCalledWith(
       expect.anything(), // tx
       'tenant-1',
       'rec-1',
       conflicts,
       'airtable',
+      expect.any(Object), // mergedCanonical
+      expect.any(Object), // updatedMeta
+      'recABC',
+      ['f1'],
     );
+    // writeConflictRecords should NOT be called in LWW mode
+    expect(mockWriteConflictRecords).not.toHaveBeenCalled();
   });
 
   it('preserves clean local changes without action', async () => {
@@ -417,10 +454,24 @@ describe('InboundSyncProcessor', () => {
       convergentFieldIds: [],
     });
 
+    mockApplyLastWriteWins.mockResolvedValueOnce({
+      updatedCanonical: { f1: 'remote1', f2: 'remote2' },
+      updatedSyncMetadata: {
+        platform_record_id: 'recABC',
+        last_synced_at: '2026-01-15T11:00:00.000Z',
+        last_synced_values: {},
+        sync_status: 'active',
+        sync_direction: 'inbound',
+        orphaned_at: null,
+        orphaned_reason: null,
+      },
+      resolvedCount: 1,
+    });
+
     await processor.processJob(createMockJob(), mockLogger as never);
 
-    // Transaction should run with both updates and conflict writes
+    // Transaction should run with both updates and LWW conflict resolution
     expect(mockTransaction).toHaveBeenCalled();
-    expect(mockWriteConflictRecords).toHaveBeenCalled();
+    expect(mockApplyLastWriteWins).toHaveBeenCalled();
   });
 });

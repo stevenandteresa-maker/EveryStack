@@ -44,7 +44,8 @@ import type {
   FieldMapping,
   AirtableTokens,
 } from '@everystack/shared/sync';
-import { detectConflicts, writeConflictRecords } from '@everystack/shared/sync';
+import { detectConflicts, writeConflictRecords, applyLastWriteWins } from '@everystack/shared/sync';
+import type { ConflictResolutionStrategy } from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { BaseProcessor } from '../../lib/base-processor';
 
@@ -77,6 +78,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         syncConfig: baseConnections.syncConfig,
         oauthTokens: baseConnections.oauthTokens,
         lastSyncAt: baseConnections.lastSyncAt,
+        conflictResolution: baseConnections.conflictResolution,
       })
       .from(baseConnections)
       .where(
@@ -97,6 +99,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     const baseId = connection.externalBaseId;
     const syncConfig = connection.syncConfig as unknown as SyncConfig;
     const platform = connection.platform as SyncPlatform;
+    const conflictResolution = (connection.conflictResolution ?? 'last_write_wins') as ConflictResolutionStrategy;
 
     const apiClient = new AirtableApiClient(tokens.access_token, baseId);
 
@@ -116,6 +119,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         externalTableId: tableConfig.external_table_id,
         syncFilter: tableConfig.sync_filter,
         platform,
+        conflictResolution,
         apiClient,
         logger,
       });
@@ -161,6 +165,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     externalTableId: string;
     syncFilter: SyncConfig['tables'][0]['sync_filter'];
     platform: SyncPlatform;
+    conflictResolution: ConflictResolutionStrategy;
     apiClient: AirtableApiClient;
     logger: Logger;
   }): Promise<{ updated: number; created: number; conflicts: number }> {
@@ -172,6 +177,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       externalTableId,
       syncFilter,
       platform,
+      conflictResolution,
       apiClient,
       logger,
     } = params;
@@ -218,6 +224,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
           inboundCanonical,
           syncedFieldIds,
           platform,
+          conflictResolution,
           fieldMappings,
           logger,
         });
@@ -251,6 +258,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     inboundCanonical: Record<string, unknown>;
     syncedFieldIds: string[];
     platform: SyncPlatform;
+    conflictResolution: ConflictResolutionStrategy;
     fieldMappings: FieldMapping[];
     logger: Logger;
   }): Promise<'created' | 'updated' | 'conflict' | 'unchanged'> {
@@ -261,6 +269,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       inboundCanonical,
       syncedFieldIds,
       platform,
+      conflictResolution,
       logger,
     } = params;
 
@@ -323,70 +332,88 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
 
     // Apply within a transaction
     await db.transaction(async (tx: DrizzleClient) => {
-      // Apply clean remote changes to canonical_data
-      if (hasRemoteChanges) {
-        const updatedCanonical = { ...currentCanonical };
-        for (const change of detection.cleanRemoteChanges) {
-          updatedCanonical[change.fieldId] = change.value;
-        }
-
-        // Update sync_metadata with new last_synced_values for applied fields
-        const appliedFieldIds = detection.cleanRemoteChanges.map((c) => c.fieldId);
-        // Also update convergent fields — both sides agree, stamp as synced
-        const convergentFields = detection.convergentFieldIds;
-        const allSyncedFieldIds = [...appliedFieldIds, ...convergentFields];
-
-        const updatedMeta = syncMetadata
-          ? updateLastSyncedValues(syncMetadata, allSyncedFieldIds, updatedCanonical)
-          : createInitialSyncMetadata(
-              platformRecordId,
-              updatedCanonical,
-              syncedFieldIds,
-            );
-
-        await tx
-          .update(records)
-          .set({
-            canonicalData: updatedCanonical,
-            syncMetadata: updatedMeta as unknown as Record<string, unknown>,
-          })
-          .where(
-            and(
-              eq(records.tenantId, tenantId),
-              eq(records.id, existing.id),
-            ),
-          );
-      } else if (detection.convergentFieldIds.length > 0 && syncMetadata) {
-        // Only convergent changes — update sync_metadata timestamps
-        const updatedMeta = updateLastSyncedValues(
-          syncMetadata,
-          detection.convergentFieldIds,
-          currentCanonical,
-        );
-
-        await tx
-          .update(records)
-          .set({
-            syncMetadata: updatedMeta as unknown as Record<string, unknown>,
-          })
-          .where(
-            and(
-              eq(records.tenantId, tenantId),
-              eq(records.id, existing.id),
-            ),
-          );
+      // 1. Build canonical with clean remote changes applied
+      let mergedCanonical = { ...currentCanonical };
+      for (const change of detection.cleanRemoteChanges) {
+        mergedCanonical[change.fieldId] = change.value;
       }
 
-      // Write conflict records
+      // 2. Compute metadata for clean remote + convergent fields
+      const cleanFieldIds = [
+        ...detection.cleanRemoteChanges.map((c) => c.fieldId),
+        ...detection.convergentFieldIds,
+      ];
+
+      let updatedMeta = syncMetadata
+        ? updateLastSyncedValues(syncMetadata, cleanFieldIds, mergedCanonical)
+        : createInitialSyncMetadata(
+            platformRecordId,
+            mergedCanonical,
+            syncedFieldIds,
+          );
+
+      // 3. Handle conflicts based on resolution strategy
       if (hasConflicts) {
-        await writeConflictRecords(tx, tenantId, existing.id, detection.conflicts, platform);
-        logger.warn(
-          { recordId: existing.id, conflictCount: detection.conflicts.length },
-          'Sync conflicts detected',
-        );
+        if (conflictResolution === 'last_write_wins') {
+          // LWW: remote wins — apply remote values, write resolved_remote
+          const lwwResult = await applyLastWriteWins(
+            tx,
+            tenantId,
+            existing.id,
+            detection.conflicts,
+            platform,
+            mergedCanonical,
+            updatedMeta,
+            platformRecordId,
+            syncedFieldIds,
+          );
+          mergedCanonical = lwwResult.updatedCanonical;
+          updatedMeta = lwwResult.updatedSyncMetadata;
+        } else {
+          // Manual: write pending conflict records, local values preserved
+          await writeConflictRecords(tx, tenantId, existing.id, detection.conflicts, platform);
+          logger.warn(
+            { recordId: existing.id, conflictCount: detection.conflicts.length },
+            'Sync conflicts detected — pending manual resolution',
+          );
+        }
+      }
+
+      // 4. Write updated canonical + metadata to records
+      const hasAnyChanges = hasRemoteChanges
+        || detection.convergentFieldIds.length > 0
+        || (hasConflicts && conflictResolution === 'last_write_wins');
+
+      if (hasAnyChanges) {
+        await tx
+          .update(records)
+          .set({
+            canonicalData: mergedCanonical,
+            syncMetadata: updatedMeta as unknown as Record<string, unknown>,
+          })
+          .where(
+            and(
+              eq(records.tenantId, tenantId),
+              eq(records.id, existing.id),
+            ),
+          );
+      } else if (cleanFieldIds.length > 0 && syncMetadata) {
+        // Only convergent changes with no canonical data modification — update metadata only
+        await tx
+          .update(records)
+          .set({
+            syncMetadata: updatedMeta as unknown as Record<string, unknown>,
+          })
+          .where(
+            and(
+              eq(records.tenantId, tenantId),
+              eq(records.id, existing.id),
+            ),
+          );
       }
     });
 
+    // In manual mode, conflicts are pending — still report as 'conflict'
     return hasConflicts ? 'conflict' : 'updated';
   }
 
