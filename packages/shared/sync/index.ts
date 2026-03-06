@@ -66,10 +66,15 @@ export type {
   CanonicalFieldType,
   CanonicalData,
   // Sync metadata
+  SyncedFieldValue,
+  SyncMetadata,
   RecordSyncMetadata,
   // Transform types
   PlatformFieldConfig,
   FieldTransform,
+  // Outbound sync
+  OutboundSyncJob,
+  OutboundSyncResult,
   // Filter grammar
   FilterOperator,
   FilterRule,
@@ -83,7 +88,19 @@ export {
   FilterRuleSchema,
   SyncTableConfigSchema,
   SyncConfigSchema,
+  SyncedFieldValueSchema,
+  SyncMetadataSchema,
 } from './types';
+
+// Sync metadata utilities
+export {
+  createInitialSyncMetadata,
+  updateLastSyncedValues,
+  getLastSyncedValue,
+} from './sync-metadata';
+
+// Outbound sync pipeline
+export { executeOutboundSync } from './outbound';
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';

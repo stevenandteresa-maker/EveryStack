@@ -104,6 +104,8 @@ export interface SyncTableConfig {
   synced_record_count: number;
   /** Previous filter saved when a filter is changed — enables undo. Null when no prior filter exists. */
   previous_sync_filter?: FilterRule[] | null;
+  /** EveryStack table UUID created for this external table. Set during schema sync. */
+  es_table_id?: string;
 }
 
 /**
@@ -124,6 +126,7 @@ export const SyncTableConfigSchema = z.object({
   estimated_record_count: z.number().int().min(0),
   synced_record_count: z.number().int().min(0),
   previous_sync_filter: z.array(FilterRuleSchema).nullable().optional(),
+  es_table_id: z.string().uuid().optional(),
 });
 
 export const SyncConfigSchema = z.object({
@@ -631,4 +634,50 @@ export interface FieldTransform {
   isLossless: boolean;
   /** Which operations this field type supports. */
   supportedOperations: Array<'read' | 'write' | 'filter' | 'sort'>;
+}
+
+// ---------------------------------------------------------------------------
+// Outbound Sync — types for pushing EveryStack edits to source platforms
+// ---------------------------------------------------------------------------
+
+/**
+ * Job data for an outbound sync BullMQ job.
+ * Represents a single record update to push to the source platform.
+ */
+export interface OutboundSyncJob {
+  /** The tenant that owns this record. */
+  tenantId: string;
+  /** The record that was edited locally. */
+  recordId: string;
+  /** The table containing the record. */
+  tableId: string;
+  /** The base connection for the synced table. */
+  baseConnectionId: string;
+  /** ES field UUIDs that were changed. */
+  changedFieldIds: string[];
+  /** The user who made the edit. */
+  editedBy: string;
+  /** Job priority — lower number = higher priority. Default: 10. */
+  priority: number;
+  /** Trace propagation for logging. */
+  traceId: string;
+}
+
+/**
+ * Result of an outbound sync execution.
+ * Success or failure — BullMQ handles retries on failure.
+ */
+export interface OutboundSyncResult {
+  /** Whether the update was pushed to the platform. */
+  success: boolean;
+  /** The platform record ID that was updated. */
+  platformRecordId: string | null;
+  /** ES field IDs that were actually synced (computed fields excluded). */
+  syncedFieldIds: string[];
+  /** ES field IDs that were skipped (computed or read-only). */
+  skippedFieldIds: string[];
+  /** Error message if the sync failed. */
+  error?: string;
+  /** HTTP status code from the platform API, if applicable. */
+  statusCode?: number;
 }
