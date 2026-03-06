@@ -681,3 +681,52 @@ export interface OutboundSyncResult {
   /** HTTP status code from the platform API, if applicable. */
   statusCode?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Conflict Detection — three-way comparison types
+// @see docs/reference/sync-engine.md § Conflict Resolution UX
+// ---------------------------------------------------------------------------
+
+/** Status values for sync_conflicts rows. */
+export type ConflictStatus = 'pending' | 'resolved_local' | 'resolved_remote' | 'resolved_merged';
+
+/**
+ * A field where both local (EveryStack) and remote (platform) values
+ * changed independently from the base (last-synced) value.
+ */
+export interface DetectedConflict {
+  /** The EveryStack field UUID. */
+  fieldId: string;
+  /** Current value in canonical_data (local edit). */
+  localValue: unknown;
+  /** Incoming value from the platform. */
+  remoteValue: unknown;
+  /** Value at last sync (common ancestor). */
+  baseValue: unknown;
+}
+
+/**
+ * A field with a one-sided change that can be applied without conflict.
+ */
+export interface CleanChange {
+  /** The EveryStack field UUID. */
+  fieldId: string;
+  /** The new value to apply. */
+  value: unknown;
+}
+
+/**
+ * Result of three-way conflict detection for a single record.
+ */
+export interface ConflictDetectionResult {
+  /** Fields where only the remote side changed — apply to canonical_data. */
+  cleanRemoteChanges: CleanChange[];
+  /** Fields where only the local side changed — preserve, no action needed. */
+  cleanLocalChanges: CleanChange[];
+  /** Fields where both sides changed to different values — write sync_conflicts. */
+  conflicts: DetectedConflict[];
+  /** Fields where no side changed. */
+  unchangedFieldIds: string[];
+  /** Fields where both sides changed to the same value — no conflict. */
+  convergentFieldIds: string[];
+}

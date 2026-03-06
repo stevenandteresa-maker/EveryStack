@@ -75,6 +75,11 @@ export type {
   // Outbound sync
   OutboundSyncJob,
   OutboundSyncResult,
+  // Conflict detection
+  ConflictStatus,
+  DetectedConflict,
+  CleanChange,
+  ConflictDetectionResult,
   // Filter grammar
   FilterOperator,
   FilterRule,
@@ -101,6 +106,9 @@ export {
 
 // Outbound sync pipeline
 export { executeOutboundSync, COMPUTED_FIELD_TYPES, isComputedFieldType } from './outbound';
+
+// Conflict detection
+export { detectConflicts, writeConflictRecords, valuesAreEqual } from './conflict-detection';
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';

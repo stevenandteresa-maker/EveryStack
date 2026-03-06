@@ -50,6 +50,11 @@ export interface InitialSyncJobData extends SyncJobData {
   workspaceId: string;
 }
 
+export interface IncrementalSyncJobData extends SyncJobData {
+  /** Job type discriminant for incremental (polling) inbound sync. */
+  jobType: 'incremental';
+}
+
 export interface EmailJobData extends BaseJobData {
   to: string;
   templateId: string;
@@ -74,7 +79,7 @@ export interface DocumentGenJobData extends BaseJobData {
  * Used for type-safe queue/worker generics.
  */
 export interface QueueJobDataMap {
-  sync: SyncJobData | InitialSyncJobData;
+  sync: SyncJobData | InitialSyncJobData | IncrementalSyncJobData;
   'sync:outbound': OutboundSyncJobData;
   'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;
