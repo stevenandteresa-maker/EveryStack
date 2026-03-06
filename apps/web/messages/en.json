@@ -17,6 +17,10 @@
   "personal_tenant": {
     "default_name": "{userName}'s Workspace"
   },
+  "my_office": {
+    "heading_personal": "My Office \u00b7 Personal",
+    "heading_org": "My Office \u00b7 {tenantName}"
+  },
   "shell": {
     "sidebar": {
       "home": "Home",
@@ -36,7 +40,9 @@
       "portals": "Portals",
       "noWorkspaces": "No workspaces yet",
       "switchError": "Unable to switch workspace. Please try again.",
-      "portalNavigate": "Open {portalName} portal"
+      "portalNavigate": "Open {portalName} portal",
+      "personalQualifier": "Personal",
+      "currentWorkspace": "Current workspace"
     },
     "header": {
       "commandBarPlaceholder": "Search...",

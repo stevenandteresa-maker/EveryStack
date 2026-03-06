@@ -17,6 +17,10 @@
   "personal_tenant": {
     "default_name": "Espacio de {userName}"
   },
+  "my_office": {
+    "heading_personal": "Mi Oficina \u00b7 Personal",
+    "heading_org": "Mi Oficina \u00b7 {tenantName}"
+  },
   "shell": {
     "sidebar": {
       "home": "Inicio",
@@ -36,7 +40,9 @@
       "portals": "Portales",
       "noWorkspaces": "Sin espacios de trabajo",
       "switchError": "No se pudo cambiar de espacio de trabajo. Inténtalo de nuevo.",
-      "portalNavigate": "Abrir portal {portalName}"
+      "portalNavigate": "Abrir portal {portalName}",
+      "personalQualifier": "Personal",
+      "currentWorkspace": "Espacio de trabajo actual"
     },
     "header": {
       "commandBarPlaceholder": "Buscar...",

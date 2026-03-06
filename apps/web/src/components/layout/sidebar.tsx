@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/stores/sidebar-store';
+import { SidebarHeader } from '@/components/shell/SidebarHeader';
 import { TenantSwitcher } from '@/components/shell/TenantSwitcher';
 import { PortalSection } from '@/components/shell/PortalSection';
 import type { SidebarNavigation } from '@/data/sidebar-navigation';
@@ -44,15 +45,22 @@ export function Sidebar({ navData }: SidebarProps) {
   const { collapsed, toggle } = useSidebarStore();
   const t = useTranslations('shell.sidebar');
 
+  const activeTenant = navData?.tenants.find((tenant) => tenant.isActive) ?? null;
+
   return (
     <aside
       data-testid="sidebar"
       className={cn(
-        'hidden tablet:flex shrink-0 transition-[width] duration-200 ease-in-out',
+        'hidden tablet:flex flex-col shrink-0 transition-[width] duration-200 ease-in-out',
         'bg-[var(--sidebar-bg)] text-[var(--sidebar-text)]',
       )}
       style={{ width: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width-expanded)' }}
     >
+      {/* Sidebar Header — always visible at top (Signal 1: Contextual Clarity) */}
+      <SidebarHeader activeTenant={activeTenant} collapsed={collapsed} />
+
+      {/* Icon Rail + Content Zone */}
+      <div className="flex flex-1 min-h-0">
       {/* Icon Rail — always visible, 48px wide */}
       <nav
         data-testid="icon-rail"
@@ -135,6 +143,7 @@ export function Sidebar({ navData }: SidebarProps) {
           )}
         </div>
       )}
+      </div>
     </aside>
   );
 }

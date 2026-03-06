@@ -8,9 +8,10 @@ import { ShellAccentProvider } from '@/components/shell/ShellAccentProvider';
 import { IntlWrapper } from '@/test-utils/intl-wrapper';
 import type { SidebarNavigation } from '@/data/sidebar-navigation';
 
-// Mock Clerk and Next.js router (required by TenantSwitcher)
+// Mock Clerk and Next.js router (required by TenantSwitcher + SidebarHeader)
 vi.mock('@clerk/nextjs', () => ({
   useClerk: () => ({ setActive: vi.fn().mockResolvedValue(undefined) }),
+  useUser: () => ({ user: { fullName: 'Test User', imageUrl: null }, isLoaded: true }),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
