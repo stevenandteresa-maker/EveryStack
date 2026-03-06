@@ -166,8 +166,8 @@ describe('airtableLinkedRecordTransform', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null for null canonical value', () => {
-      const canonical: CanonicalValue = { type: 'linked_record', value: null };
+    it('returns empty array for null canonical value', () => {
+      const canonical = { type: 'linked_record', value: null } as unknown as CanonicalValue;
       const result = airtableLinkedRecordTransform.fromCanonical(canonical, baseConfig);
       expect(result).toEqual([]);
     });

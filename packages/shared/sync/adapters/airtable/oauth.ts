@@ -21,6 +21,7 @@ const logger = createLogger({ service: 'sync-oauth' });
 const AIRTABLE_AUTH_URL = 'https://airtable.com/oauth2/v1/authorize';
 const AIRTABLE_TOKEN_URL = 'https://airtable.com/oauth2/v1/token';
 const AIRTABLE_BASES_URL = 'https://api.airtable.com/v0/meta/bases';
+const AIRTABLE_API_URL = 'https://api.airtable.com/v0';
 
 const SCOPES = 'data.records:read data.records:write schema.bases:read schema.bases:write';
 
@@ -255,4 +256,140 @@ export async function listAirtableBases(
   const parsed = AirtableBasesResponseSchema.parse(json);
 
   return parsed.bases;
+}
+
+// ---------------------------------------------------------------------------
+// Table metadata types
+// ---------------------------------------------------------------------------
+
+export interface AirtableFieldMeta {
+  id: string;
+  name: string;
+  type: string;
+  options?: Record<string, unknown>;
+}
+
+export interface AirtableTableMeta {
+  id: string;
+  name: string;
+  primaryFieldId: string;
+  fields: AirtableFieldMeta[];
+}
+
+// ---------------------------------------------------------------------------
+// List tables in a base
+// ---------------------------------------------------------------------------
+
+const AirtableTablesResponseSchema = z.object({
+  tables: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      primaryFieldId: z.string(),
+      fields: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          type: z.string(),
+          options: z.record(z.string(), z.unknown()).optional(),
+        }),
+      ),
+    }),
+  ),
+});
+
+/**
+ * List all tables and their fields for a specific base.
+ */
+export async function listAirtableTables(
+  accessToken: string,
+  baseId: string,
+): Promise<AirtableTableMeta[]> {
+  const response = await fetch(
+    `${AIRTABLE_API_URL}/meta/bases/${baseId}/tables`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    logger.error(
+      { status: response.status, body: errorText },
+      'Airtable list tables failed',
+    );
+    throw new Error(`Airtable list tables failed: ${response.status}`);
+  }
+
+  const json: unknown = await response.json();
+  const parsed = AirtableTablesResponseSchema.parse(json);
+
+  return parsed.tables;
+}
+
+// ---------------------------------------------------------------------------
+// Estimate record count
+// ---------------------------------------------------------------------------
+
+/**
+ * Estimate the record count for a table by paginating up to 5 pages.
+ *
+ * Uses pageSize=100 and stops after 5 pages to avoid rate limit exhaustion.
+ * Returns `isExact: false` if more pages exist beyond the 5-page limit.
+ */
+export async function estimateAirtableRecordCount(
+  accessToken: string,
+  baseId: string,
+  tableId: string,
+  filterFormula?: string,
+): Promise<{ count: number; isExact: boolean }> {
+  const MAX_PAGES = 5;
+  const PAGE_SIZE = 100;
+
+  let count = 0;
+  let offset: string | undefined;
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params = new URLSearchParams({ pageSize: String(PAGE_SIZE) });
+    if (offset) params.set('offset', offset);
+    if (filterFormula) params.set('filterByFormula', filterFormula);
+
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/${baseId}/${tableId}?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error(
+        { status: response.status, body: errorText },
+        'Airtable record count estimation failed',
+      );
+      throw new Error(`Airtable record count estimation failed: ${response.status}`);
+    }
+
+    const json = (await response.json()) as {
+      records: unknown[];
+      offset?: string;
+    };
+
+    count += json.records.length;
+
+    if (!json.offset) {
+      return { count, isExact: true };
+    }
+
+    offset = json.offset;
+  }
+
+  // Exhausted max pages — more records exist
+  return { count, isExact: false };
 }

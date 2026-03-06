@@ -50,5 +50,37 @@
       "commandBarShortcut": "⌘K",
       "search": "Buscar"
     }
+  },
+  "sync_wizard": {
+    "title": "Conectar y sincronizar",
+    "description": "Conecta tu base de Airtable y elige qué tablas sincronizar.",
+    "step_authenticate": "Autenticar",
+    "step_select_base": "Seleccionar base",
+    "step_select_tables": "Seleccionar tablas",
+    "step1_description": "Conecta tu cuenta de Airtable para comenzar. Se abrirá una ventana para autorizar el acceso.",
+    "connect_airtable": "Conectar Airtable",
+    "step2_description": "Elige qué base de Airtable deseas sincronizar con este espacio de trabajo.",
+    "no_bases": "No se encontraron bases. Asegúrate de que tu cuenta de Airtable tenga al menos una base.",
+    "step3_description": "Selecciona las tablas a sincronizar y opcionalmente agrega filtros para limitar los registros importados.",
+    "quota_selected": "{tables} tablas — ~{records} registros",
+    "quota_remaining": "Restante: ~{remaining} registros",
+    "quota_exceeded": "Las tablas seleccionadas exceden la cuota de registros de tu plan. Elimina tablas o agrega filtros para reducir el conteo.",
+    "records": "registros",
+    "filters": "Filtros",
+    "large_table_warning": "Esta tabla tiene más de 10,000 registros. Considera agregar filtros para reducir el tiempo de sincronización.",
+    "filter_where": "Donde",
+    "filter_and": "Y",
+    "filter_or": "O",
+    "filter_add": "Agregar filtro",
+    "filter_remove": "Eliminar filtro",
+    "filter_value_placeholder": "Valor",
+    "back": "Atrás",
+    "start_sync": "Conectar e iniciar sincronización",
+    "sync_started": "Sincronización iniciada exitosamente. Los registros aparecerán a medida que se importen.",
+    "error_oauth": "La autorización falló. Inténtalo de nuevo.",
+    "error_load_bases": "No se pudieron cargar las bases. Inténtalo de nuevo.",
+    "error_load_tables": "No se pudieron cargar las tablas. Inténtalo de nuevo.",
+    "error_start_sync": "No se pudo iniciar la sincronización. Inténtalo de nuevo.",
+    "error_quota_check": "No se pudo verificar la cuota. Inténtalo de nuevo."
   }
 }

@@ -50,5 +50,37 @@
       "commandBarShortcut": "⌘K",
       "search": "Search"
     }
+  },
+  "sync_wizard": {
+    "title": "Connect & Sync",
+    "description": "Connect your Airtable base and choose which tables to sync.",
+    "step_authenticate": "Authenticate",
+    "step_select_base": "Select Base",
+    "step_select_tables": "Select Tables",
+    "step1_description": "Connect your Airtable account to get started. A popup will open for you to authorize access.",
+    "connect_airtable": "Connect Airtable",
+    "step2_description": "Choose which Airtable base you'd like to sync with this workspace.",
+    "no_bases": "No bases found. Make sure your Airtable account has at least one base.",
+    "step3_description": "Select the tables to sync and optionally add filters to limit which records are imported.",
+    "quota_selected": "{tables} tables — ~{records} records",
+    "quota_remaining": "Remaining: ~{remaining} records",
+    "quota_exceeded": "The selected tables exceed your plan's record quota. Remove tables or add filters to reduce the count.",
+    "records": "records",
+    "filters": "Filters",
+    "large_table_warning": "This table has over 10,000 records. Consider adding filters to reduce sync time.",
+    "filter_where": "Where",
+    "filter_and": "AND",
+    "filter_or": "OR",
+    "filter_add": "Add filter",
+    "filter_remove": "Remove filter",
+    "filter_value_placeholder": "Value",
+    "back": "Back",
+    "start_sync": "Connect & Start Sync",
+    "sync_started": "Sync started successfully. Records will appear as they are imported.",
+    "error_oauth": "Authorization failed. Please try again.",
+    "error_load_bases": "Failed to load bases. Please try again.",
+    "error_load_tables": "Failed to load tables. Please try again.",
+    "error_start_sync": "Failed to start sync. Please try again.",
+    "error_quota_check": "Failed to check quota. Please try again."
   }
 }

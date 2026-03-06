@@ -8,20 +8,108 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 // ---------------------------------------------------------------------------
 
 export const airtableHandlers = [
-  http.get('https://api.airtable.com/v0/:baseId/:tableId', ({ params: _params }) => {
-    return HttpResponse.json({
-      records: [
-        {
-          id: 'rec_mock_001',
-          fields: { Name: 'Test Record', Status: 'Active' },
-          createdTime: '2024-01-01T00:00:00.000Z',
-        },
-      ],
-    });
+  http.get('https://api.airtable.com/v0/:baseId/:tableId', ({ request, params: _params }) => {
+    const url = new URL(request.url);
+    const pageSize = parseInt(url.searchParams.get('pageSize') ?? '100', 10);
+    const offset = url.searchParams.get('offset');
+
+    // Generate mock records based on pageSize
+    const records = Array.from({ length: Math.min(pageSize, 5) }, (_, i) => ({
+      id: `rec_mock_${offset ? 'p2_' : ''}${String(i + 1).padStart(3, '0')}`,
+      fields: { Name: `Test Record ${i + 1}`, Status: 'Active' },
+      createdTime: '2024-01-01T00:00:00.000Z',
+    }));
+
+    // Simulate pagination: return offset on first page if no offset provided
+    const response: Record<string, unknown> = { records };
+    if (!offset) {
+      response['offset'] = 'mock_offset_page2';
+    }
+
+    return HttpResponse.json(response);
   }),
   http.patch('https://api.airtable.com/v0/:baseId/:tableId', () => {
     return HttpResponse.json({
       records: [{ id: 'rec_mock_001', fields: {} }],
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
+// Airtable OAuth Handlers
+// ---------------------------------------------------------------------------
+
+export const airtableOAuthHandlers = [
+  // Token exchange + refresh
+  http.post('https://airtable.com/oauth2/v1/token', async ({ request }) => {
+    const body = await request.text();
+    const params = new URLSearchParams(body);
+    const grantType = params.get('grant_type');
+
+    if (grantType === 'authorization_code') {
+      return HttpResponse.json({
+        access_token: 'atok_mock_exchange',
+        refresh_token: 'rtok_mock_exchange',
+        token_type: 'bearer',
+        expires_in: 3600,
+        scope: 'data.records:read data.records:write schema.bases:read schema.bases:write',
+      });
+    }
+
+    if (grantType === 'refresh_token') {
+      return HttpResponse.json({
+        access_token: 'atok_mock_refreshed',
+        refresh_token: 'rtok_mock_refreshed',
+        token_type: 'bearer',
+        expires_in: 3600,
+        scope: 'data.records:read data.records:write schema.bases:read schema.bases:write',
+      });
+    }
+
+    return HttpResponse.json({ error: 'unsupported_grant_type' }, { status: 400 });
+  }),
+
+  // List bases
+  http.get('https://api.airtable.com/v0/meta/bases', ({ request }) => {
+    // Check if this is the table listing endpoint (has baseId in path)
+    const url = new URL(request.url);
+    if (url.pathname.match(/\/v0\/meta\/bases\/[^/]+\/tables/)) {
+      // Handled by the tables handler below
+      return;
+    }
+    return HttpResponse.json({
+      bases: [
+        { id: 'appMock001', name: 'Mock Base 1', permissionLevel: 'create' },
+        { id: 'appMock002', name: 'Mock Base 2', permissionLevel: 'read' },
+      ],
+    });
+  }),
+
+  // List tables in a base
+  http.get('https://api.airtable.com/v0/meta/bases/:baseId/tables', () => {
+    return HttpResponse.json({
+      tables: [
+        {
+          id: 'tblMock001',
+          name: 'Contacts',
+          primaryFieldId: 'fldName001',
+          fields: [
+            { id: 'fldName001', name: 'Name', type: 'singleLineText' },
+            { id: 'fldEmail001', name: 'Email', type: 'email' },
+            { id: 'fldStatus001', name: 'Status', type: 'singleSelect', options: { choices: [{ name: 'Active' }, { name: 'Inactive' }] } },
+          ],
+        },
+        {
+          id: 'tblMock002',
+          name: 'Projects',
+          primaryFieldId: 'fldProjName001',
+          fields: [
+            { id: 'fldProjName001', name: 'Project Name', type: 'singleLineText' },
+            { id: 'fldDueDate001', name: 'Due Date', type: 'date' },
+            { id: 'fldBudget001', name: 'Budget', type: 'currency' },
+          ],
+        },
+      ],
     });
   }),
 ];
@@ -88,6 +176,7 @@ export const smartsuiteHandlers = [
 
 export const mockApiServer: SetupServer = setupServer(
   ...airtableHandlers,
+  ...airtableOAuthHandlers,
   ...notionHandlers,
   ...smartsuiteHandlers,
 );

@@ -6,6 +6,15 @@ export default defineConfig({
     environment: 'node',
     include: ['**/*.test.ts', '**/__tests__/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
+    env: {
+      DATABASE_URL:
+        process.env.DATABASE_URL ??
+        'postgres://everystack_test:test_password@localhost:6433/everystack_test',
+      DATABASE_READ_URL:
+        process.env.DATABASE_READ_URL ??
+        process.env.DATABASE_URL ??
+        'postgres://everystack_test:test_password@localhost:6433/everystack_test',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
