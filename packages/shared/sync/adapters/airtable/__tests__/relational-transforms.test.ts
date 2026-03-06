@@ -165,6 +165,43 @@ describe('airtableLinkedRecordTransform', () => {
       const result = airtableLinkedRecordTransform.fromCanonical(canonical, baseConfig);
       expect(result).toBeNull();
     });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'linked_record', value: null };
+      const result = airtableLinkedRecordTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toEqual([]);
+    });
+
+    it('handles mixed resolved and filtered-out entries', () => {
+      const config: PlatformFieldConfig = {
+        ...baseConfig,
+        options: {
+          ...baseConfig.options,
+          reverseRecordIdMap: { 'es-uuid-111': 'recAAA' },
+        },
+      };
+      const canonical: CanonicalValue = {
+        type: 'linked_record',
+        value: [
+          { record_id: 'es-uuid-111' },
+          { record_id: null, platform_record_id: 'recCCC', filtered_out: true },
+          { record_id: 'es-uuid-999' },
+        ],
+      };
+      const result = airtableLinkedRecordTransform.fromCanonical(canonical, config);
+      expect(result).toEqual(['recAAA', 'recCCC']);
+    });
+
+    it('skips entries with null record_id and no platform_record_id', () => {
+      const canonical: CanonicalValue = {
+        type: 'linked_record',
+        value: [
+          { record_id: null },
+        ],
+      };
+      const result = airtableLinkedRecordTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toEqual([]);
+    });
   });
 
   it('is marked as lossless', () => {

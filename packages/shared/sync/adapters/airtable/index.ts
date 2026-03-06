@@ -20,6 +20,14 @@ import { AIRTABLE_RELATIONAL_TRANSFORMS } from './relational-transforms';
 import { AIRTABLE_IDENTIFICATION_TRANSFORMS } from './identification-transforms';
 import { AIRTABLE_LOSSY_TRANSFORMS } from './lossy-transforms';
 
+// Re-export filter pushdown utilities
+export {
+  translateFilterToFormula,
+  applyLocalFilters,
+  getLocalOnlyFilters,
+  canPushDown,
+} from './filter-pushdown';
+
 const logger = createLogger({ service: 'sync' });
 
 /**

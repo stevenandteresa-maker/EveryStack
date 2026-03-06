@@ -185,6 +185,11 @@ describe('airtableUpdatedByTransform', () => {
       expect(result).toEqual({ type: 'updated_by', value: 'usr_modifier' });
     });
 
+    it('falls back to string for non-collaborator value', () => {
+      const result = airtableUpdatedByTransform.toCanonical('usr_fallback', baseConfig);
+      expect(result).toEqual({ type: 'updated_by', value: 'usr_fallback' });
+    });
+
     it('returns null value for null input', () => {
       const result = airtableUpdatedByTransform.toCanonical(null, baseConfig);
       expect(result).toEqual({ type: 'updated_by', value: null });
@@ -196,6 +201,12 @@ describe('airtableUpdatedByTransform', () => {
       const canonical: CanonicalValue = { type: 'updated_by', value: 'usr_modifier' };
       const result = airtableUpdatedByTransform.fromCanonical(canonical, baseConfig);
       expect(result).toBe('usr_modifier');
+    });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'updated_by', value: null };
+      const result = airtableUpdatedByTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBeNull();
     });
 
     it('returns null for mismatched canonical type', () => {
@@ -524,6 +535,95 @@ describe('airtableAddressTransform', () => {
         },
       });
     });
+
+    it('passes through a structured address with lat/lng', () => {
+      const structured = {
+        street: '1600 Amphitheatre Pkwy',
+        city: 'Mountain View',
+        state: 'CA',
+        postal_code: '94043',
+        country: 'US',
+        lat: 37.4220,
+        lng: -122.0841,
+      };
+      const result = airtableAddressTransform.toCanonical(structured, baseConfig);
+      expect(result).toEqual({
+        type: 'address',
+        value: {
+          street: '1600 Amphitheatre Pkwy',
+          street2: null,
+          city: 'Mountain View',
+          state: 'CA',
+          postal_code: '94043',
+          country: 'US',
+          lat: 37.4220,
+          lng: -122.0841,
+        },
+      });
+    });
+
+    it('parses a ZIP+4 code (10-character hyphenated)', () => {
+      const result = airtableAddressTransform.toCanonical(
+        '123 Main St, Springfield, IL 62704-1234, USA',
+        baseConfig,
+      );
+      expect(result).toEqual({
+        type: 'address',
+        value: {
+          street: '123 Main St',
+          street2: null,
+          city: 'Springfield',
+          state: 'IL',
+          postal_code: '62704-1234',
+          country: 'USA',
+          lat: null,
+          lng: null,
+        },
+      });
+    });
+
+    it('handles state without ZIP code', () => {
+      const result = airtableAddressTransform.toCanonical(
+        '123 Main St, Springfield, Illinois',
+        baseConfig,
+      );
+      expect(result).toEqual({
+        type: 'address',
+        value: {
+          street: '123 Main St',
+          street2: null,
+          city: 'Springfield',
+          state: 'Illinois',
+          postal_code: null,
+          country: null,
+          lat: null,
+          lng: null,
+        },
+      });
+    });
+
+    it('passes through a structured address with street2', () => {
+      const structured = {
+        street: '100 Main St',
+        street2: 'Apt 4B',
+        city: 'Denver',
+        state: 'CO',
+      };
+      const result = airtableAddressTransform.toCanonical(structured, baseConfig);
+      expect(result).toEqual({
+        type: 'address',
+        value: {
+          street: '100 Main St',
+          street2: 'Apt 4B',
+          city: 'Denver',
+          state: 'CO',
+          postal_code: null,
+          country: null,
+          lat: null,
+          lng: null,
+        },
+      });
+    });
   });
 
   describe('fromCanonical', () => {
@@ -673,6 +773,14 @@ describe('airtableFullNameTransform', () => {
     it('returns null value for undefined input', () => {
       const result = airtableFullNameTransform.toCanonical(undefined, baseConfig);
       expect(result).toEqual({ type: 'full_name', value: null });
+    });
+
+    it('handles prefix-only input', () => {
+      const result = airtableFullNameTransform.toCanonical('Dr.', baseConfig);
+      expect(result).toEqual({
+        type: 'full_name',
+        value: { prefix: 'Dr.', first: null, middle: null, last: null, suffix: null },
+      });
     });
 
     it('returns null value for empty string', () => {
@@ -862,6 +970,15 @@ describe('airtableSocialTransform', () => {
       expect(result).toEqual({
         type: 'social',
         value: { linkedin: 'https://linkedin.com/in/jane', github: 'https://github.com/jane' },
+      });
+    });
+
+    it('filters out null values from a pre-structured social object', () => {
+      const structured = { linkedin: 'https://linkedin.com/in/jane', github: null };
+      const result = airtableSocialTransform.toCanonical(structured, baseConfig);
+      expect(result).toEqual({
+        type: 'social',
+        value: { linkedin: 'https://linkedin.com/in/jane' },
       });
     });
   });

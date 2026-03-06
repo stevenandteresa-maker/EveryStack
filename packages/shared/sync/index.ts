@@ -70,13 +70,67 @@ export type {
   // Transform types
   PlatformFieldConfig,
   FieldTransform,
+  // Filter grammar
+  FilterOperator,
+  FilterRule,
+  SyncTableConfig,
+  SyncConfig,
+} from './types';
+
+// Filter & sync config schemas
+export {
+  FilterOperatorSchema,
+  FilterRuleSchema,
+  SyncTableConfigSchema,
+  SyncConfigSchema,
 } from './types';
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';
 
 // Adapter types
-export type { PlatformAdapter, FieldMapping } from './adapters/types';
+export type {
+  PlatformAdapter,
+  FieldMapping,
+  PlatformRateLimits,
+  RateLimit,
+  RetryStrategy,
+} from './adapters/types';
+
+// Rate limiter
+export {
+  RateLimiter,
+  rateLimiter,
+  AIRTABLE_RATE_LIMITS,
+} from './rate-limiter';
+export type { RateLimitResult } from './rate-limiter';
+
+// Record quota enforcement
+export {
+  PLAN_QUOTAS,
+  checkRecordQuota,
+  canSyncRecords,
+  enforceQuotaOnBatch,
+  canCreateRecord,
+  countTenantRecords,
+  getTenantPlanQuota,
+  incrementQuotaCache,
+  decrementQuotaCache,
+  invalidateQuotaCache,
+  setQuotaRedisClient,
+} from './quota';
+export type {
+  QuotaResult,
+  SyncQuotaCheck,
+  BatchQuotaResult,
+} from './quota';
 
 // Platform adapters
-export { AirtableAdapter, registerAirtableTransforms } from './adapters/airtable';
+export {
+  AirtableAdapter,
+  registerAirtableTransforms,
+  translateFilterToFormula,
+  applyLocalFilters,
+  getLocalOnlyFilters,
+  canPushDown,
+} from './adapters/airtable';

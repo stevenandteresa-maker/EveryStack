@@ -109,6 +109,12 @@ describe('airtableMultilineTextTransform', () => {
       const result = airtableMultilineTextTransform.fromCanonical(canonical, baseConfig);
       expect(result).toBeNull();
     });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'text', value: 'hello' };
+      const result = airtableMultilineTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBeNull();
+    });
   });
 
   it('is marked as lossless', () => {
@@ -148,6 +154,28 @@ describe('airtableRichTextTransform', () => {
         type: 'text',
         text: 'bold',
         marks: [{ type: 'bold' }],
+      });
+    });
+
+    it('converts Markdown with italic to TipTap JSON', () => {
+      const result = airtableRichTextTransform.toCanonical('This is *italic* text', baseConfig);
+      const doc = (result as { type: 'smart_doc'; value: { content: Array<{ content: unknown[] }> } }).value;
+      const paragraph = doc.content[0]!;
+      expect(paragraph.content).toContainEqual({
+        type: 'text',
+        text: 'italic',
+        marks: [{ type: 'italic' }],
+      });
+    });
+
+    it('converts Markdown with inline code to TipTap JSON', () => {
+      const result = airtableRichTextTransform.toCanonical('Use the `console.log` function', baseConfig);
+      const doc = (result as { type: 'smart_doc'; value: { content: Array<{ content: unknown[] }> } }).value;
+      const paragraph = doc.content[0]!;
+      expect(paragraph.content).toContainEqual({
+        type: 'text',
+        text: 'console.log',
+        marks: [{ type: 'code' }],
       });
     });
 
@@ -215,6 +243,64 @@ describe('airtableRichTextTransform', () => {
       expect(result).toBe('This is **bold** text');
     });
 
+    it('converts TipTap italic marks back to Markdown italic', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'This is ' },
+                { type: 'text', text: 'italic', marks: [{ type: 'italic' }] },
+                { type: 'text', text: ' text' },
+              ],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('This is *italic* text');
+    });
+
+    it('converts TipTap code marks back to Markdown inline code', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'Use ' },
+                { type: 'text', text: 'console.log', marks: [{ type: 'code' }] },
+              ],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('Use `console.log`');
+    });
+
+    it('handles unknown node types in TipTap via fallback', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'blockquote',
+              content: [{ type: 'text', text: 'A quote' }],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('A quote');
+    });
+
     it('converts TipTap heading back to Markdown heading', () => {
       const canonical: CanonicalValue = {
         type: 'smart_doc',
@@ -243,6 +329,69 @@ describe('airtableRichTextTransform', () => {
       const canonical: CanonicalValue = { type: 'smart_doc', value: 'doc_ref_123' };
       const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
       expect(result).toBe('doc_ref_123');
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'text', value: 'hello' };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBeNull();
+    });
+
+    it('ignores non-text inline nodes in TipTap content', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'before ' },
+                { type: 'image', attrs: { src: 'test.png' } },
+                { type: 'text', text: ' after' },
+              ],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('before  after');
+    });
+
+    it('ignores unknown mark types during fromCanonical', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'styled', marks: [{ type: 'strikethrough' }] },
+              ],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('styled');
+    });
+
+    it('defaults heading level to 1 when attrs missing', () => {
+      const canonical: CanonicalValue = {
+        type: 'smart_doc',
+        value: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              content: [{ type: 'text', text: 'No Level' }],
+            },
+          ],
+        },
+      };
+      const result = airtableRichTextTransform.fromCanonical(canonical, baseConfig);
+      expect(result).toBe('# No Level');
     });
   });
 

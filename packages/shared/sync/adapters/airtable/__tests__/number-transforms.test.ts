@@ -101,6 +101,16 @@ describe('airtableCurrencyTransform', () => {
       const canonical: CanonicalValue = { type: 'currency', value: 1500.50 };
       expect(airtableCurrencyTransform.fromCanonical(canonical, baseConfig)).toBe(1500.50);
     });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'currency', value: null };
+      expect(airtableCurrencyTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'text', value: 'hello' };
+      expect(airtableCurrencyTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
   });
 });
 
@@ -127,6 +137,16 @@ describe('airtablePercentTransform', () => {
     it('returns the decimal value', () => {
       const canonical: CanonicalValue = { type: 'percent', value: 0.75 };
       expect(airtablePercentTransform.fromCanonical(canonical, baseConfig)).toBe(0.75);
+    });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'percent', value: null };
+      expect(airtablePercentTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'number', value: 0.75 };
+      expect(airtablePercentTransform.fromCanonical(canonical, baseConfig)).toBeNull();
     });
   });
 });
@@ -160,6 +180,16 @@ describe('airtableRatingTransform', () => {
     it('returns the integer value', () => {
       const canonical: CanonicalValue = { type: 'rating', value: 5 };
       expect(airtableRatingTransform.fromCanonical(canonical, baseConfig)).toBe(5);
+    });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'rating', value: null };
+      expect(airtableRatingTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'number', value: 5 };
+      expect(airtableRatingTransform.fromCanonical(canonical, baseConfig)).toBeNull();
     });
   });
 });
@@ -254,6 +284,16 @@ describe('airtableProgressTransform', () => {
       const canonical: CanonicalValue = { type: 'progress', value: 75 };
       expect(airtableProgressTransform.fromCanonical(canonical, baseConfig)).toBe(75);
     });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'progress', value: null };
+      expect(airtableProgressTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'number', value: 75 };
+      expect(airtableProgressTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
   });
 });
 
@@ -286,6 +326,16 @@ describe('airtableAutoNumberTransform', () => {
     it('returns the integer value', () => {
       const canonical: CanonicalValue = { type: 'auto_number', value: 1001 };
       expect(airtableAutoNumberTransform.fromCanonical(canonical, baseConfig)).toBe(1001);
+    });
+
+    it('returns null for null canonical value', () => {
+      const canonical: CanonicalValue = { type: 'auto_number', value: null };
+      expect(airtableAutoNumberTransform.fromCanonical(canonical, baseConfig)).toBeNull();
+    });
+
+    it('returns null for mismatched canonical type', () => {
+      const canonical: CanonicalValue = { type: 'number', value: 1001 };
+      expect(airtableAutoNumberTransform.fromCanonical(canonical, baseConfig)).toBeNull();
     });
   });
 
