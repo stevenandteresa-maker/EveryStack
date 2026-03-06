@@ -83,6 +83,19 @@
     "error_start_sync": "Failed to start sync. Please try again.",
     "error_quota_check": "Failed to check quota. Please try again."
   },
+  "sync_filter_editor": {
+    "currently_syncing": "Currently syncing: {synced} of {total} records",
+    "estimated_after_change": "Estimated after change: ~{count} records",
+    "estimated_no_change": "Estimated after change: ~{count} records (no change)",
+    "estimating": "Estimating...",
+    "quota_remaining": "Record quota: {remaining} remaining",
+    "quota_exceeded": "This filter would exceed your record quota by {overage} records.",
+    "save_and_resync": "Save & Re-sync",
+    "cancel": "Cancel",
+    "save_success": "Filter saved. Re-sync started.",
+    "save_error": "Failed to save filter. Please try again.",
+    "no_filter": "No filter applied — syncing all records."
+  },
   "sync_orphans": {
     "banner_message": "{count, plural, one {# record} other {# records}} no longer match your sync filter. These records exist in EveryStack but are no longer being synced from Airtable. They won't receive updates.",
     "delete_button": "Delete Orphaned Records",
