@@ -104,6 +104,8 @@ export interface SyncTableConfig {
   synced_record_count: number;
   /** Previous filter saved when a filter is changed — enables undo. Null when no prior filter exists. */
   previous_sync_filter?: FilterRule[] | null;
+  /** EveryStack table UUID created for this external table. Set during schema sync. */
+  es_table_id?: string;
 }
 
 /**
@@ -124,6 +126,7 @@ export const SyncTableConfigSchema = z.object({
   estimated_record_count: z.number().int().min(0),
   synced_record_count: z.number().int().min(0),
   previous_sync_filter: z.array(FilterRuleSchema).nullable().optional(),
+  es_table_id: z.string().uuid().optional(),
 });
 
 export const SyncConfigSchema = z.object({
@@ -540,23 +543,58 @@ export type CanonicalData = Record<string, unknown>;
 // ---------------------------------------------------------------------------
 
 /**
+ * Per-field snapshot at last sync — used for conflict detection.
+ * Each field's canonical value and the timestamp it was last synced.
+ */
+export interface SyncedFieldValue {
+  /** The canonical field value at last sync. */
+  value: unknown;
+  /** ISO 8601 timestamp when this field was last synced. */
+  synced_at: string;
+}
+
+export const SyncedFieldValueSchema = z.object({
+  value: z.unknown(),
+  synced_at: z.string().datetime({ offset: true }),
+});
+
+/**
  * Per-record sync metadata tracking the relationship between
  * the canonical record and its source platform record.
+ *
+ * Stored in `records.sync_metadata` JSONB column.
  */
-export interface RecordSyncMetadata {
+export interface SyncMetadata {
   /** The record's ID on the source platform. */
   platform_record_id: string;
   /** ISO 8601 timestamp of last successful sync. */
   last_synced_at: string;
-  /** Snapshot of field values at last sync for conflict detection. */
-  last_synced_value: Record<string, unknown>;
+  /** Per-field snapshot of values at last sync for conflict detection. */
+  last_synced_values: Record<string, SyncedFieldValue>;
   /** Whether this record is actively synced or orphaned by filter changes. */
   sync_status: 'active' | 'orphaned';
+  /** Direction of sync for this record. */
+  sync_direction: 'inbound' | 'outbound' | 'both';
   /** ISO 8601 timestamp when the record was orphaned, or null. */
   orphaned_at: string | null;
   /** Reason the record was orphaned, or null. */
   orphaned_reason: 'filter_changed' | null;
 }
+
+export const SyncMetadataSchema = z.object({
+  platform_record_id: z.string().min(1),
+  last_synced_at: z.string().datetime({ offset: true }),
+  last_synced_values: z.record(z.string(), SyncedFieldValueSchema),
+  sync_status: z.enum(['active', 'orphaned']),
+  sync_direction: z.enum(['inbound', 'outbound', 'both']),
+  orphaned_at: z.string().datetime({ offset: true }).nullable(),
+  orphaned_reason: z.enum(['filter_changed']).nullable(),
+});
+
+/**
+ * @deprecated Use `SyncMetadata` instead. Kept for backward compatibility.
+ */
+export type RecordSyncMetadata = SyncMetadata;
 
 // ---------------------------------------------------------------------------
 // Platform field configuration — passed to transform functions
@@ -596,4 +634,99 @@ export interface FieldTransform {
   isLossless: boolean;
   /** Which operations this field type supports. */
   supportedOperations: Array<'read' | 'write' | 'filter' | 'sort'>;
+}
+
+// ---------------------------------------------------------------------------
+// Outbound Sync — types for pushing EveryStack edits to source platforms
+// ---------------------------------------------------------------------------
+
+/**
+ * Job data for an outbound sync BullMQ job.
+ * Represents a single record update to push to the source platform.
+ */
+export interface OutboundSyncJob {
+  /** The tenant that owns this record. */
+  tenantId: string;
+  /** The record that was edited locally. */
+  recordId: string;
+  /** The table containing the record. */
+  tableId: string;
+  /** The base connection for the synced table. */
+  baseConnectionId: string;
+  /** ES field UUIDs that were changed. */
+  changedFieldIds: string[];
+  /** The user who made the edit. */
+  editedBy: string;
+  /** Job priority — lower number = higher priority. Default: 10. */
+  priority: number;
+  /** Trace propagation for logging. */
+  traceId: string;
+}
+
+/**
+ * Result of an outbound sync execution.
+ * Success or failure — BullMQ handles retries on failure.
+ */
+export interface OutboundSyncResult {
+  /** Whether the update was pushed to the platform. */
+  success: boolean;
+  /** The platform record ID that was updated. */
+  platformRecordId: string | null;
+  /** ES field IDs that were actually synced (computed fields excluded). */
+  syncedFieldIds: string[];
+  /** ES field IDs that were skipped (computed or read-only). */
+  skippedFieldIds: string[];
+  /** Error message if the sync failed. */
+  error?: string;
+  /** HTTP status code from the platform API, if applicable. */
+  statusCode?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Conflict Detection — three-way comparison types
+// @see docs/reference/sync-engine.md § Conflict Resolution UX
+// ---------------------------------------------------------------------------
+
+/** Status values for sync_conflicts rows. */
+export type ConflictStatus = 'pending' | 'resolved_local' | 'resolved_remote' | 'resolved_merged';
+
+/**
+ * A field where both local (EveryStack) and remote (platform) values
+ * changed independently from the base (last-synced) value.
+ */
+export interface DetectedConflict {
+  /** The EveryStack field UUID. */
+  fieldId: string;
+  /** Current value in canonical_data (local edit). */
+  localValue: unknown;
+  /** Incoming value from the platform. */
+  remoteValue: unknown;
+  /** Value at last sync (common ancestor). */
+  baseValue: unknown;
+}
+
+/**
+ * A field with a one-sided change that can be applied without conflict.
+ */
+export interface CleanChange {
+  /** The EveryStack field UUID. */
+  fieldId: string;
+  /** The new value to apply. */
+  value: unknown;
+}
+
+/**
+ * Result of three-way conflict detection for a single record.
+ */
+export interface ConflictDetectionResult {
+  /** Fields where only the remote side changed — apply to canonical_data. */
+  cleanRemoteChanges: CleanChange[];
+  /** Fields where only the local side changed — preserve, no action needed. */
+  cleanLocalChanges: CleanChange[];
+  /** Fields where both sides changed to different values — write sync_conflicts. */
+  conflicts: DetectedConflict[];
+  /** Fields where no side changed. */
+  unchangedFieldIds: string[];
+  /** Fields where both sides changed to the same value — no conflict. */
+  convergentFieldIds: string[];
 }

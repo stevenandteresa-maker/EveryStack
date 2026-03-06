@@ -36,6 +36,23 @@ export type {
   ApiKeyCreateInput,
 } from './api-key-utils';
 export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc } from 'drizzle-orm';
+export type { SQL } from 'drizzle-orm';
+export { buildSearchVector, extractSearchableText } from './search';
+export type { SearchFieldDefinition } from './search';
+export {
+  generateIndexName,
+  createFieldExpressionIndex,
+  dropFieldExpressionIndex,
+  INDEXABLE_FIELD_TYPES,
+} from './index-utils';
+export type { IndexableFieldType } from './index-utils';
+export {
+  canonicalFieldExpression,
+  canonicalFieldExists,
+  canonicalFieldOrderBy,
+  QUERYABLE_FIELD_TYPES,
+} from './query-helpers';
+export type { QueryableFieldType, SortDirection } from './query-helpers';
 export { effectiveMemberships } from './schema';
 export type { EffectiveMembership } from './schema';
 export {
@@ -83,6 +100,9 @@ export {
   portalAccessRelations,
   syncedFieldMappings,
   syncedFieldMappingsRelations,
+  syncConflicts,
+  syncConflictsRelations,
+  fieldExpressionIndexes,
 } from './schema';
 export type {
   User, NewUser,
@@ -106,4 +126,6 @@ export type {
   Portal, NewPortal,
   PortalAccess, NewPortalAccess,
   SyncedFieldMapping, NewSyncedFieldMapping,
+  SyncConflict, NewSyncConflict,
+  FieldExpressionIndex, NewFieldExpressionIndex,
 } from './schema';

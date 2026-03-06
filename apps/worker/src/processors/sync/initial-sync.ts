@@ -35,6 +35,7 @@ import {
   rateLimiter,
 } from '@everystack/shared/sync';
 import type { SyncConfig, FieldMapping, AirtableTokens } from '@everystack/shared/sync';
+import { createInitialSyncMetadata } from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { BaseProcessor } from '../../lib/base-processor';
 import { syncSchema } from './schema-sync';
@@ -279,19 +280,17 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
       if (acceptedRecords.length > 0) {
         // Batch insert records
         const db = getDbForTenant(tenantId);
+        const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
         const recordValues = acceptedRecords.map((r) => ({
           tenantId,
           id: generateUUIDv7(),
           tableId: esTableId,
           canonicalData: r.canonical,
-          syncMetadata: {
-            platform_record_id: r.airtableId,
-            last_synced_at: new Date().toISOString(),
-            last_synced_value: r.canonical,
-            sync_status: 'active' as const,
-            orphaned_at: null,
-            orphaned_reason: null,
-          },
+          syncMetadata: createInitialSyncMetadata(
+            r.airtableId,
+            r.canonical,
+            syncedFieldIds,
+          ) as unknown as Record<string, unknown>,
           createdBy,
         }));
 

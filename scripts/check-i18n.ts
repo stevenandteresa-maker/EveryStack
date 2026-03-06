@@ -249,6 +249,20 @@ function isJsxAttributeExcluded(node: ts.StringLiteral): boolean {
   return false;
 }
 
+function isTranslationFunctionArg(node: ts.StringLiteral): boolean {
+  const parent = node.parent;
+  if (!parent) return false;
+  // Direct argument to t('key') or t('namespace.key')
+  if (
+    ts.isCallExpression(parent) &&
+    ts.isIdentifier(parent.expression) &&
+    parent.expression.text === 't'
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function isToastCall(node: ts.StringLiteral): boolean {
   let current: ts.Node | undefined = node.parent;
   while (current) {
@@ -336,6 +350,12 @@ function checkFile(filePath: string, sourceFile: ts.SourceFile): Violation[] {
 
       // Skip excluded JSX attributes (className, data-*, etc.)
       if (isJsxAttributeExcluded(node)) {
+        ts.forEachChild(node, visit);
+        return;
+      }
+
+      // Skip strings that are already arguments to t() translation function
+      if (isTranslationFunctionArg(node)) {
         ts.forEachChild(node, visit);
         return;
       }

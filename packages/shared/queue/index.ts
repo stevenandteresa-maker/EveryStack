@@ -7,6 +7,8 @@ export type {
   FileOrphanCleanupJobData,
   SyncJobData,
   InitialSyncJobData,
+  IncrementalSyncJobData,
+  OutboundSyncJobData,
   EmailJobData,
   AutomationJobData,
   DocumentGenJobData,

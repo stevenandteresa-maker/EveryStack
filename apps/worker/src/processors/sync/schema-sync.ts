@@ -217,6 +217,7 @@ export async function syncSchema(params: SchemaSyncParams): Promise<SchemaSyncRe
     updatedTables.push({
       ...tableConfig,
       sync_filter: updatedFilter,
+      es_table_id: esTableId,
     });
 
     // 5. Emit SYNC_SCHEMA_READY event

@@ -119,6 +119,9 @@ export type { SyncFailure, NewSyncFailure } from './sync-failures';
 export { syncSchemaChanges, syncSchemaChangesRelations } from './sync-schema-changes';
 export type { SyncSchemaChange, NewSyncSchemaChange } from './sync-schema-changes';
 
+export { fieldExpressionIndexes } from './field-expression-indexes';
+export type { FieldExpressionIndex, NewFieldExpressionIndex } from './field-expression-indexes';
+
 // ---------------------------------------------------------------------------
 // Tier 7 — Communications
 // ---------------------------------------------------------------------------

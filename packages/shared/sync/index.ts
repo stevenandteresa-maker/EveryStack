@@ -66,10 +66,20 @@ export type {
   CanonicalFieldType,
   CanonicalData,
   // Sync metadata
+  SyncedFieldValue,
+  SyncMetadata,
   RecordSyncMetadata,
   // Transform types
   PlatformFieldConfig,
   FieldTransform,
+  // Outbound sync
+  OutboundSyncJob,
+  OutboundSyncResult,
+  // Conflict detection
+  ConflictStatus,
+  DetectedConflict,
+  CleanChange,
+  ConflictDetectionResult,
   // Filter grammar
   FilterOperator,
   FilterRule,
@@ -83,7 +93,31 @@ export {
   FilterRuleSchema,
   SyncTableConfigSchema,
   SyncConfigSchema,
+  SyncedFieldValueSchema,
+  SyncMetadataSchema,
 } from './types';
+
+// Sync metadata utilities
+export {
+  createInitialSyncMetadata,
+  updateLastSyncedValues,
+  getLastSyncedValue,
+} from './sync-metadata';
+
+// Outbound sync pipeline
+export { executeOutboundSync, COMPUTED_FIELD_TYPES, isComputedFieldType } from './outbound';
+
+// Conflict detection
+export { detectConflicts, writeConflictRecords, valuesAreEqual } from './conflict-detection';
+export type { WrittenConflict } from './conflict-detection';
+
+// Conflict resolution
+export { applyLastWriteWins } from './conflict-resolution';
+export type { ConflictResolutionStrategy, LastWriteWinsResult } from './conflict-resolution';
+
+// Conflict interactions
+export { shouldRecomputeOnResolution } from './conflict-interactions';
+export type { RecomputeResult } from './conflict-interactions';
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';

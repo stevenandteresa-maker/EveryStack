@@ -4,6 +4,7 @@
  */
 export const QUEUE_NAMES = {
   sync: 'sync',
+  'sync:outbound': 'sync:outbound',
   'file-processing': 'file-processing',
   email: 'email',
   automation: 'automation',

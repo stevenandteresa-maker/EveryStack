@@ -192,14 +192,42 @@ export class AirtableApiClient {
   }
 
   /**
+   * Update a single record by ID (PATCH — partial update).
+   * Fields are keyed by field ID (fldXxx), matching the returnFieldsByFieldId mode.
+   */
+  async updateRecord(
+    tableId: string,
+    recordId: string,
+    fields: Record<string, unknown>,
+  ): Promise<AirtableApiRecord> {
+    await rateLimiter.waitForCapacity('airtable', this.scopeKey);
+
+    const params = new URLSearchParams({ returnFieldsByFieldId: 'true' });
+    const url = `${AIRTABLE_API_BASE_URL}/${this.baseId}/${tableId}/${recordId}?${params.toString()}`;
+    const response = await this.fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields }),
+    });
+    const json: unknown = await response.json();
+
+    return AirtableGetRecordResponseSchema.parse(json);
+  }
+
+  /**
    * Internal fetch wrapper with auth header and error handling.
    */
-  private async fetch(url: string): Promise<Response> {
+  private async fetch(
+    url: string,
+    options?: { method?: string; headers?: Record<string, string>; body?: string },
+  ): Promise<Response> {
     const response = await globalThis.fetch(url, {
-      method: 'GET',
+      method: options?.method ?? 'GET',
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
+        ...options?.headers,
       },
+      body: options?.body,
     });
 
     if (!response.ok) {
@@ -208,7 +236,9 @@ export class AirtableApiClient {
         { status: response.status, url, body: errorText },
         'Airtable API request failed',
       );
-      throw new Error(`Airtable API request failed: ${response.status}`);
+      const err = new Error(`Airtable API request failed: ${response.status}`);
+      (err as Error & { statusCode: number }).statusCode = response.status;
+      throw err;
     }
 
     return response;

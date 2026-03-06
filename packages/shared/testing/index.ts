@@ -21,6 +21,7 @@ export {
   createTestTenantRelationship,
   createTestBoard,
   createTestWorkspaceMembership,
+  createTestSyncConflict,
 } from './factories';
 
 export type { TestApiKeyResult } from './factories';

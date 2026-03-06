@@ -37,8 +37,22 @@ export interface SyncJobData extends BaseJobData {
   connectionId: string;
 }
 
+export interface OutboundSyncJobData extends BaseJobData {
+  recordId: string;
+  tableId: string;
+  baseConnectionId: string;
+  changedFieldIds: string[];
+  editedBy: string;
+  priority: number;
+}
+
 export interface InitialSyncJobData extends SyncJobData {
   workspaceId: string;
+}
+
+export interface IncrementalSyncJobData extends SyncJobData {
+  /** Job type discriminant for incremental (polling) inbound sync. */
+  jobType: 'incremental';
 }
 
 export interface EmailJobData extends BaseJobData {
@@ -65,7 +79,8 @@ export interface DocumentGenJobData extends BaseJobData {
  * Used for type-safe queue/worker generics.
  */
 export interface QueueJobDataMap {
-  sync: SyncJobData | InitialSyncJobData;
+  sync: SyncJobData | InitialSyncJobData | IncrementalSyncJobData;
+  'sync:outbound': OutboundSyncJobData;
   'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;
   automation: AutomationJobData;

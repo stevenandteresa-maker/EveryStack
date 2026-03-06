@@ -33,6 +33,7 @@ import {
   tenantMemberships,
   boards,
   workspaceMemberships,
+  syncConflicts,
 } from '../db/schema';
 import type {
   NewTenant,
@@ -77,6 +78,8 @@ import type {
   Board,
   NewWorkspaceMembership,
   WorkspaceMembership,
+  NewSyncConflict,
+  SyncConflict,
 } from '../db/schema';
 
 let testDbConn: DrizzleClient | undefined;
@@ -865,4 +868,45 @@ export async function createTestWorkspaceMembership(
   };
 
   return firstRow(await db.insert(workspaceMemberships).values(values).returning());
+}
+
+// ---------------------------------------------------------------------------
+// Tier 14 — Sync Conflicts (Phase 2B)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a sync conflict with sensible defaults.
+ * Auto-creates a tenant, field (and table chain) when not provided.
+ * Default: status 'pending', platform 'airtable'.
+ */
+export async function createTestSyncConflict(
+  overrides?: Partial<NewSyncConflict>,
+): Promise<SyncConflict> {
+  const db = getTestDb();
+
+  let tenantId = overrides?.tenantId;
+  let fieldId = overrides?.fieldId;
+
+  if (!fieldId) {
+    const field = await createTestField(tenantId ? { tenantId } : undefined);
+    fieldId = field.id;
+    tenantId = tenantId ?? field.tenantId;
+  }
+
+  const recordId = overrides?.recordId ?? generateUUIDv7();
+
+  const values: NewSyncConflict = {
+    id: generateUUIDv7(),
+    tenantId: tenantId ?? (await createTestTenant()).id,
+    recordId,
+    fieldId,
+    localValue: 'local value',
+    remoteValue: 'remote value',
+    baseValue: 'base value',
+    platform: 'airtable',
+    status: 'pending',
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(syncConflicts).values(values).returning());
 }

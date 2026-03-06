@@ -7,8 +7,8 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 **Last updated:** 2026-03-06
 **Branch:** `main`
-**Latest tag:** `v0.1.9-phase-1j`
-**Total commits:** 21 (squash merges)
+**Latest tag:** `v0.2.0-phase-2a`
+**Total commits:** 22 (squash merges)
 
 ---
 
@@ -126,7 +126,7 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 **Shared package exports added in 1J:**
 - `@everystack/shared/db` — effectiveMemberships (view), EffectiveMembership (type), getEffectiveMemberships, getEffectiveMembershipForTenant
 
-**Patterns established:** Vitest configs (4), Docker test services, 20 factories with auto-parent creation (added `createTestTenantRelationship` in 1J), tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook, effective-memberships, sidebar-navigation.
+**Patterns established:** Vitest configs (4), Docker test services, 20 factories with auto-parent creation (added `createTestTenantRelationship` in 1J), tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking (enhanced with Airtable OAuth/metadata handlers in 2A), performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook, effective-memberships, sidebar-navigation, sync-connections, sync-setup.
 
 ### Phase 1F — Design System Foundation & i18n (Complete)
 
@@ -534,13 +534,141 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 - RLS documentation aligned with actual policies
 - Scope labels standardized (no more phase numbers in reference docs)
 
+### Phase 2A — FieldTypeRegistry, Canonical Transform Layer, Airtable Adapter (Complete)
+
+FieldTypeRegistry singleton, 60+ canonical value types, complete Airtable adapter (32 field types across 10 transform modules), OAuth PKCE flow, filter pushdown, proactive rate limiting, quota enforcement, token encryption, sync worker processors, setup wizard UI, and sync filter management.
+
+**Sync Core (`packages/shared/sync/`):**
+- `field-registry.ts` — `FieldTypeRegistry` class: singleton registry mapping `{platform}:{fieldType}` → `FieldTransform`. Methods: `register()`, `get()`, `has()`, `getAllForPlatform()`, `getSupportedFieldTypes()`, `clear()`, `size`. Exported singleton: `fieldTypeRegistry`
+- `types.ts` — Canonical value types (9 categories, 60+ variants), filter grammar (`FilterOperator` 15 operators, `FilterRule`, Zod schemas), `SyncConfig`/`SyncTableConfig` (stored in `base_connections.sync_config` JSONB), `FieldTransform` interface (`toCanonical()`, `fromCanonical()`, `isLossless`, `supportedOperations`), `RecordSyncMetadata`, `PlatformFieldConfig`, `SourceRefs`, `SyncPlatform`
+- `quota.ts` — Plan-based record quota enforcement with Redis caching (60s TTL). `PLAN_QUOTAS` (Freelancer 10K → Enterprise ∞). 3 enforcement points: `canSyncRecords()` (preventive), `enforceQuotaOnBatch()` (runtime partial acceptance), `canCreateRecord()` (single). Cache mutation: `incrementQuotaCache()`/`decrementQuotaCache()`. `checkRecordQuota()` main interface
+- `rate-limiter.ts` — Redis-backed sliding-window rate limiter with atomic Lua scripts. `RateLimiter` class: `checkLimit()`, `waitForCapacity()` (blocks with exponential backoff). `AIRTABLE_RATE_LIMITS`: per_base 5/sec, per_api_key 50/sec. Retry strategy: 5 max, 200ms base, 30s max, 2× backoff. Fail-open on Redis errors. Exported singleton: `rateLimiter`
+- `index.ts` — Barrel exports: all types, schemas, registry, adapter types, rate limiter, quota, Airtable adapter + OAuth + API client + filter pushdown
+
+**Adapter Types (`packages/shared/sync/adapters/types.ts`):**
+- `PlatformAdapter` interface: `platform`, `toCanonical()`, `fromCanonical()`
+- `FieldMapping`: Maps ES field UUID ↔ platform field ID/type (`fieldId`, `externalFieldId`, `fieldType`, `externalFieldType`, `config`)
+- `RateLimit`, `RetryStrategy`, `PlatformRateLimits` types
+
+**Airtable Adapter (`packages/shared/sync/adapters/airtable/`):**
+- `index.ts` — `AirtableAdapter` class implementing `PlatformAdapter`. `registerAirtableTransforms()` registers all 10 transform bundles at app startup. Delegates transforms to registry; skips unregistered types with warning (never crashes)
+- `api-client.ts` — `AirtableApiClient` class: `listRecords()` (paginated, `returnFieldsByFieldId=true`), `getRecord()`, `listFields()`. Rate-limited via `rateLimiter.waitForCapacity()` before every fetch. Zod-validated responses
+- `oauth.ts` — OAuth 2.0 PKCE flow: `generateCodeVerifier()`, `generateCodeChallenge()`, `getAirtableAuthUrl()`, `exchangeCodeForTokens()`, `refreshAirtableToken()`. Metadata: `listAirtableBases()`, `listAirtableTables()`, `estimateAirtableRecordCount()` (pages up to 5×100). Scopes: `data.records:read data.records:write schema.bases:read schema.bases:write`
+- `filter-pushdown.ts` — `translateFilterToFormula()` (FilterRule[] → Airtable formula string), `applyLocalFilters()` (post-fetch fallback), `getLocalOnlyFilters()`, `canPushDown()`. 14 pushable operators, 1 local-only (`is_within`)
+
+**Airtable Transform Modules (10 files, each exports `AIRTABLE_*_TRANSFORMS` array):**
+- `text-transforms.ts` — `singleLineText` → `TextValue`, `multilineText` → `TextAreaValue`, `richText` → `SmartDocValue` (lossy: Markdown ↔ TipTap JSON with `markdownToTipTap()`/`tipTapToMarkdown()`)
+- `number-transforms.ts` — `number` → `NumberValue`, `currency` → `CurrencyValue`, `percent` → `PercentValue`, `rating` → `RatingValue`, `duration` → `DurationValue` (seconds → minutes), `progress` → `ProgressValue`, `autoNumber` → `AutoNumberValue` (read-only)
+- `selection-transforms.ts` — `singleSelect` → `SingleSelectValue`, `multipleSelects` → `MultipleSelectValue`, `status` → `StatusValue` (resolves category from config), `tag` → `TagValue`. Option resolution by label with `source_refs.airtable` for lossless round-trip. Unrecognized values get placeholder option IDs (`es_opt_unsynced_{hash}`)
+- `date-transforms.ts` — `date`/`dateTime` → `DateValue`, `dateRange` → `DateRangeValue`, `dueDate` → `DueDateValue`, `time` → `TimeValue`, `createdTime` → `CreatedAtValue`, `lastModifiedTime` → `UpdatedAtValue` (both read-only). Timezone normalization from field config
+- `people-contact-transforms.ts` — `collaborator` → `PeopleValue`, `createdBy` → `CreatedByValue`, `lastModifiedBy` → `UpdatedByValue` (both read-only), `email` → `EmailValue`, `phoneNumber` → `PhoneValue`, `url` → `UrlValue`, `address` → `AddressValue` (lossy: heuristic CSV parsing), `fullName` → `FullNameValue` (lossy: heuristic prefix/suffix detection), `social` → `SocialValue` (domain-based platform detection)
+- `boolean-interactive-transforms.ts` — `checkbox` → `CheckboxValue` (Airtable undefined → false), `button` → `ButtonValue` (read-only). Checklist/signature intentionally NOT registered (EveryStack-only)
+- `files-transforms.ts` — `multipleAttachments` → `FilesValue` (partial lossless). Best thumbnail selection (large → full → small). `source_refs.airtable = attachment.id` for round-trip
+- `relational-transforms.ts` — `multipleRecordLinks` → `LinkedRecordValue`. Uses `fieldConfig.options.recordIdMap` for Airtable → ES UUID mapping. Unmapped records: `record_id = null`, `filtered_out = true` (per sync-engine.md § Cross-Links to Filtered-Out Records)
+- `identification-transforms.ts` — `barcode` → `BarcodeValue` (lossless: unwrap/wrap `{text}`)
+- `lossy-transforms.ts` — `lookup`/`rollup`/`formulaField`/`count` → `TextValue` (read-only, lossy). Arrays comma-joined. `fromCanonical()` returns undefined. Per CLAUDE.md: "Never sync computed fields back to platforms"
+
+**Token Encryption (`packages/shared/crypto/`):**
+- `token-encryption.ts` — AES-256-GCM encryption for OAuth tokens in `base_connections.oauth_tokens` JSONB. `encryptTokens()`, `decryptTokens()`. 12-byte IV, 16-byte auth tag, version field (=1) for future algorithm migration. Key from `TOKEN_ENCRYPTION_KEY` env var (64-char hex). `EncryptedPayloadSchema` Zod validation
+- `index.ts` — Re-exports: `encryptTokens`, `decryptTokens`, `EncryptedPayloadSchema`, `EncryptedPayload` type
+
+**Worker Processors (`apps/worker/src/processors/sync/`):**
+- `initial-sync.ts` — `InitialSyncProcessor` extends `BaseProcessor<InitialSyncJobData>`. 3-phase sync: schema sync → paginated record fetch with `AirtableApiClient` + `AirtableAdapter.toCanonical()` → quota enforcement via `enforceQuotaOnBatch()`. Emits 5 realtime events: `SYNC_STARTED`, `SYNC_SCHEMA_READY`, `SYNC_PROGRESS`, `SYNC_COMPLETED`, `SYNC_FAILED`
+- `schema-sync.ts` — `syncSchema()` helper (not a separate processor): creates ES tables + fields + `synced_field_mappings` per enabled table. `AIRTABLE_TO_CANONICAL_TYPE` static map (32 Airtable types → canonical). `remapFilterFieldIds()` translates Airtable fldXxx → ES UUIDs in filter rules. Returns `{ tableMap, updatedSyncConfig }`
+- `orphan-detection.ts` — `detectAndProcessOrphans()`: 6-step pipeline — load local records → fetch IDs matching current filter → diff → verify candidates against Airtable API (batch of 5) → mark orphaned (`sync_status: 'orphaned'`, `orphaned_reason: 'filter_changed'`) or soft-delete (platform-deleted) → decrement quota cache → emit `SYNC_RECORDS_ORPHANED`
+
+**Worker Index (`apps/worker/src/index.ts`):**
+- Added `InitialSyncProcessor` import, instantiation with `eventPublisher`, `.start()` call, and shutdown handler
+
+**Server Actions (`apps/web/src/actions/`):**
+- `sync-connections.ts` — `initiateAirtableConnection()` (PKCE state + code verifier in Redis 10min TTL, returns auth URL), `completeAirtableConnection()` (token exchange, encrypt, create connection + audit log), `listBasesForConnection()` (auto-refresh if <5min to expiry), `selectBaseForConnection()`. Admin + 'connection' resource permissions
+- `sync-setup.ts` — `listTablesInBase()`, `fetchEstimatedRecordCount()`, `checkQuotaForSync()`, `saveSyncConfigAndStartSync()` (saves config, re-validates quota, enqueues `sync.initial` job). Shared `resolveAccessToken()` helper
+- `sync-filters.ts` — `updateSyncFilter()` (stores `previous_sync_filter` for undo, re-validates quota, enqueues re-sync), `enableSyncTable()`, `disableSyncTable()`, `estimateFilteredRecordCount()` (translates FilterRule[] → Airtable formula via field mappings). Admin + 'connection' permissions
+- `sync-orphans.ts` — `deleteOrphanedRecords()` (soft-delete + decrement quota cache), `keepOrphanedRecordsAsLocal()` (dismiss banner), `undoFilterChange()` (revert to `previous_sync_filter`, reset orphan markers, enqueue re-sync). Admin + 'record' permissions
+
+**Data Functions (`apps/web/src/data/`):**
+- `sync-connections.ts` — `getConnectionsForTenant()` (never includes tokens), `getConnectionById()`, `getConnectionWithTokens()` (internal only), `createConnection()`, `updateConnectionBase()`, `updateConnectionTokens()`. Types: `ConnectionListItem`, `ConnectionDetail`, `ConnectionWithTokens`. All tenant-scoped, transactional writes with audit logging
+- `sync-setup.ts` — `getSyncConfig()`, `updateSyncConfig()` (transactional + audit log with tableCount/pollingInterval)
+
+**OAuth Callback (`apps/web/src/app/api/oauth/airtable/callback/route.ts`):**
+- Handles Airtable OAuth redirect: reads `code` + `state`, exchanges tokens, renders HTML with `postMessage({ type: 'airtable_oauth_complete', connectionId })` to popup opener. Fallback: redirect with query param. Error: `airtable_oauth_error` postMessage
+
+**Sync Components (`apps/web/src/components/sync/`):**
+- `SyncSetupWizard.tsx` — 3-step Dialog wizard ("Wizard Create" pattern): Step 1 (OAuth popup via `window.open()` + `postMessage` listener), Step 2 (base selection with permission badges), Step 3 (table selection with per-table checkboxes, lazy record count fetching, inline SyncFilterBuilder, quota progress bar, large table warning >10K). `useReducer` with discriminated actions. StepIndicator sub-component
+- `SyncFilterBuilder.tsx` — Reusable filter builder. Props: `fields`, `filters`, `onChange`, `mode` ('platform' | 'es'). FIELD_TYPE_OPERATORS Map (not switch) for 6 field type categories. Per-row: conjunction AND/OR, field selector, operator selector, value input. VALUE_FREE_OPERATORS Set for operators without values
+- `SyncFilterEditor.tsx` — Post-setup filter editing panel. Embeds SyncFilterBuilder (mode="es"). Debounced estimation (500ms). Quota display with remaining/overage. Save & Re-sync button
+- `FilteredOutLinkChip.tsx` — Display-only badge for cross-linked records outside sync filter. Truncates at 24 chars. Filter icon + opacity-50. Tooltip: "This record exists on {platform} but is outside your sync filter"
+- `OrphanBanner.tsx` — Alert banner for orphaned records. Amber warning style (`role="alert"`). 3 actions: Delete, Keep as Local-Only, Undo Filter Change
+- `OrphanRowIndicator.tsx` — CloudOff icon + tooltip for orphaned grid rows. Exports `ORPHAN_ROW_CLASS` constant for row-level muting
+
+**UI Primitives:**
+- `apps/web/src/components/ui/checkbox.tsx` — shadcn/ui Checkbox (Radix UI). 18 shadcn/ui components total
+
+**Queue Types (`packages/shared/queue/types.ts`):**
+- Added `InitialSyncJobData` (extends `SyncJobData` + `workspaceId`). `QueueJobDataMap.sync` now accepts `SyncJobData | InitialSyncJobData`
+
+**Realtime Events (`packages/shared/realtime/events.ts`):**
+- Added 7 sync events: `SYNC_STARTED`, `SYNC_SCHEMA_READY`, `SYNC_PROGRESS`, `SYNC_BATCH_COMPLETE`, `SYNC_COMPLETED`, `SYNC_FAILED`, `SYNC_RECORDS_ORPHANED`. 23 event types total
+
+**DB Exports (`packages/shared/db/index.ts`):**
+- Added: `syncedFieldMappings` table, `syncedFieldMappingsRelations`, `SyncedFieldMapping` type, `NewSyncedFieldMapping` type
+
+**Mock APIs (`packages/shared/testing/mock-apis.ts`):**
+- Enhanced Airtable handlers: OAuth token exchange/refresh, list bases, list tables with realistic field metadata (singleLineText, email, singleSelect, date, currency). Support for `returnFieldsByFieldId=true`
+
+**Environment Variables (`.env.example`):**
+- `AIRTABLE_CLIENT_ID`, `AIRTABLE_CLIENT_SECRET` — Airtable OAuth app credentials
+- `TOKEN_ENCRYPTION_KEY` — AES-256-GCM key (64-char hex, generate with `crypto.randomBytes(32).toString('hex')`)
+
+**i18n (`en.json` + `es.json`):**
+- New namespaces: `sync_wizard` (28 keys: title, steps, buttons, errors), `sync_filter_editor` (10 keys: status, estimation, quota, actions), `sync_orphans` (6 keys: banner message with plural, action buttons, tooltips)
+
+**Tests (Phase 2A — 31 test files, ~774 tests):**
+- `packages/shared/sync/__tests__/field-registry.test.ts` (21 tests)
+- `packages/shared/sync/__tests__/quota.test.ts` (33 tests)
+- `packages/shared/sync/__tests__/rate-limiter.test.ts` (25 tests)
+- `packages/shared/crypto/token-encryption.test.ts` (15 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/airtable-adapter.test.ts` (20 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/api-client.test.ts` (11 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/oauth.test.ts` (24 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/filter-pushdown.test.ts` (58 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/text-transforms.test.ts` (39 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/number-transforms.test.ts` (47 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/selection-transforms.test.ts` (48 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/date-transforms.test.ts` (55 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/people-contact-transforms.test.ts` (113 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/boolean-interactive-transforms.test.ts` (24 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/files-transforms.test.ts` (14 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/relational-transforms.test.ts` (19 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/identification-transforms.test.ts` (15 tests)
+- `packages/shared/sync/adapters/airtable/__tests__/lossy-transforms.test.ts` (16 tests)
+- `apps/worker/src/processors/sync/__tests__/initial-sync.test.ts` (8 tests)
+- `apps/worker/src/processors/sync/__tests__/schema-sync.test.ts` (6 tests)
+- `apps/worker/src/processors/sync/__tests__/orphan-detection.test.ts` (10 tests)
+- `apps/web/src/actions/__tests__/sync-filters.test.ts` (11 tests)
+- `apps/web/src/actions/__tests__/sync-orphans.test.ts` (9 tests)
+- `apps/web/src/data/__tests__/sync-connections.integration.test.ts` (15 tests)
+- `apps/web/src/data/__tests__/sync-setup.integration.test.ts` (9 tests)
+- `apps/web/src/components/sync/__tests__/SyncSetupWizard.test.tsx` (15 tests)
+- `apps/web/src/components/sync/__tests__/SyncFilterBuilder.test.tsx` (8 tests)
+- `apps/web/src/components/sync/__tests__/SyncFilterEditor.test.tsx` (11 tests)
+- `apps/web/src/components/sync/__tests__/FilteredOutLinkChip.test.tsx` (6 tests)
+- `apps/web/src/components/sync/__tests__/OrphanBanner.test.tsx` (7 tests)
+
+**Shared package exports added in 2A:**
+- `@everystack/shared/sync` — FieldTypeRegistry, fieldTypeRegistry, all canonical value types, FilterOperator, FilterRule, SyncConfig, SyncTableConfig, FieldTransform, PlatformAdapter, FieldMapping, RateLimiter, rateLimiter, AIRTABLE_RATE_LIMITS, quota functions, AirtableAdapter, registerAirtableTransforms, filter pushdown utilities, AirtableApiClient, Airtable OAuth functions, AirtableTokens, AirtableBase, AirtableTableMeta, AirtableFieldMeta
+- `@everystack/shared/crypto` — encryptTokens, decryptTokens, EncryptedPayloadSchema, EncryptedPayload
+- `@everystack/shared/db` — syncedFieldMappings, syncedFieldMappingsRelations, SyncedFieldMapping, NewSyncedFieldMapping
+
+**Patterns established:** FieldTypeRegistry singleton for all field type operations (no switch statements). Canonical JSONB discrimination via `{ type, value }` objects. `isLossless` flag on transforms for sync algorithm decisions. `supportedOperations` array declaring read/write/filter/sort capabilities. `source_refs` for platform-native ID preservation (lossless round-tripping). Filter pushdown optimization (push to platform formula vs. local fallback). Proactive rate limiting via `rateLimiter.waitForCapacity()` before every API call. Redis-cached quota with INCRBY/DECRBY mutations. AES-256-GCM token encryption with versioning. PKCE OAuth flow with Redis state + popup `postMessage` communication. `registerAirtableTransforms()` called once at startup. `resolveAccessToken()` shared helper with 5-min auto-refresh threshold. `previous_sync_filter` tracking for undo support. Orphan detection 6-step pipeline with verification against platform API. `AIRTABLE_TO_CANONICAL_TYPE` static map for schema sync. `FIELD_TYPE_OPERATORS` Map (not switch) in filter builder UI.
+
 ---
 
 ## What Does NOT Exist Yet
 
-**Sync Engine** — `packages/shared/sync/field-registry.ts` is empty. No platform adapters (Airtable, Notion, SmartSuite). No `toCanonical()`/`fromCanonical()` transforms. Schema tables exist but no sync logic.
+**Sync Engine** — FieldTypeRegistry, canonical types, and Airtable adapter (32 field types, OAuth, API client, filter pushdown) are operational. Initial sync processor, schema sync, and orphan detection are operational. Notion and SmartSuite adapters not yet implemented (adapter stubs only). No incremental/delta sync yet. No webhook-based change detection. No outbound sync (write-back to platforms). No conflict resolution.
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 17 shadcn/ui primitives installed. Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
 
 **Views / Grid / Card** — No view rendering code. Schema for `views` exists but no UI.
 
@@ -564,17 +692,17 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
-**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
 **Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, and event publishing are fully operational. No presence tracking yet (stubs exist, marked for MVP — Core UX).
 
-**Worker Jobs** — BullMQ worker with 6 queues and 3 file processors (thumbnail, scan, orphan cleanup) operational. Sync, email, automation, and document-gen processors not yet implemented.
+**Worker Jobs** — BullMQ worker with 6 queues, 3 file processors (thumbnail, scan, orphan cleanup), and 1 sync processor (initial sync with schema sync + orphan detection helpers) operational. Email, automation, and document-gen processors not yet implemented. No incremental sync processor yet.
 
 **File Storage** — StorageClient interface, R2/MinIO client, presigned upload pipeline, MIME/magic byte validation, thumbnail generation, virus scanning, and orphan cleanup are operational. No file attachment UI yet (no record attachment picker, no file browser).
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts`, `apps/web/src/actions/tenant-switch.ts`, `apps/web/src/data/api-keys.ts`, and `apps/web/src/data/sidebar-navigation.ts` exist. No record CRUD actions, no workspace/table management actions yet.
+**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts`, `apps/web/src/actions/tenant-switch.ts`, `apps/web/src/actions/sync-connections.ts`, `apps/web/src/actions/sync-setup.ts`, `apps/web/src/actions/sync-filters.ts`, `apps/web/src/actions/sync-orphans.ts`, `apps/web/src/data/api-keys.ts`, `apps/web/src/data/sidebar-navigation.ts`, `apps/web/src/data/sync-connections.ts`, and `apps/web/src/data/sync-setup.ts` exist. No record CRUD actions, no workspace/table management actions yet.
 
 ---
 
@@ -605,7 +733,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **Tags** | `v0.1.X-phase-YZ` |
 | **Security headers** | CSP + HSTS + X-Frame-Options. Platform (strict) vs Portal (embeddable) |
 | **Webhook verification** | Svix for Clerk, generic HMAC for others |
-| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. 16 event types in `REALTIME_EVENTS` |
+| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. 23 event types in `REALTIME_EVENTS` (16 original + 7 sync events added in 2A) |
 | **Room authorization** | Tenant-scoped rooms (`t:{tenantId}:{resourceType}:{resourceId}`). 5 resource types with query-based authorization |
 | **Worker processors** | Extend `BaseProcessor<TData>`. Trace propagation + Pino child logger + Sentry. `processJob(job, logger)` abstract method |
 | **Graceful shutdown** | `setupGracefulShutdown()` with ordered handlers. Realtime: 10s, Worker: 30s forced exit |
@@ -616,7 +744,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **Redis clients** | `createRedisClient(name)` with `maxRetriesPerRequest: null` for BullMQ. Separate clients for pub/sub (subscribe mode) |
 | **Design tokens** | CSS custom properties in globals.css. Three-layer color: accent, semantic, data palette |
 | **Typography** | DM Sans (UI), JetBrains Mono (code). 9-step scale in `design-system/typography.ts` |
-| **UI primitives** | 17 shadcn/ui components in `components/ui/` (added sonner toast). Extend via composition, never recreate |
+| **UI primitives** | 18 shadcn/ui components in `components/ui/` (added checkbox in 2A). Extend via composition, never recreate |
 | **i18n** | next-intl, non-routing locale strategy. All user-facing text through `useTranslations()`. `check:i18n` CI gate |
 | **Shell layout** | Dark sidebar: Icon Rail (48px, always visible) + Content Zone (232px, expandable). Accent header (52px, `--shell-accent` CSS var with 150ms transition). White content. `block-size: 100dvh`. Responsive: sidebar hidden on mobile |
 | **Shell accent** | `ShellAccentProvider` React Context manages `--shell-accent` on `:root`. 8 curated org colors + fixed personal (#78716C) + fixed portal (#64748B). `getShellAccent()` computes correct accent. `useShellAccent()` hook: set, revert, applyTenantAccent. All ≥3:1 WCAG AA on dark sidebar |
@@ -638,6 +766,21 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **API error format** | `{ error: { code, message, details?, request_id? } }`. All responses include `X-API-Version: 2026-03-01`. Use convenience helpers (`apiBadRequest`, etc.) |
 | **API middleware** | `withPlatformApi(handler, ...scopes)` — single entry point. Pipeline: auth → rate limit → handler → logging → error mapping |
 | **Request logging** | `logApiRequest()` fire-and-forget to `api_request_log`. Never throws. Records method, path, status, duration, sizes |
+| **FieldTypeRegistry** | `fieldTypeRegistry` singleton maps `{platform}:{fieldType}` → `FieldTransform`. Use `registry.get()` — never switch on field types. `registerAirtableTransforms()` called once at startup |
+| **Canonical JSONB values** | All field values use `{ type: 'fieldType', value: <typed> }` discriminated union. 9 categories, 60+ variants. Keyed by `fields.id` (UUID) |
+| **Transform lossless flag** | Each `FieldTransform` declares `isLossless: boolean` — sync engine uses this for algorithm decisions |
+| **Transform operations** | Each `FieldTransform` declares `supportedOperations: ('read' \| 'write' \| 'filter' \| 'sort')[]`. Outbound sync skips fields without 'write'. Computed fields (lookup/rollup/formula/count) are `['read']` only |
+| **Source refs** | Selection, files, relational fields store platform-native IDs in `source_refs.{platform}` for lossless round-tripping. Used during `fromCanonical()` to recover original IDs |
+| **Filter pushdown** | `translateFilterToFormula()` pushes supported operators to platform API. `applyLocalFilters()` handles unpushable operators locally. `canPushDown()` for query planning |
+| **Sync rate limiting** | `rateLimiter.waitForCapacity(platform, scopeKey)` gates all platform API calls. Proactive sliding-window via Redis Lua scripts. `AIRTABLE_RATE_LIMITS`: 5/sec per base, 50/sec per key. Fail-open on Redis errors |
+| **Record quota** | Plan-based limits in `PLAN_QUOTAS`. 3 enforcement points: preventive (`canSyncRecords`), runtime (`enforceQuotaOnBatch`), single (`canCreateRecord`). Redis cache (60s TTL) with INCRBY/DECRBY mutation |
+| **Token encryption** | `encryptTokens()`/`decryptTokens()` via AES-256-GCM. 12-byte IV, 16-byte auth tag, version field. `TOKEN_ENCRYPTION_KEY` env var (64-char hex). Stored in `base_connections.oauth_tokens` JSONB |
+| **OAuth PKCE** | PKCE state + code verifier stored in Redis (10min TTL). Popup opens OAuth URL → callback exchanges code → `postMessage` to opener. Auto-refresh when token expires within 5 minutes |
+| **Sync setup wizard** | 3-step "Wizard Create" pattern (Dialog): authenticate → select base → select/filter tables. `useReducer` state machine. OAuth popup via `window.open()` + `postMessage` |
+| **Filter builder** | `SyncFilterBuilder` uses `FIELD_TYPE_OPERATORS` Map (not switch). Two modes: 'platform' (external field IDs) and 'es' (ES UUIDs). Reusable across wizard and post-setup filter editor |
+| **Orphan handling** | `previous_sync_filter` stored for undo support. Orphan detection: diff local vs platform-filtered IDs → verify against API → mark `sync_status: 'orphaned'`. 3 user actions: delete, keep local, undo filter change |
+| **Sync schema sync** | `AIRTABLE_TO_CANONICAL_TYPE` static map (32 types). Creates tables + fields + synced_field_mappings. `remapFilterFieldIds()` translates platform IDs → ES UUIDs |
+| **Sync initial sync** | `InitialSyncProcessor` extends `BaseProcessor`. 3-phase: schema sync → paginated record fetch (Airtable API → `toCanonical()`) → quota enforcement. 5 realtime events |
 
 ---
 
