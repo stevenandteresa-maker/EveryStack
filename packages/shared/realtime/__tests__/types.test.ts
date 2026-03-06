@@ -30,9 +30,9 @@ describe('RoomPattern', () => {
 });
 
 describe('REALTIME_EVENTS', () => {
-  it('has exactly 18 event names', () => {
+  it('has exactly 21 event names', () => {
     const eventCount = Object.keys(REALTIME_EVENTS).length;
-    expect(eventCount).toBe(18);
+    expect(eventCount).toBe(21);
   });
 
   it('contains all record events', () => {
@@ -46,9 +46,12 @@ describe('REALTIME_EVENTS', () => {
 
   it('contains all sync events', () => {
     expect(REALTIME_EVENTS.SYNC_STARTED).toBe('sync.started');
+    expect(REALTIME_EVENTS.SYNC_SCHEMA_READY).toBe('sync.schema_ready');
+    expect(REALTIME_EVENTS.SYNC_PROGRESS).toBe('sync.progress');
     expect(REALTIME_EVENTS.SYNC_BATCH_COMPLETE).toBe('sync.batch_complete');
     expect(REALTIME_EVENTS.SYNC_COMPLETED).toBe('sync.completed');
     expect(REALTIME_EVENTS.SYNC_FAILED).toBe('sync.failed');
+    expect(REALTIME_EVENTS.SYNC_RECORDS_ORPHANED).toBe('sync.records_orphaned');
   });
 
   it('contains all schema events', () => {
@@ -77,6 +80,6 @@ describe('REALTIME_EVENTS', () => {
   it('event values satisfy RealtimeEventName type', () => {
     // Type-level check: assigning each value to the union type
     const events: RealtimeEventName[] = Object.values(REALTIME_EVENTS);
-    expect(events).toHaveLength(18);
+    expect(events).toHaveLength(21);
   });
 });

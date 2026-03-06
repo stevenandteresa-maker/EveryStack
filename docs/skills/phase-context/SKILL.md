@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-05
+**Last updated:** 2026-03-06
 **Branch:** `main`
-**Latest tag:** `v0.1.8-phase-1i`
-**Total commits:** 20 (squash merges)
+**Latest tag:** `v0.1.9-phase-1j`
+**Total commits:** 21 (squash merges)
 
 ---
 
@@ -38,16 +38,16 @@ Full Drizzle ORM schema (59 tables), 16 SQL migrations, RLS, connection pooling,
 
 **Key files:**
 - `packages/shared/db/client.ts` — `getDbForTenant(tenantId, intent)` routing, PgBouncer clients
-- `packages/shared/db/rls.ts` — `setTenantContext()`, 47 tenant-scoped tables with RLS policies, `RLS_EXCLUDED_COLUMNS`
+- `packages/shared/db/rls.ts` — `setTenantContext()`, 48 tenant-scoped tables with RLS policies (47 standard + `tenant_relationships` with OR-clause), `RLS_EXCLUDED_COLUMNS`
 - `packages/shared/db/uuid.ts` — `generateUUIDv7()` (all PKs are UUIDv7)
 - `packages/shared/db/schema/` — 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
-- `packages/shared/db/migrations/` — 21 migrations (0000–0018 prior phases + 0019–0020 Phase 1I)
+- `packages/shared/db/migrations/` — 24 migrations (0000–0018 prior phases + 0019–0020 Phase 1I + 0021–0023 Phase 1J)
 - `packages/shared/db/operations/user-operations.ts` — `createUserWithTenant()` (now provisions personal tenant), `updateUserFromClerk()`
 - `packages/shared/db/drizzle.config.ts` — Migration config (uses DATABASE_URL_DIRECT for DDL)
 
 **Schema highlights:** `records` hash-partitioned into 16 partitions by `tenant_id`. `audit_log`, `ai_usage_log`, `api_request_log` time-partitioned monthly. Canonical JSONB pattern: `records.canonical_data` keyed by `fields.id`.
 
-**Patterns established:** `getDbForTenant()` for all DB access, `setTenantContext()` before RLS queries, UUIDv7 everywhere, composite PKs on partitioned tables, no raw SQL outside migrations. Admin-only tables intentionally skip RLS (accessed only via `/admin` routes).
+**Patterns established:** `getDbForTenant()` for all DB access, `setTenantContext()` before RLS queries, UUIDv7 everywhere, composite PKs on partitioned tables, no raw SQL outside migrations. Admin-only tables intentionally skip RLS (accessed only via `/admin` routes). Cross-tenant queries (e.g. `effective_memberships`) use `dbRead` directly.
 
 ### Phase 1C — Auth & Tenant Isolation (Complete)
 
@@ -123,7 +123,10 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 **Shared package exports added in 1I:**
 - `@everystack/shared/db` — writeAuditLog, writeAuditLogBatch, auditEntrySchema, AUDIT_ACTOR_TYPES, AUDIT_RETENTION_DAYS, API_KEY_PREFIXES, API_KEY_SCOPES, RATE_LIMIT_TIERS, generateApiKey, hashApiKey, verifyApiKeyHash, apiKeyCreateSchema
 
-**Patterns established:** Vitest configs (4), Docker test services, 19 factories with auto-parent creation, tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook.
+**Shared package exports added in 1J:**
+- `@everystack/shared/db` — effectiveMemberships (view), EffectiveMembership (type), getEffectiveMemberships, getEffectiveMembershipForTenant
+
+**Patterns established:** Vitest configs (4), Docker test services, 20 factories with auto-parent creation (added `createTestTenantRelationship` in 1J), tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook, effective-memberships, sidebar-navigation.
 
 ### Phase 1F — Design System Foundation & i18n (Complete)
 
@@ -399,6 +402,98 @@ Audit logging helper, API key infrastructure, Platform API authentication/rate l
 
 **Patterns established:** `writeAuditLog()` in same transaction as mutations. API keys shown once at creation, SHA-256 hashed for storage. Bearer token auth with timing-safe verification. Two-level rate limiting (per-key token bucket + per-tenant ceiling). Fail-open on Redis errors. `withPlatformApi()` as single entry point for API routes. Fire-and-forget request logging. Date-based API versioning (`2026-03-01`).
 
+### Phase 1J — CP Migration, Multi-Tenant Auth & Navigation Shell (Complete)
+
+CP-001/CP-002 schema migrations, multi-tenant identity (personal tenants, agency relationships, effective memberships), tenant switching (Clerk+Redis hybrid), sidebar navigation shell with contextual clarity signals.
+
+**Migrations (3 new — 0021, 0022, 0023):**
+- `0021_cp001_portal_thread_refinements.sql` — Portal slug uniqueness scoped to tenant (`UNIQUE(tenant_id, slug)`), portal access revocation tracking (`revoked_at`, `revoked_reason`, `record_slug`, `linked_record_id`), threads `visibility` → `thread_type` (varchar 50, default 'internal'), unique constraint on `(scope_type, scope_id, thread_type)`
+- `0022_cp002_multi_tenant_identity.sql` — `users.personal_tenant_id` (uuid FK), workspace transfer stubs (`transferred_from_tenant_id`, `original_created_by_tenant_id`), new `tenant_relationships` table (agency-client relationships with `relationship_type`, `status`, `access_level`, `initiated_by`, `agency_billing_responsible`, `metadata` JSONB), RLS with OR clause (both agency and client can see rows)
+- `0023_effective_memberships_view.sql` — `effective_memberships` SQL view: UNION ALL of direct `tenant_memberships` + agency access via `tenant_relationships` join. Columns: `userId`, `tenantId`, `role`, `source` ('direct'|'agency'), `agencyTenantId`
+
+**New Schema Files:**
+- `packages/shared/db/schema/tenant-relationships.ts` — Agency-client relationships table. All string columns VARCHAR (not ENUM). Relationship types: 'managed'|'white_label'|'reseller'|'referral'. Status: 'pending'|'active'|'suspended'|'revoked'. Access levels: 'admin'|'builder'|'read_only'. Drizzle relations to agency/client tenants, authorizedBy/revokedBy users
+- `packages/shared/db/schema/effective-memberships.ts` — `pgView('effective_memberships').existing()` — TypeScript typing only (DDL in migration). Exports `EffectiveMembership` type
+
+**Modified Schema Files:**
+- `portals.ts` — Slug index changed from global unique to tenant-scoped `UNIQUE(tenant_id, slug)`
+- `portal-access.ts` — Added `revokedAt`, `revokedReason`, `recordSlug` (client-safe, never exposes raw UUID), `linkedRecordId`
+- `threads.ts` — Replaced `visibility` with `threadType` (varchar 50, default 'internal'). Known values: 'internal'|'client'
+- `users.ts` — Added `personalTenantId` (uuid FK → tenants, ON DELETE SET NULL) with index
+- `workspaces.ts` — Added `transferredFromTenantId`, `originalCreatedByTenantId` (post-MVP transfer stubs)
+- `rls.ts` — Added `tenant_relationships` to tenant-scoped tables (48 total now). OR-clause RLS policy for agency+client visibility
+
+**Database Operations (`packages/shared/db/operations/`):**
+- `effective-memberships.ts` — `getEffectiveMemberships(userId)` (all accessible tenants), `getEffectiveMembershipForTenant(userId, tenantId)` (specific tenant check). Cross-tenant by design, uses `dbRead`
+- `user-operations.ts` — `createUserWithTenant()` updated: no longer sets `personalTenantId` directly (set via webhook handler)
+
+**DB Exports (`packages/shared/db/index.ts`):**
+- Added: `effectiveMemberships` view, `EffectiveMembership` type, `getEffectiveMemberships()`, `getEffectiveMembershipForTenant()`
+
+**Auth Layer (`apps/web/src/lib/auth/`):**
+- `effective-membership.ts` — `resolveUserAccess(userId, tenantId)` → `ResolvedUserAccess` (role, source, agencyTenantId). `resolveUserTenants(userId)` → deduplicated tenant ID array. Agency access_level mapping: admin→admin, builder→member, read_only→viewer. Direct memberships take precedence
+- `personal-tenant.ts` — `provisionPersonalTenant(userId, userName)` (idempotent, creates tenant+membership, sets `users.personal_tenant_id`). `isPersonalTenant(tenantId, userId)`. `hasPersonalWorkspace(tenantId)` (sidebar display rule: hidden until ≥1 workspace). `PERSONAL_TENANT_ACCENT_COLOR` = '#78716C' (warm neutral, fixed, never reused by org tenants)
+- `tenant-switch.ts` — Clerk+Redis hybrid model. `switchTenant(userId, targetTenantId)` → `TenantSwitchResult` (validates access, fetches tenant, updates Redis cache 24h TTL, returns clerkOrgId for client `setActive()`). `getActiveTenant(userId)` (Redis cache first, Clerk fallback). `invalidateTenantCache(userId)` (client revert path). Redis key: `active_tenant:{userId}`. All Redis failures non-fatal
+
+**Auth Context (`apps/web/src/lib/`):**
+- `auth-context.ts` — `getAuthContext()` now returns `agencyTenantId: string | null` in `ResolvedAuthContext` (non-null when accessing via agency relationship)
+- `tenant-resolver.ts` — `resolveUser()` now resolves all accessible tenants via `resolveUserTenants()` (direct+agency). `resolveTenant()` verifies effective access via `resolveUserAccess()`, logs agency access. Returns `ResolvedTenant` with optional `agencyTenantId`. 404 (not 403) on access denial to prevent tenant enumeration
+
+**Server Actions (`apps/web/src/actions/`):**
+- `tenant-switch.ts` — `switchTenantAction(targetTenantId)` (Zod validation, calls `switchTenant()`, writes audit log with `action: 'tenant.switched'`, returns `TenantSwitchResult`). `invalidateTenantCacheAction()` (Redis cache deletion for client revert path)
+
+**Data Functions (`apps/web/src/data/`):**
+- `sidebar-navigation.ts` — `getSidebarNavigation(userId, activeTenantId)` → `SidebarNavigation` (tenants + portals). Cross-tenant aggregation via `dbRead`. Role-aware workspace filtering (Owner/Admin see all, Members only explicit memberships). Board grouping. Personal tenants sorted first, hidden if empty. Portal entries via user email (active, non-revoked). Types: `SidebarNavigation`, `TenantNavSection`, `BoardNavGroup`, `WorkspaceNavEntry`, `PortalNavEntry`
+
+**Shell Components (`apps/web/src/components/shell/`):**
+- `ShellAccentProvider.tsx` — React Context for `--shell-accent` CSS variable. `useShellAccent()` hook: `shellAccent`, `setShellAccent()`, `revertShellAccent()`, `applyTenantAccent()`. Syncs to `:root` CSS property. Personal tenant → warm neutral, org tenant → configured accent or default Teal
+- `SidebarHeader.tsx` — Signal 1 of Contextual Clarity. Sticky header with avatar + tenant name + qualifier ("Personal" or org name). Uses Clerk `useUser()` for avatar. Collapsed: avatar only (32px). Expanded: avatar (36px) + name
+- `TenantSwitcher.tsx` — Orchestrates 5-step optimistic switching: (1) repaint accent + expand target, (2) `switchTenantAction()`, (3) Clerk `setActive()`, (4) `router.refresh()`, (5) on failure: revert accent, show error toast, invalidate Redis cache. Prevents concurrent switches
+- `TenantSection.tsx` — Expandable tenant node: accent dot + name + chevron. Active tenants start expanded. Renders "My Office" entry + WorkspaceTree. Click on inactive tenant triggers switch callback
+- `WorkspaceTree.tsx` — Renders boards (collapsible groups) + ungrouped workspaces. Active workspace: white left border + bold. Board headers: uppercase muted text
+- `PortalSection.tsx` — Portal entries below divider. Globe icon + system accent (#64748B, non-customizable). Portal name + tenant qualifier. Links to `/portal/{portalSlug}`. Hidden when no portals
+- `MyOfficeHeading.tsx` — Signal 3 of Contextual Clarity. Personal: "My Office · Personal". Org: "My Office · {tenantName}"
+
+**Design System (`apps/web/src/lib/design-system/`):**
+- `shell-accent.ts` — `PERSONAL_TENANT_ACCENT` (#78716C), `PORTAL_ACCENT` (#64748B), `ORG_ACCENT_OPTIONS` (8 curated colors), `DEFAULT_ACCENT_COLOR` (#0D9488 Teal). `getShellAccent(tenantId, isPersonal, accentColor?)` computes correct accent. `isValidAccentColor(hex)` validates against curated set. All org colors ≥3:1 WCAG AA contrast on dark sidebar
+
+**Layout Changes:**
+- `sidebar.tsx` — Major rewrite: Icon Rail (48px, always visible: Home/Tasks/Chat/Calendar top, Toggle/Help/Avatar bottom) + Content Zone (232px, only when expanded: SidebarHeader + TenantSwitcher + PortalSection). Responsive: hidden on mobile, flex on tablet+
+- `header.tsx` — Background now uses `--shell-accent` CSS variable with 150ms transition. Command bar placeholder (300px). Responsive mobile/desktop layout
+- `app-shell.tsx` — Accepts `navData?: SidebarNavigation | null` prop for sidebar
+
+**CSS (`globals.css`):**
+- New CSS variables: `--shell-accent` (#0D9488 default), `--portal-accent` (#64748B), `--personal-accent` (#78716C)
+- Touch target utilities: `.touch-target` (44×44), `.touch-target-lg` (48×48), `.touch-target-primary` (56×56)
+
+**UI Primitives:**
+- `apps/web/src/components/ui/sonner.tsx` — Sonner toast component (17 shadcn/ui components total now)
+
+**i18n (en.json + es.json):**
+- New keys: `shell.sidebar.*` (myOfficeQualified, myOfficePersonal, personalQualifier, currentWorkspace, portals, noWorkspaces, switchError, portalNavigate), `shell.header.*` (commandBarPlaceholder, commandBarShortcut, search), `my_office.*` (heading_personal, heading_org)
+
+**Factories (`packages/shared/testing/factories.ts`):**
+- New: `createTestTenantRelationship()` — auto-creates agency+client tenants, defaults: managed/active/builder/agency-initiated. 20 factories total
+- Updated: `createTestPortalAccess()` now includes `recordSlug`. `createTestThread()` uses `threadType` (was `visibility`)
+
+**Tests (Phase 1J — 14 new test files, ~192 tests):**
+- `apps/web/src/components/shell/__tests__/PortalSection.test.tsx` (11 tests)
+- `apps/web/src/components/shell/__tests__/ShellAccentProvider.test.tsx` (10 tests)
+- `apps/web/src/components/shell/__tests__/TenantSection.test.tsx` (10 tests)
+- `apps/web/src/components/shell/__tests__/TenantSwitcher.test.tsx` (12 tests)
+- `apps/web/src/components/shell/__tests__/WorkspaceTree.test.tsx` (6 tests)
+- `apps/web/src/components/shell/__tests__/contextual-clarity.test.tsx` (25 tests)
+- `apps/web/src/data/__tests__/sidebar-navigation.integration.test.ts` (7 tests)
+- `apps/web/src/lib/auth/__tests__/effective-membership.test.ts` (12 tests)
+- `apps/web/src/lib/auth/__tests__/personal-tenant.test.ts` (15 tests)
+- `apps/web/src/lib/auth/__tests__/tenant-switch.test.ts` (9 tests)
+- `apps/web/src/lib/design-system/shell-accent.test.ts` (20 tests)
+- `packages/shared/db/operations/effective-memberships.test.ts` (4 tests)
+- `packages/shared/db/operations/__tests__/effective-memberships.integration.test.ts` (8 tests)
+- Updated: `auth-flow.integration.test.ts`, `role-check.integration.test.ts`, `webhook-user-created.integration.test.ts`, `sidebar.test.tsx`
+
+**Patterns established:** CP-001/CP-002 schema migrations. `effective_memberships` SQL view for unified direct+agency access. `resolveUserAccess()` / `resolveUserTenants()` for auth resolution. Clerk+Redis hybrid tenant switching (server validates → Redis cache → client `setActive()`). Personal tenant auto-provisioning via Clerk webhook (idempotent). Three Contextual Clarity signals (SidebarHeader, shell accent, MyOfficeHeading). `ShellAccentProvider` React Context for `--shell-accent` CSS variable repainting. Optimistic tenant switch with revert-on-failure. Shell accent: 8 curated org colors + fixed personal (#78716C) + fixed portal (#64748B). Cross-tenant sidebar aggregation via `dbRead`. Role-aware workspace visibility. Board grouping. 404 (not 403) on cross-tenant access denial.
+
 ### Scope Updates (PR #13 — docs/scope-updates)
 
 Schema expansions, personal tenant provisioning, Platform Owner Console, Support System, and comprehensive naming/convention audit.
@@ -426,8 +521,8 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 - `thread-participants.ts` — Made `user_id` nullable, added `participant_type` + `external_contact_id` for external contacts
 
 **Key logic changes:**
-- `user-operations.ts` — `createUserWithTenant()` now auto-provisions a personal tenant (reserved stub, no UI surface). Returns `personalTenantId`.
-- `rls.ts` — Updated to 47 tenant-scoped tables. Added `RLS_EXCLUDED_COLUMNS` (hides `is_platform_admin`, `is_support_agent` from tenant queries). Documented 6 admin-only tables that intentionally skip RLS.
+- `user-operations.ts` — `createUserWithTenant()` creates initial tenant + membership (personal tenant provisioning now handled by `provisionPersonalTenant()` in Phase 1J).
+- `rls.ts` — Updated to 48 tenant-scoped tables (47 standard + `tenant_relationships` OR-clause in 1J). Added `RLS_EXCLUDED_COLUMNS` (hides `is_platform_admin`, `is_support_agent` from tenant queries). Documented 6 admin-only tables that intentionally skip RLS.
 
 **New reference docs:**
 - `docs/reference/platform-owner-console.md` — Full spec for platform admin dashboard
@@ -445,7 +540,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **Sync Engine** — `packages/shared/sync/field-registry.ts` is empty. No platform adapters (Airtable, Notion, SmartSuite). No `toCanonical()`/`fromCanonical()` transforms. Schema tables exist but no sync logic.
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 16 shadcn/ui primitives are installed. Application shell (sidebar, header, content) exists. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 17 shadcn/ui primitives installed. Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
 
 **Views / Grid / Card** — No view rendering code. Schema for `views` exists but no UI.
 
@@ -469,7 +564,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
-**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
 **Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, and event publishing are fully operational. No presence tracking yet (stubs exist, marked for MVP — Core UX).
 
@@ -479,7 +574,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts` and `apps/web/src/data/api-keys.ts` exist (Phase 1I). No other data functions or actions yet.
+**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts`, `apps/web/src/actions/tenant-switch.ts`, `apps/web/src/data/api-keys.ts`, and `apps/web/src/data/sidebar-navigation.ts` exist. No record CRUD actions, no workspace/table management actions yet.
 
 ---
 
@@ -490,15 +585,18 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **Primary keys** | UUIDv7 via `generateUUIDv7()` — no serial/auto-increment anywhere |
 | **ORM** | Drizzle ORM exclusively. No raw SQL outside migrations |
 | **Tenant routing** | `getDbForTenant(tenantId, intent)` for every query |
-| **RLS** | `setTenantContext(db, tenantId)` before tenant-scoped operations. 47 tenant-scoped tables. 6 admin-only tables skip RLS intentionally |
+| **RLS** | `setTenantContext(db, tenantId)` before tenant-scoped operations. 48 tenant-scoped tables. 6 admin-only tables skip RLS intentionally. `tenant_relationships` uses OR-clause RLS (both agency and client can see) |
 | **RLS column exclusion** | `RLS_EXCLUDED_COLUMNS` in `rls.ts` — hide `is_platform_admin`, `is_support_agent` from tenant queries |
 | **Admin tables** | Admin-only tables (support_requests, admin_impersonation_sessions, etc.) have no RLS — accessed only via `/admin` routes |
-| **Personal tenants** | Auto-provisioned on user creation. `settings.personal = true`. Reserved stub, no UI surface yet |
+| **Personal tenants** | Auto-provisioned via Clerk webhook (`provisionPersonalTenant()`). Idempotent. `users.personal_tenant_id` FK. Fixed accent #78716C (warm neutral). Hidden in sidebar until ≥1 workspace |
 | **Error handling** | All errors extend `AppError` with code/statusCode/details/traceId |
 | **Logging** | Pino with PII redaction. `webLogger`/`workerLogger`/`realtimeLogger` |
 | **Tracing** | AsyncLocalStorage via `runWithTraceContext()`. TraceId flows to logs + OTel spans |
-| **Auth** | Clerk for platform users. `getAuthContext()` resolves to internal IDs |
-| **Roles** | 5-role hierarchy checked via `roleAtLeast()` or `requireRole()` |
+| **Auth** | Clerk for platform users. `getAuthContext()` resolves to internal IDs + `agencyTenantId`. `resolveUserAccess()` + `resolveUserTenants()` for effective membership resolution (direct + agency) |
+| **Roles** | 5-role hierarchy checked via `roleAtLeast()` or `requireRole()`. Agency access_level mapped: admin→admin, builder→member, read_only→viewer |
+| **Tenant switching** | Clerk+Redis hybrid: server validates access → Redis cache (24h TTL, key `active_tenant:{userId}`) → client `setActive()`. `switchTenantAction()` Server Action with audit log. Redis failures non-fatal (Clerk fallback). 404 on access denial (prevents enumeration) |
+| **Effective memberships** | `effective_memberships` SQL view (UNION ALL direct + agency). `getEffectiveMemberships(userId)` and `getEffectiveMembershipForTenant(userId, tenantId)`. Cross-tenant by design (uses `dbRead`) |
+| **Agency relationships** | `tenant_relationships` table with OR-clause RLS. Types: managed/white_label/reseller/referral. Statuses: pending/active/suspended/revoked. All VARCHAR (not ENUM). `createTestTenantRelationship()` factory |
 | **Testing** | Vitest with forks pool. Factories with auto-parent creation. Mocked DB in unit tests, real DB in integration |
 | **Test isolation** | `afterEach` truncates all tables. Each test creates own state via factories |
 | **Coverage** | V8 provider. Per-path thresholds enforced (data: 95%, db/sync: 90%, actions: 90%, jobs: 85%) |
@@ -518,9 +616,13 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **Redis clients** | `createRedisClient(name)` with `maxRetriesPerRequest: null` for BullMQ. Separate clients for pub/sub (subscribe mode) |
 | **Design tokens** | CSS custom properties in globals.css. Three-layer color: accent, semantic, data palette |
 | **Typography** | DM Sans (UI), JetBrains Mono (code). 9-step scale in `design-system/typography.ts` |
-| **UI primitives** | 16 shadcn/ui components in `components/ui/`. Extend via composition, never recreate |
+| **UI primitives** | 17 shadcn/ui components in `components/ui/` (added sonner toast). Extend via composition, never recreate |
 | **i18n** | next-intl, non-routing locale strategy. All user-facing text through `useTranslations()`. `check:i18n` CI gate |
-| **Shell layout** | Dark sidebar (48/280px) + accent header (52px) + white content. `block-size: 100dvh` |
+| **Shell layout** | Dark sidebar: Icon Rail (48px, always visible) + Content Zone (232px, expandable). Accent header (52px, `--shell-accent` CSS var with 150ms transition). White content. `block-size: 100dvh`. Responsive: sidebar hidden on mobile |
+| **Shell accent** | `ShellAccentProvider` React Context manages `--shell-accent` on `:root`. 8 curated org colors + fixed personal (#78716C) + fixed portal (#64748B). `getShellAccent()` computes correct accent. `useShellAccent()` hook: set, revert, applyTenantAccent. All ≥3:1 WCAG AA on dark sidebar |
+| **Contextual clarity** | 3 signals: (1) SidebarHeader (avatar + tenant name), (2) Shell accent repainting on switch, (3) MyOfficeHeading (tenant-qualified page title). All update on tenant switch |
+| **Sidebar navigation** | `getSidebarNavigation()` cross-tenant aggregation via `dbRead`. Role-aware workspace visibility (Owner/Admin all, Members explicit only). Board grouping. Personal tenants first, hidden if empty. Portal section with system accent |
+| **Optimistic tenant switch** | TenantSwitcher: repaint accent → `switchTenantAction()` → Clerk `setActive()` → `router.refresh()`. On failure: revert accent, error toast, Redis cache invalidation. Prevents concurrent switches |
 | **AI service** | `AIService.getInstance()` singleton. 6-step flow: budget check → route → compile → execute → log → deduct |
 | **AI capability tiers** | `fast`/`standard`/`advanced` — feature code never references providers or models directly |
 | **AI provider isolation** | `@anthropic-ai/sdk` imported ONLY in `packages/shared/ai/providers/anthropic.ts` |

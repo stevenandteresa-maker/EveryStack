@@ -16,7 +16,8 @@
     "./redis": "./redis/index.ts",
     "./realtime": "./realtime/index.ts",
     "./queue": "./queue/index.ts",
-    "./storage": "./storage/index.ts"
+    "./storage": "./storage/index.ts",
+    "./crypto": "./crypto/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

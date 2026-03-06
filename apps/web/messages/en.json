@@ -50,5 +50,58 @@
       "commandBarShortcut": "⌘K",
       "search": "Search"
     }
+  },
+  "sync_wizard": {
+    "title": "Connect & Sync",
+    "description": "Connect your Airtable base and choose which tables to sync.",
+    "step_authenticate": "Authenticate",
+    "step_select_base": "Select Base",
+    "step_select_tables": "Select Tables",
+    "step1_description": "Connect your Airtable account to get started. A popup will open for you to authorize access.",
+    "connect_airtable": "Connect Airtable",
+    "step2_description": "Choose which Airtable base you'd like to sync with this workspace.",
+    "no_bases": "No bases found. Make sure your Airtable account has at least one base.",
+    "step3_description": "Select the tables to sync and optionally add filters to limit which records are imported.",
+    "quota_selected": "{tables} tables — ~{records} records",
+    "quota_remaining": "Remaining: ~{remaining} records",
+    "quota_exceeded": "The selected tables exceed your plan's record quota. Remove tables or add filters to reduce the count.",
+    "records": "records",
+    "filters": "Filters",
+    "large_table_warning": "This table has over 10,000 records. Consider adding filters to reduce sync time.",
+    "filter_where": "Where",
+    "filter_and": "AND",
+    "filter_or": "OR",
+    "filter_add": "Add filter",
+    "filter_remove": "Remove filter",
+    "filter_value_placeholder": "Value",
+    "back": "Back",
+    "start_sync": "Connect & Start Sync",
+    "sync_started": "Sync started successfully. Records will appear as they are imported.",
+    "error_oauth": "Authorization failed. Please try again.",
+    "error_load_bases": "Failed to load bases. Please try again.",
+    "error_load_tables": "Failed to load tables. Please try again.",
+    "error_start_sync": "Failed to start sync. Please try again.",
+    "error_quota_check": "Failed to check quota. Please try again."
+  },
+  "sync_filter_editor": {
+    "currently_syncing": "Currently syncing: {synced} of {total} records",
+    "estimated_after_change": "Estimated after change: ~{count} records",
+    "estimated_no_change": "Estimated after change: ~{count} records (no change)",
+    "estimating": "Estimating...",
+    "quota_remaining": "Record quota: {remaining} remaining",
+    "quota_exceeded": "This filter would exceed your record quota by {overage} records.",
+    "save_and_resync": "Save & Re-sync",
+    "cancel": "Cancel",
+    "save_success": "Filter saved. Re-sync started.",
+    "save_error": "Failed to save filter. Please try again.",
+    "no_filter": "No filter applied — syncing all records."
+  },
+  "sync_orphans": {
+    "banner_message": "{count, plural, one {# record} other {# records}} no longer match your sync filter. These records exist in EveryStack but are no longer being synced from Airtable. They won't receive updates.",
+    "delete_button": "Delete Orphaned Records",
+    "keep_local_button": "Keep as Local-Only",
+    "undo_filter_button": "Undo Filter Change",
+    "row_indicator_tooltip": "This record is no longer synced — it was excluded by a sync filter change on {date}.",
+    "filtered_out_tooltip": "This record exists on {platform} but is outside your sync filter."
   }
 }

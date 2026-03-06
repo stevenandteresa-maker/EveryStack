@@ -50,5 +50,58 @@
       "commandBarShortcut": "⌘K",
       "search": "Buscar"
     }
+  },
+  "sync_wizard": {
+    "title": "Conectar y sincronizar",
+    "description": "Conecta tu base de Airtable y elige qué tablas sincronizar.",
+    "step_authenticate": "Autenticar",
+    "step_select_base": "Seleccionar base",
+    "step_select_tables": "Seleccionar tablas",
+    "step1_description": "Conecta tu cuenta de Airtable para comenzar. Se abrirá una ventana para autorizar el acceso.",
+    "connect_airtable": "Conectar Airtable",
+    "step2_description": "Elige qué base de Airtable deseas sincronizar con este espacio de trabajo.",
+    "no_bases": "No se encontraron bases. Asegúrate de que tu cuenta de Airtable tenga al menos una base.",
+    "step3_description": "Selecciona las tablas a sincronizar y opcionalmente agrega filtros para limitar los registros importados.",
+    "quota_selected": "{tables} tablas — ~{records} registros",
+    "quota_remaining": "Restante: ~{remaining} registros",
+    "quota_exceeded": "Las tablas seleccionadas exceden la cuota de registros de tu plan. Elimina tablas o agrega filtros para reducir el conteo.",
+    "records": "registros",
+    "filters": "Filtros",
+    "large_table_warning": "Esta tabla tiene más de 10,000 registros. Considera agregar filtros para reducir el tiempo de sincronización.",
+    "filter_where": "Donde",
+    "filter_and": "Y",
+    "filter_or": "O",
+    "filter_add": "Agregar filtro",
+    "filter_remove": "Eliminar filtro",
+    "filter_value_placeholder": "Valor",
+    "back": "Atrás",
+    "start_sync": "Conectar e iniciar sincronización",
+    "sync_started": "Sincronización iniciada exitosamente. Los registros aparecerán a medida que se importen.",
+    "error_oauth": "La autorización falló. Inténtalo de nuevo.",
+    "error_load_bases": "No se pudieron cargar las bases. Inténtalo de nuevo.",
+    "error_load_tables": "No se pudieron cargar las tablas. Inténtalo de nuevo.",
+    "error_start_sync": "No se pudo iniciar la sincronización. Inténtalo de nuevo.",
+    "error_quota_check": "No se pudo verificar la cuota. Inténtalo de nuevo."
+  },
+  "sync_filter_editor": {
+    "currently_syncing": "Sincronizando actualmente: {synced} de {total} registros",
+    "estimated_after_change": "Estimado después del cambio: ~{count} registros",
+    "estimated_no_change": "Estimado después del cambio: ~{count} registros (sin cambios)",
+    "estimating": "Estimando...",
+    "quota_remaining": "Cuota de registros: {remaining} restantes",
+    "quota_exceeded": "Este filtro excedería tu cuota de registros por {overage} registros.",
+    "save_and_resync": "Guardar y re-sincronizar",
+    "cancel": "Cancelar",
+    "save_success": "Filtro guardado. Re-sincronización iniciada.",
+    "save_error": "Error al guardar el filtro. Inténtalo de nuevo.",
+    "no_filter": "Sin filtro aplicado — sincronizando todos los registros."
+  },
+  "sync_orphans": {
+    "banner_message": "{count, plural, one {# registro} other {# registros}} ya no coinciden con tu filtro de sincronización. Estos registros existen en EveryStack pero ya no se sincronizan desde Airtable. No recibirán actualizaciones.",
+    "delete_button": "Eliminar registros huérfanos",
+    "keep_local_button": "Mantener como solo local",
+    "undo_filter_button": "Deshacer cambio de filtro",
+    "row_indicator_tooltip": "Este registro ya no se sincroniza — fue excluido por un cambio de filtro de sincronización el {date}.",
+    "filtered_out_tooltip": "Este registro existe en {platform} pero está fuera de tu filtro de sincronización."
   }
 }

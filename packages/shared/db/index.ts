@@ -81,6 +81,8 @@ export {
   portalsRelations,
   portalAccess,
   portalAccessRelations,
+  syncedFieldMappings,
+  syncedFieldMappingsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -103,4 +105,5 @@ export type {
   ApiRequestLog, NewApiRequestLog,
   Portal, NewPortal,
   PortalAccess, NewPortalAccess,
+  SyncedFieldMapping, NewSyncedFieldMapping,
 } from './schema';
