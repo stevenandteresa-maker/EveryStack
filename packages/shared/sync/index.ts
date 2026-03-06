@@ -73,3 +73,9 @@ export type {
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';
+
+// Adapter types
+export type { PlatformAdapter, FieldMapping } from './adapters/types';
+
+// Platform adapters
+export { AirtableAdapter, registerAirtableTransforms } from './adapters/airtable';
