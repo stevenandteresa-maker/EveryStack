@@ -30,6 +30,11 @@
     /* ── Workspace Accent — default Teal, overridden per-tenant ── */
     --workspace-accent: #0D9488;
 
+    /* ── Shell Accent Tokens — per-tenant repainting (CP-002) ── */
+    --shell-accent: #0D9488;         /* default: Teal — overridden per-tenant */
+    --portal-accent: #64748B;        /* system-owned, non-customisable */
+    --personal-accent: #78716C;      /* warm neutral for personal tenant */
+
     /* ── EveryStack Elevation ── */
     --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
 
