@@ -29,6 +29,7 @@ import {
   threads,
   apiKeys,
   recordViewConfigs,
+  tenantRelationships,
 } from '../db/schema';
 import type {
   NewTenant,
@@ -65,6 +66,8 @@ import type {
   ApiKey,
   NewRecordViewConfig,
   RecordViewConfig,
+  NewTenantRelationship,
+  TenantRelationship,
 } from '../db/schema';
 
 let testDbConn: DrizzleClient | undefined;
@@ -728,4 +731,39 @@ export async function createTestApiKey(
 
   const apiKey = firstRow(await db.insert(apiKeys).values(values).returning());
   return { apiKey, rawKey };
+}
+
+// ---------------------------------------------------------------------------
+// Tier 11 — Tenant Relationships (CP-002)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a tenant relationship with sensible defaults.
+ * Auto-creates agency and client tenants when not provided.
+ * Auto-creates a user when authorizedByUserId is not provided.
+ * Default: status 'active', access_level 'builder', relationship_type 'managed'.
+ */
+export async function createTestTenantRelationship(
+  overrides?: Partial<NewTenantRelationship>,
+): Promise<TenantRelationship> {
+  const db = getTestDb();
+
+  const agencyTenantId = overrides?.agencyTenantId ?? (await createTestTenant({ name: 'Agency Tenant' })).id;
+  const clientTenantId = overrides?.clientTenantId ?? (await createTestTenant({ name: 'Client Tenant' })).id;
+  const authorizedByUserId = overrides?.authorizedByUserId ?? (await createTestUser()).id;
+
+  const values: NewTenantRelationship = {
+    id: generateUUIDv7(),
+    agencyTenantId,
+    clientTenantId,
+    relationshipType: 'managed',
+    status: 'active',
+    accessLevel: 'builder',
+    initiatedBy: 'agency',
+    authorizedByUserId,
+    metadata: {},
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(tenantRelationships).values(values).returning());
 }

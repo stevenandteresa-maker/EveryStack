@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
+import { tenants } from './tenants';
 
 export const users = pgTable(
   'users',
@@ -20,6 +21,8 @@ export const users = pgTable(
     name: varchar('name', { length: 255 }).notNull(),
     avatarUrl: varchar('avatar_url', { length: 2048 }),
     preferences: jsonb('preferences').$type<{ locale?: string; theme?: string }>().default({}).notNull(),
+    // CP-002: Personal tenant — set on first login via auto-provisioning; identity-bound, cannot be transferred
+    personalTenantId: uuid('personal_tenant_id').references(() => tenants.id, { onDelete: 'set null' }),
     // Platform Owner Console — never return in tenant-scoped queries (see RLS_EXCLUDED_COLUMNS)
     isPlatformAdmin: boolean('is_platform_admin').default(false).notNull(),
     // Support System — never return in tenant-scoped queries (see RLS_EXCLUDED_COLUMNS)
@@ -30,6 +33,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex('users_clerk_id_idx').on(table.clerkId),
     index('users_email_idx').on(table.email),
+    index('users_personal_tenant_id_idx').on(table.personalTenantId),
   ],
 );
 

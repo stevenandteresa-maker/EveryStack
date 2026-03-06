@@ -33,6 +33,8 @@ import { sql } from 'drizzle-orm';
 export const TENANT_SCOPED_TABLES = [
   // Tier 1 — Foundation
   'tenant_memberships',
+  // CP-002: RLS uses OR — both agency_tenant_id and client_tenant_id can see the row
+  'tenant_relationships',
 
   // Tier 2 — Workspace & Boards
   'boards',

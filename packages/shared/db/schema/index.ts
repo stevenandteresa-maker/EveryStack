@@ -14,6 +14,13 @@ export { tenants } from './tenants';
 export type { Tenant, NewTenant } from './tenants';
 
 // ---------------------------------------------------------------------------
+// Tier 1B — Tenant Relationships (agency-client)
+// ---------------------------------------------------------------------------
+
+export { tenantRelationships, tenantRelationshipsRelations } from './tenant-relationships';
+export type { TenantRelationship, NewTenantRelationship } from './tenant-relationships';
+
+// ---------------------------------------------------------------------------
 // Tier 2 — Tenant Memberships & Boards
 // ---------------------------------------------------------------------------
 

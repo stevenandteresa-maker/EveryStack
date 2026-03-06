@@ -155,6 +155,13 @@
       "when": 1772630000000,
       "tag": "0021_cp001_portal_thread_refinements",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1772640000000,
+      "tag": "0022_cp002_multi_tenant_identity",
+      "breakpoints": true
     }
   ]
 }
