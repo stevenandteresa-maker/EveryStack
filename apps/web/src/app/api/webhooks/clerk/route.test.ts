@@ -15,6 +15,11 @@ vi.mock('@everystack/shared/db', () => ({
   updateUserFromClerk: (...args: unknown[]) => mockUpdateUserFromClerk(...args),
 }));
 
+const mockProvisionPersonalTenant = vi.fn().mockResolvedValue('personal-tenant-id-1');
+vi.mock('@/lib/auth/personal-tenant', () => ({
+  provisionPersonalTenant: (...args: unknown[]) => mockProvisionPersonalTenant(...args),
+}));
+
 const mockVerifyClerkWebhook = vi.fn();
 vi.mock('@everystack/shared/webhooks', () => ({
   verifyClerkWebhook: (...args: unknown[]) => mockVerifyClerkWebhook(...args),
@@ -169,6 +174,7 @@ describe('POST /api/webhooks/clerk', () => {
       email: 'john@example.com',
       name: 'John Doe',
     });
+    expect(mockProvisionPersonalTenant).toHaveBeenCalledWith('user-id-1', 'John Doe');
   });
 
   it('handles user.created with name fallback to email prefix', async () => {
@@ -187,6 +193,7 @@ describe('POST /api/webhooks/clerk', () => {
     expect(mockCreateUserWithTenant).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'john' }),
     );
+    expect(mockProvisionPersonalTenant).toHaveBeenCalledWith('user-id-1', 'john');
   });
 
   it('handles user.updated event', async () => {

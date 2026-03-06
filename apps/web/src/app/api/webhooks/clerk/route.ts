@@ -7,6 +7,7 @@ import {
 } from '@everystack/shared/db';
 import { webLogger } from '@everystack/shared/logging';
 import { verifyClerkWebhook } from '@everystack/shared/webhooks';
+import { provisionPersonalTenant } from '@/lib/auth/personal-tenant';
 
 interface ClerkEmailAddress {
   email_address: string;
@@ -103,11 +104,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const email = getPrimaryEmail(event.data);
       const name = buildDisplayName(event.data);
 
-      await createUserWithTenant({
+      const { userId } = await createUserWithTenant({
         clerkId: event.data.id,
         email,
         name,
       });
+
+      // Provision personal tenant (idempotent — safe on Clerk webhook retry)
+      await provisionPersonalTenant(userId, name);
 
       return NextResponse.json({ received: true }, { status: 201 });
     }

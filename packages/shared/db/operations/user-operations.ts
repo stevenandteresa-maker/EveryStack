@@ -8,7 +8,6 @@ import { tenants } from '../schema/tenants';
 import { tenantMemberships } from '../schema/tenant-memberships';
 import { workspaces } from '../schema/workspaces';
 import { workspaceMemberships } from '../schema/workspace-memberships';
-import { createLogger } from '../../logging';
 
 /**
  * Generates a URL-safe slug from a name.
@@ -28,13 +27,10 @@ function generateSlug(name: string): string {
   return base ? `${base}-${suffix}` : suffix;
 }
 
-const logger = createLogger({ service: 'user-operations' });
-
 export interface CreateUserWithTenantResult {
   userId: string;
   tenantId: string;
   workspaceId: string;
-  personalTenantId: string;
 }
 
 /**
@@ -56,7 +52,6 @@ export async function createUserWithTenant(
   const userId = generateUUIDv7();
   const tenantId = generateUUIDv7();
   const workspaceId = generateUUIDv7();
-  const personalTenantId = generateUUIDv7();
 
   await client.transaction(async (tx) => {
     // 1. Create user (no RLS — users table has no tenant_id)
@@ -102,31 +97,9 @@ export async function createUserWithTenant(
       workspaceId,
       role: 'manager',
     });
-
-    // 7. Create personal tenant (reserved stub — no workspaces, no UI surface)
-    const personalTenantName = `${name}'s Personal Space`;
-    await tx.insert(tenants).values({
-      id: personalTenantId,
-      name: personalTenantName,
-      plan: 'freelancer',
-      settings: { personal: true, auto_provisioned: true },
-    });
-
-    // 8. Set tenant context for personal tenant RLS-protected inserts
-    await setTenantContext(tx, personalTenantId);
-
-    // 9. Create personal tenant membership (owner, active)
-    await tx.insert(tenantMemberships).values({
-      tenantId: personalTenantId,
-      userId,
-      role: 'owner',
-      status: 'active',
-    });
-
-    logger.info({ userId, personalTenantId }, 'personal tenant provisioned for user');
   });
 
-  return { userId, tenantId, workspaceId, personalTenantId };
+  return { userId, tenantId, workspaceId };
 }
 
 /**

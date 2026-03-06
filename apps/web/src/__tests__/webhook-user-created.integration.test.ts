@@ -6,29 +6,48 @@ import type { NextRequest } from 'next/server';
 // Hoisted mock state for the write DB (transaction tracking)
 // ---------------------------------------------------------------------------
 
-const { insertedRows, mockWriteDb, resetInserts } = vi.hoisted(() => {
+const { insertedRows, updatedRows, mockWriteDb, resetInserts } = vi.hoisted(() => {
   const rows: Array<{ table: unknown; values: Record<string, unknown> }> = [];
+  const updates: Array<{ values: Record<string, unknown> }> = [];
 
-  const tx = {
+  const makeTxLike = () => ({
     insert: (table: unknown) => ({
       values: (vals: Record<string, unknown>) => {
         rows.push({ table, values: vals });
         return { returning: () => [vals] };
       },
     }),
-  };
+    update: () => ({
+      set: (vals: Record<string, unknown>) => ({
+        where: () => {
+          updates.push({ values: vals });
+          return Promise.resolve();
+        },
+      }),
+    }),
+  });
+
+  const tx = makeTxLike();
 
   const writeDb = {
     transaction: async (fn: (t: typeof tx) => Promise<void>) => {
       await fn(tx);
     },
+    // select() for provisionPersonalTenant idempotency check
+    select: () => ({
+      from: () => ({
+        where: () => [{ personalTenantId: null }],
+      }),
+    }),
   };
 
   return {
     insertedRows: rows,
+    updatedRows: updates,
     mockWriteDb: writeDb,
     resetInserts: () => {
       rows.length = 0;
+      updates.length = 0;
     },
   };
 });
@@ -139,7 +158,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
     process.env.CLERK_WEBHOOK_SECRET = WEBHOOK_SECRET;
   });
 
-  it('creates all 7 expected rows in a single transaction with valid signature', async () => {
+  it('creates all expected rows across createUserWithTenant and provisionPersonalTenant', async () => {
     const event = makeClerkEvent();
     const body = JSON.stringify(event);
     const headers = generateSvixHeaders(body);
@@ -149,7 +168,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
 
     expect(response.status).toBe(201);
 
-    // Seven inserts in the transaction
+    // 5 inserts from createUserWithTenant + 2 from provisionPersonalTenant = 7
     expect(insertedRows).toHaveLength(7);
 
     // 1. User
@@ -192,20 +211,31 @@ describe('Webhook integration: user.created with real Svix verification', { time
       role: 'manager',
     });
 
-    // 6. Personal tenant
+    // 6. Personal tenant (from provisionPersonalTenant — with accent color)
+    // UUID index 4: slug consumed index 3, personalTenantId is next
     expect(insertedRows[5]?.values).toMatchObject({
-      id: MOCK_UUIDS[3],
-      name: "New User's Personal Space",
+      id: MOCK_UUIDS[4],
+      name: "New User's Workspace",
       plan: 'freelancer',
-      settings: { personal: true, auto_provisioned: true },
+      settings: {
+        personal: true,
+        auto_provisioned: true,
+        branding_accent_color: '#78716C',
+      },
     });
 
     // 7. Personal tenant membership (owner, active)
     expect(insertedRows[6]?.values).toMatchObject({
-      tenantId: MOCK_UUIDS[3],
+      tenantId: MOCK_UUIDS[4],
       userId: MOCK_UUIDS[0],
       role: 'owner',
       status: 'active',
+    });
+
+    // 8. users.personal_tenant_id updated
+    expect(updatedRows).toHaveLength(1);
+    expect(updatedRows[0]?.values).toMatchObject({
+      personalTenantId: MOCK_UUIDS[4],
     });
   });
 
@@ -242,7 +272,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
     const { setTenantContext } = await import(
       '../../../../packages/shared/db/rls'
     );
-    // Called for primary tenant and personal tenant
+    // Called once for primary tenant (createUserWithTenant) and once for personal tenant (provisionPersonalTenant)
     expect(setTenantContext).toHaveBeenCalledTimes(2);
     expect(setTenantContext).toHaveBeenCalledWith(
       expect.anything(), // transaction client
@@ -250,7 +280,7 @@ describe('Webhook integration: user.created with real Svix verification', { time
     );
     expect(setTenantContext).toHaveBeenCalledWith(
       expect.anything(), // transaction client
-      MOCK_UUIDS[3],    // personalTenantId
+      MOCK_UUIDS[4],    // personalTenantId (index 4: slug consumed index 3)
     );
   });
 });

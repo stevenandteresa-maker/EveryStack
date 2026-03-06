@@ -14,6 +14,9 @@
     "search": "Search...",
     "noResults": "No results found"
   },
+  "personal_tenant": {
+    "default_name": "{userName}'s Workspace"
+  },
   "shell": {
     "sidebar": {
       "home": "Home",
