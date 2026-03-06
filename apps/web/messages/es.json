@@ -123,6 +123,9 @@
     "keep_all_remote": "Mantener todo {platform}",
     "pending_count": "{count, plural, one {# conflicto pendiente} other {# conflictos pendientes}}",
     "cancel": "Cancelar",
-    "apply": "Aplicar resoluciones"
+    "apply": "Aplicar resoluciones",
+    "cell_tooltip": "Conflicto: editado localmente y en {platform}. Haz clic para resolver.",
+    "toolbar_badge": "{count, plural, one {# conflicto} other {# conflictos}}",
+    "row_badge_tooltip": "Esta fila tiene {count, plural, one {# conflicto} other {# conflictos}}. Haz clic para resolver."
   }
 }

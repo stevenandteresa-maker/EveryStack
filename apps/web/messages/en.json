@@ -123,6 +123,9 @@
     "keep_all_remote": "Keep All {platform}",
     "pending_count": "{count, plural, one {# conflict pending} other {# conflicts pending}}",
     "cancel": "Cancel",
-    "apply": "Apply Resolutions"
+    "apply": "Apply Resolutions",
+    "cell_tooltip": "Conflict: edited both locally and on {platform}. Click to resolve.",
+    "toolbar_badge": "{count, plural, one {# conflict} other {# conflicts}}",
+    "row_badge_tooltip": "This row has {count, plural, one {# conflict} other {# conflicts}}. Click to resolve."
   }
 }
