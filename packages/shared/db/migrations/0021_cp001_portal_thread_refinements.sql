@@ -23,8 +23,8 @@ ALTER TABLE "portal_access" ADD COLUMN "revoked_reason" varchar(255);
 ALTER TABLE "portal_access" ADD COLUMN "record_slug" varchar(255);
 --> statement-breakpoint
 
--- Step 6: Add linked_record_id column to portal_access with FK
-ALTER TABLE "portal_access" ADD COLUMN "linked_record_id" uuid REFERENCES "records"("id") ON DELETE SET NULL;
+-- Step 6: Add linked_record_id column to portal_access (no FK — records uses composite PK)
+ALTER TABLE "portal_access" ADD COLUMN "linked_record_id" uuid;
 --> statement-breakpoint
 
 -- Step 7: Add unique constraint on (portal_id, record_slug)

@@ -11,7 +11,7 @@ import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
 import { tenants } from './tenants';
 import { portals } from './portals';
-import { records } from './records';
+
 
 export const portalAccess = pgTable(
   'portal_access',
@@ -35,7 +35,8 @@ export const portalAccess = pgTable(
     // Client-safe slug for portal URLs — raw record UUID never exposed
     recordSlug: varchar('record_slug', { length: 255 }),
     // Optional link to a contact/client record (post-MVP App Portal conversion)
-    linkedRecordId: uuid('linked_record_id').references(() => records.id, { onDelete: 'set null' }),
+    // No FK constraint — records uses composite PK (tenant_id, id), plain uuid reference
+    linkedRecordId: uuid('linked_record_id'),
     lastAccessedAt: timestamp('last_accessed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
