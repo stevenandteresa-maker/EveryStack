@@ -70,6 +70,40 @@ function detectSocialPlatform(url: string): string {
 // ---------------------------------------------------------------------------
 
 /**
+ * Split a "State ZIP" string into state and postal code parts.
+ * Uses lastIndexOf to find the boundary — no regex needed.
+ * Handles US ZIP codes (12345 or 12345-6789).
+ */
+function isUsZip(s: string): boolean {
+  if (s.length === 5) return s.split('').every((c) => c >= '0' && c <= '9');
+  if (s.length === 10 && s[5] === '-') {
+    return (
+      s.substring(0, 5).split('').every((c) => c >= '0' && c <= '9') &&
+      s.substring(6).split('').every((c) => c >= '0' && c <= '9')
+    );
+  }
+  return false;
+}
+
+function splitStateZip(stateZip: string): { state: string; postalCode: string | null } {
+  const trimmed = stateZip.trim();
+  if (trimmed === '') return { state: '', postalCode: null };
+
+  const lastSpace = trimmed.lastIndexOf(' ');
+  if (lastSpace === -1) return { state: trimmed, postalCode: null };
+
+  const candidate = trimmed.substring(lastSpace + 1);
+  if (isUsZip(candidate)) {
+    return {
+      state: trimmed.substring(0, lastSpace).trim(),
+      postalCode: candidate,
+    };
+  }
+
+  return { state: trimmed, postalCode: null };
+}
+
+/**
  * Best-effort parse of a single-line address string into structured parts.
  * This is inherently lossy — there is no universal address format.
  * A proper geocoding/parsing service would be used in production for accuracy.
@@ -85,26 +119,24 @@ function parseAddressString(raw: string): {
 
   if (parts.length >= 4) {
     // "123 Main St, City, State ZIP, Country"
-    const stateZip = parts[2] ?? '';
-    const stateZipMatch = stateZip.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
+    const { state, postalCode } = splitStateZip(parts[2] ?? '');
     return {
       street: parts[0] ?? null,
       city: parts[1] ?? null,
-      state: stateZipMatch?.[1] ?? stateZip,
-      postal_code: stateZipMatch?.[2] ?? null,
+      state,
+      postal_code: postalCode,
       country: parts[3] ?? null,
     };
   }
 
   if (parts.length === 3) {
     // "123 Main St, City, State ZIP"
-    const stateZip = parts[2] ?? '';
-    const stateZipMatch = stateZip.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
+    const { state, postalCode } = splitStateZip(parts[2] ?? '');
     return {
       street: parts[0] ?? null,
       city: parts[1] ?? null,
-      state: stateZipMatch?.[1] ?? stateZip,
-      postal_code: stateZipMatch?.[2] ?? null,
+      state,
+      postal_code: postalCode,
       country: null,
     };
   }
