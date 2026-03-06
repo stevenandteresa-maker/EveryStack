@@ -540,23 +540,58 @@ export type CanonicalData = Record<string, unknown>;
 // ---------------------------------------------------------------------------
 
 /**
+ * Per-field snapshot at last sync — used for conflict detection.
+ * Each field's canonical value and the timestamp it was last synced.
+ */
+export interface SyncedFieldValue {
+  /** The canonical field value at last sync. */
+  value: unknown;
+  /** ISO 8601 timestamp when this field was last synced. */
+  synced_at: string;
+}
+
+export const SyncedFieldValueSchema = z.object({
+  value: z.unknown(),
+  synced_at: z.string().datetime({ offset: true }),
+});
+
+/**
  * Per-record sync metadata tracking the relationship between
  * the canonical record and its source platform record.
+ *
+ * Stored in `records.sync_metadata` JSONB column.
  */
-export interface RecordSyncMetadata {
+export interface SyncMetadata {
   /** The record's ID on the source platform. */
   platform_record_id: string;
   /** ISO 8601 timestamp of last successful sync. */
   last_synced_at: string;
-  /** Snapshot of field values at last sync for conflict detection. */
-  last_synced_value: Record<string, unknown>;
+  /** Per-field snapshot of values at last sync for conflict detection. */
+  last_synced_values: Record<string, SyncedFieldValue>;
   /** Whether this record is actively synced or orphaned by filter changes. */
   sync_status: 'active' | 'orphaned';
+  /** Direction of sync for this record. */
+  sync_direction: 'inbound' | 'outbound' | 'both';
   /** ISO 8601 timestamp when the record was orphaned, or null. */
   orphaned_at: string | null;
   /** Reason the record was orphaned, or null. */
   orphaned_reason: 'filter_changed' | null;
 }
+
+export const SyncMetadataSchema = z.object({
+  platform_record_id: z.string().min(1),
+  last_synced_at: z.string().datetime({ offset: true }),
+  last_synced_values: z.record(z.string(), SyncedFieldValueSchema),
+  sync_status: z.enum(['active', 'orphaned']),
+  sync_direction: z.enum(['inbound', 'outbound', 'both']),
+  orphaned_at: z.string().datetime({ offset: true }).nullable(),
+  orphaned_reason: z.enum(['filter_changed']).nullable(),
+});
+
+/**
+ * @deprecated Use `SyncMetadata` instead. Kept for backward compatibility.
+ */
+export type RecordSyncMetadata = SyncMetadata;
 
 // ---------------------------------------------------------------------------
 // Platform field configuration — passed to transform functions
