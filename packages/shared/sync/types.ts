@@ -8,6 +8,126 @@
 // Covers all 9 MVP categories from data-model.md § Field Type Taxonomy.
 // ---------------------------------------------------------------------------
 
+import { z } from 'zod';
+
+// ---------------------------------------------------------------------------
+// Filter Grammar — shared by sync filters, grid view filters, portal
+// data_scope, and App record_filters (post-MVP).
+// @see docs/reference/sync-engine.md § Sync Filters
+// ---------------------------------------------------------------------------
+
+/**
+ * All supported filter comparison operators.
+ * Used across sync filters, view filters, and portal data scopes.
+ */
+export type FilterOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_equal'
+  | 'less_equal'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'is_any_of'
+  | 'is_none_of'
+  | 'is_before'
+  | 'is_after'
+  | 'is_within';
+
+/**
+ * A single filter condition. Combined into arrays using the
+ * `conjunction` property to form AND/OR groups.
+ */
+export interface FilterRule {
+  /** EveryStack field ID (mapped from platform field during sync setup). */
+  fieldId: string;
+  /** The comparison operator to apply. */
+  operator: FilterOperator;
+  /** Value to compare against. Type depends on field type and operator. */
+  value: unknown;
+  /** How this rule combines with the next rule in the array. */
+  conjunction: 'and' | 'or';
+}
+
+// ---------------------------------------------------------------------------
+// Zod schemas for filter types
+// ---------------------------------------------------------------------------
+
+export const FilterOperatorSchema = z.enum([
+  'equals',
+  'not_equals',
+  'contains',
+  'not_contains',
+  'greater_than',
+  'less_than',
+  'greater_equal',
+  'less_equal',
+  'is_empty',
+  'is_not_empty',
+  'is_any_of',
+  'is_none_of',
+  'is_before',
+  'is_after',
+  'is_within',
+]);
+
+export const FilterRuleSchema = z.object({
+  fieldId: z.string().min(1),
+  operator: FilterOperatorSchema,
+  value: z.unknown(),
+  conjunction: z.enum(['and', 'or']),
+});
+
+// ---------------------------------------------------------------------------
+// SyncConfig — shape of base_connections.sync_config (JSONB)
+// @see docs/reference/sync-engine.md § Table Selection Model
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-table sync configuration within a base connection.
+ */
+export interface SyncTableConfig {
+  /** Platform's table/database ID. */
+  external_table_id: string;
+  /** Display name from platform. */
+  external_table_name: string;
+  /** Whether this table is selected for sync. */
+  enabled: boolean;
+  /** Inbound filter — same grammar as view filters. Null = no filter (sync all). */
+  sync_filter: FilterRule[] | null;
+  /** Last known record count from the platform. */
+  estimated_record_count: number;
+  /** Actual number of records synced locally. */
+  synced_record_count: number;
+}
+
+/**
+ * Root sync configuration stored in `base_connections.sync_config` JSONB column.
+ */
+export interface SyncConfig {
+  /** Polling interval in seconds. Default: 300 (5 min). */
+  polling_interval_seconds: number;
+  /** Per-table selection and filter configuration. */
+  tables: SyncTableConfig[];
+}
+
+export const SyncTableConfigSchema = z.object({
+  external_table_id: z.string().min(1),
+  external_table_name: z.string().min(1),
+  enabled: z.boolean(),
+  sync_filter: z.array(FilterRuleSchema).nullable(),
+  estimated_record_count: z.number().int().min(0),
+  synced_record_count: z.number().int().min(0),
+});
+
+export const SyncConfigSchema = z.object({
+  polling_interval_seconds: z.number().int().min(1).default(300),
+  tables: z.array(SyncTableConfigSchema),
+});
+
 // ---------------------------------------------------------------------------
 // Supporting types
 // ---------------------------------------------------------------------------
