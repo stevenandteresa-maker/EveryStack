@@ -304,12 +304,20 @@ export interface SignatureValue {
 // Category 7: Relational
 // ---------------------------------------------------------------------------
 
+export interface LinkedRecordEntry {
+  /** ES record UUID, or null if the linked record is not synced locally. */
+  record_id: string | null;
+  /** Original platform record ID, stored when record_id is null (filtered-out). */
+  platform_record_id?: string;
+  /** Display value cached from the source platform. */
+  display?: string;
+  /** True when the linked record exists on the platform but was excluded by the sync filter. */
+  filtered_out?: boolean;
+}
+
 export interface LinkedRecordValue {
   type: 'linked_record';
-  value: Array<{
-    id: string;
-    filtered_out?: boolean;
-  }>;
+  value: LinkedRecordEntry[];
 }
 
 // ---------------------------------------------------------------------------
@@ -322,6 +330,7 @@ export interface FileObject {
   file_type: string;
   size: number;
   thumbnail_url?: string | null;
+  source_refs?: SourceRefs;
 }
 
 export interface FilesValue {

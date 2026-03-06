@@ -54,6 +54,7 @@ export type {
   SignatureData,
   SignatureValue,
   // Category 7: Relational
+  LinkedRecordEntry,
   LinkedRecordValue,
   // Category 8: Files
   FileObject,

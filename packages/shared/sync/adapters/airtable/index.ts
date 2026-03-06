@@ -15,6 +15,10 @@ import { AIRTABLE_SELECTION_TRANSFORMS } from './selection-transforms';
 import { AIRTABLE_DATE_TRANSFORMS } from './date-transforms';
 import { AIRTABLE_PEOPLE_CONTACT_TRANSFORMS } from './people-contact-transforms';
 import { AIRTABLE_BOOLEAN_INTERACTIVE_TRANSFORMS } from './boolean-interactive-transforms';
+import { AIRTABLE_FILES_TRANSFORMS } from './files-transforms';
+import { AIRTABLE_RELATIONAL_TRANSFORMS } from './relational-transforms';
+import { AIRTABLE_IDENTIFICATION_TRANSFORMS } from './identification-transforms';
+import { AIRTABLE_LOSSY_TRANSFORMS } from './lossy-transforms';
 
 const logger = createLogger({ service: 'sync' });
 
@@ -47,6 +51,18 @@ export function registerAirtableTransforms(): void {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
   for (const { airtableType, transform } of AIRTABLE_BOOLEAN_INTERACTIVE_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_FILES_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_RELATIONAL_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_IDENTIFICATION_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_LOSSY_TRANSFORMS) {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
 }

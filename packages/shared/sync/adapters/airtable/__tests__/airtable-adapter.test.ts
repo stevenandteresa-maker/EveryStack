@@ -201,7 +201,7 @@ describe('AirtableAdapter', () => {
       const record = {
         fields: {
           fldName: 'Test',
-          fldFormula: '=SUM(1,2)',
+          fldUnknown: 'some value',
         },
       };
 
@@ -214,10 +214,10 @@ describe('AirtableAdapter', () => {
           config: {},
         },
         {
-          fieldId: 'es-formula',
-          externalFieldId: 'fldFormula',
-          fieldType: 'formula',
-          externalFieldType: 'formula', // Not registered
+          fieldId: 'es-unknown',
+          externalFieldId: 'fldUnknown',
+          fieldType: 'unknown_type',
+          externalFieldType: 'unknownFieldType', // Not registered
           config: {},
         },
       ];
@@ -227,7 +227,7 @@ describe('AirtableAdapter', () => {
       // Registered field is transformed
       expect(result['es-name']).toEqual({ type: 'text', value: 'Test' });
       // Unregistered field is skipped
-      expect(result['es-formula']).toBeUndefined();
+      expect(result['es-unknown']).toBeUndefined();
     });
 
     it('handles record with no fields property', () => {
@@ -366,7 +366,7 @@ describe('AirtableAdapter', () => {
     it('skips unregistered field types without crashing', () => {
       const canonicalData: Record<string, CanonicalValue> = {
         'es-name': { type: 'text', value: 'Test' },
-        'es-formula': { type: 'text', value: '=SUM(1,2)' },
+        'es-unknown': { type: 'text', value: 'some value' },
       };
 
       const mappings: FieldMapping[] = [
@@ -378,10 +378,10 @@ describe('AirtableAdapter', () => {
           config: {},
         },
         {
-          fieldId: 'es-formula',
-          externalFieldId: 'fldFormula',
-          fieldType: 'formula',
-          externalFieldType: 'formula', // Not registered
+          fieldId: 'es-unknown',
+          externalFieldId: 'fldUnknown',
+          fieldType: 'unknown_type',
+          externalFieldType: 'unknownFieldType', // Not registered
           config: {},
         },
       ];
@@ -389,7 +389,7 @@ describe('AirtableAdapter', () => {
       const result = adapter.fromCanonical(canonicalData, mappings) as Record<string, unknown>;
 
       expect(result['fldName']).toBe('Test');
-      expect(result['fldFormula']).toBeUndefined();
+      expect(result['fldUnknown']).toBeUndefined();
     });
 
     it('handles empty canonical data', () => {
@@ -510,6 +510,6 @@ describe('registerAirtableTransforms()', () => {
   it('registers exactly 32 transforms total', () => {
     fieldTypeRegistry.clear();
     registerAirtableTransforms();
-    expect(fieldTypeRegistry.getSupportedFieldTypes('airtable')).toHaveLength(32);
+    expect(fieldTypeRegistry.getSupportedFieldTypes('airtable')).toHaveLength(39);
   });
 });
