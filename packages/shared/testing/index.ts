@@ -2,6 +2,7 @@ export {
   getTestDb,
   createTestTenant,
   createTestUser,
+  createTestTenantMembership,
   createTestWorkspace,
   createTestRecord,
   createTestTable,
@@ -17,6 +18,9 @@ export {
   createTestDocumentTemplate,
   createTestThread,
   createTestApiKey,
+  createTestTenantRelationship,
+  createTestBoard,
+  createTestWorkspaceMembership,
 } from './factories';
 
 export type { TestApiKeyResult } from './factories';

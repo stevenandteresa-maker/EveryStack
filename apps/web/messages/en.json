@@ -25,7 +25,14 @@
       "expand": "Expand sidebar",
       "collapse": "Collapse sidebar",
       "collapseLabel": "Collapse",
-      "account": "Account"
+      "account": "Account",
+      "myOffice": "My Office",
+      "tasks": "Tasks",
+      "chat": "Chat",
+      "calendar": "Calendar",
+      "help": "Help",
+      "portals": "Portals",
+      "noWorkspaces": "No workspaces yet"
     },
     "header": {
       "commandBarPlaceholder": "Search...",

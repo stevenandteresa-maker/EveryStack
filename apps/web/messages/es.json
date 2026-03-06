@@ -25,7 +25,14 @@
       "expand": "Expandir barra lateral",
       "collapse": "Contraer barra lateral",
       "collapseLabel": "Contraer",
-      "account": "Cuenta"
+      "account": "Cuenta",
+      "myOffice": "Mi Oficina",
+      "tasks": "Tareas",
+      "chat": "Chat",
+      "calendar": "Calendario",
+      "help": "Ayuda",
+      "portals": "Portales",
+      "noWorkspaces": "Sin espacios de trabajo"
     },
     "header": {
       "commandBarPlaceholder": "Buscar...",

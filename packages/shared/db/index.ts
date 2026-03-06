@@ -77,6 +77,10 @@ export {
   auditLogRelations,
   apiRequestLog,
   apiRequestLogRelations,
+  portals,
+  portalsRelations,
+  portalAccess,
+  portalAccessRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -97,4 +101,6 @@ export type {
   ApiKey, NewApiKey,
   AuditLog, NewAuditLog,
   ApiRequestLog, NewApiRequestLog,
+  Portal, NewPortal,
+  PortalAccess, NewPortalAccess,
 } from './schema';
