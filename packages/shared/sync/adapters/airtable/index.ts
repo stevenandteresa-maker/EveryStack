@@ -11,6 +11,8 @@ import type { CanonicalValue, PlatformFieldConfig } from '../../types';
 import type { PlatformAdapter, FieldMapping } from '../types';
 import { AIRTABLE_TEXT_TRANSFORMS } from './text-transforms';
 import { AIRTABLE_NUMBER_TRANSFORMS } from './number-transforms';
+import { AIRTABLE_SELECTION_TRANSFORMS } from './selection-transforms';
+import { AIRTABLE_DATE_TRANSFORMS } from './date-transforms';
 
 const logger = createLogger({ service: 'sync' });
 
@@ -31,6 +33,12 @@ export function registerAirtableTransforms(): void {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
   for (const { airtableType, transform } of AIRTABLE_NUMBER_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_SELECTION_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_DATE_TRANSFORMS) {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
 }

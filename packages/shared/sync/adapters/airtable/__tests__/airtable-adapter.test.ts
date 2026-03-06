@@ -490,11 +490,26 @@ describe('registerAirtableTransforms()', () => {
     expect(fieldTypeRegistry.has('airtable', 'duration')).toBe(true);
     expect(fieldTypeRegistry.has('airtable', 'progress')).toBe(true);
     expect(fieldTypeRegistry.has('airtable', 'autoNumber')).toBe(true);
+
+    // Selection transforms (4)
+    expect(fieldTypeRegistry.has('airtable', 'singleSelect')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'multipleSelects')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'status')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'tag')).toBe(true);
+
+    // Date transforms (7)
+    expect(fieldTypeRegistry.has('airtable', 'date')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'dateTime')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'dateRange')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'dueDate')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'time')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'createdTime')).toBe(true);
+    expect(fieldTypeRegistry.has('airtable', 'lastModifiedTime')).toBe(true);
   });
 
-  it('registers exactly 10 transforms total', () => {
+  it('registers exactly 21 transforms total', () => {
     fieldTypeRegistry.clear();
     registerAirtableTransforms();
-    expect(fieldTypeRegistry.getSupportedFieldTypes('airtable')).toHaveLength(10);
+    expect(fieldTypeRegistry.getSupportedFieldTypes('airtable')).toHaveLength(21);
   });
 });
