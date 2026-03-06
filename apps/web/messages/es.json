@@ -124,8 +124,18 @@
     "pending_count": "{count, plural, one {# conflicto pendiente} other {# conflictos pendientes}}",
     "cancel": "Cancelar",
     "apply": "Aplicar resoluciones",
+    "applying": "Aplicando\u2026",
     "cell_tooltip": "Conflicto: editado localmente y en {platform}. Haz clic para resolver.",
     "toolbar_badge": "{count, plural, one {# conflicto} other {# conflictos}}",
-    "row_badge_tooltip": "Esta fila tiene {count, plural, one {# conflicto} other {# conflictos}}. Haz clic para resolver."
+    "toolbar_badge_readonly": "{count, plural, one {# conflicto} other {# conflictos}} (pendiente de resolución)",
+    "row_badge_tooltip": "Esta fila tiene {count, plural, one {# conflicto} other {# conflictos}}. Haz clic para resolver.",
+    "resolve_success": "Conflicto resuelto.",
+    "resolve_error": "No se pudo resolver el conflicto. Inténtalo de nuevo.",
+    "undo": "Deshacer",
+    "undo_success": "Resolución deshecha.",
+    "undo_expired": "Deshacer ya no está disponible.",
+    "bulk_resolve_record_success": "Todos los conflictos de este registro resueltos.",
+    "bulk_resolve_table_success": "Todos los conflictos de esta tabla resueltos.",
+    "team_member_tooltip": "Este campo tiene un conflicto de sincronización. Un Administrador lo resolverá."
   }
 }
