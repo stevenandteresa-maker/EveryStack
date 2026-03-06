@@ -100,7 +100,7 @@ export {
 } from './sync-metadata';
 
 // Outbound sync pipeline
-export { executeOutboundSync } from './outbound';
+export { executeOutboundSync, COMPUTED_FIELD_TYPES, isComputedFieldType } from './outbound';
 
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';

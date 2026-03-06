@@ -97,6 +97,17 @@ vi.mock('@everystack/shared/sync', () => ({
   enforceQuotaOnBatch: mockEnforceQuotaOnBatch,
   incrementQuotaCache: mockIncrementQuotaCache,
   rateLimiter: { waitForCapacity: mockWaitForCapacity },
+  createInitialSyncMetadata: vi.fn((platformRecordId: string, canonical: Record<string, unknown>) => ({
+    platform_record_id: platformRecordId,
+    last_synced_at: new Date().toISOString(),
+    last_synced_values: Object.fromEntries(
+      Object.entries(canonical).map(([k, v]) => [k, { value: v, synced_at: new Date().toISOString() }]),
+    ),
+    sync_status: 'active',
+    sync_direction: 'inbound',
+    orphaned_at: null,
+    orphaned_reason: null,
+  })),
 }));
 
 vi.mock('@everystack/shared/realtime', () => ({

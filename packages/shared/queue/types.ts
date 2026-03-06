@@ -37,6 +37,15 @@ export interface SyncJobData extends BaseJobData {
   connectionId: string;
 }
 
+export interface OutboundSyncJobData extends BaseJobData {
+  recordId: string;
+  tableId: string;
+  baseConnectionId: string;
+  changedFieldIds: string[];
+  editedBy: string;
+  priority: number;
+}
+
 export interface InitialSyncJobData extends SyncJobData {
   workspaceId: string;
 }
@@ -66,6 +75,7 @@ export interface DocumentGenJobData extends BaseJobData {
  */
 export interface QueueJobDataMap {
   sync: SyncJobData | InitialSyncJobData;
+  'sync:outbound': OutboundSyncJobData;
   'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;
   automation: AutomationJobData;

@@ -67,6 +67,7 @@ export const TENANT_SCOPED_TABLES = [
 
   // Tier 6B — Sync Infrastructure
   'synced_field_mappings',
+  'field_expression_indexes',
   'sync_conflicts',
   'sync_failures',
   'sync_schema_changes',

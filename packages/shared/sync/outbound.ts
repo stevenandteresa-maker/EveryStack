@@ -42,7 +42,7 @@ import type {
 const logger = createLogger({ service: 'outbound-sync' });
 
 /** Canonical field types that are computed — never sync back to platforms. */
-const COMPUTED_FIELD_TYPES = new Set([
+export const COMPUTED_FIELD_TYPES = new Set([
   'lookup',
   'rollup',
   'formula',
@@ -53,6 +53,11 @@ const COMPUTED_FIELD_TYPES = new Set([
   'created_by',
   'updated_by',
 ]);
+
+/** Check if a field type is computed (read-only, cannot be edited or synced back). */
+export function isComputedFieldType(fieldType: string): boolean {
+  return COMPUTED_FIELD_TYPES.has(fieldType);
+}
 
 /**
  * Execute an outbound sync for a single record.
