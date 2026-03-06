@@ -13,6 +13,8 @@ import { AIRTABLE_TEXT_TRANSFORMS } from './text-transforms';
 import { AIRTABLE_NUMBER_TRANSFORMS } from './number-transforms';
 import { AIRTABLE_SELECTION_TRANSFORMS } from './selection-transforms';
 import { AIRTABLE_DATE_TRANSFORMS } from './date-transforms';
+import { AIRTABLE_PEOPLE_CONTACT_TRANSFORMS } from './people-contact-transforms';
+import { AIRTABLE_BOOLEAN_INTERACTIVE_TRANSFORMS } from './boolean-interactive-transforms';
 
 const logger = createLogger({ service: 'sync' });
 
@@ -39,6 +41,12 @@ export function registerAirtableTransforms(): void {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
   for (const { airtableType, transform } of AIRTABLE_DATE_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_PEOPLE_CONTACT_TRANSFORMS) {
+    fieldTypeRegistry.register('airtable', airtableType, transform);
+  }
+  for (const { airtableType, transform } of AIRTABLE_BOOLEAN_INTERACTIVE_TRANSFORMS) {
     fieldTypeRegistry.register('airtable', airtableType, transform);
   }
 }
