@@ -18,6 +18,7 @@ export const REALTIME_EVENTS = {
   SYNC_BATCH_COMPLETE: 'sync.batch_complete',
   SYNC_COMPLETED: 'sync.completed',
   SYNC_FAILED: 'sync.failed',
+  SYNC_RECORDS_ORPHANED: 'sync.records_orphaned',
 
   // Schema events
   FIELD_CREATED: 'schema.field.created',

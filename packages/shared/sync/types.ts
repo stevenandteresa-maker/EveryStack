@@ -102,6 +102,8 @@ export interface SyncTableConfig {
   estimated_record_count: number;
   /** Actual number of records synced locally. */
   synced_record_count: number;
+  /** Previous filter saved when a filter is changed — enables undo. Null when no prior filter exists. */
+  previous_sync_filter?: FilterRule[] | null;
 }
 
 /**
@@ -121,6 +123,7 @@ export const SyncTableConfigSchema = z.object({
   sync_filter: z.array(FilterRuleSchema).nullable(),
   estimated_record_count: z.number().int().min(0),
   synced_record_count: z.number().int().min(0),
+  previous_sync_filter: z.array(FilterRuleSchema).nullable().optional(),
 });
 
 export const SyncConfigSchema = z.object({

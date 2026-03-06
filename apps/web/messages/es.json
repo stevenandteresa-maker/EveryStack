@@ -82,5 +82,13 @@
     "error_load_tables": "No se pudieron cargar las tablas. Inténtalo de nuevo.",
     "error_start_sync": "No se pudo iniciar la sincronización. Inténtalo de nuevo.",
     "error_quota_check": "No se pudo verificar la cuota. Inténtalo de nuevo."
+  },
+  "sync_orphans": {
+    "banner_message": "{count, plural, one {# registro} other {# registros}} ya no coinciden con tu filtro de sincronización. Estos registros existen en EveryStack pero ya no se sincronizan desde Airtable. No recibirán actualizaciones.",
+    "delete_button": "Eliminar registros huérfanos",
+    "keep_local_button": "Mantener como solo local",
+    "undo_filter_button": "Deshacer cambio de filtro",
+    "row_indicator_tooltip": "Este registro ya no se sincroniza — fue excluido por un cambio de filtro de sincronización el {date}.",
+    "filtered_out_tooltip": "Este registro existe en {platform} pero está fuera de tu filtro de sincronización."
   }
 }
