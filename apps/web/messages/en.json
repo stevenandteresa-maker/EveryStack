@@ -12,7 +12,8 @@
     "edit": "Edit",
     "close": "Close",
     "search": "Search...",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "statusRunning": "EveryStack is running."
   },
   "personal_tenant": {
     "default_name": "{userName}'s Workspace"

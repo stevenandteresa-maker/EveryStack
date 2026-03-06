@@ -1,3 +1,6 @@
-export default function HomePage() {
-  return <h1>EveryStack is running.</h1>;
+import { getTranslations } from 'next-intl/server';
+
+export default async function HomePage() {
+  const t = await getTranslations('common');
+  return <h1>{t('statusRunning')}</h1>;
 }

@@ -12,7 +12,8 @@
     "edit": "Editar",
     "close": "Cerrar",
     "search": "Buscar...",
-    "noResults": "No se encontraron resultados"
+    "noResults": "No se encontraron resultados",
+    "statusRunning": "EveryStack está en funcionamiento."
   },
   "personal_tenant": {
     "default_name": "Espacio de {userName}"
