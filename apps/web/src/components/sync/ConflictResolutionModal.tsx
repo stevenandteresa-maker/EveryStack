@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConflictFieldRow } from './ConflictFieldRow';
 import { ConflictResolutionActions } from './ConflictResolutionActions';
-import { resolveConflict } from '@/actions/sync-conflict-resolve';
+import { resolveConflict, bulkResolveConflicts } from '@/actions/sync-conflict-resolve';
 import { showUndoResolveToast } from './UndoResolveToast';
 import { useSyncConflictStore } from '@/lib/sync-conflict-store';
 import type {
@@ -124,38 +124,76 @@ export function ConflictResolutionModal({
       // Build a lookup for undo callbacks
       const conflictsById = new Map(conflicts.map((c) => [c.id, c]));
 
-      // Submit each resolution to the server action
-      for (const resolution of resolved) {
-        const conflict = conflictsById.get(resolution.conflictId);
-        if (!conflict) continue;
+      // Check if all resolutions are the same non-edit choice (eligible for bulk)
+      const allSameChoice = resolved.length > 1
+        && resolved.every((r) => r.choice === resolved[0]?.choice)
+        && resolved[0]?.choice !== 'edit';
 
-        const result = await resolveConflict({
-          conflictId: resolution.conflictId,
-          resolution: toResolutionStatus(resolution.choice),
-          mergedValue: resolution.editedValue,
+      if (allSameChoice && resolved[0]) {
+        // Use bulk resolve for same-direction resolutions
+        const bulkResolution = toResolutionStatus(resolved[0].choice);
+        const result = await bulkResolveConflicts({
+          recordId,
           tableId,
+          resolution: bulkResolution,
         });
 
-        // Optimistic: remove conflict from store
-        removeConflict(recordId, conflict.fieldId);
+        // Optimistic: remove all conflicts from store
+        for (const conflict of conflicts) {
+          removeConflict(recordId, conflict.fieldId);
+        }
 
         // Show undo toast
         showUndoResolveToast(
           {
             undoToken: result.undoToken,
             onUndoSuccess: () => {
-              // Re-add conflict to the store on undo
-              addConflict(recordId, conflict.fieldId, {
-                id: conflict.id,
-                localValue: conflict.localValue,
-                remoteValue: conflict.remoteValue,
-                platform: conflict.platform,
-                createdAt: conflict.createdAt,
-              });
+              for (const conflict of conflicts) {
+                addConflict(recordId, conflict.fieldId, {
+                  id: conflict.id,
+                  localValue: conflict.localValue,
+                  remoteValue: conflict.remoteValue,
+                  platform: conflict.platform,
+                  createdAt: conflict.createdAt,
+                });
+              }
             },
           },
           t,
         );
+      } else {
+        // Submit each resolution individually
+        for (const resolution of resolved) {
+          const conflict = conflictsById.get(resolution.conflictId);
+          if (!conflict) continue;
+
+          const result = await resolveConflict({
+            conflictId: resolution.conflictId,
+            resolution: toResolutionStatus(resolution.choice),
+            mergedValue: resolution.editedValue,
+            tableId,
+          });
+
+          // Optimistic: remove conflict from store
+          removeConflict(recordId, conflict.fieldId);
+
+          // Show undo toast
+          showUndoResolveToast(
+            {
+              undoToken: result.undoToken,
+              onUndoSuccess: () => {
+                addConflict(recordId, conflict.fieldId, {
+                  id: conflict.id,
+                  localValue: conflict.localValue,
+                  remoteValue: conflict.remoteValue,
+                  platform: conflict.platform,
+                  createdAt: conflict.createdAt,
+                });
+              },
+            },
+            t,
+          );
+        }
       }
 
       // Notify parent callback

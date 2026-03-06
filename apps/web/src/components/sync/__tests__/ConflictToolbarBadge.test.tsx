@@ -68,4 +68,68 @@ describe('ConflictToolbarBadge', () => {
     const badge = screen.getByTestId('conflict-toolbar-badge');
     expect(badge.className).toContain('text-amber-600');
   });
+
+  // --- Role-based rendering ---
+
+  describe('conflictRole=hidden', () => {
+    it('returns null regardless of count', () => {
+      const { container } = render(
+        <IntlWrapper>
+          <ConflictToolbarBadge count={5} onFilterConflicts={vi.fn()} conflictRole="hidden" />
+        </IntlWrapper>,
+      );
+
+      expect(container.innerHTML).toBe('');
+    });
+  });
+
+  describe('conflictRole=readonly', () => {
+    it('renders non-clickable badge with readonly text', () => {
+      render(
+        <IntlWrapper>
+          <ConflictToolbarBadge count={3} onFilterConflicts={vi.fn()} conflictRole="readonly" />
+        </IntlWrapper>,
+      );
+
+      expect(screen.queryByTestId('conflict-toolbar-badge')).not.toBeInTheDocument();
+      const readonlyBadge = screen.getByTestId('conflict-toolbar-badge-readonly');
+      expect(readonlyBadge).toBeInTheDocument();
+      expect(readonlyBadge.tagName).toBe('SPAN');
+      expect(readonlyBadge.textContent).toContain('3');
+      expect(readonlyBadge.textContent).toContain('pending resolution');
+    });
+
+    it('does not call onFilterConflicts when clicked', async () => {
+      const onFilter = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <IntlWrapper>
+          <ConflictToolbarBadge count={3} onFilterConflicts={onFilter} conflictRole="readonly" />
+        </IntlWrapper>,
+      );
+
+      const readonlyBadge = screen.getByTestId('conflict-toolbar-badge-readonly');
+      await user.click(readonlyBadge);
+      expect(onFilter).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('conflictRole=resolver', () => {
+    it('renders clickable badge (same as default)', async () => {
+      const onFilter = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <IntlWrapper>
+          <ConflictToolbarBadge count={3} onFilterConflicts={onFilter} conflictRole="resolver" />
+        </IntlWrapper>,
+      );
+
+      const badge = screen.getByTestId('conflict-toolbar-badge');
+      expect(badge.tagName).toBe('BUTTON');
+      await user.click(badge);
+      expect(onFilter).toHaveBeenCalledOnce();
+    });
+  });
 });

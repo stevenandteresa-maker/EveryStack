@@ -19,6 +19,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import type { ConflictMeta } from '@/data/sync-conflicts';
+import type { ConflictRole } from './conflict-types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,8 +28,10 @@ import type { ConflictMeta } from '@/data/sync-conflicts';
 export interface CellConflictIndicatorProps {
   /** The conflict metadata for this cell. */
   conflict: ConflictMeta;
-  /** Called when the user clicks to resolve. */
+  /** Called when the user clicks to resolve (ignored for readonly/hidden). */
   onResolveClick: () => void;
+  /** Role-based visibility. Defaults to 'resolver' for backward compat. */
+  conflictRole?: ConflictRole;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,9 +41,44 @@ export interface CellConflictIndicatorProps {
 export function CellConflictIndicator({
   conflict,
   onResolveClick,
+  conflictRole = 'resolver',
 }: CellConflictIndicatorProps) {
   const t = useTranslations('sync_conflicts');
 
+  if (conflictRole === 'hidden') {
+    return null;
+  }
+
+  const triangle = (
+    <span
+      className="absolute right-0 top-0 h-0 w-0 border-l-[4px] border-t-[4px] border-l-transparent border-t-amber-500"
+      aria-hidden="true"
+    />
+  );
+
+  // Readonly: non-clickable span with team_member tooltip
+  if (conflictRole === 'readonly') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="absolute inset-0 z-10"
+              data-testid="cell-conflict-indicator-readonly"
+              aria-label={t('team_member_tooltip')}
+            >
+              {triangle}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t('team_member_tooltip')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  // Resolver: clickable button (original behavior)
   return (
     <TooltipProvider>
       <Tooltip>
@@ -52,11 +90,7 @@ export function CellConflictIndicator({
             data-testid="cell-conflict-indicator"
             aria-label={t('cell_tooltip', { platform: conflict.platform })}
           >
-            {/* 4px amber triangle — top-right corner */}
-            <span
-              className="absolute right-0 top-0 h-0 w-0 border-l-[4px] border-t-[4px] border-l-transparent border-t-amber-500"
-              aria-hidden="true"
-            />
+            {triangle}
           </button>
         </TooltipTrigger>
         <TooltipContent>
@@ -76,6 +110,8 @@ export interface RowConflictBadgeProps {
   count: number;
   /** Called when the user clicks to resolve all conflicts on this record. */
   onResolveClick: () => void;
+  /** Role-based visibility. Defaults to 'resolver'. */
+  conflictRole?: ConflictRole;
 }
 
 /**
@@ -87,8 +123,35 @@ export interface RowConflictBadgeProps {
 export function RowConflictBadge({
   count,
   onResolveClick,
+  conflictRole = 'resolver',
 }: RowConflictBadgeProps) {
   const t = useTranslations('sync_conflicts');
+
+  if (conflictRole === 'hidden') {
+    return null;
+  }
+
+  // Readonly: non-clickable span
+  if (conflictRole === 'readonly') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="inline-flex items-center justify-center rounded p-0.5 text-amber-500"
+              data-testid="row-conflict-badge-readonly"
+              aria-label={t('team_member_tooltip')}
+            >
+              <AlertTriangle className="h-4 w-4" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t('team_member_tooltip')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -121,6 +184,8 @@ export interface CellWrapperProps {
   conflict?: ConflictMeta;
   /** Called when the user clicks the conflict indicator to resolve. */
   onResolveClick?: () => void;
+  /** Role-based visibility. Defaults to 'resolver'. */
+  conflictRole?: ConflictRole;
   /** The cell content to render. */
   children: React.ReactNode;
 }
@@ -132,33 +197,35 @@ export interface CellWrapperProps {
  * `conflict` is provided, renders the amber triangle, dashed underline, and
  * tooltip. When absent, renders children with no overhead.
  *
- * Usage in TanStack Table column definitions:
- * ```tsx
- * cell: ({ getValue, row, column }) => {
- *   const conflict = row.original._conflicts?.[column.id];
- *   return (
- *     <CellWrapper conflict={conflict} onResolveClick={() => openModal(row)}>
- *       <FieldRenderer value={getValue()} fieldDef={column.columnDef.meta.fieldDef} />
- *     </CellWrapper>
- *   );
- * };
- * ```
+ * Role behavior:
+ * - `resolver`: full indicator + dashed underline (original behavior)
+ * - `readonly`: indicator (non-clickable) + dashed underline
+ * - `hidden`: no indicator, no underline — just children
  */
 export function CellWrapper({
   conflict,
   onResolveClick,
+  conflictRole = 'resolver',
   children,
 }: CellWrapperProps) {
-  if (!conflict) {
+  if (!conflict || conflictRole === 'hidden') {
     return <>{children}</>;
   }
 
   return (
     <div className="relative" data-testid="cell-wrapper-conflicted">
-      {onResolveClick && (
+      {conflictRole === 'resolver' && onResolveClick && (
         <CellConflictIndicator
           conflict={conflict}
           onResolveClick={onResolveClick}
+          conflictRole="resolver"
+        />
+      )}
+      {conflictRole === 'readonly' && (
+        <CellConflictIndicator
+          conflict={conflict}
+          onResolveClick={() => {}}
+          conflictRole="readonly"
         />
       )}
       {/* 1px amber dashed underline on cell text */}

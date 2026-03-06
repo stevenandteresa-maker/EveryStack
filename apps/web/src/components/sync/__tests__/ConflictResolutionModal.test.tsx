@@ -1,10 +1,32 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConflictResolutionModal } from '../ConflictResolutionModal';
 import { IntlWrapper } from '@/test-utils/intl-wrapper';
 import type { ConflictItem, ConflictResolution } from '../conflict-types';
+
+// Mock server action and undo toast (these are async server calls)
+const mockResolveConflict = vi.fn().mockResolvedValue({ success: true, undoToken: 'mock-undo-token' });
+const mockBulkResolveConflicts = vi.fn().mockResolvedValue({ success: true, undoToken: 'mock-bulk-undo-token', resolvedCount: 3 });
+
+vi.mock('@/actions/sync-conflict-resolve', () => ({
+  resolveConflict: (...args: unknown[]) => mockResolveConflict(...args),
+  bulkResolveConflicts: (...args: unknown[]) => mockBulkResolveConflicts(...args),
+}));
+
+vi.mock('../UndoResolveToast', () => ({
+  showUndoResolveToast: vi.fn(),
+}));
+
+vi.mock('@/lib/sync-conflict-store', () => ({
+  useSyncConflictStore: vi.fn((selector: (state: Record<string, unknown>) => unknown) =>
+    selector({
+      removeConflict: vi.fn(),
+      addConflict: vi.fn(),
+    }),
+  ),
+}));
 
 // ---------------------------------------------------------------------------
 // Polyfill ResizeObserver for ScrollArea (Radix)
@@ -58,6 +80,8 @@ function renderModal(overrides?: {
   conflicts?: ConflictItem[];
   onResolve?: (r: ConflictResolution[]) => void;
   onOpenChange?: (open: boolean) => void;
+  tableId?: string;
+  recordId?: string;
 }) {
   const props = {
     open: overrides?.open ?? true,
@@ -65,6 +89,8 @@ function renderModal(overrides?: {
     recordName: overrides?.recordName ?? 'Acme Project',
     conflicts: overrides?.conflicts ?? [makeConflict()],
     onResolve: overrides?.onResolve ?? vi.fn(),
+    tableId: overrides?.tableId ?? 'table-uuid-1',
+    recordId: overrides?.recordId ?? 'record-uuid-1',
   };
 
   return render(
@@ -79,6 +105,12 @@ function renderModal(overrides?: {
 // ---------------------------------------------------------------------------
 
 describe('ConflictResolutionModal', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockResolveConflict.mockResolvedValue({ success: true, undoToken: 'mock-undo-token' });
+    mockBulkResolveConflicts.mockResolvedValue({ success: true, undoToken: 'mock-bulk-undo-token', resolvedCount: 3 });
+  });
+
   // --- Single-field mode ---
 
   it('renders in single-field mode with field and record name in title', () => {
@@ -226,6 +258,52 @@ describe('ConflictResolutionModal', () => {
 
     expect(field0?.choice).toBe('keep_remote'); // preserved
     expect(field1?.choice).toBe('keep_local'); // bulk applied
+  });
+
+  // --- Bulk resolve Server Action wiring ---
+
+  it('calls bulkResolveConflicts when all resolutions are the same direction', async () => {
+    const onResolve = vi.fn();
+    const user = userEvent.setup();
+    renderModal({ conflicts: makeConflicts(3), onResolve });
+
+    await user.click(screen.getByTestId('conflict-keep-all-local'));
+    await user.click(screen.getByTestId('conflict-apply-btn'));
+
+    expect(mockBulkResolveConflicts).toHaveBeenCalledWith({
+      recordId: 'record-uuid-1',
+      tableId: 'table-uuid-1',
+      resolution: 'resolved_local',
+    });
+    // Should NOT call individual resolveConflict
+    expect(mockResolveConflict).not.toHaveBeenCalled();
+  });
+
+  it('calls individual resolveConflict when resolutions are mixed', async () => {
+    const onResolve = vi.fn();
+    const user = userEvent.setup();
+    renderModal({ conflicts: makeConflicts(2), onResolve });
+
+    // Resolve first with keep_remote, second with keep_local
+    await user.click(screen.getByTestId('conflict-keep-remote-field-0'));
+    await user.click(screen.getByTestId('conflict-keep-local-field-1'));
+    await user.click(screen.getByTestId('conflict-apply-btn'));
+
+    expect(mockBulkResolveConflicts).not.toHaveBeenCalled();
+    expect(mockResolveConflict).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls individual resolveConflict for single conflict', async () => {
+    const onResolve = vi.fn();
+    const user = userEvent.setup();
+    renderModal({ onResolve });
+
+    await user.click(screen.getByTestId('conflict-keep-local-field-1'));
+    await user.click(screen.getByTestId('conflict-apply-btn'));
+
+    // Single conflict should always use individual resolve (not bulk)
+    expect(mockResolveConflict).toHaveBeenCalledTimes(1);
+    expect(mockBulkResolveConflicts).not.toHaveBeenCalled();
   });
 
   // --- Modal behavior ---

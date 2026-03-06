@@ -115,6 +115,10 @@ export type { WrittenConflict } from './conflict-detection';
 export { applyLastWriteWins } from './conflict-resolution';
 export type { ConflictResolutionStrategy, LastWriteWinsResult } from './conflict-resolution';
 
+// Conflict interactions
+export { shouldRecomputeOnResolution } from './conflict-interactions';
+export type { RecomputeResult } from './conflict-interactions';
+
 // Registry
 export { FieldTypeRegistry, fieldTypeRegistry } from './field-registry';
 

@@ -8,6 +8,8 @@
 // ---------------------------------------------------------------------------
 
 import type { SyncPlatform } from '@everystack/shared/sync';
+import type { EffectiveRole } from '@everystack/shared/auth';
+import { roleAtLeast } from '@everystack/shared/auth';
 
 /**
  * A single field-level conflict enriched with display metadata.
@@ -75,4 +77,28 @@ export interface ConflictResolutionModalProps {
   conflicts: ConflictItem[];
   /** Called when the user confirms all resolutions. */
   onResolve: (resolutions: ConflictResolution[]) => void;
+  /** Table ID — required for the resolveConflict Server Action. */
+  tableId: string;
+  /** Record ID — required for optimistic store updates. */
+  recordId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Role-based conflict visibility
+// ---------------------------------------------------------------------------
+
+/**
+ * Conflict visibility role — derived from EffectiveRole for UI rendering.
+ *
+ * - `resolver`: owner/admin/manager — full resolution UI (clickable, opens modal)
+ * - `readonly`: team_member — amber indicator + tooltip, NOT clickable
+ * - `hidden`: viewer — no conflict indicators at all
+ */
+export type ConflictRole = 'resolver' | 'readonly' | 'hidden';
+
+/** Map EffectiveRole → ConflictRole for conflict visibility. */
+export function getConflictRole(effectiveRole: EffectiveRole): ConflictRole {
+  if (roleAtLeast(effectiveRole, 'manager')) return 'resolver';
+  if (effectiveRole === 'team_member') return 'readonly';
+  return 'hidden';
 }

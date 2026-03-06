@@ -28,6 +28,7 @@ import {
   isNull,
   buildSearchVector,
   generateUUIDv7,
+  writeAuditLog,
 } from '@everystack/shared/db';
 import type { SearchFieldDefinition } from '@everystack/shared/db';
 import { updateLastSyncedValues } from '@everystack/shared/sync';
@@ -90,6 +91,17 @@ const undoConflictResolutionSchema = z.object({
 
 export type ResolveConflictInput = z.input<typeof resolveConflictSchema>;
 
+const bulkResolveConflictsSchema = z.object({
+  recordId: z.string().uuid(),
+  tableId: z.string().uuid(),
+  resolution: resolutionEnum,
+});
+
+const bulkResolveTableConflictsSchema = z.object({
+  tableId: z.string().uuid(),
+  resolution: resolutionEnum,
+});
+
 // ---------------------------------------------------------------------------
 // Undo cache shape
 // ---------------------------------------------------------------------------
@@ -107,6 +119,14 @@ interface UndoState {
   baseValue: unknown;
   platform: string;
   outboundJobId: string | null;
+}
+
+interface BulkUndoState {
+  type: 'bulk';
+  tableId: string;
+  tenantId: string;
+  items: UndoState[];
+  outboundJobIds: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -231,7 +251,7 @@ export async function resolveConflict(
       ? updateLastSyncedValues(existingMeta, [conflict.fieldId], updatedCanonicalData)
       : null;
 
-    // 7. Single transaction: update conflict + record
+    // 7. Single transaction: update conflict + record + audit log
     await db.transaction(async (tx) => {
       // Update sync_conflicts status
       await tx
@@ -266,6 +286,25 @@ export async function resolveConflict(
             eq(records.id, conflict.recordId),
           ),
         );
+
+      // Audit log
+      await writeAuditLog(tx, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'sync_conflict.resolved',
+        entityType: 'record',
+        entityId: conflict.recordId,
+        details: {
+          conflictId,
+          fieldId: conflict.fieldId,
+          resolution,
+          previousValue: resolution === 'resolved_local' ? conflict.remoteValue : conflict.localValue,
+          resolvedValue,
+          platform: conflict.platform,
+        },
+        traceId: getTraceId() ?? `conflict-resolve:${conflictId}:${Date.now()}`,
+      });
     });
 
     // 8. Emit real-time events
@@ -522,6 +561,574 @@ export async function undoConflictResolution(
     });
 
     return { success: true };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// bulkResolveConflicts — resolve all pending conflicts on a single record
+// ---------------------------------------------------------------------------
+
+export async function bulkResolveConflicts(
+  input: z.input<typeof bulkResolveConflictsSchema>,
+): Promise<{ success: true; undoToken: string; resolvedCount: number }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'manager', 'record', 'update');
+
+  const { recordId, tableId, resolution } = bulkResolveConflictsSchema.parse(input);
+
+  // Merged resolution not supported in bulk (no per-field mergedValue)
+  if (resolution === 'resolved_merged') {
+    throw new ValidationError('Bulk resolve does not support merged resolution', {
+      recordId,
+    });
+  }
+
+  try {
+    const db = getDbForTenant(tenantId, 'write');
+
+    // 1. Load all pending conflicts for this record
+    const pendingConflicts = await db
+      .select()
+      .from(syncConflicts)
+      .where(
+        and(
+          eq(syncConflicts.tenantId, tenantId),
+          eq(syncConflicts.recordId, recordId),
+          eq(syncConflicts.status, 'pending'),
+        ),
+      );
+
+    if (pendingConflicts.length === 0) {
+      throw new NotFoundError('No pending conflicts found for record', { recordId });
+    }
+
+    // 2. Load the record
+    const [record] = await db
+      .select({
+        tenantId: records.tenantId,
+        id: records.id,
+        tableId: records.tableId,
+        canonicalData: records.canonicalData,
+        syncMetadata: records.syncMetadata,
+      })
+      .from(records)
+      .where(
+        and(
+          eq(records.tenantId, tenantId),
+          eq(records.id, recordId),
+          isNull(records.archivedAt),
+        ),
+      )
+      .limit(1);
+
+    if (!record) {
+      throw new NotFoundError('Record not found', { recordId });
+    }
+
+    // 3. Build updated canonical data with all resolved fields
+    const updatedCanonicalData: Record<string, unknown> = { ...record.canonicalData };
+    const changedFieldIds: string[] = [];
+
+    for (const conflict of pendingConflicts) {
+      const resolvedValue = resolution === 'resolved_local'
+        ? conflict.localValue
+        : conflict.remoteValue;
+      updatedCanonicalData[conflict.fieldId] = resolvedValue;
+      changedFieldIds.push(conflict.fieldId);
+    }
+
+    // 4. Load table fields for search_vector rebuild
+    const tableFields = await db
+      .select({
+        id: fieldsTable.id,
+        fieldType: fieldsTable.fieldType,
+        isPrimary: fieldsTable.isPrimary,
+        config: fieldsTable.config,
+      })
+      .from(fieldsTable)
+      .where(
+        and(
+          eq(fieldsTable.tenantId, tenantId),
+          eq(fieldsTable.tableId, tableId),
+        ),
+      );
+
+    const searchFieldDefs: SearchFieldDefinition[] = tableFields.map((f) => ({
+      id: f.id,
+      fieldType: f.fieldType,
+      isPrimary: f.isPrimary,
+      config: f.config,
+    }));
+
+    const searchVectorExpr = buildSearchVector(updatedCanonicalData, searchFieldDefs);
+
+    // 5. Update sync_metadata
+    const existingMeta = record.syncMetadata as SyncMetadata | null;
+    const updatedSyncMetadata = existingMeta
+      ? updateLastSyncedValues(existingMeta, changedFieldIds, updatedCanonicalData)
+      : null;
+
+    // 6. Single transaction: update all conflicts + record + audit logs
+    await db.transaction(async (tx) => {
+      for (const conflict of pendingConflicts) {
+        await tx
+          .update(syncConflicts)
+          .set({
+            status: resolution,
+            resolvedBy: userId,
+            resolvedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(syncConflicts.id, conflict.id),
+              eq(syncConflicts.tenantId, tenantId),
+            ),
+          );
+
+        const resolvedValue = resolution === 'resolved_local'
+          ? conflict.localValue
+          : conflict.remoteValue;
+
+        await writeAuditLog(tx, {
+          tenantId,
+          actorType: 'user',
+          actorId: userId,
+          action: 'sync_conflict.resolved',
+          entityType: 'record',
+          entityId: recordId,
+          details: {
+            conflictId: conflict.id,
+            fieldId: conflict.fieldId,
+            resolution,
+            previousValue: resolution === 'resolved_local' ? conflict.remoteValue : conflict.localValue,
+            resolvedValue,
+            platform: conflict.platform,
+            bulk: true,
+          },
+          traceId: getTraceId() ?? `bulk-conflict-resolve:${recordId}:${Date.now()}`,
+        });
+      }
+
+      await tx
+        .update(records)
+        .set({
+          canonicalData: updatedCanonicalData,
+          searchVector: searchVectorExpr as unknown as string,
+          ...(updatedSyncMetadata
+            ? { syncMetadata: updatedSyncMetadata as unknown as Record<string, unknown> }
+            : {}),
+          updatedBy: userId,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            eq(records.id, recordId),
+          ),
+        );
+    });
+
+    // 7. Emit events per conflict + single RECORD_UPDATED
+    const redis = getRedis();
+    const publisher = createEventPublisher(redis);
+    const tableChannel = `table:${tableId}`;
+
+    const allResolvedFields: Record<string, unknown> = {};
+    for (const conflict of pendingConflicts) {
+      const resolvedValue = resolution === 'resolved_local'
+        ? conflict.localValue
+        : conflict.remoteValue;
+      allResolvedFields[conflict.fieldId] = resolvedValue;
+
+      await publisher.publish({
+        tenantId,
+        channel: tableChannel,
+        event: REALTIME_EVENTS.SYNC_CONFLICT_RESOLVED,
+        payload: {
+          type: REALTIME_EVENTS.SYNC_CONFLICT_RESOLVED,
+          recordId,
+          fieldId: conflict.fieldId,
+          conflictId: conflict.id,
+          resolvedValue,
+          resolution,
+        },
+        excludeUserId: userId,
+      });
+    }
+
+    await publisher.publish({
+      tenantId,
+      channel: tableChannel,
+      event: REALTIME_EVENTS.RECORD_UPDATED,
+      payload: { recordId, fields: allResolvedFields },
+      excludeUserId: userId,
+    });
+
+    // 8. Enqueue outbound sync if resolved_local and connection is active
+    let outboundJobId: string | null = null;
+
+    if (resolution === 'resolved_local') {
+      const [mapping] = await db
+        .select({ baseConnectionId: syncedFieldMappings.baseConnectionId })
+        .from(syncedFieldMappings)
+        .where(
+          and(
+            eq(syncedFieldMappings.tenantId, tenantId),
+            eq(syncedFieldMappings.tableId, tableId),
+            eq(syncedFieldMappings.status, 'active'),
+          ),
+        )
+        .limit(1);
+
+      if (mapping) {
+        const [connection] = await db
+          .select({
+            syncDirection: baseConnections.syncDirection,
+            syncStatus: baseConnections.syncStatus,
+          })
+          .from(baseConnections)
+          .where(
+            and(
+              eq(baseConnections.id, mapping.baseConnectionId),
+              eq(baseConnections.tenantId, tenantId),
+            ),
+          )
+          .limit(1);
+
+        if (
+          connection &&
+          connection.syncDirection !== 'inbound_only' &&
+          connection.syncStatus === 'active'
+        ) {
+          const queue = getQueue('sync:outbound');
+          outboundJobId = `outbound:${tenantId}:${recordId}:bulk`;
+
+          await queue.add(
+            'outbound-sync',
+            {
+              tenantId,
+              recordId,
+              tableId,
+              baseConnectionId: mapping.baseConnectionId,
+              changedFieldIds,
+              editedBy: userId,
+              priority: RESOLUTION_PRIORITY,
+              traceId: getTraceId() ?? `bulk-conflict-resolve:${recordId}:${Date.now()}`,
+              triggeredBy: userId,
+            },
+            {
+              jobId: outboundJobId,
+              priority: RESOLUTION_PRIORITY,
+            },
+          );
+        }
+      }
+    }
+
+    // 9. Cache bulk undo state
+    const undoToken = generateUUIDv7();
+    const undoItems: UndoState[] = pendingConflicts.map((conflict) => ({
+      conflictId: conflict.id,
+      recordId,
+      fieldId: conflict.fieldId,
+      tableId,
+      tenantId,
+      previousCanonicalData: record.canonicalData,
+      previousSyncMetadata: record.syncMetadata,
+      localValue: conflict.localValue,
+      remoteValue: conflict.remoteValue,
+      baseValue: conflict.baseValue,
+      platform: conflict.platform,
+      outboundJobId,
+    }));
+
+    const bulkUndoState: BulkUndoState = {
+      type: 'bulk',
+      tableId,
+      tenantId,
+      items: undoItems,
+      outboundJobIds: outboundJobId ? [outboundJobId] : [],
+    };
+
+    await redis.set(
+      `${UNDO_KEY_PREFIX}${undoToken}`,
+      JSON.stringify(bulkUndoState),
+      'EX',
+      UNDO_TTL_SECONDS,
+    );
+
+    return { success: true, undoToken, resolvedCount: pendingConflicts.length };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// bulkResolveTableConflicts — resolve all pending conflicts in a table
+// ---------------------------------------------------------------------------
+
+export async function bulkResolveTableConflicts(
+  input: z.input<typeof bulkResolveTableConflictsSchema>,
+): Promise<{ success: true; undoToken: string; resolvedCount: number }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'manager', 'record', 'update');
+
+  const { tableId, resolution } = bulkResolveTableConflictsSchema.parse(input);
+
+  if (resolution === 'resolved_merged') {
+    throw new ValidationError('Bulk resolve does not support merged resolution', {
+      tableId,
+    });
+  }
+
+  try {
+    const db = getDbForTenant(tenantId, 'write');
+
+    // 1. Load all pending conflicts for the table (join through records)
+    const allConflicts = await db
+      .select({
+        conflict: syncConflicts,
+        recordTableId: records.tableId,
+      })
+      .from(syncConflicts)
+      .innerJoin(
+        records,
+        and(
+          eq(records.id, syncConflicts.recordId),
+          eq(records.tenantId, syncConflicts.tenantId),
+        ),
+      )
+      .where(
+        and(
+          eq(syncConflicts.tenantId, tenantId),
+          eq(syncConflicts.status, 'pending'),
+          eq(records.tableId, tableId),
+          isNull(records.archivedAt),
+        ),
+      );
+
+    if (allConflicts.length === 0) {
+      throw new NotFoundError('No pending conflicts found for table', { tableId });
+    }
+
+    // 2. Group conflicts by record
+    const conflictsByRecord = new Map<string, typeof allConflicts>();
+    for (const row of allConflicts) {
+      const recId = row.conflict.recordId;
+      const existing = conflictsByRecord.get(recId) ?? [];
+      existing.push(row);
+      conflictsByRecord.set(recId, existing);
+    }
+
+    // 3. Load table fields once
+    const tableFields = await db
+      .select({
+        id: fieldsTable.id,
+        fieldType: fieldsTable.fieldType,
+        isPrimary: fieldsTable.isPrimary,
+        config: fieldsTable.config,
+      })
+      .from(fieldsTable)
+      .where(
+        and(
+          eq(fieldsTable.tenantId, tenantId),
+          eq(fieldsTable.tableId, tableId),
+        ),
+      );
+
+    const searchFieldDefs: SearchFieldDefinition[] = tableFields.map((f) => ({
+      id: f.id,
+      fieldType: f.fieldType,
+      isPrimary: f.isPrimary,
+      config: f.config,
+    }));
+
+    // 4. Process each record group
+    const allUndoItems: UndoState[] = [];
+    const allOutboundJobIds: string[] = [];
+    let totalResolved = 0;
+
+    for (const [recId, rows] of conflictsByRecord) {
+      const conflicts = rows.map((r) => r.conflict);
+
+      // Load the record
+      const [record] = await db
+        .select({
+          tenantId: records.tenantId,
+          id: records.id,
+          tableId: records.tableId,
+          canonicalData: records.canonicalData,
+          syncMetadata: records.syncMetadata,
+        })
+        .from(records)
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            eq(records.id, recId),
+            isNull(records.archivedAt),
+          ),
+        )
+        .limit(1);
+
+      if (!record) continue;
+
+      // Build updated canonical data
+      const updatedCanonicalData: Record<string, unknown> = { ...record.canonicalData };
+      const changedFieldIds: string[] = [];
+
+      for (const conflict of conflicts) {
+        const resolvedValue = resolution === 'resolved_local'
+          ? conflict.localValue
+          : conflict.remoteValue;
+        updatedCanonicalData[conflict.fieldId] = resolvedValue;
+        changedFieldIds.push(conflict.fieldId);
+      }
+
+      const searchVectorExpr = buildSearchVector(updatedCanonicalData, searchFieldDefs);
+      const existingMeta = record.syncMetadata as SyncMetadata | null;
+      const updatedSyncMetadata = existingMeta
+        ? updateLastSyncedValues(existingMeta, changedFieldIds, updatedCanonicalData)
+        : null;
+
+      // Transaction per record
+      await db.transaction(async (tx) => {
+        for (const conflict of conflicts) {
+          await tx
+            .update(syncConflicts)
+            .set({
+              status: resolution,
+              resolvedBy: userId,
+              resolvedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(syncConflicts.id, conflict.id),
+                eq(syncConflicts.tenantId, tenantId),
+              ),
+            );
+
+          const resolvedValue = resolution === 'resolved_local'
+            ? conflict.localValue
+            : conflict.remoteValue;
+
+          await writeAuditLog(tx, {
+            tenantId,
+            actorType: 'user',
+            actorId: userId,
+            action: 'sync_conflict.resolved',
+            entityType: 'record',
+            entityId: recId,
+            details: {
+              conflictId: conflict.id,
+              fieldId: conflict.fieldId,
+              resolution,
+              previousValue: resolution === 'resolved_local' ? conflict.remoteValue : conflict.localValue,
+              resolvedValue,
+              platform: conflict.platform,
+              bulk: true,
+              tableLevel: true,
+            },
+            traceId: getTraceId() ?? `bulk-table-conflict-resolve:${tableId}:${Date.now()}`,
+          });
+        }
+
+        await tx
+          .update(records)
+          .set({
+            canonicalData: updatedCanonicalData,
+            searchVector: searchVectorExpr as unknown as string,
+            ...(updatedSyncMetadata
+              ? { syncMetadata: updatedSyncMetadata as unknown as Record<string, unknown> }
+              : {}),
+            updatedBy: userId,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(records.tenantId, tenantId),
+              eq(records.id, recId),
+            ),
+          );
+      });
+
+      // Emit events
+      const redis = getRedis();
+      const publisher = createEventPublisher(redis);
+      const tableChannel = `table:${tableId}`;
+
+      const resolvedFields: Record<string, unknown> = {};
+      for (const conflict of conflicts) {
+        const resolvedValue = resolution === 'resolved_local'
+          ? conflict.localValue
+          : conflict.remoteValue;
+        resolvedFields[conflict.fieldId] = resolvedValue;
+
+        await publisher.publish({
+          tenantId,
+          channel: tableChannel,
+          event: REALTIME_EVENTS.SYNC_CONFLICT_RESOLVED,
+          payload: {
+            type: REALTIME_EVENTS.SYNC_CONFLICT_RESOLVED,
+            recordId: recId,
+            fieldId: conflict.fieldId,
+            conflictId: conflict.id,
+            resolvedValue,
+            resolution,
+          },
+          excludeUserId: userId,
+        });
+      }
+
+      await publisher.publish({
+        tenantId,
+        channel: tableChannel,
+        event: REALTIME_EVENTS.RECORD_UPDATED,
+        payload: { recordId: recId, fields: resolvedFields },
+        excludeUserId: userId,
+      });
+
+      // Build undo items
+      for (const conflict of conflicts) {
+        allUndoItems.push({
+          conflictId: conflict.id,
+          recordId: recId,
+          fieldId: conflict.fieldId,
+          tableId,
+          tenantId,
+          previousCanonicalData: record.canonicalData,
+          previousSyncMetadata: record.syncMetadata,
+          localValue: conflict.localValue,
+          remoteValue: conflict.remoteValue,
+          baseValue: conflict.baseValue,
+          platform: conflict.platform,
+          outboundJobId: null,
+        });
+      }
+
+      totalResolved += conflicts.length;
+    }
+
+    // 5. Cache bulk undo state
+    const redis = getRedis();
+    const undoToken = generateUUIDv7();
+    const bulkUndoState: BulkUndoState = {
+      type: 'bulk',
+      tableId,
+      tenantId,
+      items: allUndoItems,
+      outboundJobIds: allOutboundJobIds,
+    };
+
+    await redis.set(
+      `${UNDO_KEY_PREFIX}${undoToken}`,
+      JSON.stringify(bulkUndoState),
+      'EX',
+      UNDO_TTL_SECONDS,
+    );
+
+    return { success: true, undoToken, resolvedCount: totalResolved };
   } catch (error) {
     throw wrapUnknownError(error);
   }

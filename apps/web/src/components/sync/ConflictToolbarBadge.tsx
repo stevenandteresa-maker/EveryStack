@@ -12,6 +12,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
+import type { ConflictRole } from './conflict-types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,6 +23,8 @@ export interface ConflictToolbarBadgeProps {
   count: number;
   /** Called when the user clicks to filter the grid to conflicted records. */
   onFilterConflicts: () => void;
+  /** Role-based visibility. Defaults to 'resolver'. */
+  conflictRole?: ConflictRole;
 }
 
 // ---------------------------------------------------------------------------
@@ -31,11 +34,25 @@ export interface ConflictToolbarBadgeProps {
 export function ConflictToolbarBadge({
   count,
   onFilterConflicts,
+  conflictRole = 'resolver',
 }: ConflictToolbarBadgeProps) {
   const t = useTranslations('sync_conflicts');
 
-  if (count === 0) {
+  if (count === 0 || conflictRole === 'hidden') {
     return null;
+  }
+
+  // Readonly: informational badge, non-clickable
+  if (conflictRole === 'readonly') {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[13px] font-medium text-amber-600"
+        data-testid="conflict-toolbar-badge-readonly"
+      >
+        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+        <span>{t('toolbar_badge_readonly', { count })}</span>
+      </span>
+    );
   }
 
   return (
