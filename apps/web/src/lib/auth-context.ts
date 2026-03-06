@@ -4,8 +4,8 @@ import { resolveUser, resolveTenant } from '@/lib/tenant-resolver';
 /**
  * Fully resolved auth context with internal EveryStack UUIDs.
  * Guaranteed: userId is internal (not Clerk), tenantId is resolved
- * server-side (never from client input), and the user has an active
- * membership in this tenant.
+ * server-side (never from client input), and the user has effective
+ * access to this tenant (direct membership or agency relationship).
  */
 export interface ResolvedAuthContext {
   /** Internal EveryStack user UUID */
@@ -14,6 +14,8 @@ export interface ResolvedAuthContext {
   tenantId: string;
   /** Original Clerk user ID (for Clerk API calls only) */
   clerkUserId: string;
+  /** Non-null when the user accesses this tenant via agency relationship */
+  agencyTenantId: string | null;
 }
 
 /**
@@ -26,16 +28,18 @@ export interface ResolvedAuthContext {
  * - Redirects to /sign-in if unauthenticated (via requireAuth)
  * - Throws NotFoundError (404) if user or tenant cannot be resolved
  * - tenantId is never derived from URL params, query strings, or headers
+ * - agencyTenantId is set when user accesses tenant via agency relationship
  */
 export async function getAuthContext(): Promise<ResolvedAuthContext> {
   const clerkSession = await requireAuth();
 
   const user = await resolveUser(clerkSession.userId);
-  const tenantId = await resolveTenant(user.id, clerkSession.clerkOrgId);
+  const resolved = await resolveTenant(user.id, clerkSession.clerkOrgId);
 
   return {
     userId: user.id,
-    tenantId,
+    tenantId: resolved.tenantId,
     clerkUserId: clerkSession.userId,
+    agencyTenantId: resolved.agencyTenantId,
   };
 }

@@ -97,6 +97,21 @@ vi.mock('../../../../packages/shared/db/client', () => ({
   getDbForTenant: vi.fn(() => mockRoleDb),
 }));
 
+vi.mock('@everystack/shared/logging', () => ({
+  webLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  })),
+}));
+
 // ---------------------------------------------------------------------------
 // Import modules under test
 // ---------------------------------------------------------------------------
@@ -114,9 +129,9 @@ function setupAuthenticatedUser(clerkId: string, userId: string, tenantId: strin
 
   setDbReadResults([
     [{ id: userId }],           // resolveUser: find user
-    [{ tenantId }],             // resolveUser: memberships
+    [{ tenantId, role: 'owner', source: 'direct', agencyTenantId: null }], // resolveUserTenants → getEffectiveMemberships
     [{ id: tenantId }],         // resolveTenant: tenant lookup
-    [{ id: 'mem_1' }],         // resolveTenant: verify membership
+    [{ tenantId, role: 'owner', source: 'direct', agencyTenantId: null }], // resolveUserAccess → getEffectiveMembershipForTenant
   ]);
 }
 
