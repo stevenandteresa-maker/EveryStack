@@ -15,6 +15,7 @@ const {
   mockWriteConflictRecords,
   mockApplyLastWriteWins,
   mockWaitForCapacity,
+  mockPublish,
   mockSelect,
   mockInsert,
   mockUpdate,
@@ -24,6 +25,7 @@ const {
   const mockInsert = vi.fn();
   const mockUpdate = vi.fn();
   const mockTransaction = vi.fn();
+  const mockPublish = vi.fn().mockResolvedValue(undefined);
 
   return {
     mockGetDbForTenant: vi.fn(() => ({
@@ -42,7 +44,7 @@ const {
       unchangedFieldIds: [],
       convergentFieldIds: [],
     }),
-    mockWriteConflictRecords: vi.fn().mockResolvedValue(undefined),
+    mockWriteConflictRecords: vi.fn().mockResolvedValue([]),
     mockApplyLastWriteWins: vi.fn().mockResolvedValue({
       updatedCanonical: {},
       updatedSyncMetadata: {
@@ -57,6 +59,7 @@ const {
       resolvedCount: 0,
     }),
     mockWaitForCapacity: vi.fn().mockResolvedValue(undefined),
+    mockPublish,
     mockSelect,
     mockInsert,
     mockUpdate,
@@ -134,6 +137,13 @@ vi.mock('@everystack/shared/sync', () => {
 
 vi.mock('@everystack/shared/crypto', () => ({
   decryptTokens: mockDecryptTokens,
+}));
+
+vi.mock('@everystack/shared/realtime', () => ({
+  REALTIME_EVENTS: {
+    SYNC_CONFLICT_DETECTED: 'sync.conflict_detected',
+    SYNC_CONFLICT_RESOLVED: 'sync.conflict_resolved',
+  },
 }));
 
 vi.mock('@everystack/shared/logging', () => ({
@@ -250,7 +260,8 @@ describe('InboundSyncProcessor', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    processor = new InboundSyncProcessor();
+    const mockEventPublisher = { publish: mockPublish } as never;
+    processor = new InboundSyncProcessor(mockEventPublisher);
 
     // Default: update returns a chain
     mockUpdate.mockReturnValue({
@@ -473,5 +484,96 @@ describe('InboundSyncProcessor', () => {
     // Transaction should run with both updates and LWW conflict resolution
     expect(mockTransaction).toHaveBeenCalled();
     expect(mockApplyLastWriteWins).toHaveBeenCalled();
+  });
+
+  it('emits sync.conflict_detected events after writeConflictRecords in manual mode', async () => {
+    const connection = {
+      ...setupConnectionQuery(),
+      conflictResolution: 'manual',
+    };
+
+    setupChainedSelectMock([
+      [connection],
+      [{ fieldId: 'f1', externalFieldId: 'fld1', externalFieldType: 'singleLineText', fieldType: 'text', config: {} }],
+      [{ id: 'rec-1', tenantId: 'tenant-1', canonicalData: { f1: 'local' }, syncMetadata: { platform_record_id: 'recABC', last_synced_values: { f1: { value: 'base', synced_at: '2026-01-15T10:00:00.000Z' } } } }],
+    ]);
+
+    mockListRecords.mockResolvedValueOnce({
+      records: [{ id: 'recABC', fields: { fld1: 'Remote' } }],
+      offset: undefined,
+    });
+
+    mockToCanonical.mockReturnValueOnce({ f1: { type: 'text', value: 'Remote' } });
+
+    const conflicts = [{
+      fieldId: 'f1',
+      localValue: 'local',
+      remoteValue: { type: 'text', value: 'Remote' },
+      baseValue: 'base',
+    }];
+
+    mockDetectConflicts.mockReturnValueOnce({
+      cleanRemoteChanges: [],
+      cleanLocalChanges: [],
+      conflicts,
+      unchangedFieldIds: [],
+      convergentFieldIds: [],
+    });
+
+    const writtenConflicts = [
+      { id: 'conflict-uuid-1', fieldId: 'f1', localValue: 'local', remoteValue: { type: 'text', value: 'Remote' } },
+    ];
+    mockWriteConflictRecords.mockResolvedValueOnce(writtenConflicts);
+
+    await processor.processJob(createMockJob(), mockLogger as never);
+
+    // writeConflictRecords called in manual mode
+    expect(mockWriteConflictRecords).toHaveBeenCalled();
+
+    // Event emitted for each written conflict
+    expect(mockPublish).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      channel: 'table:es-table-1',
+      event: 'sync.conflict_detected',
+      payload: {
+        type: 'sync.conflict_detected',
+        recordId: 'rec-1',
+        fieldId: 'f1',
+        conflictId: 'conflict-uuid-1',
+        localValue: 'local',
+        remoteValue: { type: 'text', value: 'Remote' },
+        platform: 'airtable',
+      },
+    });
+  });
+
+  it('does not emit conflict events in last_write_wins mode', async () => {
+    const connection = setupConnectionQuery(); // default: no conflictResolution → 'last_write_wins'
+
+    setupChainedSelectMock([
+      [connection],
+      [{ fieldId: 'f1', externalFieldId: 'fld1', externalFieldType: 'singleLineText', fieldType: 'text', config: {} }],
+      [{ id: 'rec-1', tenantId: 'tenant-1', canonicalData: { f1: 'local' }, syncMetadata: { platform_record_id: 'recABC', last_synced_values: { f1: { value: 'base', synced_at: '2026-01-15T10:00:00.000Z' } } } }],
+    ]);
+
+    mockListRecords.mockResolvedValueOnce({
+      records: [{ id: 'recABC', fields: { fld1: 'Remote' } }],
+      offset: undefined,
+    });
+
+    mockToCanonical.mockReturnValueOnce({ f1: { type: 'text', value: 'Remote' } });
+
+    mockDetectConflicts.mockReturnValueOnce({
+      cleanRemoteChanges: [],
+      cleanLocalChanges: [],
+      conflicts: [{ fieldId: 'f1', localValue: 'local', remoteValue: 'remote', baseValue: 'base' }],
+      unchangedFieldIds: [],
+      convergentFieldIds: [],
+    });
+
+    await processor.processJob(createMockJob(), mockLogger as never);
+
+    // LWW mode — no conflict events emitted
+    expect(mockPublish).not.toHaveBeenCalled();
   });
 });

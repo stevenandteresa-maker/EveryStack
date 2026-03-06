@@ -109,6 +109,7 @@ export { executeOutboundSync, COMPUTED_FIELD_TYPES, isComputedFieldType } from '
 
 // Conflict detection
 export { detectConflicts, writeConflictRecords, valuesAreEqual } from './conflict-detection';
+export type { WrittenConflict } from './conflict-detection';
 
 // Conflict resolution
 export { applyLastWriteWins } from './conflict-resolution';

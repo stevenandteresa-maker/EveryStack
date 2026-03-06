@@ -14,6 +14,7 @@ import { FileScanProcessor } from './processors/file-scan';
 import { FileOrphanCleanupProcessor } from './processors/file-orphan-cleanup';
 import { FileProcessingRouter } from './processors/file-processing-router';
 import { InitialSyncProcessor } from './processors/sync/initial-sync';
+import { InboundSyncProcessor } from './processors/sync/sync-inbound';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -48,6 +49,9 @@ orphanProcessor.start();
 const initialSyncProcessor = new InitialSyncProcessor(eventPublisher);
 initialSyncProcessor.start();
 
+const inboundSyncProcessor = new InboundSyncProcessor(eventPublisher);
+inboundSyncProcessor.start();
+
 // ---------------------------------------------------------------------------
 // Shutdown handlers (order: processors → queues → telemetry → redis)
 // ---------------------------------------------------------------------------
@@ -55,6 +59,7 @@ initialSyncProcessor.start();
 registerShutdownHandler(async () => fileRouter.close());
 registerShutdownHandler(async () => orphanProcessor.close());
 registerShutdownHandler(async () => initialSyncProcessor.close());
+registerShutdownHandler(async () => inboundSyncProcessor.close());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);
 registerShutdownHandler(async () => {

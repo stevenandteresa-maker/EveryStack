@@ -45,8 +45,10 @@ import type {
   AirtableTokens,
 } from '@everystack/shared/sync';
 import { detectConflicts, writeConflictRecords, applyLastWriteWins } from '@everystack/shared/sync';
-import type { ConflictResolutionStrategy } from '@everystack/shared/sync';
+import type { ConflictResolutionStrategy, WrittenConflict } from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
+import { REALTIME_EVENTS } from '@everystack/shared/realtime';
+import type { EventPublisher } from '@everystack/shared/realtime';
 import { BaseProcessor } from '../../lib/base-processor';
 
 // Ensure transforms are registered
@@ -58,9 +60,11 @@ registerAirtableTransforms();
 
 export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> {
   private readonly adapter = new AirtableAdapter();
+  private readonly eventPublisher: EventPublisher;
 
-  constructor() {
+  constructor(eventPublisher: EventPublisher) {
     super('sync', { concurrency: 3 });
+    this.eventPublisher = eventPublisher;
   }
 
   async processJob(job: Job<IncrementalSyncJobData>, logger: Logger): Promise<void> {
@@ -229,9 +233,20 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
           logger,
         });
 
-        if (result === 'created') created++;
-        else if (result === 'updated') updated++;
-        else if (result === 'conflict') conflicts++;
+        if (result.status === 'created') created++;
+        else if (result.status === 'updated') updated++;
+        else if (result.status === 'conflict') conflicts++;
+
+        // Emit sync.conflict_detected for each written conflict record
+        if (result.writtenConflicts.length > 0) {
+          await this.emitConflictDetectedEvents(
+            tenantId,
+            esTableId,
+            result.recordId,
+            result.writtenConflicts,
+            platform,
+          );
+        }
       }
 
       offset = page.offset;
@@ -261,7 +276,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     conflictResolution: ConflictResolutionStrategy;
     fieldMappings: FieldMapping[];
     logger: Logger;
-  }): Promise<'created' | 'updated' | 'conflict' | 'unchanged'> {
+  }): Promise<{ status: 'created' | 'updated' | 'conflict' | 'unchanged'; recordId: string; writtenConflicts: WrittenConflict[] }> {
     const {
       tenantId,
       esTableId,
@@ -309,7 +324,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         syncMetadata: syncMeta as unknown as Record<string, unknown>,
       });
 
-      return 'created';
+      return { status: 'created' as const, recordId: '', writtenConflicts: [] };
     }
 
     // Existing record — run three-way conflict detection
@@ -327,8 +342,11 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     const hasConflicts = detection.conflicts.length > 0;
 
     if (!hasRemoteChanges && !hasConflicts && detection.convergentFieldIds.length === 0) {
-      return 'unchanged';
+      return { status: 'unchanged' as const, recordId: existing.id, writtenConflicts: [] };
     }
+
+    // Track conflicts written during manual resolution
+    let writtenConflicts: WrittenConflict[] = [];
 
     // Apply within a transaction
     await db.transaction(async (tx: DrizzleClient) => {
@@ -371,7 +389,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
           updatedMeta = lwwResult.updatedSyncMetadata;
         } else {
           // Manual: write pending conflict records, local values preserved
-          await writeConflictRecords(tx, tenantId, existing.id, detection.conflicts, platform);
+          writtenConflicts = await writeConflictRecords(tx, tenantId, existing.id, detection.conflicts, platform);
           logger.warn(
             { recordId: existing.id, conflictCount: detection.conflicts.length },
             'Sync conflicts detected — pending manual resolution',
@@ -414,7 +432,37 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     });
 
     // In manual mode, conflicts are pending — still report as 'conflict'
-    return hasConflicts ? 'conflict' : 'updated';
+    const status = hasConflicts ? 'conflict' as const : 'updated' as const;
+    return { status, recordId: existing.id, writtenConflicts };
+  }
+
+  /**
+   * Emit sync.conflict_detected for each conflict written during manual resolution.
+   * Each conflict gets its own event so clients can update individual cell indicators.
+   */
+  private async emitConflictDetectedEvents(
+    tenantId: string,
+    tableId: string,
+    recordId: string,
+    writtenConflicts: WrittenConflict[],
+    platform: string,
+  ): Promise<void> {
+    for (const conflict of writtenConflicts) {
+      await this.eventPublisher.publish({
+        tenantId,
+        channel: `table:${tableId}`,
+        event: REALTIME_EVENTS.SYNC_CONFLICT_DETECTED,
+        payload: {
+          type: REALTIME_EVENTS.SYNC_CONFLICT_DETECTED,
+          recordId,
+          fieldId: conflict.fieldId,
+          conflictId: conflict.id,
+          localValue: conflict.localValue,
+          remoteValue: conflict.remoteValue,
+          platform,
+        },
+      });
+    }
   }
 
   /**

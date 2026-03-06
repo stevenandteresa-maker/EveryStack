@@ -145,14 +145,22 @@ export function detectConflicts(
  * @param conflicts - Detected conflicts from detectConflicts()
  * @param platform  - Source platform identifier
  */
+/** Conflict record returned after writing to sync_conflicts. */
+export interface WrittenConflict {
+  id: string;
+  fieldId: string;
+  localValue: unknown;
+  remoteValue: unknown;
+}
+
 export async function writeConflictRecords(
   tx: DrizzleClient,
   tenantId: string,
   recordId: string,
   conflicts: DetectedConflict[],
   platform: SyncPlatform,
-): Promise<void> {
-  if (conflicts.length === 0) return;
+): Promise<WrittenConflict[]> {
+  if (conflicts.length === 0) return [];
 
   const rows = conflicts.map((conflict) => ({
     tenantId,
@@ -165,5 +173,15 @@ export async function writeConflictRecords(
     status: 'pending' as const,
   }));
 
-  await tx.insert(syncConflicts).values(rows);
+  const inserted = await tx
+    .insert(syncConflicts)
+    .values(rows)
+    .returning({
+      id: syncConflicts.id,
+      fieldId: syncConflicts.fieldId,
+      localValue: syncConflicts.localValue,
+      remoteValue: syncConflicts.remoteValue,
+    });
+
+  return inserted;
 }

@@ -12,3 +12,9 @@ export type { RealtimeService } from './service';
 
 export { EventPublisher, createEventPublisher, buildChannel } from './publisher';
 export type { PublishEventOptions, RedisEventPayload } from './publisher';
+
+export type {
+  SyncConflictDetectedPayload,
+  SyncConflictResolvedPayload,
+  SyncConflictEventPayload,
+} from './sync-conflict-payloads';
