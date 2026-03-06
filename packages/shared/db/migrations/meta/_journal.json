@@ -162,6 +162,13 @@
       "when": 1772640000000,
       "tag": "0022_cp002_multi_tenant_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1772650000000,
+      "tag": "0023_effective_memberships_view",
+      "breakpoints": true
     }
   ]
 }

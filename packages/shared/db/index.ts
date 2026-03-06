@@ -36,6 +36,12 @@ export type {
   ApiKeyCreateInput,
 } from './api-key-utils';
 export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc } from 'drizzle-orm';
+export { effectiveMemberships } from './schema';
+export type { EffectiveMembership } from './schema';
+export {
+  getEffectiveMemberships,
+  getEffectiveMembershipForTenant,
+} from './operations/effective-memberships';
 export {
   users,
   tenants,

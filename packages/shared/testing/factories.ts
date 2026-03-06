@@ -30,6 +30,7 @@ import {
   apiKeys,
   recordViewConfigs,
   tenantRelationships,
+  tenantMemberships,
 } from '../db/schema';
 import type {
   NewTenant,
@@ -68,6 +69,8 @@ import type {
   RecordViewConfig,
   NewTenantRelationship,
   TenantRelationship,
+  NewTenantMembership,
+  TenantMembership,
 } from '../db/schema';
 
 let testDbConn: DrizzleClient | undefined;
@@ -136,6 +139,32 @@ export async function createTestUser(
   };
 
   return firstRow(await db.insert(users).values(values).returning());
+}
+
+/**
+ * Creates a tenant membership with sensible defaults.
+ * Auto-creates a tenant when tenantId is not provided.
+ * Auto-creates a user when userId is not provided.
+ * Defaults: role 'member', status 'active'.
+ */
+export async function createTestTenantMembership(
+  overrides?: Partial<NewTenantMembership>,
+): Promise<TenantMembership> {
+  const db = getTestDb();
+
+  const tenantId = overrides?.tenantId ?? (await createTestTenant()).id;
+  const userId = overrides?.userId ?? (await createTestUser()).id;
+
+  const values: NewTenantMembership = {
+    id: generateUUIDv7(),
+    tenantId,
+    userId,
+    role: 'member',
+    status: 'active',
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(tenantMemberships).values(values).returning());
 }
 
 /**
