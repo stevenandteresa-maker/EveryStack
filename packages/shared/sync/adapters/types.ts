@@ -7,6 +7,51 @@
 
 import type { CanonicalValue, SyncPlatform } from '../types';
 
+// ---------------------------------------------------------------------------
+// Rate Limit Configuration — per-platform API rate limit declarations
+//
+// Each platform adapter declares its rate limits as structured configuration.
+// The sync scheduler uses these to proactively gate API calls.
+// @see docs/reference/sync-engine.md § External API Rate Limit Management
+// ---------------------------------------------------------------------------
+
+/**
+ * A single rate limit constraint (e.g., 5 req/s per base).
+ */
+export interface RateLimit {
+  /** Scope identifier, e.g. 'per_base', 'per_api_key'. */
+  scope: string;
+  /** Maximum number of requests allowed within the window. */
+  maxRequests: number;
+  /** Window duration in seconds. */
+  windowSeconds: number;
+}
+
+/**
+ * Retry behaviour when a rate limit is hit or a transient error occurs.
+ */
+export interface RetryStrategy {
+  /** Maximum number of retry attempts. */
+  maxRetries: number;
+  /** Initial delay in milliseconds before the first retry. */
+  baseDelayMs: number;
+  /** Upper bound on delay in milliseconds. */
+  maxDelayMs: number;
+  /** Multiplier applied to the delay after each successive retry. */
+  backoffMultiplier: number;
+}
+
+/**
+ * Declares all rate limits and retry behaviour for a platform.
+ * Registered with the RateLimiter at startup — these are configuration,
+ * not hardcoded, so they can be updated when platforms change limits.
+ */
+export interface PlatformRateLimits {
+  platform: SyncPlatform;
+  limits: RateLimit[];
+  retryStrategy: RetryStrategy;
+}
+
 /**
  * Maps an EveryStack field to its external platform counterpart.
  * Used by adapters to know which platform field corresponds to which
