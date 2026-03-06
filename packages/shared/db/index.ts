@@ -36,6 +36,12 @@ export type {
   ApiKeyCreateInput,
 } from './api-key-utils';
 export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc } from 'drizzle-orm';
+export { effectiveMemberships } from './schema';
+export type { EffectiveMembership } from './schema';
+export {
+  getEffectiveMemberships,
+  getEffectiveMembershipForTenant,
+} from './operations/effective-memberships';
 export {
   users,
   tenants,
@@ -71,6 +77,10 @@ export {
   auditLogRelations,
   apiRequestLog,
   apiRequestLogRelations,
+  portals,
+  portalsRelations,
+  portalAccess,
+  portalAccessRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -91,4 +101,6 @@ export type {
   ApiKey, NewApiKey,
   AuditLog, NewAuditLog,
   ApiRequestLog, NewApiRequestLog,
+  Portal, NewPortal,
+  PortalAccess, NewPortalAccess,
 } from './schema';

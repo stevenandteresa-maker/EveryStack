@@ -29,6 +29,11 @@ export const workspaces = pgTable(
     slug: varchar('slug', { length: 255 }).notNull(),
     sortOrder: integer('sort_order'),
     settings: jsonb('settings').$type<Record<string, unknown>>().default({}).notNull(),
+    // CP-002: Workspace transfer tracking — schema stubs for post-MVP
+    transferredFromTenantId: uuid('transferred_from_tenant_id')
+      .references(() => tenants.id, { onDelete: 'set null' }),
+    originalCreatedByTenantId: uuid('original_created_by_tenant_id')
+      .references(() => tenants.id, { onDelete: 'set null' }),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id),

@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-04
+**Last updated:** 2026-03-05
 **Branch:** `main`
-**Latest tag:** `v0.1.7-phase-1h`
-**Total commits:** 42 (30 prior + 12 Phase 1H)
+**Latest tag:** `v0.1.8-phase-1i`
+**Total commits:** 20 (squash merges)
 
 ---
 
@@ -41,7 +41,7 @@ Full Drizzle ORM schema (59 tables), 16 SQL migrations, RLS, connection pooling,
 - `packages/shared/db/rls.ts` — `setTenantContext()`, 47 tenant-scoped tables with RLS policies, `RLS_EXCLUDED_COLUMNS`
 - `packages/shared/db/uuid.ts` — `generateUUIDv7()` (all PKs are UUIDv7)
 - `packages/shared/db/schema/` — 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
-- `packages/shared/db/migrations/` — 16 migrations (0000–0015 original + 0015–0018 scope updates)
+- `packages/shared/db/migrations/` — 21 migrations (0000–0018 prior phases + 0019–0020 Phase 1I)
 - `packages/shared/db/operations/user-operations.ts` — `createUserWithTenant()` (now provisions personal tenant), `updateUserFromClerk()`
 - `packages/shared/db/drizzle.config.ts` — Migration config (uses DATABASE_URL_DIRECT for DDL)
 
@@ -63,7 +63,7 @@ Clerk integration, 5-role RBAC hierarchy, tenant resolution, webhook-driven user
 - `apps/web/src/app/api/webhooks/clerk/route.ts` — `user.created` / `org.updated` webhook handler
 - `apps/web/src/lib/middleware.ts` — Clerk middleware + route matchers
 
-**Patterns established:** Clerk org ID stored in `tenants.clerk_id`, internal UUIDs for all DB relations. `tenant-resolver.ts` handles the lookup. Never trust client-supplied tenant/user IDs.
+**Patterns established:** Clerk org ID stored in `tenants.clerk_org_id` (varchar), internal UUIDs for all DB relations. `tenant-resolver.ts` handles the lookup. Never trust client-supplied tenant/user IDs.
 
 ### Phase 1D — Observability & Security (Complete)
 
@@ -119,6 +119,9 @@ Vitest monorepo config, Docker test services, comprehensive test data factories.
 
 **Shared package imports added in 1H:**
 - `@everystack/shared/ai` — AIService, AnthropicAdapter, SelfHostedAdapter, PromptRegistry, ToolRegistry, AI_FEATURES, AI_RATES, calculateCost, logAIUsage, checkBudget, deductCredits, canonicalToAIContext, aiToCanonical, createAIStream, provider errors, all types
+
+**Shared package exports added in 1I:**
+- `@everystack/shared/db` — writeAuditLog, writeAuditLogBatch, auditEntrySchema, AUDIT_ACTOR_TYPES, AUDIT_RETENTION_DAYS, API_KEY_PREFIXES, API_KEY_SCOPES, RATE_LIMIT_TIERS, generateApiKey, hashApiKey, verifyApiKeyHash, apiKeyCreateSchema
 
 **Patterns established:** Vitest configs (4), Docker test services, 19 factories with auto-parent creation, tenant isolation testing helper, Clerk session mocking, MSW-based platform API mocking, performance + a11y test helpers. Integration tests: auth-flow, role-check, webhook.
 
@@ -313,6 +316,89 @@ Provider-agnostic AI abstraction. Feature code uses capability tiers (`fast`/`st
 
 **Patterns established:** `AIService` singleton for all AI calls. Capability tiers (`fast`/`standard`/`advanced`) — never reference providers in feature code. `PromptRegistry` with versioned templates and provider-specific compilers. `ToolRegistry` with scope-based filtering. Budget check before execution, usage logging after. `canonicalToAIContext()`/`aiToCanonical()` for JSONB ↔ AI translation. `createAIStream()` for SSE responses. `@anthropic-ai/sdk` in exactly one file.
 
+### Phase 1I — Audit Log & Platform API Auth Skeleton (Complete)
+
+Audit logging helper, API key infrastructure, Platform API authentication/rate limiting middleware, error format, and composed middleware pipeline.
+
+**Audit Logging (`packages/shared/db/audit.ts`):**
+- `writeAuditLog(tx, entry)` — Single audit entry writer, never fails parent transaction
+- `writeAuditLogBatch(tx, entry)` — Batch writer (record ID arrays capped at 1,000 with truncation flag)
+- `auditEntrySchema` — Zod validation (actorId required for non-system actors, actorLabel only for api_key type)
+- `AUDIT_ACTOR_TYPES` — 7 sources: `user`, `sync`, `automation`, `portal_client`, `system`, `agent`, `api_key`
+- `AUDIT_RETENTION_DAYS` — Plan-based: freelancer 30d, starter 90d, professional 365d, business 730d, enterprise ∞
+
+**API Key Utilities (`packages/shared/db/api-key-utils.ts`):**
+- `generateApiKey(environment)` — Base62 encoding with rejection sampling on `crypto.randomBytes` (~285 bits entropy, 48 chars)
+- `hashApiKey(fullKey)` — SHA-256 hex digest
+- `verifyApiKeyHash(fullKey, storedHash)` — Timing-safe comparison via `crypto.timingSafeEqual`
+- `apiKeyCreateSchema` — Zod validation schema
+- `API_KEY_PREFIXES` — `{ live: 'esk_live_', test: 'esk_test_' }`
+- `API_KEY_SCOPES` — `['data:read', 'data:write', 'schema:read', 'schema:write', 'admin']`
+- `RATE_LIMIT_TIERS` — 4 tiers: basic (60/min, burst 10), standard (120/min, burst 20), high (600/min, burst 100), enterprise (2000/min, burst 500)
+
+**API Key Data Functions (`apps/web/src/data/api-keys.ts`):**
+- `createApiKey(tenantId, userId, input)` — Transactional create + audit log, returns full key once
+- `listApiKeys(tenantId)` — Excludes `keyHash` from response (never exposed)
+- `revokeApiKey(tenantId, userId, keyId)` — Transactional revoke + audit log
+- `getApiKeyByHash(keyHash)` — Cross-tenant lookup by hash (tenant unknown at auth time)
+
+**API Key Server Actions (`apps/web/src/actions/api-keys.ts`):**
+- `createApiKeyAction(input)` — Owner/Admin only via `requireRole()`
+- `revokeApiKeyAction(keyId)` — Owner/Admin only via `requireRole()`
+
+**Auth Middleware (`apps/web/src/lib/api/auth-middleware.ts`):**
+- `authenticateApiKey(request)` → `ApiRequestContext` (tenantId, apiKeyId, scopes, rateLimitTier, actorLabel, requestId)
+- `requireScope(context, ...scopes)` — Throws 403 if insufficient (admin scope overrides all)
+- `withApiAuth(handler, ...requiredScopes)` — Higher-order wrapper
+- Bearer token flow: extract → prefix validate → SHA-256 hash → DB lookup → status/expiry check
+- Fire-and-forget `lastUsedAt` update (doesn't block response)
+- `X-Actor-Label` header extraction for audit attribution (capped 255 chars)
+
+**Rate Limiter (`apps/web/src/lib/api/rate-limiter.ts`):**
+- `checkRateLimit(apiKeyId, tier)` — Per-key token bucket via atomic Redis Lua script
+- `checkTenantCeiling(tenantId, highestKeyTier)` — Per-tenant sliding window (ceiling = 3× highest tier)
+- `setRateLimitHeaders(response, result)` — X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After
+- `setRedisClient(client)` — For test injection
+- Sub-integer precision (×1000 scaling), auto-expiring keys, fail-open on Redis errors
+- Redis keys: `rate_limit:{apiKeyId}` (hash), `rate_limit_tenant:{tenantId}` (sorted set), `rate_limit_tenant_ceiling:{tenantId}` (cached value, 60s TTL)
+
+**Error Format (`apps/web/src/lib/api/errors.ts`):**
+- `apiError(status, code, message, details?, requestId?)` — Generic error builder
+- `createApiErrorResponse` — Alias for `apiError`
+- 9 convenience helpers: `apiBadRequest`, `apiUnauthorized`, `apiForbidden`, `apiNotFound`, `apiConflict`, `apiValidationError`, `apiPayloadTooLarge`, `apiRateLimited`, `apiInternalError`
+- `API_VERSION` = `'2026-03-01'` (date-based), `API_VERSION_HEADER` = `'X-API-Version'`
+- Response shape: `{ error: { code, message, details?, request_id? } }` + version header
+
+**Request Logger (`apps/web/src/lib/api/request-logger.ts`):**
+- `logApiRequest(entry)` — Fire-and-forget insert to `api_request_log`, never throws
+- Records: tenantId, apiKeyId, method, path, statusCode, durationMs, requestSize, responseSize
+
+**Composed Middleware (`apps/web/src/lib/api/middleware.ts`):**
+- `withPlatformApi(handler, ...requiredScopes)` — Single entry point for all Platform API handlers
+- Pipeline: auth → scope check → per-key rate limit → tenant ceiling → version header → rate limit headers → handler → request logging → error mapping
+- Error mapping: AppError → typed API response, unhandled → 500 with Sentry capture + requestId
+
+**Health Endpoint (`apps/web/src/app/api/v1/route.ts`):**
+- `GET /api/v1/` — Returns `{ api: "everystack", version: "v1", status: "ok" }` + version header, no auth required
+
+**Migrations:**
+- `0019_make_audit_log_actor_id_nullable.sql` — `ALTER TABLE audit_log ALTER COLUMN actor_id DROP NOT NULL` (for system actor type)
+- `0020_add_clerk_org_id_to_tenants.sql` — `ALTER TABLE tenants ADD COLUMN clerk_org_id varchar(255)` + unique index
+
+**Shared package exports updated:**
+- `@everystack/shared/db` — Added: `writeAuditLog`, `writeAuditLogBatch`, `auditEntrySchema`, `AUDIT_ACTOR_TYPES`, `AUDIT_RETENTION_DAYS`, `API_KEY_PREFIXES`, `API_KEY_SCOPES`, `RATE_LIMIT_TIERS`, `generateApiKey`, `hashApiKey`, `verifyApiKeyHash`, `apiKeyCreateSchema`
+
+**Tests (Phase 1I — 7 test files, 139 tests):**
+- `packages/shared/db/audit.test.ts` (21 tests)
+- `packages/shared/db/api-key-utils.test.ts` (32 tests)
+- `apps/web/src/data/__tests__/api-keys.integration.test.ts` (7 tests)
+- `apps/web/src/lib/api/auth-middleware.test.ts` (22 tests)
+- `apps/web/src/lib/api/rate-limiter.test.ts` (17 tests)
+- `apps/web/src/lib/api/errors.test.ts` (35 tests)
+- `apps/web/src/lib/api/request-logger.test.ts` (5 tests)
+
+**Patterns established:** `writeAuditLog()` in same transaction as mutations. API keys shown once at creation, SHA-256 hashed for storage. Bearer token auth with timing-safe verification. Two-level rate limiting (per-key token bucket + per-tenant ceiling). Fail-open on Redis errors. `withPlatformApi()` as single entry point for API routes. Fire-and-forget request logging. Date-based API versioning (`2026-03-01`).
+
 ### Scope Updates (PR #13 — docs/scope-updates)
 
 Schema expansions, personal tenant provisioning, Platform Owner Console, Support System, and comprehensive naming/convention audit.
@@ -381,7 +467,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **Support System** — Schemas and reference doc exist (`support-system.md`). No support UI, no AI support chatbot, no escalation flow.
 
-**Platform API** — `apps/web/src/app/api/health/route.ts` exists. No v1 data endpoints.
+**Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
 **i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
@@ -393,7 +479,7 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — `apps/web/src/actions/` and `apps/web/src/data/` are empty.
+**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts` and `apps/web/src/data/api-keys.ts` exist (Phase 1I). No other data functions or actions yet.
 
 ---
 
@@ -443,6 +529,13 @@ Schema expansions, personal tenant provisioning, Platform Owner Console, Support
 | **AI metering** | `calculateCost()` for token pricing. `checkBudget()` before execution. `logAIUsage()` + `deductCredits()` after. 4 alert tiers (50/75/90/100%) |
 | **AI data contract** | `canonicalToAIContext()` (JSONB → AI) and `aiToCanonical()` (AI → JSONB). Per-field-type configs. Type guards for success/error results |
 | **AI streaming** | `createAIStream()` wraps into Vercel AI SDK `createDataStreamResponse`. `AIJobPayload`/`AIJobResult` for async BullMQ jobs |
+| **Audit logging** | `writeAuditLog(tx, entry)` inside same transaction as mutation. 7 actor types. Never fails parent transaction. Plan-based retention |
+| **API keys** | Generated with `generateApiKey()` (base62, ~285 bits). Hashed with SHA-256, full key shown once. Timing-safe verification via `verifyApiKeyHash()` |
+| **Platform API auth** | `authenticateApiKey()` extracts Bearer token, validates prefix (`esk_live_`/`esk_test_`), hash-lookups DB, checks status/expiry. Fire-and-forget `lastUsedAt` update |
+| **Rate limiting** | Two-level: per-key token bucket + per-tenant ceiling (3× highest tier). Atomic Redis Lua scripts. Fail-open on Redis errors. Standard headers on all responses |
+| **API error format** | `{ error: { code, message, details?, request_id? } }`. All responses include `X-API-Version: 2026-03-01`. Use convenience helpers (`apiBadRequest`, etc.) |
+| **API middleware** | `withPlatformApi(handler, ...scopes)` — single entry point. Pipeline: auth → rate limit → handler → logging → error mapping |
+| **Request logging** | `logApiRequest()` fire-and-forget to `api_request_log`. Never throws. Records method, path, status, duration, sizes |
 
 ---
 

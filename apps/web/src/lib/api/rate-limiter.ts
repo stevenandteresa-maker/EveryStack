@@ -257,7 +257,7 @@ end
 
 -- Add this request with the current timestamp as the score
 -- Use a unique member to allow multiple entries per millisecond
-local member = now_ms .. ':' .. math.random(1000000)
+local member = now_ms .. ':' .. math.random(1, 999999999)
 redis.call('ZADD', key, now_ms, member)
 
 -- Set TTL slightly longer than the window

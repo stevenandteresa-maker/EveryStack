@@ -14,7 +14,7 @@ vi.mock('../client', () => ({
 // Mock the uuid module to return predictable UUIDs
 import { createMockUUIDs } from '../../testing/mock-uuid';
 
-const MOCK_UUIDS = createMockUUIDs(6);
+const MOCK_UUIDS = createMockUUIDs(4);
 let uuidIndex = 0;
 
 vi.mock('../uuid', () => ({
@@ -23,15 +23,6 @@ vi.mock('../uuid', () => ({
 
 vi.mock('../rls', () => ({
   setTenantContext: vi.fn(),
-}));
-
-vi.mock('../../logging', () => ({
-  createLogger: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  }),
 }));
 
 // Build a minimal fake Drizzle client that tracks calls
@@ -93,10 +84,9 @@ describe('createUserWithTenant', () => {
     expect(result.userId).toBe(MOCK_UUIDS[0]!);
     expect(result.tenantId).toBe(MOCK_UUIDS[1]!);
     expect(result.workspaceId).toBe(MOCK_UUIDS[2]!);
-    expect(result.personalTenantId).toBe(MOCK_UUIDS[3]!);
 
-    // Seven inserts in the transaction
-    expect(insertedRows).toHaveLength(7);
+    // Five inserts in the transaction (user, tenant, membership, workspace, workspace membership)
+    expect(insertedRows).toHaveLength(5);
 
     // 1. User
     expect(insertedRows[0]?.table).toBe('users');
@@ -144,24 +134,6 @@ describe('createUserWithTenant', () => {
       workspaceId: MOCK_UUIDS[2]!,
       role: 'manager',
     });
-
-    // 6. Personal tenant
-    expect(insertedRows[5]?.table).toBe('tenants');
-    expect(insertedRows[5]?.values).toMatchObject({
-      id: MOCK_UUIDS[3]!,
-      name: "John Doe's Personal Space",
-      plan: 'freelancer',
-      settings: { personal: true, auto_provisioned: true },
-    });
-
-    // 7. Personal tenant membership
-    expect(insertedRows[6]?.table).toBe('tenant_memberships');
-    expect(insertedRows[6]?.values).toMatchObject({
-      tenantId: MOCK_UUIDS[3]!,
-      userId: MOCK_UUIDS[0]!,
-      role: 'owner',
-      status: 'active',
-    });
   });
 
   it('calls setTenantContext before inserting RLS-protected rows', async () => {
@@ -174,15 +146,11 @@ describe('createUserWithTenant', () => {
       client,
     );
 
-    // Called for primary tenant and personal tenant
-    expect(setTenantContext).toHaveBeenCalledTimes(2);
+    // Called once for the primary tenant
+    expect(setTenantContext).toHaveBeenCalledTimes(1);
     expect(setTenantContext).toHaveBeenCalledWith(
       expect.anything(),
       MOCK_UUIDS[1]!,
-    );
-    expect(setTenantContext).toHaveBeenCalledWith(
-      expect.anything(),
-      MOCK_UUIDS[3]!,
     );
   });
 

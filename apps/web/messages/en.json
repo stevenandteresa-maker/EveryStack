@@ -12,7 +12,15 @@
     "edit": "Edit",
     "close": "Close",
     "search": "Search...",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "statusRunning": "EveryStack is running."
+  },
+  "personal_tenant": {
+    "default_name": "{userName}'s Workspace"
+  },
+  "my_office": {
+    "heading_personal": "My Office \u00b7 Personal",
+    "heading_org": "My Office \u00b7 {tenantName}"
   },
   "shell": {
     "sidebar": {
@@ -22,7 +30,20 @@
       "expand": "Expand sidebar",
       "collapse": "Collapse sidebar",
       "collapseLabel": "Collapse",
-      "account": "Account"
+      "account": "Account",
+      "myOffice": "My Office",
+      "myOfficeQualified": "My Office \u00b7 {tenantName}",
+      "myOfficePersonal": "My Office \u00b7 Personal",
+      "tasks": "Tasks",
+      "chat": "Chat",
+      "calendar": "Calendar",
+      "help": "Help",
+      "portals": "Portals",
+      "noWorkspaces": "No workspaces yet",
+      "switchError": "Unable to switch workspace. Please try again.",
+      "portalNavigate": "Open {portalName} portal",
+      "personalQualifier": "Personal",
+      "currentWorkspace": "Current workspace"
     },
     "header": {
       "commandBarPlaceholder": "Search...",

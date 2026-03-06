@@ -12,6 +12,7 @@ import { generateUUIDv7 } from '../uuid';
 import { tenants } from './tenants';
 import { portals } from './portals';
 
+
 export const portalAccess = pgTable(
   'portal_access',
   {
@@ -27,12 +28,22 @@ export const portalAccess = pgTable(
     authHash: varchar('auth_hash', { length: 255 }),
     token: varchar('token', { length: 255 }),
     tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+    // CP-001: Revocation tracking
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    // Known values: 'record_deleted', 'manager_revoked', 'portal_archived'
+    revokedReason: varchar('revoked_reason', { length: 255 }),
+    // Client-safe slug for portal URLs — raw record UUID never exposed
+    recordSlug: varchar('record_slug', { length: 255 }),
+    // Optional link to a contact/client record (post-MVP App Portal conversion)
+    // No FK constraint — records uses composite PK (tenant_id, id), plain uuid reference
+    linkedRecordId: uuid('linked_record_id'),
     lastAccessedAt: timestamp('last_accessed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index('portal_access_tenant_portal_idx').on(table.tenantId, table.portalId),
     uniqueIndex('portal_access_portal_record_email_idx').on(table.portalId, table.recordId, table.email),
+    uniqueIndex('portal_access_portal_record_slug_idx').on(table.portalId, table.recordSlug),
   ],
 );
 

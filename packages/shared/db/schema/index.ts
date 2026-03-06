@@ -14,6 +14,13 @@ export { tenants } from './tenants';
 export type { Tenant, NewTenant } from './tenants';
 
 // ---------------------------------------------------------------------------
+// Tier 1B — Tenant Relationships (agency-client)
+// ---------------------------------------------------------------------------
+
+export { tenantRelationships, tenantRelationshipsRelations } from './tenant-relationships';
+export type { TenantRelationship, NewTenantRelationship } from './tenant-relationships';
+
+// ---------------------------------------------------------------------------
 // Tier 2 — Tenant Memberships & Boards
 // ---------------------------------------------------------------------------
 
@@ -250,3 +257,10 @@ export type { FeatureRequest, NewFeatureRequest } from './feature-requests';
 
 export { tenantEnterpriseConfig, tenantEnterpriseConfigRelations } from './tenant-enterprise-config';
 export type { TenantEnterpriseConfig, NewTenantEnterpriseConfig } from './tenant-enterprise-config';
+
+// ---------------------------------------------------------------------------
+// Views — Unified query surfaces (read-only, defined in migrations)
+// ---------------------------------------------------------------------------
+
+export { effectiveMemberships } from './effective-memberships';
+export type { EffectiveMembership } from './effective-memberships';

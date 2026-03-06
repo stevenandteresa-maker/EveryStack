@@ -148,6 +148,27 @@
       "when": 1772620000000,
       "tag": "0020_add_clerk_org_id_to_tenants",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1772630000000,
+      "tag": "0021_cp001_portal_thread_refinements",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1772640000000,
+      "tag": "0022_cp002_multi_tenant_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1772650000000,
+      "tag": "0023_effective_memberships_view",
+      "breakpoints": true
     }
   ]
 }

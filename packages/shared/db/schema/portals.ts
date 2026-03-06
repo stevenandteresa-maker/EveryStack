@@ -41,7 +41,7 @@ export const portals = pgTable(
   },
   (table) => [
     index('portals_tenant_idx').on(table.tenantId),
-    uniqueIndex('portals_slug_idx').on(table.slug),
+    uniqueIndex('portals_tenant_slug_idx').on(table.tenantId, table.slug),
   ],
 );
 

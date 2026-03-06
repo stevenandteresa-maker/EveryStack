@@ -32,6 +32,7 @@ import {
   createTestThread,
   createTestApiKey,
   createTestRecordViewConfig,
+  createTestTenantRelationship,
 } from './factories';
 
 beforeEach(() => {
@@ -340,5 +341,56 @@ describe('createTestApiKey', () => {
     const b = await createTestApiKey();
     expect(a.rawKey).not.toBe(b.rawKey);
     expect(a.apiKey.keyHash).not.toBe(b.apiKey.keyHash);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CP-002 — Tenant Relationships
+// ---------------------------------------------------------------------------
+
+describe('createTestTenantRelationship', () => {
+  it('auto-creates agency and client tenants when not provided', async () => {
+    const rel = await createTestTenantRelationship();
+    expect(isValidUUID(rel.id)).toBe(true);
+    expect(isValidUUID(rel.agencyTenantId)).toBe(true);
+    expect(isValidUUID(rel.clientTenantId)).toBe(true);
+    expect(rel.agencyTenantId).not.toBe(rel.clientTenantId);
+    expect(rel.relationshipType).toBe('managed');
+    expect(rel.status).toBe('active');
+    expect(rel.accessLevel).toBe('builder');
+    expect(rel.initiatedBy).toBe('agency');
+    // 4 inserts: agency tenant, client tenant, user (authorizedBy), relationship
+    expect(mockDb.insert).toHaveBeenCalledTimes(4);
+  });
+
+  it('uses provided tenant IDs without auto-creating', async () => {
+    const agencyTenantId = '01900000-0000-7000-8000-000000000040';
+    const clientTenantId = '01900000-0000-7000-8000-000000000041';
+    const authorizedByUserId = '01900000-0000-7000-8000-000000000042';
+    const rel = await createTestTenantRelationship({
+      agencyTenantId,
+      clientTenantId,
+      authorizedByUserId,
+    });
+    expect(rel.agencyTenantId).toBe(agencyTenantId);
+    expect(rel.clientTenantId).toBe(clientTenantId);
+    expect(rel.authorizedByUserId).toBe(authorizedByUserId);
+    // Only 1 insert: the relationship itself
+    expect(mockDb.insert).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies overrides', async () => {
+    const rel = await createTestTenantRelationship({
+      relationshipType: 'white_label',
+      status: 'pending',
+      accessLevel: 'admin',
+      initiatedBy: 'client',
+      metadata: { contract_ref: 'C-123', hide_member_identity: true },
+    });
+    expect(rel.relationshipType).toBe('white_label');
+    expect(rel.status).toBe('pending');
+    expect(rel.accessLevel).toBe('admin');
+    expect(rel.initiatedBy).toBe('client');
+    expect(rel.metadata).toEqual({ contract_ref: 'C-123', hide_member_identity: true });
   });
 });

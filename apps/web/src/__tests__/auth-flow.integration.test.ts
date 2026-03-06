@@ -72,6 +72,21 @@ vi.mock('../../../../packages/shared/db/client', () => ({
   getDbForTenant: vi.fn(() => ({})),
 }));
 
+vi.mock('@everystack/shared/logging', () => ({
+  webLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  createLogger: vi.fn(() => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  })),
+}));
+
 // ---------------------------------------------------------------------------
 // Import the module under test (uses mocked dependencies)
 // ---------------------------------------------------------------------------
@@ -88,7 +103,7 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
     setDbReadResults([]);
   });
 
-  it('produces valid ResolvedAuthContext via clerkOrgId path', async () => {
+  it('produces valid ResolvedAuthContext via clerkOrgId path (direct member)', async () => {
     mockClerkAuth.mockResolvedValue({
       userId: 'clerk_user_abc',
       orgId: 'org_xyz',
@@ -96,14 +111,14 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
 
     // DB queries (4 sequential calls):
     // 1. resolveUser: find user by clerkId
-    // 2. resolveUser: find active tenant memberships
+    // 2. resolveUserTenants → getEffectiveMemberships: all accessible tenants
     // 3. resolveTenant: find tenant by clerkOrgId
-    // 4. resolveTenant: verify user has active membership in that tenant
+    // 4. resolveUserAccess → getEffectiveMembershipForTenant: verify access
     setDbReadResults([
       [{ id: 'int_user_001' }],
-      [{ tenantId: 'int_tenant_001' }],
+      [{ tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null }],
       [{ id: 'int_tenant_001' }],
-      [{ id: 'membership_001' }],
+      [{ tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null }],
     ]);
 
     const context = await getAuthContext();
@@ -112,6 +127,7 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       userId: 'int_user_001',
       tenantId: 'int_tenant_001',
       clerkUserId: 'clerk_user_abc',
+      agencyTenantId: null,
     });
   });
 
@@ -121,14 +137,16 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       orgId: undefined,
     });
 
-    // DB queries (3 sequential calls):
+    // DB queries (4 sequential calls):
     // 1. resolveUser: find user
-    // 2. resolveUser: find active memberships
-    // 3. resolveTenant: fallback to first active membership
+    // 2. resolveUserTenants → getEffectiveMemberships: all accessible tenants
+    // 3. resolveTenant fallback → resolveUserTenants again (getEffectiveMemberships)
+    // 4. resolveUserAccess → getEffectiveMembershipForTenant: get access details
     setDbReadResults([
       [{ id: 'int_user_solo' }],
-      [{ tenantId: 'int_tenant_solo' }],
-      [{ tenantId: 'int_tenant_solo' }],
+      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
+      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
+      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
     ]);
 
     const context = await getAuthContext();
@@ -137,6 +155,7 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       userId: 'int_user_solo',
       tenantId: 'int_tenant_solo',
       clerkUserId: 'clerk_user_solo',
+      agencyTenantId: null,
     });
   });
 
@@ -162,7 +181,7 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
 
     setDbReadResults([
       [{ id: 'int_user_x' }],
-      [{ tenantId: 'some_tenant' }],
+      [{ tenantId: 'some_tenant', role: 'owner', source: 'direct', agencyTenantId: null }],
       [], // tenant not found by clerkOrgId
     ]);
 
@@ -177,12 +196,38 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
 
     setDbReadResults([
       [{ id: 'int_user_a' }],
-      [{ tenantId: 'int_tenant_a' }],
+      [{ tenantId: 'int_tenant_a', role: 'owner', source: 'direct', agencyTenantId: null }],
       [{ id: 'int_tenant_b' }], // tenant B exists
-      [], // but user has no membership in tenant B
+      [], // but user has no effective membership in tenant B
     ]);
 
     // Returns 404 — not 403 — to prevent tenant enumeration
     await expect(getAuthContext()).rejects.toThrow('Tenant not found');
+  });
+
+  it('includes agencyTenantId for agency access', async () => {
+    mockClerkAuth.mockResolvedValue({
+      userId: 'clerk_agency_user',
+      orgId: 'org_client',
+    });
+
+    setDbReadResults([
+      [{ id: 'int_agency_user' }],
+      [
+        { tenantId: 'agency_tenant', role: 'owner', source: 'direct', agencyTenantId: null },
+        { tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant' },
+      ],
+      [{ id: 'client_tenant' }],
+      [{ tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant' }],
+    ]);
+
+    const context = await getAuthContext();
+
+    expect(context).toEqual({
+      userId: 'int_agency_user',
+      tenantId: 'client_tenant',
+      clerkUserId: 'clerk_agency_user',
+      agencyTenantId: 'agency_tenant',
+    });
   });
 });

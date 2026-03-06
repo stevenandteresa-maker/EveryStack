@@ -22,12 +22,17 @@ import {
   views,
   crossLinks,
   portals,
+  portalAccess,
   forms,
   automations,
   documentTemplates,
   threads,
   apiKeys,
   recordViewConfigs,
+  tenantRelationships,
+  tenantMemberships,
+  boards,
+  workspaceMemberships,
 } from '../db/schema';
 import type {
   NewTenant,
@@ -50,6 +55,8 @@ import type {
   CrossLink,
   NewPortal,
   Portal,
+  NewPortalAccess,
+  PortalAccess,
   NewForm,
   Form,
   NewAutomation,
@@ -62,6 +69,14 @@ import type {
   ApiKey,
   NewRecordViewConfig,
   RecordViewConfig,
+  NewTenantRelationship,
+  TenantRelationship,
+  NewTenantMembership,
+  TenantMembership,
+  NewBoard,
+  Board,
+  NewWorkspaceMembership,
+  WorkspaceMembership,
 } from '../db/schema';
 
 let testDbConn: DrizzleClient | undefined;
@@ -130,6 +145,32 @@ export async function createTestUser(
   };
 
   return firstRow(await db.insert(users).values(values).returning());
+}
+
+/**
+ * Creates a tenant membership with sensible defaults.
+ * Auto-creates a tenant when tenantId is not provided.
+ * Auto-creates a user when userId is not provided.
+ * Defaults: role 'member', status 'active'.
+ */
+export async function createTestTenantMembership(
+  overrides?: Partial<NewTenantMembership>,
+): Promise<TenantMembership> {
+  const db = getTestDb();
+
+  const tenantId = overrides?.tenantId ?? (await createTestTenant()).id;
+  const userId = overrides?.userId ?? (await createTestUser()).id;
+
+  const values: NewTenantMembership = {
+    id: generateUUIDv7(),
+    tenantId,
+    userId,
+    role: 'member',
+    status: 'active',
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(tenantMemberships).values(values).returning());
 }
 
 /**
@@ -492,6 +533,39 @@ export async function createTestPortal(
 }
 
 /**
+ * Creates a portal access row with sensible defaults.
+ * Auto-creates a portal (and therefore table, record view config, tenant) when portalId is not provided.
+ * Generates a record_slug when not provided.
+ */
+export async function createTestPortalAccess(
+  overrides?: Partial<NewPortalAccess>,
+): Promise<PortalAccess> {
+  const db = getTestDb();
+  const suffix = randomSuffix();
+
+  let tenantId = overrides?.tenantId;
+  let portalId = overrides?.portalId;
+
+  if (!portalId) {
+    const portal = await createTestPortal(tenantId ? { tenantId } : undefined);
+    portalId = portal.id;
+    tenantId = tenantId ?? portal.tenantId;
+  }
+
+  const values: NewPortalAccess = {
+    id: generateUUIDv7(),
+    tenantId: tenantId!,
+    portalId,
+    recordId: overrides?.recordId ?? generateUUIDv7(),
+    email: `client-${suffix}@example.com`,
+    recordSlug: `rec-${suffix}`,
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(portalAccess).values(values).returning());
+}
+
+/**
  * Creates a form with sensible defaults.
  * Auto-creates a table, record view config, and user when not provided.
  */
@@ -642,6 +716,7 @@ export async function createTestThread(
     tenantId,
     scopeType: 'record',
     scopeId: generateUUIDv7(),
+    threadType: 'internal',
     createdBy,
     ...overrides,
   };
@@ -691,4 +766,103 @@ export async function createTestApiKey(
 
   const apiKey = firstRow(await db.insert(apiKeys).values(values).returning());
   return { apiKey, rawKey };
+}
+
+// ---------------------------------------------------------------------------
+// Tier 11 — Tenant Relationships (CP-002)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a tenant relationship with sensible defaults.
+ * Auto-creates agency and client tenants when not provided.
+ * Auto-creates a user when authorizedByUserId is not provided.
+ * Default: status 'active', access_level 'builder', relationship_type 'managed'.
+ */
+export async function createTestTenantRelationship(
+  overrides?: Partial<NewTenantRelationship>,
+): Promise<TenantRelationship> {
+  const db = getTestDb();
+
+  const agencyTenantId = overrides?.agencyTenantId ?? (await createTestTenant({ name: 'Agency Tenant' })).id;
+  const clientTenantId = overrides?.clientTenantId ?? (await createTestTenant({ name: 'Client Tenant' })).id;
+  const authorizedByUserId = overrides?.authorizedByUserId ?? (await createTestUser()).id;
+
+  const values: NewTenantRelationship = {
+    id: generateUUIDv7(),
+    agencyTenantId,
+    clientTenantId,
+    relationshipType: 'managed',
+    status: 'active',
+    accessLevel: 'builder',
+    initiatedBy: 'agency',
+    authorizedByUserId,
+    metadata: {},
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(tenantRelationships).values(values).returning());
+}
+
+// ---------------------------------------------------------------------------
+// Tier 12 — Boards (CP-Prompt 8)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a board with sensible defaults.
+ * Auto-creates a tenant when tenantId is not provided.
+ */
+export async function createTestBoard(
+  overrides?: Partial<NewBoard>,
+): Promise<Board> {
+  const db = getTestDb();
+  const suffix = randomSuffix();
+
+  const tenantId = overrides?.tenantId ?? (await createTestTenant()).id;
+
+  const values: NewBoard = {
+    id: generateUUIDv7(),
+    tenantId,
+    name: `Test Board ${suffix}`,
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(boards).values(values).returning());
+}
+
+// ---------------------------------------------------------------------------
+// Tier 13 — Workspace Memberships (CP-Prompt 8)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a workspace membership with sensible defaults.
+ * Auto-creates a workspace (and therefore tenant) when workspaceId is not provided.
+ * Auto-creates a user when userId is not provided.
+ * Defaults: role 'manager'.
+ */
+export async function createTestWorkspaceMembership(
+  overrides?: Partial<NewWorkspaceMembership>,
+): Promise<WorkspaceMembership> {
+  const db = getTestDb();
+
+  let tenantId = overrides?.tenantId;
+  let workspaceId = overrides?.workspaceId;
+
+  if (!workspaceId) {
+    const workspace = await createTestWorkspace(tenantId ? { tenantId } : undefined);
+    workspaceId = workspace.id;
+    tenantId = tenantId ?? workspace.tenantId;
+  }
+
+  const userId = overrides?.userId ?? (await createTestUser()).id;
+
+  const values: NewWorkspaceMembership = {
+    id: generateUUIDv7(),
+    userId,
+    tenantId: tenantId!,
+    workspaceId,
+    role: 'manager',
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(workspaceMemberships).values(values).returning());
 }
