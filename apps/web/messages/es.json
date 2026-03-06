@@ -103,5 +103,26 @@
     "undo_filter_button": "Deshacer cambio de filtro",
     "row_indicator_tooltip": "Este registro ya no se sincroniza — fue excluido por un cambio de filtro de sincronización el {date}.",
     "filtered_out_tooltip": "Este registro existe en {platform} pero está fuera de tu filtro de sincronización."
+  },
+  "sync_conflicts": {
+    "title_single": "Conflicto: \"{field}\" en \"{record}\"",
+    "title_multi": "{count, plural, one {# Conflicto} other {# Conflictos}} en \"{record}\"",
+    "description": "Este registro fue editado tanto en EveryStack como en la plataforma de origen. Elige qué valor mantener para cada campo.",
+    "local_label": "EveryStack",
+    "remote_label": "{platform}",
+    "base_value": "Era: {value}",
+    "changed_by": "Cambiado por {name}",
+    "changed_in_platform": "Cambiado en {platform}",
+    "keep_local": "Mantener EveryStack",
+    "keep_remote": "Mantener {platform}",
+    "edit": "Editar",
+    "confirm": "Confirmar",
+    "cancel_edit": "Cancelar",
+    "resolved": "Resuelto",
+    "keep_all_local": "Mantener todo EveryStack",
+    "keep_all_remote": "Mantener todo {platform}",
+    "pending_count": "{count, plural, one {# conflicto pendiente} other {# conflictos pendientes}}",
+    "cancel": "Cancelar",
+    "apply": "Aplicar resoluciones"
   }
 }
