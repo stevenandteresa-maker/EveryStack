@@ -27,12 +27,16 @@
       "collapseLabel": "Contraer",
       "account": "Cuenta",
       "myOffice": "Mi Oficina",
+      "myOfficeQualified": "Mi Oficina \u00b7 {tenantName}",
+      "myOfficePersonal": "Mi Oficina \u00b7 Personal",
       "tasks": "Tareas",
       "chat": "Chat",
       "calendar": "Calendario",
       "help": "Ayuda",
       "portals": "Portales",
-      "noWorkspaces": "Sin espacios de trabajo"
+      "noWorkspaces": "Sin espacios de trabajo",
+      "switchError": "No se pudo cambiar de espacio de trabajo. Inténtalo de nuevo.",
+      "portalNavigate": "Abrir portal {portalName}"
     },
     "header": {
       "commandBarPlaceholder": "Buscar...",

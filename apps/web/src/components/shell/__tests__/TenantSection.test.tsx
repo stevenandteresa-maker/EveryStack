@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TenantSection } from '../TenantSection';
@@ -38,7 +38,7 @@ describe('TenantSection', () => {
       </IntlWrapper>,
     );
     // My Office should be visible since active is expanded
-    expect(screen.getByText('My Office')).toBeInTheDocument();
+    expect(screen.getByTestId('my-office-tenant-1')).toBeInTheDocument();
     expect(screen.getByText('Marketing')).toBeInTheDocument();
   });
 
@@ -49,7 +49,7 @@ describe('TenantSection', () => {
       </IntlWrapper>,
     );
     // My Office should NOT be visible since inactive is collapsed
-    expect(screen.queryByText('My Office')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('my-office-tenant-1')).not.toBeInTheDocument();
   });
 
   it('toggles expand/collapse on header click', async () => {
@@ -63,15 +63,15 @@ describe('TenantSection', () => {
     );
 
     // Initially expanded
-    expect(screen.getByText('My Office')).toBeInTheDocument();
+    expect(screen.getByTestId('my-office-tenant-1')).toBeInTheDocument();
 
     // Click to collapse
     await user.click(screen.getByTestId('tenant-header-tenant-1'));
-    expect(screen.queryByText('My Office')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('my-office-tenant-1')).not.toBeInTheDocument();
 
     // Click to expand again
     await user.click(screen.getByTestId('tenant-header-tenant-1'));
-    expect(screen.getByText('My Office')).toBeInTheDocument();
+    expect(screen.getByTestId('my-office-tenant-1')).toBeInTheDocument();
   });
 
   it('shows "No workspaces yet" when empty', () => {
@@ -94,5 +94,62 @@ describe('TenantSection', () => {
     const dot = header.querySelector('span[aria-hidden="true"]');
     expect(dot).toBeTruthy();
     expect(dot?.className).toContain('rounded-full');
+  });
+
+  it('displays tenant-qualified My Office heading', () => {
+    render(
+      <IntlWrapper>
+        <TenantSection section={makeSection({ tenantName: 'Acme Corp', isActive: true })} />
+      </IntlWrapper>,
+    );
+
+    const myOffice = screen.getByTestId('my-office-tenant-1');
+    expect(myOffice.textContent).toContain('My Office');
+    expect(myOffice.textContent).toContain('Acme Corp');
+  });
+
+  it('displays "Personal" qualifier for personal tenant', () => {
+    render(
+      <IntlWrapper>
+        <TenantSection
+          section={makeSection({ isPersonalTenant: true, isActive: true })}
+        />
+      </IntlWrapper>,
+    );
+
+    const myOffice = screen.getByTestId('my-office-tenant-1');
+    expect(myOffice.textContent).toContain('Personal');
+  });
+
+  it('calls onTenantSwitch when inactive tenant header is clicked', async () => {
+    const user = userEvent.setup();
+    const onSwitch = vi.fn();
+    render(
+      <IntlWrapper>
+        <TenantSection
+          section={makeSection({ isActive: false })}
+          onTenantSwitch={onSwitch}
+        />
+      </IntlWrapper>,
+    );
+
+    await user.click(screen.getByTestId('tenant-header-tenant-1'));
+    expect(onSwitch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onTenantSwitch when active tenant header is clicked', async () => {
+    const user = userEvent.setup();
+    const onSwitch = vi.fn();
+    render(
+      <IntlWrapper>
+        <TenantSection
+          section={makeSection({ isActive: true })}
+          onTenantSwitch={onSwitch}
+        />
+      </IntlWrapper>,
+    );
+
+    await user.click(screen.getByTestId('tenant-header-tenant-1'));
+    expect(onSwitch).not.toHaveBeenCalled();
   });
 });

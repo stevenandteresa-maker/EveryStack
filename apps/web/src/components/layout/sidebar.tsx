@@ -9,12 +9,12 @@ import {
   PanelLeftOpen,
   HelpCircle,
   User,
-  ExternalLink,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/stores/sidebar-store';
-import { TenantSection } from '@/components/shell/TenantSection';
+import { TenantSwitcher } from '@/components/shell/TenantSwitcher';
+import { PortalSection } from '@/components/shell/PortalSection';
 import type { SidebarNavigation } from '@/data/sidebar-navigation';
 
 // ---------------------------------------------------------------------------
@@ -144,38 +144,10 @@ export function Sidebar({ navData }: SidebarProps) {
 // ---------------------------------------------------------------------------
 
 function SidebarNavContent({ navData }: { navData: SidebarNavigation }) {
-  const t = useTranslations('shell.sidebar');
-
   return (
     <>
-      {navData.tenants.map((section) => (
-        <TenantSection key={section.tenantId} section={section} />
-      ))}
-
-      {navData.portals.length > 0 && (
-        <div className="mt-4">
-          <div className="px-2 pb-1">
-            <span className="text-caption font-semibold uppercase tracking-wider text-[var(--sidebar-text-muted)]">
-              {t('portals')}
-            </span>
-          </div>
-          {navData.portals.map((portal) => (
-            <button
-              key={portal.portalId}
-              type="button"
-              data-testid={`portal-entry-${portal.portalId}`}
-              className={cn(
-                'flex items-center gap-2 w-full px-2 py-1.5 rounded',
-                'text-body-sm text-[var(--sidebar-text)] hover:bg-[var(--sidebar-bg-hover)]',
-                'transition-colors duration-150',
-              )}
-            >
-              <ExternalLink size={16} className="shrink-0 text-[var(--sidebar-text-muted)]" />
-              <span className="truncate">{portal.portalName}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <TenantSwitcher tenants={navData.tenants} />
+      <PortalSection portals={navData.portals} />
     </>
   );
 }

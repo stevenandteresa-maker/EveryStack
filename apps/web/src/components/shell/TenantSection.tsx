@@ -10,20 +10,34 @@ import type { TenantNavSection } from '@/data/sidebar-navigation';
 interface TenantSectionProps {
   section: TenantNavSection;
   activeWorkspaceId?: string;
+  /** Called when an inactive tenant header is clicked to initiate a switch. */
+  onTenantSwitch?: () => void;
 }
 
-export function TenantSection({ section, activeWorkspaceId }: TenantSectionProps) {
+export function TenantSection({ section, activeWorkspaceId, onTenantSwitch }: TenantSectionProps) {
   const [expanded, setExpanded] = useState(section.isActive);
   const t = useTranslations('shell.sidebar');
 
   const hasWorkspaces = section.workspaces.length > 0 || section.boards.length > 0;
+
+  function handleHeaderClick() {
+    if (!section.isActive && onTenantSwitch) {
+      onTenantSwitch();
+      return;
+    }
+    setExpanded(!expanded);
+  }
+
+  const myOfficeLabel = section.isPersonalTenant
+    ? t('myOfficePersonal')
+    : t('myOfficeQualified', { tenantName: section.tenantName });
 
   return (
     <div data-testid={`tenant-section-${section.tenantId}`}>
       {/* Tenant header */}
       <button
         type="button"
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleHeaderClick}
         data-testid={`tenant-header-${section.tenantId}`}
         className={cn(
           'flex items-center gap-2 w-full px-2 py-1.5 rounded',
@@ -59,7 +73,7 @@ export function TenantSection({ section, activeWorkspaceId }: TenantSectionProps
             )}
           >
             <Building2 size={16} className="shrink-0" />
-            <span className="truncate">{t('myOffice')}</span>
+            <span className="truncate">{myOfficeLabel}</span>
           </button>
 
           {/* Workspace tree */}

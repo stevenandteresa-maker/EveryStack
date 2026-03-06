@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Sidebar } from './sidebar';
 import { useSidebarStore } from '@/stores/sidebar-store';
+import { ShellAccentProvider } from '@/components/shell/ShellAccentProvider';
 import { IntlWrapper } from '@/test-utils/intl-wrapper';
 import type { SidebarNavigation } from '@/data/sidebar-navigation';
+
+// Mock Clerk and Next.js router (required by TenantSwitcher)
+vi.mock('@clerk/nextjs', () => ({
+  useClerk: () => ({ setActive: vi.fn().mockResolvedValue(undefined) }),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+vi.mock('sonner', () => ({
+  toast: { error: vi.fn() },
+}));
 
 const mockNavData: SidebarNavigation = {
   tenants: [
@@ -24,6 +36,16 @@ const mockNavData: SidebarNavigation = {
   portals: [],
 };
 
+function renderSidebar(navData?: SidebarNavigation | null) {
+  return render(
+    <IntlWrapper>
+      <ShellAccentProvider>
+        <Sidebar navData={navData} />
+      </ShellAccentProvider>
+    </IntlWrapper>,
+  );
+}
+
 describe('Sidebar', () => {
   beforeEach(() => {
     useSidebarStore.setState({ collapsed: true });
@@ -31,7 +53,7 @@ describe('Sidebar', () => {
   });
 
   it('renders in collapsed state by default', () => {
-    render(<IntlWrapper><Sidebar /></IntlWrapper>);
+    renderSidebar();
     const sidebar = screen.getByTestId('sidebar');
     expect(sidebar).toBeInTheDocument();
     expect(sidebar.style.width).toBe('var(--sidebar-width-collapsed)');
@@ -39,7 +61,7 @@ describe('Sidebar', () => {
 
   it('expands to full width when toggle is clicked', async () => {
     const user = userEvent.setup();
-    render(<IntlWrapper><Sidebar navData={mockNavData} /></IntlWrapper>);
+    renderSidebar(mockNavData);
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);
@@ -51,7 +73,7 @@ describe('Sidebar', () => {
   it('collapses back when toggle is clicked again', async () => {
     const user = userEvent.setup();
     useSidebarStore.setState({ collapsed: false });
-    render(<IntlWrapper><Sidebar navData={mockNavData} /></IntlWrapper>);
+    renderSidebar(mockNavData);
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);
@@ -61,7 +83,7 @@ describe('Sidebar', () => {
   });
 
   it('shows icon rail items with accessible labels', () => {
-    render(<IntlWrapper><Sidebar /></IntlWrapper>);
+    renderSidebar();
     expect(screen.getByLabelText('Home')).toBeInTheDocument();
     expect(screen.getByLabelText('Tasks')).toBeInTheDocument();
     expect(screen.getByLabelText('Chat')).toBeInTheDocument();
@@ -71,25 +93,25 @@ describe('Sidebar', () => {
 
   it('shows icon rail always visible even when expanded', () => {
     useSidebarStore.setState({ collapsed: false });
-    render(<IntlWrapper><Sidebar navData={mockNavData} /></IntlWrapper>);
+    renderSidebar(mockNavData);
     expect(screen.getByTestId('icon-rail')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
   });
 
   it('hides content zone when collapsed', () => {
-    render(<IntlWrapper><Sidebar navData={mockNavData} /></IntlWrapper>);
+    renderSidebar(mockNavData);
     expect(screen.queryByTestId('sidebar-content')).not.toBeInTheDocument();
   });
 
   it('shows skeleton when navData is null', () => {
     useSidebarStore.setState({ collapsed: false });
-    render(<IntlWrapper><Sidebar navData={null} /></IntlWrapper>);
+    renderSidebar(null);
     expect(screen.getByTestId('sidebar-skeleton')).toBeInTheDocument();
   });
 
   it('renders tenant sections when expanded with nav data', () => {
     useSidebarStore.setState({ collapsed: false });
-    render(<IntlWrapper><Sidebar navData={mockNavData} /></IntlWrapper>);
+    renderSidebar(mockNavData);
     expect(screen.getByTestId('tenant-section-tenant-1')).toBeInTheDocument();
   });
 
@@ -101,14 +123,14 @@ describe('Sidebar', () => {
         { portalId: 'portal-1', portalName: 'Client Portal', tenantName: 'Acme', portalSlug: 'client-portal' },
       ],
     };
-    render(<IntlWrapper><Sidebar navData={withPortals} /></IntlWrapper>);
+    renderSidebar(withPortals);
     expect(screen.getByText('Portals')).toBeInTheDocument();
     expect(screen.getByTestId('portal-entry-portal-1')).toBeInTheDocument();
   });
 
   it('persists state to localStorage via Zustand', async () => {
     const user = userEvent.setup();
-    render(<IntlWrapper><Sidebar /></IntlWrapper>);
+    renderSidebar();
 
     const toggle = screen.getByTestId('sidebar-toggle');
     await user.click(toggle);

@@ -27,12 +27,16 @@
       "collapseLabel": "Collapse",
       "account": "Account",
       "myOffice": "My Office",
+      "myOfficeQualified": "My Office \u00b7 {tenantName}",
+      "myOfficePersonal": "My Office \u00b7 Personal",
       "tasks": "Tasks",
       "chat": "Chat",
       "calendar": "Calendar",
       "help": "Help",
       "portals": "Portals",
-      "noWorkspaces": "No workspaces yet"
+      "noWorkspaces": "No workspaces yet",
+      "switchError": "Unable to switch workspace. Please try again.",
+      "portalNavigate": "Open {portalName} portal"
     },
     "header": {
       "commandBarPlaceholder": "Search...",
