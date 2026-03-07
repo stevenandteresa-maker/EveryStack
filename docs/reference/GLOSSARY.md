@@ -541,6 +541,14 @@ The platform-agnostic data format used to store all record data in PostgreSQL. E
 
 A configured connection to an external platform base/workspace. Stores: platform type, API credentials, sync direction, sync schedule, last sync timestamp. One base connection can sync multiple tables.
 
+### Smart Polling
+
+Adaptive polling strategy that adjusts sync frequency based on user activity context. Four tiers: actively viewing a synced table (30s), tab open but table not visible (5min), workspace not accessed (30min), webhook available (event-driven, no polling). All polling uses cursor-based change detection (`modifiedTime > lastSyncTimestamp`). See `sync-engine.md` > Layer 5.
+
+### Converted Table
+
+A synced table that has been migrated to a native EveryStack table via the "Convert to Native Table" flow. Conversion progresses through statuses on `base_connections.sync_status`: `converted` (migration in progress, dual-write to shadow table), `converted_finalized` (migration complete, sync fully stopped). Converted tables are excluded from polling entirely. See `cross-linking.md` > "Convert to Native Table" Migration.
+
 ---
 
 ## Definitions — Communications
