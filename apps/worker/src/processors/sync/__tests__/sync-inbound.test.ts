@@ -108,8 +108,16 @@ vi.mock('@everystack/shared/sync', () => {
   return {
     AirtableApiClient: MockAirtableApiClient,
     AirtableAdapter: MockAirtableAdapter,
+    NotionAdapter: function MockNotionAdapter() {
+      return { toCanonical: vi.fn() };
+    },
+    NotionApiClient: function MockNotionApiClient() {
+      return { queryDatabase: vi.fn(), updatePage: vi.fn() };
+    },
     registerAirtableTransforms: vi.fn(),
+    registerNotionTransforms: vi.fn(),
     translateFilterToFormula: vi.fn().mockReturnValue(''),
+    translateToNotionFilter: vi.fn().mockReturnValue(undefined),
     rateLimiter: { waitForCapacity: mockWaitForCapacity },
     createInitialSyncMetadata: vi.fn().mockReturnValue({
       platform_record_id: 'rec_new',

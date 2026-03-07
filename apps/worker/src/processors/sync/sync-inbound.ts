@@ -31,18 +31,24 @@ import type { DrizzleClient } from '@everystack/shared/db';
 import {
   AirtableApiClient,
   AirtableAdapter,
+  NotionAdapter,
+  NotionApiClient,
   registerAirtableTransforms,
+  registerNotionTransforms,
   translateFilterToFormula,
+  translateToNotionFilter,
   rateLimiter,
   createInitialSyncMetadata,
   updateLastSyncedValues,
 } from '@everystack/shared/sync';
 import type {
+  PlatformAdapter,
   SyncConfig,
   SyncMetadata,
   SyncPlatform,
   FieldMapping,
   AirtableTokens,
+  NotionTokens,
 } from '@everystack/shared/sync';
 import { detectConflicts, writeConflictRecords, applyLastWriteWins } from '@everystack/shared/sync';
 import type { ConflictResolutionStrategy, WrittenConflict } from '@everystack/shared/sync';
@@ -53,18 +59,26 @@ import { BaseProcessor } from '../../lib/base-processor';
 
 // Ensure transforms are registered
 registerAirtableTransforms();
+registerNotionTransforms();
 
 // ---------------------------------------------------------------------------
 // Processor
 // ---------------------------------------------------------------------------
 
 export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> {
-  private readonly adapter = new AirtableAdapter();
+  private readonly airtableAdapter = new AirtableAdapter();
+  private readonly notionAdapter = new NotionAdapter();
   private readonly eventPublisher: EventPublisher;
 
   constructor(eventPublisher: EventPublisher) {
     super('sync', { concurrency: 3 });
     this.eventPublisher = eventPublisher;
+  }
+
+  /** Resolve the correct adapter for the connection's platform. */
+  private getAdapter(platform: string): PlatformAdapter {
+    if (platform === 'notion') return this.notionAdapter;
+    return this.airtableAdapter;
   }
 
   async processJob(job: Job<IncrementalSyncJobData>, logger: Logger): Promise<void> {
@@ -97,15 +111,21 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       throw new Error('Connection missing tokens or base ID');
     }
 
-    const tokens = decryptTokens<Record<string, unknown>>(
+    const rawTokens = decryptTokens<Record<string, unknown>>(
       connection.oauthTokens as Record<string, unknown>,
-    ) as unknown as AirtableTokens;
+    );
     const baseId = connection.externalBaseId;
     const syncConfig = connection.syncConfig as unknown as SyncConfig;
     const platform = connection.platform as SyncPlatform;
     const conflictResolution = (connection.conflictResolution ?? 'last_write_wins') as ConflictResolutionStrategy;
 
-    const apiClient = new AirtableApiClient(tokens.access_token, baseId);
+    // Platform-aware API client
+    const airtableClient = platform !== 'notion'
+      ? new AirtableApiClient((rawTokens as unknown as AirtableTokens).access_token, baseId ?? '')
+      : null;
+    const notionClient = platform === 'notion'
+      ? new NotionApiClient((rawTokens as unknown as NotionTokens).access_token)
+      : null;
 
     // 2. Process each enabled table
     let totalUpdated = 0;
@@ -118,13 +138,14 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       const result = await this.syncTableInbound({
         tenantId,
         connectionId,
-        baseId,
+        baseId: baseId ?? '',
         esTableId: tableConfig.es_table_id,
         externalTableId: tableConfig.external_table_id,
         syncFilter: tableConfig.sync_filter,
         platform,
         conflictResolution,
-        apiClient,
+        airtableClient,
+        notionClient,
         logger,
       });
 
@@ -170,7 +191,8 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     syncFilter: SyncConfig['tables'][0]['sync_filter'];
     platform: SyncPlatform;
     conflictResolution: ConflictResolutionStrategy;
-    apiClient: AirtableApiClient;
+    airtableClient: AirtableApiClient | null;
+    notionClient: NotionApiClient | null;
     logger: Logger;
   }): Promise<{ updated: number; created: number; conflicts: number }> {
     const {
@@ -182,9 +204,12 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       syncFilter,
       platform,
       conflictResolution,
-      apiClient,
+      airtableClient,
+      notionClient,
       logger,
     } = params;
+
+    const adapter = this.getAdapter(platform);
 
     // Build field mappings
     const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, esTableId);
@@ -196,61 +221,121 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       fieldMap.set(mapping.fieldId, mapping.externalFieldId);
     }
 
-    let filterFormula = '';
+    // Platform-specific filter setup
+    let airtableFilterFormula = '';
+    let notionFilter: Record<string, unknown> | undefined;
     if (syncFilter && syncFilter.length > 0) {
-      filterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      if (platform === 'notion') {
+        notionFilter = translateToNotionFilter(syncFilter, fieldMappings) as Record<string, unknown> | undefined;
+      } else {
+        airtableFilterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      }
     }
 
-    let offset: string | undefined;
     let updated = 0;
     let created = 0;
     let conflicts = 0;
 
-    do {
-      await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
+    if (platform === 'notion' && notionClient) {
+      // Notion pagination: uses start_cursor / has_more
+      let startCursor: string | null = null;
+      let hasMore = true;
 
-      const page = await apiClient.listRecords(externalTableId, {
-        pageSize: 100,
-        offset,
-        filterByFormula: filterFormula || undefined,
-      });
+      while (hasMore) {
+        const rateLimitScope = `integration:${connectionId}`;
+        await rateLimiter.waitForCapacity('notion', rateLimitScope);
 
-      if (page.records.length === 0) break;
-
-      for (const platformRecord of page.records) {
-        const inboundCanonical = this.adapter.toCanonical(platformRecord, fieldMappings);
-        const platformRecordId = platformRecord.id;
-
-        const result = await this.reconcileRecord({
-          tenantId,
-          esTableId,
-          platformRecordId,
-          inboundCanonical,
-          syncedFieldIds,
-          platform,
-          conflictResolution,
-          fieldMappings,
-          logger,
+        const queryResult = await notionClient.queryDatabase(externalTableId, {
+          pageSize: 100,
+          startCursor,
+          filter: notionFilter,
         });
 
-        if (result.status === 'created') created++;
-        else if (result.status === 'updated') updated++;
-        else if (result.status === 'conflict') conflicts++;
+        if (queryResult.results.length === 0) break;
 
-        // Emit sync.conflict_detected for each written conflict record
-        if (result.writtenConflicts.length > 0) {
-          await this.emitConflictDetectedEvents(
+        for (const page of queryResult.results) {
+          const inboundCanonical = adapter.toCanonical(page, fieldMappings);
+          const platformRecordId = page.id;
+
+          const result = await this.reconcileRecord({
             tenantId,
             esTableId,
-            result.recordId,
-            result.writtenConflicts,
+            platformRecordId,
+            inboundCanonical,
+            syncedFieldIds,
             platform,
-          );
-        }
-      }
+            conflictResolution,
+            fieldMappings,
+            logger,
+          });
 
-      offset = page.offset;
-    } while (offset);
+          if (result.status === 'created') created++;
+          else if (result.status === 'updated') updated++;
+          else if (result.status === 'conflict') conflicts++;
+
+          if (result.writtenConflicts.length > 0) {
+            await this.emitConflictDetectedEvents(
+              tenantId,
+              esTableId,
+              result.recordId,
+              result.writtenConflicts,
+              platform,
+            );
+          }
+        }
+
+        hasMore = queryResult.has_more;
+        startCursor = queryResult.next_cursor;
+      }
+    } else if (airtableClient) {
+      // Airtable pagination: uses offset string
+      let offset: string | undefined;
+
+      do {
+        await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
+
+        const page = await airtableClient.listRecords(externalTableId, {
+          pageSize: 100,
+          offset,
+          filterByFormula: airtableFilterFormula || undefined,
+        });
+
+        if (page.records.length === 0) break;
+
+        for (const platformRecord of page.records) {
+          const inboundCanonical = adapter.toCanonical(platformRecord, fieldMappings);
+          const platformRecordId = platformRecord.id;
+
+          const result = await this.reconcileRecord({
+            tenantId,
+            esTableId,
+            platformRecordId,
+            inboundCanonical,
+            syncedFieldIds,
+            platform,
+            conflictResolution,
+            fieldMappings,
+            logger,
+          });
+
+          if (result.status === 'created') created++;
+          else if (result.status === 'updated') updated++;
+          else if (result.status === 'conflict') conflicts++;
+
+          if (result.writtenConflicts.length > 0) {
+            await this.emitConflictDetectedEvents(
+              tenantId,
+              esTableId,
+              result.recordId,
+              result.writtenConflicts,
+              platform,
+            );
+          }
+        }
+
+        offset = page.offset;
+      } while (offset);
+    }
 
     logger.info(
       { esTableId, updated, created, conflicts },

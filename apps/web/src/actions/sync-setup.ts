@@ -17,10 +17,14 @@ import {
   refreshAirtableToken,
   canSyncRecords,
   SyncConfigSchema,
+  getNotionDatabaseSchema,
+  estimateNotionRecordCount,
 } from '@everystack/shared/sync';
 import type {
   AirtableTokens,
   AirtableTableMeta,
+  NotionTokens,
+  NotionDatabaseMeta,
   SyncConfig,
   SyncQuotaCheck,
 } from '@everystack/shared/sync';
@@ -60,6 +64,16 @@ const saveSyncConfigSchema = z.object({
   syncConfig: SyncConfigSchema,
 });
 
+const notionDatabaseSchemaInput = z.object({
+  connectionId: z.string().uuid(),
+  databaseId: z.string().min(1),
+});
+
+const notionRecordCountInput = z.object({
+  connectionId: z.string().uuid(),
+  databaseId: z.string().min(1),
+});
+
 // ---------------------------------------------------------------------------
 // Token refresh threshold — 5 minutes
 // ---------------------------------------------------------------------------
@@ -73,6 +87,7 @@ const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
 async function resolveAccessToken(
   tenantId: string,
   connectionId: string,
+  platform: 'airtable' | 'notion' = 'airtable',
 ): Promise<string> {
   const connection = await getConnectionWithTokens(tenantId, connectionId);
 
@@ -80,6 +95,15 @@ async function resolveAccessToken(
     throw new Error('Connection has no OAuth tokens');
   }
 
+  // Notion tokens don't expire — no refresh needed
+  if (platform === 'notion') {
+    const tokens = decryptTokens<Record<string, unknown>>(
+      connection.oauthTokens,
+    ) as unknown as NotionTokens;
+    return tokens.access_token;
+  }
+
+  // Airtable tokens may need refresh
   let tokens = decryptTokens<Record<string, unknown>>(
     connection.oauthTokens,
   ) as unknown as AirtableTokens;
@@ -211,6 +235,56 @@ export async function saveSyncConfigAndStartSync(
     });
 
     return { jobId: job.id ?? connectionId };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notion-specific: getNotionDatabaseProperties
+// ---------------------------------------------------------------------------
+
+/**
+ * Retrieve property schema for a Notion database.
+ * Equivalent to `listTablesInBase` but for a single Notion database.
+ * In Notion, each database is a "table", and properties are "fields".
+ */
+export async function getNotionDatabaseProperties(
+  input: z.input<typeof notionDatabaseSchemaInput>,
+): Promise<{ database: NotionDatabaseMeta }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'admin', 'connection', 'read');
+
+  const { connectionId, databaseId } = notionDatabaseSchemaInput.parse(input);
+
+  try {
+    const accessToken = await resolveAccessToken(tenantId, connectionId, 'notion');
+    const database = await getNotionDatabaseSchema(accessToken, databaseId);
+    return { database };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notion-specific: fetchNotionEstimatedRecordCount
+// ---------------------------------------------------------------------------
+
+/**
+ * Estimate the record count for a Notion database.
+ * Notion does not expose a direct count API — paginates to estimate.
+ */
+export async function fetchNotionEstimatedRecordCount(
+  input: z.input<typeof notionRecordCountInput>,
+): Promise<{ count: number; isExact: boolean }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'admin', 'connection', 'read');
+
+  const { connectionId, databaseId } = notionRecordCountInput.parse(input);
+
+  try {
+    const accessToken = await resolveAccessToken(tenantId, connectionId, 'notion');
+    return await estimateNotionRecordCount(accessToken, databaseId);
   } catch (error) {
     throw wrapUnknownError(error);
   }

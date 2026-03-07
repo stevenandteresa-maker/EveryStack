@@ -1,12 +1,20 @@
 'use server';
 
 /**
- * Server Actions — Sync Connection Management (Airtable OAuth PKCE)
+ * Server Actions — Sync Connection Management (Airtable OAuth PKCE + Notion OAuth)
  *
+ * Airtable:
  * - initiateAirtableConnection: generates PKCE state, stores in Redis, returns auth URL
  * - completeAirtableConnection: exchanges code for tokens, encrypts, creates connection
+ *
+ * Notion:
+ * - initiateNotionConnection: generates state, stores in Redis, returns auth URL
+ * - completeNotionConnection: exchanges code for tokens, encrypts, creates connection
+ * - listDatabasesForConnection: lists Notion databases accessible to the integration
+ *
+ * Shared:
  * - listBasesForConnection: lists Airtable bases (auto-refreshes tokens if near expiry)
- * - selectBaseForConnection: associates a base with a connection
+ * - selectBaseForConnection: associates a base/database with a connection
  *
  * @see docs/reference/sync-engine.md § Connection Management
  */
@@ -22,8 +30,11 @@ import {
   exchangeCodeForTokens,
   refreshAirtableToken,
   listAirtableBases,
+  getNotionAuthUrl,
+  exchangeNotionCodeForTokens,
+  listNotionDatabases,
 } from '@everystack/shared/sync';
-import type { AirtableTokens, AirtableBase } from '@everystack/shared/sync';
+import type { AirtableTokens, AirtableBase, NotionTokens, NotionDatabase } from '@everystack/shared/sync';
 import { encryptTokens, decryptTokens } from '@everystack/shared/crypto';
 import { getAuthContext } from '@/lib/auth-context';
 import { wrapUnknownError } from '@/lib/errors';
@@ -221,9 +232,9 @@ export async function listBasesForConnection(
 // ---------------------------------------------------------------------------
 
 /**
- * Associate a selected Airtable base with a connection.
+ * Associate a selected Airtable base or Notion database with a connection.
  *
- * Called after the user picks a base from listBasesForConnection results.
+ * Called after the user picks a base/database from the listing results.
  */
 export async function selectBaseForConnection(
   input: z.input<typeof selectBaseSchema>,
@@ -235,6 +246,143 @@ export async function selectBaseForConnection(
 
   try {
     await updateConnectionBase(tenantId, userId, connectionId, baseId, baseName);
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notion PKCE Redis key pattern
+// ---------------------------------------------------------------------------
+
+const NOTION_PKCE_KEY_PREFIX = 'oauth:notion:state:';
+
+// ---------------------------------------------------------------------------
+// Notion Zod schemas
+// ---------------------------------------------------------------------------
+
+const completeNotionSchema = z.object({
+  code: z.string().min(1),
+  state: z.string().min(1),
+});
+
+const listDatabasesSchema = z.object({
+  connectionId: z.string().uuid(),
+});
+
+// ---------------------------------------------------------------------------
+// initiateNotionConnection
+// ---------------------------------------------------------------------------
+
+/**
+ * Begin the Notion OAuth flow.
+ *
+ * Generates a random state, stores it in Redis (10min TTL),
+ * and returns the Notion authorization URL.
+ */
+export async function initiateNotionConnection(): Promise<{ authUrl: string }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'admin', 'connection', 'create');
+
+  try {
+    const state = randomBytes(32).toString('hex');
+
+    const redisClient = getRedis();
+    await redisClient.set(
+      `${NOTION_PKCE_KEY_PREFIX}${state}`,
+      JSON.stringify({ tenantId, userId }),
+      'EX',
+      PKCE_TTL_SECONDS,
+    );
+
+    const authUrl = getNotionAuthUrl(state);
+    return { authUrl };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// completeNotionConnection
+// ---------------------------------------------------------------------------
+
+/**
+ * Complete the Notion OAuth flow after the user is redirected back.
+ *
+ * Retrieves state from Redis (one-time use), verifies auth context,
+ * exchanges the code for tokens, encrypts them, and creates the connection.
+ */
+export async function completeNotionConnection(
+  input: z.input<typeof completeNotionSchema>,
+): Promise<{ connectionId: string }> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'admin', 'connection', 'create');
+
+  const { code, state } = completeNotionSchema.parse(input);
+
+  try {
+    const redisClient = getRedis();
+    const redisKey = `${NOTION_PKCE_KEY_PREFIX}${state}`;
+
+    const stored = await redisClient.get(redisKey);
+    if (!stored) {
+      throw new Error('OAuth state expired or invalid');
+    }
+    await redisClient.del(redisKey);
+
+    const oauthState = JSON.parse(stored) as {
+      tenantId: string;
+      userId: string;
+    };
+
+    if (oauthState.tenantId !== tenantId || oauthState.userId !== userId) {
+      throw new Error('OAuth state mismatch — auth context does not match');
+    }
+
+    const tokens = await exchangeNotionCodeForTokens(code);
+
+    const tokenRecord: Record<string, unknown> = { ...tokens };
+    const encrypted = encryptTokens(tokenRecord);
+    const connectionId = await createConnection(
+      tenantId,
+      userId,
+      'notion',
+      encrypted,
+    );
+
+    return { connectionId };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// listDatabasesForConnection
+// ---------------------------------------------------------------------------
+
+/**
+ * List Notion databases accessible via a connection's OAuth tokens.
+ *
+ * Notion access tokens do not expire, so no refresh flow is needed.
+ */
+export async function listDatabasesForConnection(
+  input: z.input<typeof listDatabasesSchema>,
+): Promise<NotionDatabase[]> {
+  const { userId, tenantId } = await getAuthContext();
+  await requireRole(userId, tenantId, undefined, 'admin', 'connection', 'read');
+
+  const { connectionId } = listDatabasesSchema.parse(input);
+
+  try {
+    const connection = await getConnectionWithTokens(tenantId, connectionId);
+
+    if (!connection.oauthTokens) {
+      throw new Error('Connection has no OAuth tokens');
+    }
+
+    const tokens = decryptTokens<Record<string, unknown>>(connection.oauthTokens) as unknown as NotionTokens;
+
+    return await listNotionDatabases(tokens.access_token);
   } catch (error) {
     throw wrapUnknownError(error);
   }

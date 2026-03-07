@@ -136,6 +136,7 @@ export {
   RateLimiter,
   rateLimiter,
   AIRTABLE_RATE_LIMITS,
+  NOTION_RATE_LIMITS,
 } from './rate-limiter';
 export type { RateLimitResult } from './rate-limiter';
 
@@ -198,6 +199,8 @@ export type {
 export {
   NotionAdapter,
   registerNotionTransforms,
+  translateToNotionFilter,
+  NotionApiClient,
 } from './adapters/notion';
 export type {
   NotionPage,
@@ -209,3 +212,25 @@ export type {
   NotionDate,
   NotionFile,
 } from './adapters/notion/notion-types';
+
+// Notion OAuth
+export {
+  getNotionAuthUrl,
+  exchangeNotionCodeForTokens,
+  listNotionDatabases,
+  getNotionDatabaseSchema,
+  estimateNotionRecordCount,
+} from './adapters/notion/oauth';
+export type {
+  NotionTokens,
+  NotionDatabase,
+  NotionPropertyMeta,
+  NotionDatabaseMeta,
+} from './adapters/notion/oauth';
+
+// Notion API client types
+export type {
+  NotionQueryResponse,
+  NotionPageResult,
+  NotionQueryOptions,
+} from './adapters/notion/api-client';

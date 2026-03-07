@@ -1,5 +1,6 @@
 // ---------------------------------------------------------------------------
-// Notion adapter barrel — re-exports adapter, transforms, types, and filter
+// Notion adapter barrel — re-exports adapter, transforms, types, filter,
+// OAuth, and API client
 // ---------------------------------------------------------------------------
 
 export { NotionAdapter, registerNotionTransforms } from './notion-adapter';
@@ -16,3 +17,26 @@ export type {
   NotionDate,
   NotionFile,
 } from './notion-types';
+
+// OAuth
+export {
+  getNotionAuthUrl,
+  exchangeNotionCodeForTokens,
+  listNotionDatabases,
+  getNotionDatabaseSchema,
+  estimateNotionRecordCount,
+} from './oauth';
+export type {
+  NotionTokens,
+  NotionDatabase,
+  NotionPropertyMeta,
+  NotionDatabaseMeta,
+} from './oauth';
+
+// API client
+export { NotionApiClient, NOTION_API_URL } from './api-client';
+export type {
+  NotionQueryResponse,
+  NotionPageResult,
+  NotionQueryOptions,
+} from './api-client';
