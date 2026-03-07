@@ -732,6 +732,55 @@ export interface ConflictDetectionResult {
 }
 
 // ---------------------------------------------------------------------------
+// Smart Polling — adaptive intervals based on table visibility state
+// @see docs/reference/sync-engine.md § Smart Polling & Real-Time Push
+// ---------------------------------------------------------------------------
+
+/**
+ * Polling interval tiers in milliseconds.
+ * Determined by table visibility state via Socket.io room membership.
+ */
+export const POLLING_INTERVALS = {
+  /** 30 seconds — user has this table open */
+  ACTIVE_VIEWING: 30_000,
+  /** 5 minutes — workspace open but table not active */
+  TAB_OPEN_NOT_VISIBLE: 300_000,
+  /** 30 minutes — workspace not accessed recently */
+  WORKSPACE_INACTIVE: 1_800_000,
+  /** null — Airtable webhooks, event-driven (no polling) */
+  EVENT_DRIVEN: null,
+} as const;
+
+/**
+ * Visibility state of a table, derived from Socket.io room membership.
+ * - `active` — at least one connected client has this table's room joined
+ * - `background` — at least one connected client in the same workspace, but not viewing this table
+ * - `inactive` — no connected clients in the workspace
+ */
+export type TableVisibility = 'active' | 'background' | 'inactive';
+
+/**
+ * Webhook configuration stored in base_connections.sync_config.webhooks.
+ * Used for Airtable event-driven sync.
+ */
+export interface SyncConfigWebhooks {
+  airtable_webhook_id?: string;
+  airtable_webhook_cursor?: string;
+  webhook_registered_at?: string;
+}
+
+/**
+ * Sync statuses that indicate a table has been converted to native EveryStack.
+ * These tables are either skipped entirely or synced to shadow only.
+ */
+export type ConvertedSyncStatus = 'converted' | 'converted_dual_write' | 'converted_finalized';
+
+/**
+ * All possible sync statuses for a base_connection.
+ */
+export type SyncStatus = 'active' | 'paused' | 'error' | 'auth_required' | ConvertedSyncStatus;
+
+// ---------------------------------------------------------------------------
 // Connection Health — shape of base_connections.health (JSONB)
 // @see docs/reference/sync-engine.md § Sync Connection Status Model
 // ---------------------------------------------------------------------------

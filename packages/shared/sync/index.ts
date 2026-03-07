@@ -89,7 +89,15 @@ export type {
   SyncErrorCode,
   SyncError,
   ConnectionHealth,
+  // Smart polling
+  TableVisibility,
+  SyncConfigWebhooks,
+  ConvertedSyncStatus,
+  SyncStatus,
 } from './types';
+
+// Smart polling constants
+export { POLLING_INTERVALS } from './types';
 
 // Filter & sync config schemas
 export {
