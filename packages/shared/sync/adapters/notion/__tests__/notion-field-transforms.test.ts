@@ -1356,3 +1356,203 @@ describe('NOTION_TRANSFORMS', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Round-trip tests — toCanonical → fromCanonical preserves data
+// ---------------------------------------------------------------------------
+
+describe('Round-trip tests (toCanonical → fromCanonical)', () => {
+  it('title: plain text round-trips', () => {
+    const notionValue: NotionRichText[] = [
+      {
+        type: 'text',
+        text: { content: 'Hello World' },
+        annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+        plain_text: 'Hello World',
+        href: null,
+      },
+    ];
+    const canonical = notionTitleTransform.toCanonical(notionValue, baseConfig);
+    const outbound = notionTitleTransform.fromCanonical(canonical, baseConfig) as { title: Array<{ text: { content: string } }> };
+    expect(outbound.title[0]?.text.content).toBe('Hello World');
+  });
+
+  it('title: null round-trips to empty array', () => {
+    const canonical = notionTitleTransform.toCanonical(null, baseConfig);
+    const outbound = notionTitleTransform.fromCanonical(canonical, baseConfig) as { title: unknown[] };
+    expect(outbound.title).toEqual([]);
+  });
+
+  it('rich_text: plain text round-trips', () => {
+    const notionValue: NotionRichText[] = [
+      {
+        type: 'text',
+        text: { content: 'A long description with details' },
+        annotations: { bold: false, italic: false, strikethrough: false, underline: false, code: false, color: 'default' },
+        plain_text: 'A long description with details',
+        href: null,
+      },
+    ];
+    const canonical = notionRichTextTransform.toCanonical(notionValue, baseConfig);
+    const outbound = notionRichTextTransform.fromCanonical(canonical, baseConfig) as { rich_text: Array<{ text: { content: string } }> };
+    expect(outbound.rich_text[0]?.text.content).toBe('A long description with details');
+  });
+
+  it('number: value round-trips exactly', () => {
+    const canonical = notionNumberTransform.toCanonical(42.5, baseConfig);
+    const outbound = notionNumberTransform.fromCanonical(canonical, baseConfig) as { number: number };
+    expect(outbound.number).toBe(42.5);
+  });
+
+  it('number: null round-trips', () => {
+    const canonical = notionNumberTransform.toCanonical(null, baseConfig);
+    const outbound = notionNumberTransform.fromCanonical(canonical, baseConfig) as { number: null };
+    expect(outbound.number).toBeNull();
+  });
+
+  it('select: option with source_refs round-trips by ID', () => {
+    const config: PlatformFieldConfig = {
+      ...baseConfig,
+      options: {
+        options: [
+          { id: 'es-opt-1', label: 'Active', source_refs: { notion: { option_id: 'notion-opt-1' } } },
+        ],
+      },
+    };
+    const canonical = notionSelectTransform.toCanonical(
+      { id: 'notion-opt-1', name: 'Active', color: 'green' },
+      config,
+    );
+    const outbound = notionSelectTransform.fromCanonical(canonical, config) as { select: { id: string } };
+    expect(outbound.select.id).toBe('notion-opt-1');
+  });
+
+  it('select: null round-trips to null', () => {
+    const canonical = notionSelectTransform.toCanonical(null, baseConfig);
+    const outbound = notionSelectTransform.fromCanonical(canonical, baseConfig) as { select: null };
+    expect(outbound.select).toBeNull();
+  });
+
+  it('multi_select: options round-trip preserving order', () => {
+    const config: PlatformFieldConfig = {
+      ...baseConfig,
+      options: {
+        options: [
+          { id: 'es-1', label: 'Tag A', source_refs: { notion: { option_id: 'n-1' } } },
+          { id: 'es-2', label: 'Tag B', source_refs: { notion: { option_id: 'n-2' } } },
+        ],
+      },
+    };
+    const canonical = notionMultiSelectTransform.toCanonical(
+      [
+        { id: 'n-1', name: 'Tag A', color: 'blue' },
+        { id: 'n-2', name: 'Tag B', color: 'red' },
+      ],
+      config,
+    );
+    const outbound = notionMultiSelectTransform.fromCanonical(canonical, config) as { multi_select: Array<{ id: string }> };
+    expect(outbound.multi_select).toHaveLength(2);
+    expect(outbound.multi_select[0]?.id).toBe('n-1');
+    expect(outbound.multi_select[1]?.id).toBe('n-2');
+  });
+
+  it('status: option with source_refs round-trips by ID', () => {
+    const config: PlatformFieldConfig = {
+      ...baseConfig,
+      options: {
+        options: [
+          { id: 'es-status-1', label: 'In Progress', source_refs: { notion: { option_id: 'ns-1' } } },
+        ],
+        groups: [{ id: 'g1', name: 'In Progress', option_ids: ['ns-1'] }],
+      },
+    };
+    const canonical = notionStatusTransform.toCanonical(
+      { id: 'ns-1', name: 'In Progress', color: 'yellow' },
+      config,
+    );
+    const outbound = notionStatusTransform.fromCanonical(canonical, config) as { status: { id: string } };
+    expect(outbound.status.id).toBe('ns-1');
+  });
+
+  it('date: single date round-trips', () => {
+    const canonical = notionDateTransform.toCanonical(
+      { start: '2024-03-15', end: null, time_zone: null },
+      baseConfig,
+    );
+    const outbound = notionDateTransform.fromCanonical(canonical, baseConfig) as { date: { start: string } };
+    expect(outbound.date.start).toBe('2024-03-15');
+  });
+
+  it('date: date range round-trips', () => {
+    const canonical = notionDateTransform.toCanonical(
+      { start: '2024-03-15', end: '2024-03-20', time_zone: null },
+      baseConfig,
+    );
+    const outbound = notionDateTransform.fromCanonical(canonical, baseConfig) as { date: { start: string; end: string } };
+    expect(outbound.date.start).toBe('2024-03-15');
+    expect(outbound.date.end).toBe('2024-03-20');
+  });
+
+  it('checkbox: true round-trips', () => {
+    const canonical = notionCheckboxTransform.toCanonical(true, baseConfig);
+    const outbound = notionCheckboxTransform.fromCanonical(canonical, baseConfig) as { checkbox: boolean };
+    expect(outbound.checkbox).toBe(true);
+  });
+
+  it('checkbox: false round-trips', () => {
+    const canonical = notionCheckboxTransform.toCanonical(false, baseConfig);
+    const outbound = notionCheckboxTransform.fromCanonical(canonical, baseConfig) as { checkbox: boolean };
+    expect(outbound.checkbox).toBe(false);
+  });
+
+  it('url: value round-trips', () => {
+    const canonical = notionUrlTransform.toCanonical('https://example.com/path', baseConfig);
+    const outbound = notionUrlTransform.fromCanonical(canonical, baseConfig) as { url: string };
+    expect(outbound.url).toBe('https://example.com/path');
+  });
+
+  it('email: value round-trips', () => {
+    const canonical = notionEmailTransform.toCanonical('user@company.com', baseConfig);
+    const outbound = notionEmailTransform.fromCanonical(canonical, baseConfig) as { email: string };
+    expect(outbound.email).toBe('user@company.com');
+  });
+
+  it('phone: value round-trips (number extracted)', () => {
+    const canonical = notionPhoneNumberTransform.toCanonical('+1-555-0100', baseConfig);
+    const outbound = notionPhoneNumberTransform.fromCanonical(canonical, baseConfig) as { phone_number: string };
+    expect(outbound.phone_number).toBe('+1-555-0100');
+  });
+
+  it('people: user IDs round-trip', () => {
+    const notionUsers: NotionUser[] = [
+      { object: 'user', id: 'user-abc' },
+      { object: 'user', id: 'user-def' },
+    ];
+    const canonical = notionPeopleTransform.toCanonical(notionUsers, baseConfig);
+    const outbound = notionPeopleTransform.fromCanonical(canonical, baseConfig) as { people: Array<{ id: string }> };
+    expect(outbound.people).toHaveLength(2);
+    expect(outbound.people[0]?.id).toBe('user-abc');
+    expect(outbound.people[1]?.id).toBe('user-def');
+  });
+
+  it('relation: page IDs round-trip via platform_record_id', () => {
+    const canonical = notionRelationTransform.toCanonical(
+      [{ id: 'page-1' }, { id: 'page-2' }],
+      baseConfig,
+    );
+    const outbound = notionRelationTransform.fromCanonical(canonical, baseConfig) as { relation: Array<{ id: string }> };
+    expect(outbound.relation).toHaveLength(2);
+    expect(outbound.relation[0]?.id).toBe('page-1');
+    expect(outbound.relation[1]?.id).toBe('page-2');
+  });
+
+  it('files: external files round-trip', () => {
+    const notionFiles = [
+      { type: 'external' as const, external: { url: 'https://cdn.example.com/file.pdf' }, name: 'file.pdf' },
+    ];
+    const canonical = notionFilesTransform.toCanonical(notionFiles, baseConfig);
+    const outbound = notionFilesTransform.fromCanonical(canonical, baseConfig) as { files: Array<{ external: { url: string }; name: string }> };
+    expect(outbound.files[0]?.external.url).toBe('https://cdn.example.com/file.pdf');
+    expect(outbound.files[0]?.name).toBe('file.pdf');
+  });
+});
