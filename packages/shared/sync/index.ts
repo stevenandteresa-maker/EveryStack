@@ -193,3 +193,19 @@ export type {
   AirtableTableMeta,
   AirtableFieldMeta,
 } from './adapters/airtable/oauth';
+
+// Notion adapter
+export {
+  NotionAdapter,
+  registerNotionTransforms,
+} from './adapters/notion';
+export type {
+  NotionPage,
+  NotionProperty,
+  NotionPropertyType,
+  NotionRichText,
+  NotionUser,
+  NotionSelectOption,
+  NotionDate,
+  NotionFile,
+} from './adapters/notion/notion-types';
