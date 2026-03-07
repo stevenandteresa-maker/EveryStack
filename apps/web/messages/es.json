@@ -138,5 +138,26 @@
     "bulk_resolve_record_success": "Todos los conflictos de este registro resueltos.",
     "bulk_resolve_table_success": "Todos los conflictos de esta tabla resueltos.",
     "team_member_tooltip": "Este campo tiene un conflicto de sincronización. Un Administrador lo resolverá."
+  },
+  "sync_status": {
+    "synced": "Sincronizado",
+    "synced_ago": "Sincronizado {time}",
+    "syncing": "Sincronizando\u2026",
+    "last_synced_ago": "Última sincronización {time}",
+    "stale": "La sincronización puede estar retrasada",
+    "retrying": "Reintentando sincronización\u2026",
+    "sync_error": "Error de sincronización",
+    "auth_required": "Se requiere reautenticación",
+    "paused": "Sincronización pausada",
+    "synced_conflicts": "{count, plural, one {Sincronizado \u00b7 # conflicto} other {Sincronizado \u00b7 # conflictos}}",
+    "tooltip_healthy": "Sincronizado con {platform}.",
+    "tooltip_syncing": "Sincronizando con {platform}\u2026",
+    "tooltip_stale": "La sincronización puede estar retrasada. Verifica el estado de la conexión.",
+    "tooltip_retrying": "Error de sincronización: {error}. Reintentando automáticamente.",
+    "tooltip_retrying_with_time": "Error de sincronización: {error}. Próximo reintento: {time}.",
+    "tooltip_error": "La sincronización falló. Haz clic para ver detalles.",
+    "tooltip_auth_required": "Tu conexión con {platform} necesita reautenticación. Haz clic para reconectar.",
+    "tooltip_paused": "La sincronización está pausada por un administrador.",
+    "tooltip_conflicts": "{count, plural, one {# conflicto de sincronización pendiente} other {# conflictos de sincronización pendientes}}. Haz clic para resolver."
   }
 }

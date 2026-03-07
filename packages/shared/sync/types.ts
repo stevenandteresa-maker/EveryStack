@@ -730,3 +730,78 @@ export interface ConflictDetectionResult {
   /** Fields where both sides changed to the same value — no conflict. */
   convergentFieldIds: string[];
 }
+
+// ---------------------------------------------------------------------------
+// Connection Health — shape of base_connections.health (JSONB)
+// @see docs/reference/sync-engine.md § Sync Connection Status Model
+// ---------------------------------------------------------------------------
+
+/**
+ * Error codes for sync failures.
+ * Used in SyncError.code and for driving error recovery flows.
+ */
+export type SyncErrorCode =
+  | 'auth_expired'
+  | 'rate_limited'
+  | 'platform_unavailable'
+  | 'schema_mismatch'
+  | 'permission_denied'
+  | 'partial_failure'
+  | 'quota_exceeded'
+  | 'unknown';
+
+/**
+ * A structured sync error stored in ConnectionHealth.last_error.
+ */
+export interface SyncError {
+  code: SyncErrorCode;
+  message: string;
+  timestamp: string;
+  retryable: boolean;
+  details: Record<string, unknown>;
+}
+
+/**
+ * Shape of the base_connections.health JSONB column.
+ * Tracks sync health metrics for a connection.
+ */
+export interface ConnectionHealth {
+  last_success_at: string | null;
+  last_error: SyncError | null;
+  consecutive_failures: number;
+  next_retry_at: string | null;
+  records_synced: number;
+  records_failed: number;
+}
+
+// ---------------------------------------------------------------------------
+// Zod schemas for ConnectionHealth and SyncError
+// ---------------------------------------------------------------------------
+
+export const SyncErrorCodeSchema = z.enum([
+  'auth_expired',
+  'rate_limited',
+  'platform_unavailable',
+  'schema_mismatch',
+  'permission_denied',
+  'partial_failure',
+  'quota_exceeded',
+  'unknown',
+]);
+
+export const SyncErrorSchema = z.object({
+  code: SyncErrorCodeSchema,
+  message: z.string(),
+  timestamp: z.string(),
+  retryable: z.boolean(),
+  details: z.record(z.string(), z.unknown()),
+});
+
+export const ConnectionHealthSchema = z.object({
+  last_success_at: z.string().nullable(),
+  last_error: SyncErrorSchema.nullable(),
+  consecutive_failures: z.number().int().min(0),
+  next_retry_at: z.string().nullable(),
+  records_synced: z.number().int().min(0),
+  records_failed: z.number().int().min(0),
+});

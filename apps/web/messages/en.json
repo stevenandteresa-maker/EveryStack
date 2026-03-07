@@ -138,5 +138,26 @@
     "team_member_tooltip": "This field has a sync conflict. A Manager will resolve it.",
     "bulk_resolve_record_success": "All conflicts on this record resolved.",
     "bulk_resolve_table_success": "All conflicts in this table resolved."
+  },
+  "sync_status": {
+    "synced": "Synced",
+    "synced_ago": "Synced {time}",
+    "syncing": "Syncing\u2026",
+    "last_synced_ago": "Last synced {time}",
+    "stale": "Sync may be delayed",
+    "retrying": "Sync retrying\u2026",
+    "sync_error": "Sync error",
+    "auth_required": "Re-authentication required",
+    "paused": "Sync paused",
+    "synced_conflicts": "{count, plural, one {Synced \u00b7 # conflict} other {Synced \u00b7 # conflicts}}",
+    "tooltip_healthy": "Synced with {platform}.",
+    "tooltip_syncing": "Syncing with {platform}\u2026",
+    "tooltip_stale": "Sync may be delayed. Check connection status.",
+    "tooltip_retrying": "Sync error: {error}. Retrying automatically.",
+    "tooltip_retrying_with_time": "Sync error: {error}. Next retry: {time}.",
+    "tooltip_error": "Sync failed. Click for details.",
+    "tooltip_auth_required": "Your {platform} connection needs re-authentication. Click to reconnect.",
+    "tooltip_paused": "Sync is paused by a manager.",
+    "tooltip_conflicts": "{count, plural, one {# sync conflict pending} other {# sync conflicts pending}}. Click to resolve."
   }
 }

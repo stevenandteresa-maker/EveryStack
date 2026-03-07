@@ -85,6 +85,10 @@ export type {
   FilterRule,
   SyncTableConfig,
   SyncConfig,
+  // Connection health
+  SyncErrorCode,
+  SyncError,
+  ConnectionHealth,
 } from './types';
 
 // Filter & sync config schemas
@@ -95,7 +99,18 @@ export {
   SyncConfigSchema,
   SyncedFieldValueSchema,
   SyncMetadataSchema,
+  SyncErrorCodeSchema,
+  SyncErrorSchema,
+  ConnectionHealthSchema,
 } from './types';
+
+// Connection health utilities
+export {
+  deriveSyncHealthState,
+  updateConnectionHealth,
+  DEFAULT_CONNECTION_HEALTH,
+} from './health';
+export type { SyncHealthState } from './health';
 
 // Sync metadata utilities
 export {
