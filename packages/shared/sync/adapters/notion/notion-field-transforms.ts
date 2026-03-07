@@ -1,13 +1,13 @@
 // ---------------------------------------------------------------------------
-// Notion Field Type Transforms — toCanonical direction
+// Notion Field Type Transforms — bidirectional (toCanonical + fromCanonical)
 //
-// Maps all ~20 Notion property types to EveryStack canonical JSONB shapes.
-// fromCanonical() stubs return undefined (Prompt 2 implements outbound).
+// Maps all ~20 Notion property types to EveryStack canonical JSONB shapes
+// and back. Writable types implement fromCanonical() for outbound sync;
+// read-only types (formula, rollup, created_time, etc.) return undefined.
 //
 // Notion's rich text model: title and rich_text properties return arrays
 // of rich text objects. Plain text is extracted for the canonical value;
-// the full rich text array is preserved in source_refs.notion for
-// lossless round-tripping on fromCanonical().
+// fromCanonical() reconstructs plain-text rich text arrays for the API.
 // ---------------------------------------------------------------------------
 
 import type {
@@ -16,6 +16,21 @@ import type {
   CanonicalValue,
   LinkedRecordEntry,
   FileObject,
+  TextValue,
+  TextAreaValue,
+  NumberValue,
+  SingleSelectValue,
+  MultipleSelectValue,
+  StatusValue,
+  DateValue,
+  DateRangeValue,
+  PeopleValue,
+  EmailValue,
+  PhoneValue,
+  UrlValue,
+  CheckboxValue,
+  LinkedRecordValue,
+  FilesValue,
 } from '../../types';
 import type {
   NotionRichText,
@@ -158,9 +173,10 @@ export const notionTitleTransform: FieldTransform = {
     if (!richText || richText.length === 0) return { type: 'text', value: null };
     return { type: 'text', value: extractPlainText(richText) };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    // Prompt 2 implements outbound
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as TextValue;
+    if (val.value == null) return { title: [] };
+    return { title: [{ type: 'text', text: { content: val.value } }] };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -173,8 +189,10 @@ export const notionRichTextTransform: FieldTransform = {
     if (!richText || richText.length === 0) return { type: 'text_area', value: null };
     return { type: 'text_area', value: extractPlainText(richText) };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as TextAreaValue;
+    if (val.value == null) return { rich_text: [] };
+    return { rich_text: [{ type: 'text', text: { content: val.value } }] };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -191,8 +209,9 @@ export const notionNumberTransform: FieldTransform = {
     const n = Number(value);
     return { type: 'number', value: Number.isNaN(n) ? null : n };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as NumberValue;
+    return { number: val.value };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -211,8 +230,12 @@ export const notionSelectTransform: FieldTransform = {
     const mapped = mapNotionSelectOption(option, config);
     return { type: 'single_select', value: mapped };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as SingleSelectValue;
+    if (val.value == null) return { select: null };
+    const notionRef = val.value.source_refs?.notion as Record<string, unknown> | undefined;
+    if (notionRef?.option_id) return { select: { id: notionRef.option_id as string } };
+    return { select: { name: val.value.label } };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -227,8 +250,14 @@ export const notionMultiSelectTransform: FieldTransform = {
     const items = options.map((option) => mapNotionSelectOption(option, config));
     return { type: 'multiple_select', value: items };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as MultipleSelectValue;
+    const items = val.value.map((opt) => {
+      const notionRef = opt.source_refs?.notion as Record<string, unknown> | undefined;
+      if (notionRef?.option_id) return { id: notionRef.option_id as string };
+      return { name: opt.label };
+    });
+    return { multi_select: items };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -253,8 +282,12 @@ export const notionStatusTransform: FieldTransform = {
       },
     };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as StatusValue;
+    if (val.value == null) return { status: null };
+    const notionRef = val.value.source_refs?.notion as Record<string, unknown> | undefined;
+    if (notionRef?.option_id) return { status: { id: notionRef.option_id as string } };
+    return { status: { name: val.value.label } };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -283,8 +316,15 @@ export const notionDateTransform: FieldTransform = {
 
     return { type: 'date', value: dateObj.start };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    if (canonical.type === 'date_range') {
+      const val = canonical as DateRangeValue;
+      if (val.value == null) return { date: null };
+      return { date: { start: val.value.start, end: val.value.end } };
+    }
+    const val = canonical as DateValue;
+    if (val.value == null) return { date: null };
+    return { date: { start: val.value } };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -327,8 +367,9 @@ export const notionPeopleTransform: FieldTransform = {
     if (!users || users.length === 0) return { type: 'people', value: [] };
     return { type: 'people', value: users.map((u) => u.id) };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as PeopleValue;
+    return { people: val.value.map((id) => ({ object: 'user', id })) };
   },
   isLossless: false,
   supportedOperations: ['read', 'write'],
@@ -368,8 +409,9 @@ export const notionEmailTransform: FieldTransform = {
     if (value == null) return { type: 'email', value: null };
     return { type: 'email', value: String(value) };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as EmailValue;
+    return { email: val.value };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -384,8 +426,11 @@ export const notionPhoneNumberTransform: FieldTransform = {
       value: { number: String(value), type: 'main' },
     };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as PhoneValue;
+    if (val.value == null) return { phone_number: null };
+    if (Array.isArray(val.value)) return { phone_number: val.value[0]?.number ?? null };
+    return { phone_number: val.value.number };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -397,8 +442,9 @@ export const notionUrlTransform: FieldTransform = {
     if (value == null) return { type: 'url', value: null };
     return { type: 'url', value: String(value) };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as UrlValue;
+    return { url: val.value };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -413,8 +459,9 @@ export const notionCheckboxTransform: FieldTransform = {
   toCanonical: (value: unknown, _config: PlatformFieldConfig): CanonicalValue => {
     return { type: 'checkbox', value: value === true };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as CheckboxValue;
+    return { checkbox: val.value };
   },
   isLossless: true,
   supportedOperations: ['read', 'write', 'filter', 'sort'],
@@ -449,8 +496,22 @@ export const notionRelationTransform: FieldTransform = {
 
     return { type: 'linked_record', value: entries };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, config: PlatformFieldConfig): unknown => {
+    const val = canonical as LinkedRecordValue;
+    const reverseMap = (config.options?.reverseRecordIdMap ?? {}) as Record<string, string>;
+    const relations = val.value
+      .map((entry) => {
+        // Use platform_record_id if available (round-trip from toCanonical)
+        if (entry.platform_record_id) return { id: entry.platform_record_id };
+        // Otherwise look up via reverse map (ES record ID -> Notion page ID)
+        if (entry.record_id) {
+          const platformId = reverseMap[entry.record_id];
+          if (platformId) return { id: platformId };
+        }
+        return null;
+      })
+      .filter((r): r is { id: string } => r != null);
+    return { relation: relations };
   },
   isLossless: true,
   supportedOperations: ['read', 'write'],
@@ -480,8 +541,14 @@ export const notionFilesTransform: FieldTransform = {
 
     return { type: 'files', value: fileObjects };
   },
-  fromCanonical: (_canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
-    return undefined;
+  fromCanonical: (canonical: CanonicalValue, _config: PlatformFieldConfig): unknown => {
+    const val = canonical as FilesValue;
+    const files = val.value.map((file) => ({
+      type: 'external' as const,
+      name: file.filename,
+      external: { url: file.url },
+    }));
+    return { files };
   },
   isLossless: false,
   supportedOperations: ['read', 'write'],

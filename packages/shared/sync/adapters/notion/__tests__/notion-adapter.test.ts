@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NotionAdapter, registerNotionTransforms } from '../index';
+import { NotionAdapter, registerNotionTransforms } from '../notion-adapter';
 import { fieldTypeRegistry } from '../../../field-registry';
 import type { FieldMapping } from '../../types';
+import type { CanonicalValue } from '../../../types';
 import type { NotionPage, NotionRichText } from '../notion-types';
 
 function makeRichText(content: string): NotionRichText {
@@ -246,10 +247,36 @@ describe('NotionAdapter', () => {
           externalFieldType: 'created_time',
           config: {},
         },
+        {
+          fieldId: 'es-field-2',
+          externalFieldId: 'formula_prop',
+          fieldType: 'text',
+          externalFieldType: 'formula',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-3',
+          externalFieldId: 'rollup_prop',
+          fieldType: 'text',
+          externalFieldType: 'rollup',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-4',
+          externalFieldId: 'unique_id_prop',
+          fieldType: 'auto_number',
+          externalFieldType: 'unique_id',
+          config: {},
+        },
       ];
 
       const result = adapter.fromCanonical(
-        { 'es-field-1': { type: 'created_at', value: '2024-03-15T10:00:00.000Z' } },
+        {
+          'es-field-1': { type: 'created_at', value: '2024-03-15T10:00:00.000Z' },
+          'es-field-2': { type: 'text', value: 'computed' },
+          'es-field-3': { type: 'text', value: '42' },
+          'es-field-4': { type: 'auto_number', value: 1 },
+        },
         fieldMappings,
       );
 
@@ -269,6 +296,287 @@ describe('NotionAdapter', () => {
 
       const result = adapter.fromCanonical({}, fieldMappings);
       expect(result).toEqual({});
+    });
+
+    it('transforms title text back to Notion rich text', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'title_prop',
+          fieldType: 'text',
+          externalFieldType: 'title',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        { 'es-field-1': { type: 'text', value: 'Hello World' } },
+        fieldMappings,
+      );
+
+      expect(result['title_prop']).toEqual({
+        title: [{ type: 'text', text: { content: 'Hello World' } }],
+      });
+    });
+
+    it('transforms rich_text back to Notion rich text array', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'desc_prop',
+          fieldType: 'text_area',
+          externalFieldType: 'rich_text',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        { 'es-field-1': { type: 'text_area', value: 'Description text' } },
+        fieldMappings,
+      );
+
+      expect(result['desc_prop']).toEqual({
+        rich_text: [{ type: 'text', text: { content: 'Description text' } }],
+      });
+    });
+
+    it('transforms number back to Notion number', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'num_prop',
+          fieldType: 'number',
+          externalFieldType: 'number',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        { 'es-field-1': { type: 'number', value: 42 } },
+        fieldMappings,
+      );
+
+      expect(result['num_prop']).toEqual({ number: 42 });
+    });
+
+    it('transforms checkbox back to Notion boolean', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'check_prop',
+          fieldType: 'checkbox',
+          externalFieldType: 'checkbox',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        { 'es-field-1': { type: 'checkbox', value: true } },
+        fieldMappings,
+      );
+
+      expect(result['check_prop']).toEqual({ checkbox: true });
+    });
+
+    it('transforms select with source_refs back to Notion select by ID', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'select_prop',
+          fieldType: 'single_select',
+          externalFieldType: 'select',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        {
+          'es-field-1': {
+            type: 'single_select',
+            value: {
+              id: 'es-opt-1',
+              label: 'Active',
+              source_refs: { notion: { option_id: 'opt_1', color: 'green' } },
+            },
+          } as CanonicalValue,
+        },
+        fieldMappings,
+      );
+
+      expect(result['select_prop']).toEqual({ select: { id: 'opt_1' } });
+    });
+
+    it('transforms select without source_refs by name', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'select_prop',
+          fieldType: 'single_select',
+          externalFieldType: 'select',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        {
+          'es-field-1': {
+            type: 'single_select',
+            value: { id: 'es-opt-1', label: 'New Option' },
+          } as CanonicalValue,
+        },
+        fieldMappings,
+      );
+
+      expect(result['select_prop']).toEqual({ select: { name: 'New Option' } });
+    });
+
+    it('transforms date back to Notion date object', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'date_prop',
+          fieldType: 'date',
+          externalFieldType: 'date',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        { 'es-field-1': { type: 'date', value: '2024-03-15' } },
+        fieldMappings,
+      );
+
+      expect(result['date_prop']).toEqual({ date: { start: '2024-03-15' } });
+    });
+
+    it('transforms date_range back to Notion date with start and end', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'date_prop',
+          fieldType: 'date_range',
+          externalFieldType: 'date',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        {
+          'es-field-1': {
+            type: 'date_range',
+            value: { start: '2024-03-15', end: '2024-03-20' },
+          },
+        },
+        fieldMappings,
+      );
+
+      expect(result['date_prop']).toEqual({
+        date: { start: '2024-03-15', end: '2024-03-20' },
+      });
+    });
+
+    it('transforms multiple writable fields in a single call', () => {
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'title_prop',
+          fieldType: 'text',
+          externalFieldType: 'title',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-2',
+          externalFieldId: 'num_prop',
+          fieldType: 'number',
+          externalFieldType: 'number',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-3',
+          externalFieldId: 'url_prop',
+          fieldType: 'url',
+          externalFieldType: 'url',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-4',
+          externalFieldId: 'email_prop',
+          fieldType: 'email',
+          externalFieldType: 'email',
+          config: {},
+        },
+      ];
+
+      const result = adapter.fromCanonical(
+        {
+          'es-field-1': { type: 'text', value: 'Record Name' },
+          'es-field-2': { type: 'number', value: 100 },
+          'es-field-3': { type: 'url', value: 'https://example.com' },
+          'es-field-4': { type: 'email', value: 'test@example.com' },
+        },
+        fieldMappings,
+      );
+
+      expect(Object.keys(result)).toHaveLength(4);
+      expect(result['title_prop']).toEqual({
+        title: [{ type: 'text', text: { content: 'Record Name' } }],
+      });
+      expect(result['num_prop']).toEqual({ number: 100 });
+      expect(result['url_prop']).toEqual({ url: 'https://example.com' });
+      expect(result['email_prop']).toEqual({ email: 'test@example.com' });
+    });
+
+    it('round-trips: toCanonical → fromCanonical preserves data', () => {
+      const page = makeNotionPage({
+        Name: {
+          id: 'title_prop',
+          type: 'title',
+          title: [makeRichText('Round Trip')],
+        },
+        Count: {
+          id: 'num_prop',
+          type: 'number',
+          number: 99,
+        },
+        Done: {
+          id: 'check_prop',
+          type: 'checkbox',
+          checkbox: false,
+        },
+      });
+
+      const fieldMappings: FieldMapping[] = [
+        {
+          fieldId: 'es-field-1',
+          externalFieldId: 'title_prop',
+          fieldType: 'text',
+          externalFieldType: 'title',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-2',
+          externalFieldId: 'num_prop',
+          fieldType: 'number',
+          externalFieldType: 'number',
+          config: {},
+        },
+        {
+          fieldId: 'es-field-3',
+          externalFieldId: 'check_prop',
+          fieldType: 'checkbox',
+          externalFieldType: 'checkbox',
+          config: {},
+        },
+      ];
+
+      const canonical = adapter.toCanonical(page, fieldMappings);
+      const outbound = adapter.fromCanonical(canonical, fieldMappings);
+
+      expect(outbound['title_prop']).toEqual({
+        title: [{ type: 'text', text: { content: 'Round Trip' } }],
+      });
+      expect(outbound['num_prop']).toEqual({ number: 99 });
+      expect(outbound['check_prop']).toEqual({ checkbox: false });
     });
   });
 });

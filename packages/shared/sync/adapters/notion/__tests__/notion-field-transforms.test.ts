@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { PlatformFieldConfig } from '../../../types';
+import type { PlatformFieldConfig, CanonicalValue } from '../../../types';
 import {
   extractPlainText,
   notionTitleTransform,
@@ -128,6 +128,26 @@ describe('notionTitleTransform', () => {
     });
   });
 
+  describe('fromCanonical', () => {
+    it('converts text to Notion title rich text', () => {
+      const result = notionTitleTransform.fromCanonical(
+        { type: 'text', value: 'Hello' },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        title: [{ type: 'text', text: { content: 'Hello' } }],
+      });
+    });
+
+    it('returns empty title array for null value', () => {
+      const result = notionTitleTransform.fromCanonical(
+        { type: 'text', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ title: [] });
+    });
+  });
+
   it('is lossless and supports read/write/filter/sort', () => {
     expect(notionTitleTransform.isLossless).toBe(true);
     expect(notionTitleTransform.supportedOperations).toEqual(['read', 'write', 'filter', 'sort']);
@@ -174,6 +194,26 @@ describe('notionRichTextTransform', () => {
       expect(result).toEqual({ type: 'text_area', value: null });
     });
   });
+
+  describe('fromCanonical', () => {
+    it('converts text_area to Notion rich text', () => {
+      const result = notionRichTextTransform.fromCanonical(
+        { type: 'text_area', value: 'Some description' },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        rich_text: [{ type: 'text', text: { content: 'Some description' } }],
+      });
+    });
+
+    it('returns empty array for null value', () => {
+      const result = notionRichTextTransform.fromCanonical(
+        { type: 'text_area', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ rich_text: [] });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -205,6 +245,24 @@ describe('notionNumberTransform', () => {
     it('coerces string numbers', () => {
       const result = notionNumberTransform.toCanonical('42', baseConfig);
       expect(result).toEqual({ type: 'number', value: 42 });
+    });
+  });
+
+  describe('fromCanonical', () => {
+    it('converts number to Notion number', () => {
+      const result = notionNumberTransform.fromCanonical(
+        { type: 'number', value: 42 },
+        baseConfig,
+      );
+      expect(result).toEqual({ number: 42 });
+    });
+
+    it('handles null number', () => {
+      const result = notionNumberTransform.fromCanonical(
+        { type: 'number', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ number: null });
     });
   });
 });
@@ -262,6 +320,42 @@ describe('notionSelectTransform', () => {
       expect(result).toEqual({ type: 'single_select', value: null });
     });
   });
+
+  describe('fromCanonical', () => {
+    it('uses Notion option_id from source_refs', () => {
+      const result = notionSelectTransform.fromCanonical(
+        {
+          type: 'single_select',
+          value: {
+            id: 'es-opt-1',
+            label: 'Active',
+            source_refs: { notion: { option_id: 'opt_1', color: 'green' } },
+          },
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ select: { id: 'opt_1' } });
+    });
+
+    it('falls back to name when no source_refs', () => {
+      const result = notionSelectTransform.fromCanonical(
+        {
+          type: 'single_select',
+          value: { id: 'es-opt-1', label: 'New Option' },
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ select: { name: 'New Option' } });
+    });
+
+    it('returns null select for null value', () => {
+      const result = notionSelectTransform.fromCanonical(
+        { type: 'single_select', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ select: null });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -301,6 +395,35 @@ describe('notionMultiSelectTransform', () => {
       expect(values[0]?.source_refs).toEqual({
         notion: { option_id: 'opt_x', color: 'yellow' },
       });
+    });
+  });
+
+  describe('fromCanonical', () => {
+    it('uses Notion option IDs from source_refs', () => {
+      const result = notionMultiSelectTransform.fromCanonical(
+        {
+          type: 'multiple_select',
+          value: [
+            { id: 'es-1', label: 'Tag A', source_refs: { notion: { option_id: 'opt_a' } } },
+            { id: 'es-2', label: 'Tag B', source_refs: { notion: { option_id: 'opt_b' } } },
+          ],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        multi_select: [{ id: 'opt_a' }, { id: 'opt_b' }],
+      });
+    });
+
+    it('falls back to name when no source_refs', () => {
+      const result = notionMultiSelectTransform.fromCanonical(
+        {
+          type: 'multiple_select',
+          value: [{ id: 'es-1', label: 'New Tag' }],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ multi_select: [{ name: 'New Tag' }] });
     });
   });
 });
@@ -385,6 +508,43 @@ describe('notionStatusTransform', () => {
       expect(value.category).toBe('not_started');
     });
   });
+
+  describe('fromCanonical', () => {
+    it('uses Notion option_id from source_refs', () => {
+      const result = notionStatusTransform.fromCanonical(
+        {
+          type: 'status',
+          value: {
+            id: 'es-opt-1',
+            label: 'Working',
+            category: 'in_progress' as const,
+            source_refs: { notion: { option_id: 'opt_wip', color: 'blue' } },
+          },
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ status: { id: 'opt_wip' } });
+    });
+
+    it('falls back to name when no source_refs', () => {
+      const result = notionStatusTransform.fromCanonical(
+        {
+          type: 'status',
+          value: { id: 'es-opt-1', label: 'Done', category: 'done' as const },
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ status: { name: 'Done' } });
+    });
+
+    it('returns null status for null value', () => {
+      const result = notionStatusTransform.fromCanonical(
+        { type: 'status', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ status: null });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -423,6 +583,32 @@ describe('notionDateTransform', () => {
     it('returns null for null date', () => {
       const result = notionDateTransform.toCanonical(null, baseConfig);
       expect(result).toEqual({ type: 'date', value: null });
+    });
+  });
+
+  describe('fromCanonical', () => {
+    it('converts date to Notion date with start only', () => {
+      const result = notionDateTransform.fromCanonical(
+        { type: 'date', value: '2024-03-15' },
+        baseConfig,
+      );
+      expect(result).toEqual({ date: { start: '2024-03-15' } });
+    });
+
+    it('converts date_range to Notion date with start and end', () => {
+      const result = notionDateTransform.fromCanonical(
+        { type: 'date_range', value: { start: '2024-03-15', end: '2024-03-20' } },
+        baseConfig,
+      );
+      expect(result).toEqual({ date: { start: '2024-03-15', end: '2024-03-20' } });
+    });
+
+    it('returns null date for null value', () => {
+      const result = notionDateTransform.fromCanonical(
+        { type: 'date', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ date: null });
     });
   });
 });
@@ -500,6 +686,29 @@ describe('notionPeopleTransform', () => {
     });
   });
 
+  describe('fromCanonical', () => {
+    it('converts people IDs to Notion user objects', () => {
+      const result = notionPeopleTransform.fromCanonical(
+        { type: 'people', value: ['user_1', 'user_2'] },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        people: [
+          { object: 'user', id: 'user_1' },
+          { object: 'user', id: 'user_2' },
+        ],
+      });
+    });
+
+    it('returns empty people array for empty value', () => {
+      const result = notionPeopleTransform.fromCanonical(
+        { type: 'people', value: [] },
+        baseConfig,
+      );
+      expect(result).toEqual({ people: [] });
+    });
+  });
+
   it('is lossy (user ID mapping needed)', () => {
     expect(notionPeopleTransform.isLossless).toBe(false);
   });
@@ -563,6 +772,24 @@ describe('notionEmailTransform', () => {
     expect(result).toEqual({ type: 'email', value: null });
   });
 
+  describe('fromCanonical', () => {
+    it('converts email to Notion email', () => {
+      const result = notionEmailTransform.fromCanonical(
+        { type: 'email', value: 'alice@example.com' },
+        baseConfig,
+      );
+      expect(result).toEqual({ email: 'alice@example.com' });
+    });
+
+    it('returns null email for null value', () => {
+      const result = notionEmailTransform.fromCanonical(
+        { type: 'email', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ email: null });
+    });
+  });
+
   it('is lossless', () => {
     expect(notionEmailTransform.isLossless).toBe(true);
   });
@@ -585,6 +812,38 @@ describe('notionPhoneNumberTransform', () => {
     const result = notionPhoneNumberTransform.toCanonical(null, baseConfig);
     expect(result).toEqual({ type: 'phone', value: null });
   });
+
+  describe('fromCanonical', () => {
+    it('converts phone entry to Notion phone_number string', () => {
+      const result = notionPhoneNumberTransform.fromCanonical(
+        { type: 'phone', value: { number: '+1-555-0100', type: 'main' } },
+        baseConfig,
+      );
+      expect(result).toEqual({ phone_number: '+1-555-0100' });
+    });
+
+    it('handles null phone value', () => {
+      const result = notionPhoneNumberTransform.fromCanonical(
+        { type: 'phone', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ phone_number: null });
+    });
+
+    it('handles phone array by using first entry', () => {
+      const result = notionPhoneNumberTransform.fromCanonical(
+        {
+          type: 'phone',
+          value: [
+            { number: '+1-555-0100', type: 'main' },
+            { number: '+1-555-0200', type: 'work' },
+          ],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ phone_number: '+1-555-0100' });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -600,6 +859,24 @@ describe('notionUrlTransform', () => {
   it('returns null for null', () => {
     const result = notionUrlTransform.toCanonical(null, baseConfig);
     expect(result).toEqual({ type: 'url', value: null });
+  });
+
+  describe('fromCanonical', () => {
+    it('converts url to Notion url', () => {
+      const result = notionUrlTransform.fromCanonical(
+        { type: 'url', value: 'https://example.com' },
+        baseConfig,
+      );
+      expect(result).toEqual({ url: 'https://example.com' });
+    });
+
+    it('returns null url for null value', () => {
+      const result = notionUrlTransform.fromCanonical(
+        { type: 'url', value: null },
+        baseConfig,
+      );
+      expect(result).toEqual({ url: null });
+    });
   });
 
   it('is lossless', () => {
@@ -630,6 +907,24 @@ describe('notionCheckboxTransform', () => {
   it('maps undefined to unchecked', () => {
     const result = notionCheckboxTransform.toCanonical(undefined, baseConfig);
     expect(result).toEqual({ type: 'checkbox', value: false });
+  });
+
+  describe('fromCanonical', () => {
+    it('converts checkbox true to Notion checkbox', () => {
+      const result = notionCheckboxTransform.fromCanonical(
+        { type: 'checkbox', value: true },
+        baseConfig,
+      );
+      expect(result).toEqual({ checkbox: true });
+    });
+
+    it('converts checkbox false to Notion checkbox', () => {
+      const result = notionCheckboxTransform.fromCanonical(
+        { type: 'checkbox', value: false },
+        baseConfig,
+      );
+      expect(result).toEqual({ checkbox: false });
+    });
   });
 
   it('is lossless', () => {
@@ -693,6 +988,60 @@ describe('notionRelationTransform', () => {
       expect(result).toEqual({ type: 'linked_record', value: [] });
     });
   });
+
+  describe('fromCanonical', () => {
+    it('converts linked records with platform_record_id to Notion relations', () => {
+      const result = notionRelationTransform.fromCanonical(
+        {
+          type: 'linked_record',
+          value: [
+            { record_id: null, platform_record_id: 'page-uuid-1', filtered_out: true },
+            { record_id: null, platform_record_id: 'page-uuid-2', filtered_out: true },
+          ],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        relation: [{ id: 'page-uuid-1' }, { id: 'page-uuid-2' }],
+      });
+    });
+
+    it('uses reverseRecordIdMap for ES record IDs', () => {
+      const config: PlatformFieldConfig = {
+        ...baseConfig,
+        options: {
+          reverseRecordIdMap: { 'es-rec-1': 'page-uuid-1' },
+        },
+      };
+      const result = notionRelationTransform.fromCanonical(
+        {
+          type: 'linked_record',
+          value: [{ record_id: 'es-rec-1' }],
+        },
+        config,
+      );
+      expect(result).toEqual({ relation: [{ id: 'page-uuid-1' }] });
+    });
+
+    it('skips entries with no resolvable platform ID', () => {
+      const result = notionRelationTransform.fromCanonical(
+        {
+          type: 'linked_record',
+          value: [{ record_id: 'es-rec-no-mapping' }],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({ relation: [] });
+    });
+
+    it('returns empty array for empty linked records', () => {
+      const result = notionRelationTransform.fromCanonical(
+        { type: 'linked_record', value: [] },
+        baseConfig,
+      );
+      expect(result).toEqual({ relation: [] });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -746,6 +1095,33 @@ describe('notionFilesTransform', () => {
     it('returns empty array for empty array', () => {
       const result = notionFilesTransform.toCanonical([], baseConfig);
       expect(result).toEqual({ type: 'files', value: [] });
+    });
+  });
+
+  describe('fromCanonical', () => {
+    it('converts files to Notion external file objects', () => {
+      const result = notionFilesTransform.fromCanonical(
+        {
+          type: 'files',
+          value: [
+            { url: 'https://example.com/doc.pdf', filename: 'doc.pdf', file_type: 'application/pdf', size: 1024 },
+          ],
+        },
+        baseConfig,
+      );
+      expect(result).toEqual({
+        files: [
+          { type: 'external', name: 'doc.pdf', external: { url: 'https://example.com/doc.pdf' } },
+        ],
+      });
+    });
+
+    it('returns empty files array for empty value', () => {
+      const result = notionFilesTransform.fromCanonical(
+        { type: 'files', value: [] },
+        baseConfig,
+      );
+      expect(result).toEqual({ files: [] });
     });
   });
 
@@ -936,6 +1312,46 @@ describe('NOTION_TRANSFORMS', () => {
     for (const entry of NOTION_TRANSFORMS) {
       if (readOnlyTypes.includes(entry.notionType)) {
         expect(entry.transform.supportedOperations).toEqual(['read']);
+      }
+    }
+  });
+
+  it('read-only transforms return undefined from fromCanonical', () => {
+    const readOnlyTypes = ['formula', 'rollup', 'created_time', 'created_by', 'last_edited_time', 'last_edited_by', 'unique_id'];
+    for (const entry of NOTION_TRANSFORMS) {
+      if (readOnlyTypes.includes(entry.notionType)) {
+        const result = entry.transform.fromCanonical(
+          { type: 'text', value: 'test' },
+          baseConfig,
+        );
+        expect(result).toBeUndefined();
+      }
+    }
+  });
+
+  it('writable transforms return defined values from fromCanonical', () => {
+    const writableTypes = ['title', 'rich_text', 'number', 'select', 'multi_select', 'status', 'date', 'checkbox', 'url', 'email', 'phone_number'];
+    const testValues: Record<string, unknown> = {
+      title: { type: 'text', value: 'test' },
+      rich_text: { type: 'text_area', value: 'test' },
+      number: { type: 'number', value: 1 },
+      select: { type: 'single_select', value: { id: '1', label: 'A' } },
+      multi_select: { type: 'multiple_select', value: [{ id: '1', label: 'A' }] },
+      status: { type: 'status', value: { id: '1', label: 'A', category: 'not_started' } },
+      date: { type: 'date', value: '2024-01-01' },
+      checkbox: { type: 'checkbox', value: true },
+      url: { type: 'url', value: 'https://x.com' },
+      email: { type: 'email', value: 'a@b.com' },
+      phone_number: { type: 'phone', value: { number: '123' } },
+    };
+    for (const entry of NOTION_TRANSFORMS) {
+      if (writableTypes.includes(entry.notionType)) {
+        const canonical = testValues[entry.notionType];
+        const result = entry.transform.fromCanonical(
+          canonical as CanonicalValue,
+          baseConfig,
+        );
+        expect(result).toBeDefined();
       }
     }
   });
