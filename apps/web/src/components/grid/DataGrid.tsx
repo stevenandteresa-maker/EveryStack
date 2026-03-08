@@ -25,6 +25,8 @@ import { GridHeader } from './GridHeader';
 import { GridRow } from './GridRow';
 import { useKeyboardNavigation } from './use-keyboard-navigation';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
+import { useColumnResize } from './use-column-resize';
+import { useColumnReorder } from './use-column-reorder';
 import {
   getDefaultColumnWidth,
   DRAG_HANDLE_WIDTH,
@@ -32,6 +34,7 @@ import {
   ROW_NUMBER_WIDTH,
   ADD_FIELD_COLUMN_WIDTH,
   ROW_OVERSCAN,
+  MAX_FROZEN_COLUMNS,
   GRID_TOKENS,
 } from './grid-types';
 import type { CellPosition } from './grid-types';
@@ -61,6 +64,8 @@ export interface DataGridProps {
   frozenColumnCount: number;
   columnWidths: Record<string, number>;
   columnOrder: string[];
+  columnColors: Record<string, string>;
+  hiddenFieldIds: Set<string>;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -79,6 +84,15 @@ export interface DataGridProps {
   setSelectionAnchor: (cell: CellPosition | null) => void;
   setSelectionRange: (cell: CellPosition | null) => void;
   onAddRecord?: () => void;
+  // Column behavior callbacks
+  onColumnResize: (fieldId: string, width: number) => void;
+  onColumnResizeEnd: (fieldId: string, width: number) => void;
+  onColumnReorder: (newOrder: string[]) => void;
+  onFreezeUpTo: (fieldId: string) => void;
+  onUnfreeze: () => void;
+  onHideField: (fieldId: string) => void;
+  onSetColumnColor: (fieldId: string, colorName: string | null) => void;
+  onRenameField: (fieldId: string, newName: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,6 +113,8 @@ export function DataGrid({
   frozenColumnCount,
   columnWidths,
   columnOrder,
+  columnColors,
+  hiddenFieldIds,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -116,6 +132,14 @@ export function DataGrid({
   setSelectionAnchor,
   setSelectionRange,
   onAddRecord,
+  onColumnResize,
+  onColumnResizeEnd,
+  onColumnReorder,
+  onFreezeUpTo,
+  onUnfreeze,
+  onHideField,
+  onSetColumnColor,
+  onRenameField,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -126,10 +150,12 @@ export function DataGrid({
 
   // -----------------------------------------------------------------------
   // Sort fields: primary first, then by column order or sort_order
+  // Filter out hidden fields
   // -----------------------------------------------------------------------
   const orderedFields = useMemo(() => {
-    const primaryField = fields.find((f) => f.isPrimary);
-    const nonPrimary = fields.filter((f) => !f.isPrimary);
+    const visibleFields = fields.filter((f) => !hiddenFieldIds.has(f.id));
+    const primaryField = visibleFields.find((f) => f.isPrimary);
+    const nonPrimary = visibleFields.filter((f) => !f.isPrimary);
 
     if (columnOrder.length > 0) {
       const orderMap = new Map(columnOrder.map((id, idx) => [id, idx]));
@@ -141,19 +167,86 @@ export function DataGrid({
     }
 
     return primaryField ? [primaryField, ...nonPrimary] : nonPrimary;
-  }, [fields, columnOrder]);
+  }, [fields, columnOrder, hiddenFieldIds]);
 
   // -----------------------------------------------------------------------
   // Frozen field IDs (primary always + user-frozen)
   // -----------------------------------------------------------------------
   const frozenFieldIds = useMemo(() => {
     const ids: string[] = [];
-    for (let i = 0; i < orderedFields.length && i <= frozenColumnCount; i++) {
+    const maxFrozen = Math.min(frozenColumnCount, MAX_FROZEN_COLUMNS);
+    for (let i = 0; i < orderedFields.length && i <= maxFrozen; i++) {
       const field = orderedFields[i];
       if (field) ids.push(field.id);
     }
     return ids;
   }, [orderedFields, frozenColumnCount]);
+
+  // -----------------------------------------------------------------------
+  // Max frozen width: 40% of viewport
+  // -----------------------------------------------------------------------
+  const effectiveFrozenFieldIds = useMemo(() => {
+    const containerWidth = scrollContainerRef.current?.clientWidth ?? 1440;
+    const maxFrozenWidth = containerWidth * 0.4;
+    let totalFrozenWidth = 0;
+    const validFrozen: string[] = [];
+
+    for (const fieldId of frozenFieldIds) {
+      const field = orderedFields.find((f) => f.id === fieldId);
+      if (!field) continue;
+      const configWidth = viewConfig.columns?.find(
+        (c) => c.fieldId === field.id,
+      )?.width;
+      const storeWidth = columnWidths[field.id];
+      const defaultWidth = getDefaultColumnWidth(field.fieldType, field.isPrimary);
+      const w = storeWidth ?? configWidth ?? defaultWidth;
+
+      if (totalFrozenWidth + w <= maxFrozenWidth) {
+        validFrozen.push(fieldId);
+        totalFrozenWidth += w;
+      } else {
+        break;
+      }
+    }
+
+    return validFrozen;
+  }, [frozenFieldIds, orderedFields, viewConfig.columns, columnWidths]);
+
+  // -----------------------------------------------------------------------
+  // Primary field ID (for column reorder)
+  // -----------------------------------------------------------------------
+  const primaryFieldId = useMemo(() => {
+    return fields.find((f) => f.isPrimary)?.id ?? null;
+  }, [fields]);
+
+  // -----------------------------------------------------------------------
+  // Column order for reorder hook
+  // -----------------------------------------------------------------------
+  const effectiveColumnOrder = useMemo(() => {
+    return orderedFields.map((f) => f.id);
+  }, [orderedFields]);
+
+  // -----------------------------------------------------------------------
+  // Column resize hook
+  // -----------------------------------------------------------------------
+  const { startResize } = useColumnResize({
+    onResize: onColumnResize,
+    onResizeEnd: onColumnResizeEnd,
+  });
+
+  // -----------------------------------------------------------------------
+  // Column reorder hook
+  // -----------------------------------------------------------------------
+  const {
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDrop,
+  } = useColumnReorder({
+    columnOrder: effectiveColumnOrder,
+    primaryFieldId,
+    onReorder: onColumnReorder,
+  });
 
   // -----------------------------------------------------------------------
   // Column definitions for TanStack Table
@@ -323,10 +416,22 @@ export function DataGrid({
         <GridHeader
           headers={table.getHeaderGroups()[0]?.headers ?? []}
           fields={orderedFields}
-          frozenFieldIds={frozenFieldIds}
+          frozenFieldIds={effectiveFrozenFieldIds}
           showAddColumn={showAddColumn}
           addColumnWidth={ADD_FIELD_COLUMN_WIDTH}
+          userRole={userRole}
+          columnColors={columnColors}
           onSelectColumn={onSelectColumn}
+          onStartResize={startResize}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          onDrop={handleDrop}
+          onFreezeUpTo={onFreezeUpTo}
+          onUnfreeze={onUnfreeze}
+          onHideField={onHideField}
+          onSetColumnColor={onSetColumnColor}
+          onRenameField={onRenameField}
         />
 
         {/* Virtual rows */}
@@ -344,6 +449,7 @@ export function DataGrid({
               rowHeight={rowHeight}
               activeCell={activeCell}
               editingCell={editingCell}
+              columnColors={columnColors}
               onCellClick={onCellClick}
               onCellDoubleClick={onCellDoubleClick}
               onCellStartReplace={onCellStartReplace}

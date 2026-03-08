@@ -327,6 +327,24 @@
       "action_filter": "Toggle filter panel",
       "action_sort": "Toggle sort panel",
       "action_command_bar": "Command Bar"
+    },
+    "column_menu": {
+      "sort_ascending": "Sort ascending",
+      "sort_descending": "Sort descending",
+      "add_filter": "Add filter",
+      "group_by": "Group by this field",
+      "edit_field": "Edit field",
+      "rename_field": "Rename field",
+      "duplicate_field": "Duplicate field",
+      "insert_field_left": "Insert field left",
+      "insert_field_right": "Insert field right",
+      "hide_field": "Hide field",
+      "delete_field": "Delete field",
+      "freeze_up_to": "Freeze up to here",
+      "unfreeze": "Unfreeze",
+      "set_column_color": "Set column color",
+      "clear_color": "Clear color",
+      "edit_permissions": "Edit permissions"
     }
   },
   "sync_dashboard": {

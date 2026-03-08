@@ -105,6 +105,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}
@@ -130,6 +131,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}
@@ -155,6 +157,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}
@@ -180,6 +183,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}
@@ -212,6 +216,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}
@@ -240,6 +245,7 @@ describe('GridRow', () => {
             onCellDoubleClick={vi.fn()}
             onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
+            columnColors={{}}
             onCellCancel={vi.fn()}
           />
         )}

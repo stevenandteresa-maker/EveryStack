@@ -25,6 +25,8 @@ export interface GridState {
   frozenColumnCount: number;
   columnWidths: Record<string, number>;
   columnOrder: string[];
+  columnColors: Record<string, string>;
+  hiddenFieldIds: Set<string>;
   selectedRows: Set<string>;
   selectionAnchor: CellPosition | null;
   selectionRange: CellPosition | null;
@@ -43,6 +45,9 @@ export interface GridActions {
   reorderColumn: (fieldId: string, newIndex: number) => void;
   setFrozenCount: (count: number) => void;
   setColumnOrder: (order: string[]) => void;
+  setColumnColor: (fieldId: string, colorName: string | null) => void;
+  setHiddenFieldIds: (ids: Set<string>) => void;
+  toggleFieldHidden: (fieldId: string) => void;
   setSelectedRows: (rows: Set<string>) => void;
   setSelectionAnchor: (cell: CellPosition | null) => void;
   setSelectionRange: (cell: CellPosition | null) => void;
@@ -64,6 +69,8 @@ export function createGridStore(initialState?: Partial<GridState>) {
     frozenColumnCount: 0,
     columnWidths: {},
     columnOrder: [],
+    columnColors: {},
+    hiddenFieldIds: new Set<string>(),
     selectedRows: new Set<string>(),
     selectionAnchor: null,
     selectionRange: null,
@@ -98,6 +105,30 @@ export function createGridStore(initialState?: Partial<GridState>) {
     setFrozenCount: (count) => set({ frozenColumnCount: count }),
 
     setColumnOrder: (order) => set({ columnOrder: order }),
+
+    setColumnColor: (fieldId, colorName) =>
+      set((state) => {
+        const updated = { ...state.columnColors };
+        if (colorName === null) {
+          delete updated[fieldId];
+        } else {
+          updated[fieldId] = colorName;
+        }
+        return { columnColors: updated };
+      }),
+
+    setHiddenFieldIds: (ids) => set({ hiddenFieldIds: ids }),
+
+    toggleFieldHidden: (fieldId) =>
+      set((state) => {
+        const updated = new Set(state.hiddenFieldIds);
+        if (updated.has(fieldId)) {
+          updated.delete(fieldId);
+        } else {
+          updated.add(fieldId);
+        }
+        return { hiddenFieldIds: updated };
+      }),
 
     setSelectedRows: (rows) => set({ selectedRows: rows }),
 

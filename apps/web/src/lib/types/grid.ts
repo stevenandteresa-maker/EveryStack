@@ -46,6 +46,8 @@ export const viewConfigSchema = z.object({
   frozenColumns: z.number().int().min(0).max(5).optional(),
   density: z.enum(['compact', 'medium', 'tall']).optional(),
   isDefault: z.boolean().optional(),
+  columnOrder: z.array(z.string().uuid()).optional(),
+  columnColors: z.record(z.string().uuid(), z.string()).optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;

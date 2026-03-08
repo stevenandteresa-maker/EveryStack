@@ -327,6 +327,24 @@
       "action_filter": "Alternar panel de filtros",
       "action_sort": "Alternar panel de ordenación",
       "action_command_bar": "Barra de comandos"
+    },
+    "column_menu": {
+      "sort_ascending": "Ordenar ascendente",
+      "sort_descending": "Ordenar descendente",
+      "add_filter": "Agregar filtro",
+      "group_by": "Agrupar por este campo",
+      "edit_field": "Editar campo",
+      "rename_field": "Renombrar campo",
+      "duplicate_field": "Duplicar campo",
+      "insert_field_left": "Insertar campo a la izquierda",
+      "insert_field_right": "Insertar campo a la derecha",
+      "hide_field": "Ocultar campo",
+      "delete_field": "Eliminar campo",
+      "freeze_up_to": "Fijar hasta aquí",
+      "unfreeze": "Desfijar",
+      "set_column_color": "Color de columna",
+      "clear_color": "Quitar color",
+      "edit_permissions": "Editar permisos"
     }
   },
   "sync_dashboard": {

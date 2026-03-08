@@ -21,6 +21,7 @@ import {
 } from './grid-types';
 import type { GridRecord, GridField, RowDensity } from '@/lib/types/grid';
 import type { CellPosition } from './grid-types';
+import { DATA_COLORS } from '@/lib/design-system/colors';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -34,6 +35,7 @@ export interface GridRowProps {
   rowHeight: number;
   activeCell: CellPosition | null;
   editingCell: CellPosition | null;
+  columnColors: Record<string, string>;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -54,6 +56,7 @@ export const GridRow = memo(function GridRow({
   rowHeight,
   activeCell,
   editingCell,
+  columnColors,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -136,8 +139,13 @@ export const GridRow = memo(function GridRow({
           editingCell?.fieldId === field.id;
         const isPrimary = field.id === primaryField?.id;
 
+        const colorName = columnColors[field.id];
+        const colorBg = colorName
+          ? DATA_COLORS.find((c) => c.name === colorName)?.light
+          : undefined;
+
         return (
-          <div key={cell.id} className="relative" style={{ width: cell.column.getSize() }}>
+          <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: colorBg }}>
             <GridCell
               record={record}
               field={field}

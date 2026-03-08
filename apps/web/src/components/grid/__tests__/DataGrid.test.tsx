@@ -80,6 +80,8 @@ const defaultProps = {
   frozenColumnCount: 0,
   columnWidths: {},
   columnOrder: [],
+  columnColors: {},
+  hiddenFieldIds: new Set<string>(),
   onCellClick: vi.fn(),
   onCellDoubleClick: vi.fn(),
   onCellStartReplace: vi.fn(),
@@ -97,6 +99,14 @@ const defaultProps = {
   setSelectionAnchor: vi.fn(),
   setSelectionRange: vi.fn(),
   onAddRecord: vi.fn(),
+  onColumnResize: vi.fn(),
+  onColumnResizeEnd: vi.fn(),
+  onColumnReorder: vi.fn(),
+  onFreezeUpTo: vi.fn(),
+  onUnfreeze: vi.fn(),
+  onHideField: vi.fn(),
+  onSetColumnColor: vi.fn(),
+  onRenameField: vi.fn(),
 };
 
 // ---------------------------------------------------------------------------
