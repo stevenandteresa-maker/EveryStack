@@ -30,6 +30,7 @@ export interface GridState {
   selectedRows: Set<string>;
   selectionAnchor: CellPosition | null;
   selectionRange: CellPosition | null;
+  isSortActive: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -51,6 +52,7 @@ export interface GridActions {
   setSelectedRows: (rows: Set<string>) => void;
   setSelectionAnchor: (cell: CellPosition | null) => void;
   setSelectionRange: (cell: CellPosition | null) => void;
+  setIsSortActive: (active: boolean) => void;
 }
 
 export type GridStore = GridState & GridActions;
@@ -74,6 +76,7 @@ export function createGridStore(initialState?: Partial<GridState>) {
     selectedRows: new Set<string>(),
     selectionAnchor: null,
     selectionRange: null,
+    isSortActive: false,
     ...initialState,
 
     // Actions
@@ -135,5 +138,7 @@ export function createGridStore(initialState?: Partial<GridState>) {
     setSelectionAnchor: (cell) => set({ selectionAnchor: cell }),
 
     setSelectionRange: (cell) => set({ selectionRange: cell }),
+
+    setIsSortActive: (active) => set({ isSortActive: active }),
   }));
 }

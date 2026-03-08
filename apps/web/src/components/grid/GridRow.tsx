@@ -4,6 +4,9 @@
  * GridRow — renders a single data row with drag handle, checkbox,
  * row number, primary field (with expand icon on hover), and data cells.
  *
+ * Wraps content in RowContextMenu for right-click actions.
+ * Supports row drag-and-drop reordering via the grip handle.
+ *
  * @see docs/reference/tables-and-views.md § Row Behavior
  */
 
@@ -13,6 +16,7 @@ import type { Row } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { GridCell } from './GridCell';
+import { RowContextMenu } from './RowContextMenu';
 import {
   GRID_TOKENS,
   DRAG_HANDLE_WIDTH,
@@ -42,6 +46,24 @@ export interface GridRowProps {
   onCellSave: (rowId: string, fieldId: string, value: unknown) => void;
   onCellCancel: () => void;
   style?: React.CSSProperties;
+  // Row reorder drag props
+  isDragDisabled?: boolean;
+  isDropTarget?: boolean;
+  onRowDragStart?: (e: React.DragEvent, recordId: string, rowIndex: number) => void;
+  onRowDragOver?: (e: React.DragEvent, rowIndex: number) => void;
+  onRowDragEnd?: () => void;
+  onRowDrop?: (e: React.DragEvent, rowIndex: number) => void;
+  // Context menu callbacks
+  onExpandRecord?: (recordId: string) => void;
+  onCopyRecord?: (recordId: string) => void;
+  onDuplicateRecord?: (recordId: string) => void;
+  onDeleteRecord?: (recordId: string) => void;
+  onInsertAbove?: (recordId: string) => void;
+  onInsertBelow?: (recordId: string) => void;
+  onCopyCellValue?: () => void;
+  onPaste?: () => void;
+  onClearCellValue?: () => void;
+  onCopyRecordLink?: (recordId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,6 +85,22 @@ export const GridRow = memo(function GridRow({
   onCellSave,
   onCellCancel,
   style,
+  isDragDisabled,
+  isDropTarget,
+  onRowDragStart,
+  onRowDragOver,
+  onRowDragEnd,
+  onRowDrop,
+  onExpandRecord,
+  onCopyRecord,
+  onDuplicateRecord,
+  onDeleteRecord,
+  onInsertAbove,
+  onInsertBelow,
+  onCopyCellValue,
+  onPaste,
+  onClearCellValue,
+  onCopyRecordLink,
 }: GridRowProps) {
   const t = useTranslations('grid');
   const [isHovered, setIsHovered] = useState(false);
@@ -71,10 +109,10 @@ export const GridRow = memo(function GridRow({
   const record = row.original;
   const primaryField = fields.find((f) => f.isPrimary);
 
-  return (
+  const rowContent = (
     <div
       role="row"
-      className="flex"
+      className={cn('flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
       style={{
         height: rowHeight,
         backgroundColor: isHovered
@@ -86,15 +124,36 @@ export const GridRow = memo(function GridRow({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onDragOver={
+        onRowDragOver
+          ? (e) => onRowDragOver(e, rowIndex)
+          : undefined
+      }
+      onDrop={
+        onRowDrop
+          ? (e) => onRowDrop(e, rowIndex)
+          : undefined
+      }
     >
       {/* Drag handle */}
       <div
-        className="shrink-0 flex items-center justify-center border-r border-b cursor-grab"
+        className={cn(
+          'shrink-0 flex items-center justify-center border-r border-b',
+          !isDragDisabled && 'cursor-grab',
+          isDragDisabled && 'cursor-default',
+        )}
         style={{
           width: DRAG_HANDLE_WIDTH,
           borderColor: GRID_TOKENS.borderDefault,
         }}
         aria-label={t('drag_handle')}
+        draggable={!isDragDisabled}
+        onDragStart={
+          onRowDragStart && !isDragDisabled
+            ? (e) => onRowDragStart(e, record.id, rowIndex)
+            : undefined
+        }
+        onDragEnd={onRowDragEnd}
       >
         {isHovered && (
           <span className="text-xs" style={{ color: GRID_TOKENS.textSecondary }}>
@@ -180,4 +239,27 @@ export const GridRow = memo(function GridRow({
       })}
     </div>
   );
+
+  // Wrap in context menu if callbacks are provided
+  if (onCopyRecord && onDuplicateRecord && onDeleteRecord) {
+    return (
+      <RowContextMenu
+        recordId={record.id}
+        onExpandRecord={onExpandRecord ?? (() => {})}
+        onCopyRecord={onCopyRecord}
+        onDuplicateRecord={onDuplicateRecord}
+        onDeleteRecord={onDeleteRecord}
+        onInsertAbove={onInsertAbove ?? (() => {})}
+        onInsertBelow={onInsertBelow ?? (() => {})}
+        onCopyCellValue={onCopyCellValue ?? (() => {})}
+        onPaste={onPaste ?? (() => {})}
+        onClearCellValue={onClearCellValue ?? (() => {})}
+        onCopyRecordLink={onCopyRecordLink ?? (() => {})}
+      >
+        {rowContent}
+      </RowContextMenu>
+    );
+  }
+
+  return rowContent;
 });

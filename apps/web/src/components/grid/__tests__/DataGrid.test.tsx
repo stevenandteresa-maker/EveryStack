@@ -82,6 +82,7 @@ const defaultProps = {
   columnOrder: [],
   columnColors: {},
   hiddenFieldIds: new Set<string>(),
+  isSortActive: false,
   onCellClick: vi.fn(),
   onCellDoubleClick: vi.fn(),
   onCellStartReplace: vi.fn(),

@@ -19,14 +19,19 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { roleAtLeast, type EffectiveRole } from '@everystack/shared/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GridHeader } from './GridHeader';
 import { GridRow } from './GridRow';
+import { NewRowInput } from './NewRowInput';
 import { useKeyboardNavigation } from './use-keyboard-navigation';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { useColumnResize } from './use-column-resize';
 import { useColumnReorder } from './use-column-reorder';
+import { useRowReorder } from './use-row-reorder';
+import { useClipboard } from './use-clipboard';
+import { useUndoRedo } from './use-undo-redo';
 import {
   getDefaultColumnWidth,
   DRAG_HANDLE_WIDTH,
@@ -66,6 +71,7 @@ export interface DataGridProps {
   columnOrder: string[];
   columnColors: Record<string, string>;
   hiddenFieldIds: Set<string>;
+  isSortActive: boolean;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -93,6 +99,16 @@ export interface DataGridProps {
   onHideField: (fieldId: string) => void;
   onSetColumnColor: (fieldId: string, colorName: string | null) => void;
   onRenameField: (fieldId: string, newName: string) => void;
+  // Row behavior callbacks
+  onRowReorder?: (recordId: string, fromIndex: number, toIndex: number) => void;
+  onCreateRecord?: (primaryFieldId: string, initialValue: string) => void;
+  onDuplicateRecord?: (recordId: string) => void;
+  onDeleteRecord?: (recordId: string) => void;
+  onRestoreRecord?: (recordId: string) => void;
+  onInsertAbove?: (recordId: string) => void;
+  onInsertBelow?: (recordId: string) => void;
+  onCopyRecordLink?: (recordId: string) => void;
+  onShowToast?: (message: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +131,7 @@ export function DataGrid({
   columnOrder,
   columnColors,
   hiddenFieldIds,
+  isSortActive,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -140,6 +157,15 @@ export function DataGrid({
   onHideField,
   onSetColumnColor,
   onRenameField,
+  onRowReorder,
+  onCreateRecord,
+  onDuplicateRecord,
+  onDeleteRecord,
+  onRestoreRecord,
+  onInsertAbove,
+  onInsertBelow,
+  onCopyRecordLink,
+  onShowToast,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -238,15 +264,103 @@ export function DataGrid({
   // Column reorder hook
   // -----------------------------------------------------------------------
   const {
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    handleDrop,
+    handleDragStart: colDragStart,
+    handleDragOver: colDragOver,
+    handleDragEnd: colDragEnd,
+    handleDrop: colDrop,
   } = useColumnReorder({
     columnOrder: effectiveColumnOrder,
     primaryFieldId,
     onReorder: onColumnReorder,
   });
+
+  // -----------------------------------------------------------------------
+  // Row reorder hook
+  // -----------------------------------------------------------------------
+  const rowReorder = useRowReorder({
+    records,
+    isSortActive,
+    onReorder: onRowReorder ?? (() => {}),
+  });
+
+  // -----------------------------------------------------------------------
+  // Undo/redo hook
+  // -----------------------------------------------------------------------
+  const undoRedo = useUndoRedo({
+    onApply: onCellSave,
+  });
+
+  // -----------------------------------------------------------------------
+  // Cell save wrapper — pushes edits to undo stack
+  // -----------------------------------------------------------------------
+  const handleCellSaveWithUndo = useCallback(
+    (rowId: string, fieldId: string, value: unknown) => {
+      const record = records.find((r) => r.id === rowId);
+      const oldValue = record
+        ? (record.canonicalData as Record<string, unknown>)[fieldId] ?? null
+        : null;
+      undoRedo.pushEdit(rowId, fieldId, oldValue, value);
+      onCellSave(rowId, fieldId, value);
+    },
+    [records, undoRedo, onCellSave],
+  );
+
+  // -----------------------------------------------------------------------
+  // Clipboard hook
+  // -----------------------------------------------------------------------
+  const clipboard = useClipboard({
+    records,
+    fields: orderedFields,
+    activeCell,
+    selectionAnchor,
+    selectionRange,
+    onUpdateCell: handleCellSaveWithUndo,
+    onShowToast: onShowToast ?? (() => {}),
+  });
+
+  // -----------------------------------------------------------------------
+  // Context menu callbacks
+  // -----------------------------------------------------------------------
+  const handleCopyRecord = useCallback(
+    (recordId: string) => {
+      onDuplicateRecord?.(recordId);
+    },
+    [onDuplicateRecord],
+  );
+
+  const handleCopyCellValue = useCallback(() => {
+    clipboard.handleCopy();
+  }, [clipboard]);
+
+  const handlePaste = useCallback(() => {
+    void clipboard.handlePaste();
+  }, [clipboard]);
+
+  const handleClearCellValue = useCallback(() => {
+    if (activeCell) {
+      handleCellSaveWithUndo(activeCell.rowId, activeCell.fieldId, null);
+    }
+  }, [activeCell, handleCellSaveWithUndo]);
+
+  // -----------------------------------------------------------------------
+  // Delete with 10s undo toast
+  // -----------------------------------------------------------------------
+  const handleDeleteWithUndo = useCallback(
+    (recordId: string) => {
+      onDeleteRecord?.(recordId);
+
+      toast(t('record_deleted'), {
+        duration: 10_000,
+        action: {
+          label: t('record_deleted_undo'),
+          onClick: () => {
+            onRestoreRecord?.(recordId);
+          },
+        },
+      });
+    },
+    [onDeleteRecord, onRestoreRecord, t],
+  );
 
   // -----------------------------------------------------------------------
   // Column definitions for TanStack Table
@@ -317,7 +431,7 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   // Keyboard navigation hook
   // -----------------------------------------------------------------------
-  const { handleKeyDown } = useKeyboardNavigation({
+  const { handleKeyDown: navKeyDown } = useKeyboardNavigation({
     fields: orderedFields,
     records,
     activeCell,
@@ -326,7 +440,7 @@ export function DataGrid({
     setActiveCell,
     startEditing,
     stopEditing,
-    onCellSave,
+    onCellSave: handleCellSaveWithUndo,
     selectedRows,
     setSelectedRows,
     selectionAnchor,
@@ -337,6 +451,54 @@ export function DataGrid({
     onOpenShortcutsHelp: () => setShortcutsOpen(true),
     scrollToCell,
   });
+
+  // -----------------------------------------------------------------------
+  // Combined keyboard handler (nav + clipboard + undo)
+  // -----------------------------------------------------------------------
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const isMeta = e.metaKey || e.ctrlKey;
+
+      // Undo: Cmd+Z
+      if (isMeta && e.key === 'z' && !e.shiftKey && !editingCell) {
+        e.preventDefault();
+        undoRedo.undo();
+        return;
+      }
+
+      // Redo: Cmd+Shift+Z
+      if (isMeta && e.key === 'z' && e.shiftKey && !editingCell) {
+        e.preventDefault();
+        undoRedo.redo();
+        return;
+      }
+
+      // Copy: Cmd+C
+      if (isMeta && e.key === 'c' && !editingCell) {
+        e.preventDefault();
+        clipboard.handleCopy();
+        return;
+      }
+
+      // Paste: Cmd+V
+      if (isMeta && e.key === 'v' && !editingCell) {
+        e.preventDefault();
+        void clipboard.handlePaste();
+        return;
+      }
+
+      // Fill Down: Cmd+D
+      if (isMeta && e.key === 'd' && !editingCell) {
+        e.preventDefault();
+        clipboard.handleFillDown();
+        return;
+      }
+
+      // Delegate to keyboard navigation
+      navKeyDown(e);
+    },
+    [editingCell, undoRedo, clipboard, navKeyDown],
+  );
 
   // -----------------------------------------------------------------------
   // Fixed column width (drag handle + checkbox + row number)
@@ -384,8 +546,17 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   if (records.length === 0) {
     return (
-      <div className="flex items-center justify-center p-8 text-sm" style={{ color: GRID_TOKENS.textSecondary }}>
-        {t('empty')}
+      <div className="flex flex-col items-center justify-center p-8 text-sm" style={{ color: GRID_TOKENS.textSecondary }}>
+        <p>{t('empty')}</p>
+        {onCreateRecord && (
+          <NewRowInput
+            fields={orderedFields}
+            rowHeight={rowHeight}
+            totalWidth={totalWidth}
+            rowCount={0}
+            onCreateRecord={onCreateRecord}
+          />
+        )}
       </div>
     );
   }
@@ -408,7 +579,7 @@ export function DataGrid({
       <div
         style={{
           width: totalWidth,
-          height: rowVirtualizer.getTotalSize() + rowHeight, // +header
+          height: rowVirtualizer.getTotalSize() + rowHeight + rowHeight, // +header +new row
           position: 'relative',
         }}
       >
@@ -423,10 +594,10 @@ export function DataGrid({
           columnColors={columnColors}
           onSelectColumn={onSelectColumn}
           onStartResize={startResize}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDrop={handleDrop}
+          onDragStart={colDragStart}
+          onDragOver={colDragOver}
+          onDragEnd={colDragEnd}
+          onDrop={colDrop}
           onFreezeUpTo={onFreezeUpTo}
           onUnfreeze={onUnfreeze}
           onHideField={onHideField}
@@ -453,7 +624,7 @@ export function DataGrid({
               onCellClick={onCellClick}
               onCellDoubleClick={onCellDoubleClick}
               onCellStartReplace={onCellStartReplace}
-              onCellSave={onCellSave}
+              onCellSave={handleCellSaveWithUndo}
               onCellCancel={onCellCancel}
               style={{
                 position: 'absolute',
@@ -461,9 +632,46 @@ export function DataGrid({
                 left: 0,
                 width: totalWidth,
               }}
+              // Row reorder
+              isDragDisabled={rowReorder.isDisabled}
+              isDropTarget={rowReorder.dropTargetIndex === virtualRow.index}
+              onRowDragStart={rowReorder.handleDragStart}
+              onRowDragOver={rowReorder.handleDragOver}
+              onRowDragEnd={rowReorder.handleDragEnd}
+              onRowDrop={rowReorder.handleDrop}
+              // Context menu
+              onExpandRecord={() => {}} // Placeholder — Record View ships in 3A-ii
+              onCopyRecord={handleCopyRecord}
+              onDuplicateRecord={onDuplicateRecord}
+              onDeleteRecord={handleDeleteWithUndo}
+              onInsertAbove={onInsertAbove}
+              onInsertBelow={onInsertBelow}
+              onCopyCellValue={handleCopyCellValue}
+              onPaste={handlePaste}
+              onClearCellValue={handleClearCellValue}
+              onCopyRecordLink={onCopyRecordLink}
             />
           );
         })}
+
+        {/* New row input — always at bottom */}
+        {onCreateRecord && (
+          <div
+            style={{
+              position: 'absolute',
+              top: rowVirtualizer.getTotalSize() + rowHeight, // after header + all rows
+              left: 0,
+            }}
+          >
+            <NewRowInput
+              fields={orderedFields}
+              rowHeight={rowHeight}
+              totalWidth={totalWidth}
+              rowCount={records.length}
+              onCreateRecord={onCreateRecord}
+            />
+          </div>
+        )}
       </div>
 
       <KeyboardShortcutsDialog
