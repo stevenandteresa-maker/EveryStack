@@ -19,6 +19,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
       include: ['db/**', 'ai/**', 'sync/**'],
+      exclude: ['db/migrations/**', '**/*.sql'],
       thresholds: {
         'db/': { lines: 90, branches: 85 },
         'ai/': { lines: 80, branches: 75 },

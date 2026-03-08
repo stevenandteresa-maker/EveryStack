@@ -28,6 +28,8 @@ import {
 import { decryptTokens } from '@everystack/shared/crypto';
 import { AirtableApiClient } from './adapters/airtable/api-client';
 import { AirtableAdapter } from './adapters/airtable';
+import { NotionApiClient } from './adapters/notion/api-client';
+import { NotionAdapter } from './adapters/notion';
 import { fieldTypeRegistry } from './field-registry';
 import { updateLastSyncedValues } from './sync-metadata';
 import type { FieldMapping } from './adapters/types';
@@ -38,6 +40,7 @@ import type {
   CanonicalValue,
   SyncConfig,
 } from './types';
+import type { NotionTokens } from './adapters/notion/oauth';
 
 const logger = createLogger({ service: 'outbound-sync' });
 
@@ -183,7 +186,8 @@ export async function executeOutboundSync(
   );
 
   // 6. Transform to platform format via adapter
-  const adapter = new AirtableAdapter();
+  const platform = connection.platform ?? 'airtable';
+  const adapter = platform === 'notion' ? new NotionAdapter() : new AirtableAdapter();
   const platformFields = adapter.fromCanonical(changedCanonical, changedMappings);
 
   if (Object.keys(platformFields as Record<string, unknown>).length === 0) {
@@ -200,18 +204,28 @@ export async function executeOutboundSync(
   }
 
   // 7. Decrypt tokens and find the external table ID
-  if (!connection.oauthTokens || !connection.externalBaseId) {
+  if (!connection.oauthTokens) {
     return {
       success: false,
       platformRecordId: syncMetadata.platform_record_id,
       syncedFieldIds: [],
       skippedFieldIds: changedFieldIds,
-      error: 'Connection missing tokens or base ID',
+      error: 'Connection missing tokens',
     };
   }
 
-  const tokens = decryptTokens<{ access_token: string }>(connection.oauthTokens);
-  const baseId = connection.externalBaseId;
+  // Notion doesn't require externalBaseId (databases are self-contained)
+  if (platform !== 'notion' && !connection.externalBaseId) {
+    return {
+      success: false,
+      platformRecordId: syncMetadata.platform_record_id,
+      syncedFieldIds: [],
+      skippedFieldIds: changedFieldIds,
+      error: 'Connection missing base ID',
+    };
+  }
+
+  const rawTokens = decryptTokens<Record<string, unknown>>(connection.oauthTokens);
 
   // Resolve external table ID from sync config
   const syncConfig = connection.syncConfig as unknown as SyncConfig;
@@ -226,15 +240,25 @@ export async function executeOutboundSync(
     };
   }
 
-  // 8. Acquire rate-limit token and call platform API
-  const apiClient = new AirtableApiClient(tokens.access_token, baseId);
-
+  // 8. Call platform API
   try {
-    await apiClient.updateRecord(
-      externalTableId,
-      syncMetadata.platform_record_id,
-      platformFields as Record<string, unknown>,
-    );
+    if (platform === 'notion') {
+      const notionTokens = rawTokens as unknown as NotionTokens;
+      const notionClient = new NotionApiClient(notionTokens.access_token);
+      await notionClient.updatePage(
+        syncMetadata.platform_record_id,
+        platformFields as Record<string, unknown>,
+      );
+    } else {
+      const airtableTokens = rawTokens as unknown as { access_token: string };
+      const baseId = connection.externalBaseId!;
+      const airtableClient = new AirtableApiClient(airtableTokens.access_token, baseId);
+      await airtableClient.updateRecord(
+        externalTableId,
+        syncMetadata.platform_record_id,
+        platformFields as Record<string, unknown>,
+      );
+    }
   } catch (err: unknown) {
     const statusCode = (err as Error & { statusCode?: number }).statusCode;
     const message = err instanceof Error ? err.message : String(err);

@@ -124,6 +124,19 @@ const AIRTABLE_RATE_LIMITS: PlatformRateLimits = {
   },
 };
 
+const NOTION_RATE_LIMITS: PlatformRateLimits = {
+  platform: 'notion',
+  limits: [
+    { scope: 'per_integration', maxRequests: 3, windowSeconds: 1 },
+  ],
+  retryStrategy: {
+    maxRetries: 5,
+    baseDelayMs: 400,
+    maxDelayMs: 30_000,
+    backoffMultiplier: 2,
+  },
+};
+
 // ---------------------------------------------------------------------------
 // RateLimiter Class
 // ---------------------------------------------------------------------------
@@ -132,8 +145,9 @@ export class RateLimiter {
   private platformConfigs = new Map<string, PlatformRateLimits>();
 
   constructor() {
-    // Register Airtable limits at construction
+    // Register platform limits at construction
     this.registerPlatformLimits(AIRTABLE_RATE_LIMITS);
+    this.registerPlatformLimits(NOTION_RATE_LIMITS);
   }
 
   /**
@@ -305,5 +319,5 @@ function sleep(ms: number): Promise<void> {
 
 export const rateLimiter = new RateLimiter();
 
-// Re-export config for external registration
-export { AIRTABLE_RATE_LIMITS };
+// Re-export configs for external registration
+export { AIRTABLE_RATE_LIMITS, NOTION_RATE_LIMITS };

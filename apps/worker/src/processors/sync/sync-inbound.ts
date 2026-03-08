@@ -31,21 +31,43 @@ import type { DrizzleClient } from '@everystack/shared/db';
 import {
   AirtableApiClient,
   AirtableAdapter,
+  NotionAdapter,
+  NotionApiClient,
   registerAirtableTransforms,
+  registerNotionTransforms,
   translateFilterToFormula,
+  translateToNotionFilter,
   rateLimiter,
   createInitialSyncMetadata,
   updateLastSyncedValues,
+  getNotionDatabaseSchema,
 } from '@everystack/shared/sync';
 import type {
+  PlatformAdapter,
   SyncConfig,
   SyncMetadata,
   SyncPlatform,
   FieldMapping,
   AirtableTokens,
+  NotionTokens,
 } from '@everystack/shared/sync';
 import { detectConflicts, writeConflictRecords, applyLastWriteWins } from '@everystack/shared/sync';
 import type { ConflictResolutionStrategy, WrittenConflict } from '@everystack/shared/sync';
+import {
+  createSyncFailure,
+  getPendingRetriableFailures,
+  incrementRetryCount,
+  markFailureResolved,
+  detectSchemaChanges,
+  createSchemaChange,
+  hasPendingSchemaChange,
+  computeSchemaChangeImpact,
+} from '@everystack/shared/sync';
+import type {
+  CreateSyncFailureInput,
+  LocalFieldMapping,
+  PlatformFieldDefinition,
+} from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { REALTIME_EVENTS } from '@everystack/shared/realtime';
 import type { EventPublisher } from '@everystack/shared/realtime';
@@ -53,18 +75,26 @@ import { BaseProcessor } from '../../lib/base-processor';
 
 // Ensure transforms are registered
 registerAirtableTransforms();
+registerNotionTransforms();
 
 // ---------------------------------------------------------------------------
 // Processor
 // ---------------------------------------------------------------------------
 
 export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> {
-  private readonly adapter = new AirtableAdapter();
+  private readonly airtableAdapter = new AirtableAdapter();
+  private readonly notionAdapter = new NotionAdapter();
   private readonly eventPublisher: EventPublisher;
 
   constructor(eventPublisher: EventPublisher) {
     super('sync', { concurrency: 3 });
     this.eventPublisher = eventPublisher;
+  }
+
+  /** Resolve the correct adapter for the connection's platform. */
+  private getAdapter(platform: string): PlatformAdapter {
+    if (platform === 'notion') return this.notionAdapter;
+    return this.airtableAdapter;
   }
 
   async processJob(job: Job<IncrementalSyncJobData>, logger: Logger): Promise<void> {
@@ -97,52 +127,82 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       throw new Error('Connection missing tokens or base ID');
     }
 
-    const tokens = decryptTokens<Record<string, unknown>>(
+    const rawTokens = decryptTokens<Record<string, unknown>>(
       connection.oauthTokens as Record<string, unknown>,
-    ) as unknown as AirtableTokens;
+    );
     const baseId = connection.externalBaseId;
     const syncConfig = connection.syncConfig as unknown as SyncConfig;
     const platform = connection.platform as SyncPlatform;
     const conflictResolution = (connection.conflictResolution ?? 'last_write_wins') as ConflictResolutionStrategy;
 
-    const apiClient = new AirtableApiClient(tokens.access_token, baseId);
+    // Platform-aware API client
+    const airtableClient = platform !== 'notion'
+      ? new AirtableApiClient((rawTokens as unknown as AirtableTokens).access_token, baseId ?? '')
+      : null;
+    const notionClient = platform === 'notion'
+      ? new NotionApiClient((rawTokens as unknown as NotionTokens).access_token)
+      : null;
 
-    // 2. Process each enabled table
+    // 2. Auto-retry pending failures from previous sync cycles
+    await this.retryPendingFailures({
+      tenantId,
+      connectionId,
+      platform,
+      conflictResolution,
+      airtableClient,
+      notionClient,
+      logger,
+    });
+
+    // 3. Process each enabled table
     let totalUpdated = 0;
     let totalCreated = 0;
     let totalConflicts = 0;
+    let totalFailed = 0;
 
     for (const tableConfig of syncConfig.tables) {
       if (!tableConfig.enabled || !tableConfig.es_table_id) continue;
 
+      const notionAccessToken = platform === 'notion' ? (rawTokens as unknown as NotionTokens).access_token : null;
       const result = await this.syncTableInbound({
         tenantId,
         connectionId,
-        baseId,
+        baseId: baseId ?? '',
         esTableId: tableConfig.es_table_id,
         externalTableId: tableConfig.external_table_id,
         syncFilter: tableConfig.sync_filter,
         platform,
         conflictResolution,
-        apiClient,
+        airtableClient,
+        notionClient,
+        notionAccessToken,
         logger,
       });
 
       totalUpdated += result.updated;
       totalCreated += result.created;
       totalConflicts += result.conflicts;
+      totalFailed += result.failed;
     }
 
-    // 3. Update connection lastSyncAt
+    // 4. Update connection lastSyncAt + health
     const writeDb = getDbForTenant(tenantId);
+    const syncStatusValue = totalFailed > 0 ? 'completed_with_errors' : undefined;
     await writeDb
       .update(baseConnections)
       .set({
         lastSyncAt: new Date(),
+        ...(syncStatusValue ? { syncStatus: syncStatusValue } : {}),
         health: {
           last_sync_type: 'incremental',
           last_sync_completed_at: new Date().toISOString(),
-          last_sync_stats: { updated: totalUpdated, created: totalCreated, conflicts: totalConflicts },
+          last_sync_stats: {
+            updated: totalUpdated,
+            created: totalCreated,
+            conflicts: totalConflicts,
+            failed: totalFailed,
+          },
+          records_failed: totalFailed,
         },
       })
       .where(
@@ -153,8 +213,8 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       );
 
     logger.info(
-      { totalUpdated, totalCreated, totalConflicts },
-      'Incremental inbound sync completed',
+      { totalUpdated, totalCreated, totalConflicts, totalFailed },
+      totalFailed > 0 ? 'Incremental inbound sync completed with errors' : 'Incremental inbound sync completed',
     );
   }
 
@@ -170,9 +230,11 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     syncFilter: SyncConfig['tables'][0]['sync_filter'];
     platform: SyncPlatform;
     conflictResolution: ConflictResolutionStrategy;
-    apiClient: AirtableApiClient;
+    airtableClient: AirtableApiClient | null;
+    notionClient: NotionApiClient | null;
+    notionAccessToken: string | null;
     logger: Logger;
-  }): Promise<{ updated: number; created: number; conflicts: number }> {
+  }): Promise<{ updated: number; created: number; conflicts: number; failed: number }> {
     const {
       tenantId,
       connectionId,
@@ -182,82 +244,175 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       syncFilter,
       platform,
       conflictResolution,
-      apiClient,
+      airtableClient,
+      notionClient,
+      notionAccessToken,
       logger,
     } = params;
 
+    const adapter = this.getAdapter(platform);
+
     // Build field mappings
     const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, esTableId);
-    const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
+
+    // Schema change detection: compare platform fields against local mappings
+    const skippedFieldIds = await this.detectAndRecordSchemaChanges({
+      tenantId,
+      connectionId,
+      esTableId,
+      platform,
+      airtableClient,
+      notionAccessToken,
+      externalTableId,
+      fieldMappings,
+      logger,
+    });
+
+    // Filter out skipped fields (type_changed or deleted pending resolution)
+    const activeFieldMappings = skippedFieldIds.size > 0
+      ? fieldMappings.filter((m) => !skippedFieldIds.has(m.fieldId))
+      : fieldMappings;
+    const syncedFieldIds = activeFieldMappings.map((m) => m.fieldId);
 
     // Build fieldMap for filter translation
     const fieldMap = new Map<string, string>();
-    for (const mapping of fieldMappings) {
+    for (const mapping of activeFieldMappings) {
       fieldMap.set(mapping.fieldId, mapping.externalFieldId);
     }
 
-    let filterFormula = '';
+    // Platform-specific filter setup
+    let airtableFilterFormula = '';
+    let notionFilter: Record<string, unknown> | undefined;
     if (syncFilter && syncFilter.length > 0) {
-      filterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      if (platform === 'notion') {
+        notionFilter = translateToNotionFilter(syncFilter, fieldMappings) as Record<string, unknown> | undefined;
+      } else {
+        airtableFilterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      }
     }
 
-    let offset: string | undefined;
     let updated = 0;
     let created = 0;
     let conflicts = 0;
+    let failed = 0;
 
-    do {
-      await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
+    if (platform === 'notion' && notionClient) {
+      // Notion pagination: uses start_cursor / has_more
+      let startCursor: string | null = null;
+      let hasMore = true;
 
-      const page = await apiClient.listRecords(externalTableId, {
-        pageSize: 100,
-        offset,
-        filterByFormula: filterFormula || undefined,
-      });
+      while (hasMore) {
+        const rateLimitScope = `integration:${connectionId}`;
+        await rateLimiter.waitForCapacity('notion', rateLimitScope);
 
-      if (page.records.length === 0) break;
-
-      for (const platformRecord of page.records) {
-        const inboundCanonical = this.adapter.toCanonical(platformRecord, fieldMappings);
-        const platformRecordId = platformRecord.id;
-
-        const result = await this.reconcileRecord({
-          tenantId,
-          esTableId,
-          platformRecordId,
-          inboundCanonical,
-          syncedFieldIds,
-          platform,
-          conflictResolution,
-          fieldMappings,
-          logger,
+        const queryResult = await notionClient.queryDatabase(externalTableId, {
+          pageSize: 100,
+          startCursor,
+          filter: notionFilter,
         });
 
-        if (result.status === 'created') created++;
-        else if (result.status === 'updated') updated++;
-        else if (result.status === 'conflict') conflicts++;
+        if (queryResult.results.length === 0) break;
 
-        // Emit sync.conflict_detected for each written conflict record
-        if (result.writtenConflicts.length > 0) {
-          await this.emitConflictDetectedEvents(
-            tenantId,
-            esTableId,
-            result.recordId,
-            result.writtenConflicts,
-            platform,
-          );
+        for (const page of queryResult.results) {
+          try {
+            const inboundCanonical = adapter.toCanonical(page, fieldMappings);
+            const platformRecordId = page.id;
+
+            const result = await this.reconcileRecord({
+              tenantId,
+              esTableId,
+              platformRecordId,
+              inboundCanonical,
+              syncedFieldIds,
+              platform,
+              conflictResolution,
+              fieldMappings,
+              logger,
+            });
+
+            if (result.status === 'created') created++;
+            else if (result.status === 'updated') updated++;
+            else if (result.status === 'conflict') conflicts++;
+
+            if (result.writtenConflicts.length > 0) {
+              await this.emitConflictDetectedEvents(
+                tenantId,
+                esTableId,
+                result.recordId,
+                result.writtenConflicts,
+                platform,
+              );
+            }
+          } catch (recordError) {
+            failed++;
+            await this.recordSyncFailure(tenantId, connectionId, page.id, recordError, page, 'inbound', logger);
+          }
         }
-      }
 
-      offset = page.offset;
-    } while (offset);
+        hasMore = queryResult.has_more;
+        startCursor = queryResult.next_cursor;
+      }
+    } else if (airtableClient) {
+      // Airtable pagination: uses offset string
+      let offset: string | undefined;
+
+      do {
+        await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
+
+        const page = await airtableClient.listRecords(externalTableId, {
+          pageSize: 100,
+          offset,
+          filterByFormula: airtableFilterFormula || undefined,
+        });
+
+        if (page.records.length === 0) break;
+
+        for (const platformRecord of page.records) {
+          try {
+            const inboundCanonical = adapter.toCanonical(platformRecord, fieldMappings);
+            const platformRecordId = platformRecord.id;
+
+            const result = await this.reconcileRecord({
+              tenantId,
+              esTableId,
+              platformRecordId,
+              inboundCanonical,
+              syncedFieldIds,
+              platform,
+              conflictResolution,
+              fieldMappings,
+              logger,
+            });
+
+            if (result.status === 'created') created++;
+            else if (result.status === 'updated') updated++;
+            else if (result.status === 'conflict') conflicts++;
+
+            if (result.writtenConflicts.length > 0) {
+              await this.emitConflictDetectedEvents(
+                tenantId,
+                esTableId,
+                result.recordId,
+                result.writtenConflicts,
+                platform,
+              );
+            }
+          } catch (recordError) {
+            failed++;
+            await this.recordSyncFailure(tenantId, connectionId, platformRecord.id, recordError, platformRecord, 'inbound', logger);
+          }
+        }
+
+        offset = page.offset;
+      } while (offset);
+    }
 
     logger.info(
-      { esTableId, updated, created, conflicts },
-      'Table inbound sync complete',
+      { esTableId, updated, created, conflicts, failed },
+      failed > 0 ? 'Table inbound sync complete with failures' : 'Table inbound sync complete',
     );
 
-    return { updated, created, conflicts };
+    return { updated, created, conflicts, failed };
   }
 
   /**
@@ -463,6 +618,308 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         },
       });
     }
+  }
+
+  /**
+   * Record a sync failure for an individual record that failed during processing.
+   * Classifies the error and writes to sync_failures. Does not rethrow.
+   */
+  private async recordSyncFailure(
+    tenantId: string,
+    connectionId: string,
+    platformRecordId: string,
+    error: unknown,
+    rawPayload: unknown,
+    direction: 'inbound' | 'outbound',
+    logger: Logger,
+  ): Promise<void> {
+    try {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = this.classifyRecordError(errorMessage);
+
+      await createSyncFailure(tenantId, {
+        baseConnectionId: connectionId,
+        direction,
+        errorCode,
+        errorMessage,
+        platformRecordId,
+        payload: rawPayload,
+      });
+
+      logger.warn(
+        { platformRecordId, errorCode, errorMessage },
+        'Individual record sync failure recorded',
+      );
+    } catch (writeError) {
+      // Failure recording itself failed — log but don't propagate
+      logger.error(
+        { platformRecordId, writeError },
+        'Failed to write sync failure record',
+      );
+    }
+  }
+
+  /**
+   * Classify a record-level error into a sync failure error code.
+   */
+  private classifyRecordError(
+    message: string,
+  ): CreateSyncFailureInput['errorCode'] {
+    const lower = message.toLowerCase();
+    if (lower.includes('validation') || lower.includes('invalid value') || lower.includes('field type mismatch')) {
+      return 'validation';
+    }
+    if (lower.includes('schema') || lower.includes('field not found')) {
+      return 'schema_mismatch';
+    }
+    if (lower.includes('too large') || lower.includes('payload')) {
+      return 'payload_too_large';
+    }
+    if (lower.includes('rejected') || lower.includes('refused')) {
+      return 'platform_rejected';
+    }
+    return 'unknown';
+  }
+
+  /**
+   * Auto-retry pending failures from previous sync cycles.
+   *
+   * Fetches pending failures with retry_count < MAX_AUTO_RETRY_COUNT,
+   * re-attempts toCanonical + reconcile, and either resolves or
+   * increments the retry count.
+   */
+  private async retryPendingFailures(params: {
+    tenantId: string;
+    connectionId: string;
+    platform: SyncPlatform;
+    conflictResolution: ConflictResolutionStrategy;
+    airtableClient: AirtableApiClient | null;
+    notionClient: NotionApiClient | null;
+    logger: Logger;
+  }): Promise<void> {
+    const { tenantId, connectionId, logger } = params;
+
+    const pendingFailures = await getPendingRetriableFailures(tenantId, connectionId);
+    if (pendingFailures.length === 0) return;
+
+    logger.info(
+      { count: pendingFailures.length },
+      'Auto-retrying pending sync failures',
+    );
+
+    for (const failure of pendingFailures) {
+      try {
+        if (!failure.payload || !failure.platformRecordId) {
+          await incrementRetryCount(tenantId, failure.id);
+          continue;
+        }
+
+        const adapter = this.getAdapter(params.platform);
+        const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, '');
+        const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
+
+        const inboundCanonical = adapter.toCanonical(
+          failure.payload as Record<string, unknown>,
+          fieldMappings,
+        );
+
+        await this.reconcileRecord({
+          tenantId,
+          esTableId: '', // Will be resolved from the record if it exists
+          platformRecordId: failure.platformRecordId,
+          inboundCanonical,
+          syncedFieldIds,
+          platform: params.platform,
+          conflictResolution: params.conflictResolution,
+          fieldMappings,
+          logger,
+        });
+
+        // Success — mark as resolved
+        await markFailureResolved(tenantId, failure.id);
+
+        logger.info(
+          { failureId: failure.id, platformRecordId: failure.platformRecordId },
+          'Auto-retry succeeded — failure resolved',
+        );
+      } catch {
+        // Still failing — increment retry count
+        const result = await incrementRetryCount(tenantId, failure.id);
+
+        logger.warn(
+          {
+            failureId: failure.id,
+            retryCount: result.newRetryCount,
+            requiresManual: result.requiresManual,
+          },
+          result.requiresManual
+            ? 'Auto-retry failed — requires manual resolution'
+            : 'Auto-retry failed — will retry next cycle',
+        );
+      }
+    }
+  }
+
+  /**
+   * Detect schema changes between the platform's current fields and local mappings.
+   * Writes detected changes to sync_schema_changes (deduped) and returns
+   * the set of field IDs that should be skipped during this sync cycle.
+   */
+  private async detectAndRecordSchemaChanges(params: {
+    tenantId: string;
+    connectionId: string;
+    esTableId: string;
+    platform: string;
+    airtableClient: AirtableApiClient | null;
+    notionAccessToken: string | null;
+    externalTableId: string;
+    fieldMappings: FieldMapping[];
+    logger: Logger;
+  }): Promise<Set<string>> {
+    const {
+      tenantId,
+      connectionId,
+      esTableId,
+      platform,
+      airtableClient,
+      notionAccessToken,
+      externalTableId,
+      fieldMappings,
+      logger,
+    } = params;
+
+    const skippedFieldIds = new Set<string>();
+
+    try {
+      // Fetch current platform field definitions
+      let platformFields: PlatformFieldDefinition[] = [];
+
+      if (platform === 'notion' && notionAccessToken) {
+        const schema = await getNotionDatabaseSchema(notionAccessToken, externalTableId);
+        platformFields = (schema.properties ?? []).map((prop) => ({
+          id: prop.id,
+          name: prop.name,
+          type: prop.type,
+        }));
+      } else if (airtableClient) {
+        const airtableFields = await airtableClient.listFields(externalTableId);
+        platformFields = airtableFields.map((f) => ({
+          id: f.id,
+          name: f.name,
+          type: f.type,
+          options: f.options,
+        }));
+      }
+
+      if (platformFields.length === 0) return skippedFieldIds;
+
+      // Build local mappings with field names for the detector
+      const db = getDbForTenant(tenantId, 'read');
+      const fieldRows = await db
+        .select({ id: fields.id, name: fields.name })
+        .from(fields)
+        .where(eq(fields.tenantId, tenantId));
+
+      const fieldNameMap = new Map<string, string>();
+      for (const row of fieldRows) {
+        fieldNameMap.set(row.id, row.name);
+      }
+
+      const localMappings: LocalFieldMapping[] = fieldMappings.map((m) => ({
+        fieldId: m.fieldId,
+        externalFieldId: m.externalFieldId,
+        externalFieldType: m.externalFieldType,
+        fieldName: fieldNameMap.get(m.fieldId) ?? '',
+      }));
+
+      // Detect changes
+      const changes = detectSchemaChanges(localMappings, platformFields);
+
+      if (changes.length === 0) return skippedFieldIds;
+
+      logger.info(
+        { changeCount: changes.length, changeTypes: changes.map((c) => c.changeType) },
+        'Schema changes detected during inbound sync',
+      );
+
+      // Write changes to sync_schema_changes (deduped — skip if pending already exists)
+      for (const change of changes) {
+        const alreadyPending = await hasPendingSchemaChange(
+          tenantId,
+          connectionId,
+          change.platformFieldId,
+          change.changeType,
+        );
+
+        if (alreadyPending) {
+          // Still pending from previous cycle — skip but still mark field for skipping
+          if (
+            change.fieldId &&
+            (change.changeType === 'field_type_changed' || change.changeType === 'field_deleted')
+          ) {
+            skippedFieldIds.add(change.fieldId);
+          }
+          continue;
+        }
+
+        // Compute impact for existing fields
+        let impact = { formulaCount: 0, automationCount: 0, portalFieldCount: 0, crossLinkCount: 0 };
+        if (change.fieldId) {
+          impact = await computeSchemaChangeImpact(tenantId, change.fieldId);
+        }
+
+        await createSchemaChange(tenantId, {
+          baseConnectionId: connectionId,
+          changeType: change.changeType,
+          fieldId: change.fieldId,
+          platformFieldId: change.platformFieldId,
+          oldSchema: change.oldSchema,
+          newSchema: change.newSchema,
+          impact,
+        });
+
+        // Skip syncing affected fields until Manager resolves
+        if (
+          change.fieldId &&
+          (change.changeType === 'field_type_changed' || change.changeType === 'field_deleted')
+        ) {
+          skippedFieldIds.add(change.fieldId);
+        }
+
+        logger.info(
+          {
+            changeType: change.changeType,
+            fieldId: change.fieldId,
+            platformFieldId: change.platformFieldId,
+            impact,
+          },
+          'Schema change recorded',
+        );
+      }
+
+      // Emit real-time event so the UI can refresh the Schema Changes tab
+      if (skippedFieldIds.size > 0 || changes.length > 0) {
+        await this.eventPublisher.publish({
+          tenantId,
+          channel: `table:${esTableId}`,
+          event: REALTIME_EVENTS.SYNC_SCHEMA_CHANGE_DETECTED,
+          payload: {
+            connectionId,
+            tableId: esTableId,
+            changeCount: changes.length,
+            changeTypes: [...new Set(changes.map((c) => c.changeType))],
+          },
+        });
+      }
+    } catch (error) {
+      // Schema detection failure should not block the sync
+      logger.error(
+        { error },
+        'Schema change detection failed — continuing sync without detection',
+      );
+    }
+
+    return skippedFieldIds;
   }
 
   /**

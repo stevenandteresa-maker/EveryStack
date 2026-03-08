@@ -30,9 +30,9 @@ describe('RoomPattern', () => {
 });
 
 describe('REALTIME_EVENTS', () => {
-  it('has exactly 23 event names', () => {
+  it('has exactly 24 event names', () => {
     const eventCount = Object.keys(REALTIME_EVENTS).length;
-    expect(eventCount).toBe(23);
+    expect(eventCount).toBe(24);
   });
 
   it('contains all record events', () => {
@@ -70,6 +70,7 @@ describe('REALTIME_EVENTS', () => {
   it('contains conflict events', () => {
     expect(REALTIME_EVENTS.SYNC_CONFLICT_DETECTED).toBe('sync.conflict_detected');
     expect(REALTIME_EVENTS.SYNC_CONFLICT_RESOLVED).toBe('sync.conflict_resolved');
+    expect(REALTIME_EVENTS.SYNC_SCHEMA_CHANGE_DETECTED).toBe('sync.schema_change_detected');
   });
 
   it('contains notification event', () => {
@@ -85,6 +86,6 @@ describe('REALTIME_EVENTS', () => {
   it('event values satisfy RealtimeEventName type', () => {
     // Type-level check: assigning each value to the union type
     const events: RealtimeEventName[] = Object.values(REALTIME_EVENTS);
-    expect(events).toHaveLength(23);
+    expect(events).toHaveLength(24);
   });
 });

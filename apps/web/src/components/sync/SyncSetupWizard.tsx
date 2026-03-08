@@ -32,19 +32,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { SyncFilterBuilder } from './SyncFilterBuilder';
 import type { FilterField } from './SyncFilterBuilder';
-import { initiateAirtableConnection } from '@/actions/sync-connections';
-import { listBasesForConnection, selectBaseForConnection } from '@/actions/sync-connections';
+import {
+  initiateAirtableConnection,
+  initiateNotionConnection,
+  listBasesForConnection,
+  listDatabasesForConnection,
+  selectBaseForConnection,
+} from '@/actions/sync-connections';
 import {
   listTablesInBase,
   fetchEstimatedRecordCount,
+  fetchNotionEstimatedRecordCount,
+  getNotionDatabaseProperties,
   checkQuotaForSync,
   saveSyncConfigAndStartSync,
 } from '@/actions/sync-setup';
-import type { AirtableBase, AirtableTableMeta, FilterRule, SyncConfig } from '@everystack/shared/sync';
+import type { AirtableBase, AirtableTableMeta, NotionDatabase, FilterRule, SyncConfig } from '@everystack/shared/sync';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
+
+export type SyncPlatformChoice = 'airtable' | 'notion';
 
 export interface SyncSetupWizardProps {
   open: boolean;
@@ -65,11 +74,19 @@ interface TableSelection {
   showFilters: boolean;
 }
 
+/** Unified base/database item for Step 2 display. */
+interface BaseItem {
+  id: string;
+  name: string;
+  detail: string;
+}
+
 interface WizardState {
   step: 1 | 2 | 3;
+  platform: SyncPlatformChoice | null;
   connectionId: string | null;
-  bases: AirtableBase[];
-  selectedBase: AirtableBase | null;
+  bases: BaseItem[];
+  selectedBase: BaseItem | null;
   tables: AirtableTableMeta[];
   tableSelections: Record<string, TableSelection>;
   quotaRemaining: number;
@@ -81,6 +98,7 @@ interface WizardState {
 
 const initialState: WizardState = {
   step: 1,
+  platform: null,
   connectionId: null,
   bases: [],
   selectedBase: null,
@@ -98,9 +116,10 @@ const initialState: WizardState = {
 // ---------------------------------------------------------------------------
 
 type WizardAction =
+  | { type: 'SET_PLATFORM'; platform: SyncPlatformChoice }
   | { type: 'SET_CONNECTION'; connectionId: string }
-  | { type: 'SET_BASES'; bases: AirtableBase[] }
-  | { type: 'SELECT_BASE'; base: AirtableBase }
+  | { type: 'SET_BASES'; bases: BaseItem[] }
+  | { type: 'SELECT_BASE'; base: BaseItem }
   | { type: 'SET_TABLES'; tables: AirtableTableMeta[] }
   | { type: 'TOGGLE_TABLE'; tableId: string }
   | { type: 'SET_TABLE_FILTERS'; tableId: string; filters: FilterRule[] }
@@ -115,6 +134,8 @@ type WizardAction =
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
+    case 'SET_PLATFORM':
+      return { ...state, platform: action.platform };
     case 'SET_CONNECTION':
       return { ...state, connectionId: action.connectionId, error: null };
     case 'SET_BASES':
@@ -303,13 +324,22 @@ export function SyncSetupWizard({
       const appUrl = process.env['NEXT_PUBLIC_APP_URL'] ?? window.location.origin;
       if (event.origin !== new URL(appUrl).origin) return;
 
+      // Airtable OAuth complete
       if (event.data?.type === 'airtable_oauth_complete' && event.data.connectionId) {
         dispatch({ type: 'SET_CONNECTION', connectionId: event.data.connectionId });
         dispatch({ type: 'GO_TO_STEP', step: 2 });
         popupRef.current = null;
       }
 
-      if (event.data?.type === 'airtable_oauth_error') {
+      // Notion OAuth complete
+      if (event.data?.type === 'notion_oauth_complete' && event.data.connectionId) {
+        dispatch({ type: 'SET_CONNECTION', connectionId: event.data.connectionId });
+        dispatch({ type: 'GO_TO_STEP', step: 2 });
+        popupRef.current = null;
+      }
+
+      // OAuth errors
+      if (event.data?.type === 'airtable_oauth_error' || event.data?.type === 'notion_oauth_error') {
         dispatch({ type: 'SET_ERROR', error: event.data.error ?? t('error_oauth') });
         popupRef.current = null;
       }
@@ -330,7 +360,17 @@ export function SyncSetupWizard({
     let cancelled = false;
     dispatch({ type: 'SET_LOADING', loading: true });
 
-    listBasesForConnection({ connectionId: state.connectionId })
+    const loadBases = state.platform === 'notion'
+      ? listDatabasesForConnection({ connectionId: state.connectionId })
+          .then((databases: NotionDatabase[]) =>
+            databases.map((db) => ({ id: db.id, name: db.title, detail: db.icon ?? '' })),
+          )
+      : listBasesForConnection({ connectionId: state.connectionId })
+          .then((bases: AirtableBase[]) =>
+            bases.map((b) => ({ id: b.id, name: b.name, detail: b.permissionLevel })),
+          );
+
+    loadBases
       .then((bases) => {
         if (!cancelled) dispatch({ type: 'SET_BASES', bases });
       })
@@ -339,7 +379,7 @@ export function SyncSetupWizard({
       });
 
     return () => { cancelled = true; };
-  }, [state.step, state.connectionId, state.bases.length]);
+  }, [state.step, state.connectionId, state.bases.length, state.platform]);
 
   // -------------------------------------------------------------------------
   // Load tables when entering step 3
@@ -352,11 +392,30 @@ export function SyncSetupWizard({
     let cancelled = false;
     dispatch({ type: 'SET_LOADING', loading: true });
 
+    const loadTables = state.platform === 'notion'
+      ? getNotionDatabaseProperties({
+          connectionId: state.connectionId,
+          databaseId: state.selectedBase.id,
+        }).then((result) => ({
+          // Notion: a single database is a single "table" with properties as fields
+          tables: [{
+            id: result.database.id,
+            name: result.database.title,
+            primaryFieldId: result.database.properties.find((p) => p.type === 'title')?.id ?? '',
+            fields: result.database.properties.map((p) => ({
+              id: p.id,
+              name: p.name,
+              type: p.type,
+            })),
+          }] satisfies AirtableTableMeta[],
+        }))
+      : listTablesInBase({
+          connectionId: state.connectionId,
+          baseId: state.selectedBase.id,
+        });
+
     Promise.all([
-      listTablesInBase({
-        connectionId: state.connectionId,
-        baseId: state.selectedBase.id,
-      }),
+      loadTables,
       checkQuotaForSync({ estimatedCount: 0 }),
     ])
       .then(([tablesResult, quotaResult]) => {
@@ -373,19 +432,22 @@ export function SyncSetupWizard({
       });
 
     return () => { cancelled = true; };
-  }, [state.step, state.connectionId, state.selectedBase, state.tables.length]);
+  }, [state.step, state.connectionId, state.selectedBase, state.tables.length, state.platform]);
 
   // -------------------------------------------------------------------------
   // Handlers
   // -------------------------------------------------------------------------
 
-  const handleConnect = useCallback(async () => {
+  const handleConnect = useCallback(async (platform: SyncPlatformChoice) => {
+    dispatch({ type: 'SET_PLATFORM', platform });
     dispatch({ type: 'SET_LOADING', loading: true });
     try {
-      const { authUrl } = await initiateAirtableConnection();
+      const { authUrl } = platform === 'notion'
+        ? await initiateNotionConnection()
+        : await initiateAirtableConnection();
       const popup = window.open(
         authUrl,
-        'airtable_oauth',
+        `${platform}_oauth`,
         'width=600,height=700,scrollbars=yes',
       );
       popupRef.current = popup;
@@ -396,7 +458,7 @@ export function SyncSetupWizard({
   }, []);
 
   const handleSelectBase = useCallback(
-    async (base: AirtableBase) => {
+    async (base: BaseItem) => {
       if (!state.connectionId) return;
       dispatch({ type: 'SELECT_BASE', base });
       dispatch({ type: 'SET_LOADING', loading: true });
@@ -425,11 +487,16 @@ export function SyncSetupWizard({
       // If toggling ON and no count yet, fetch estimate
       if (!sel.enabled && sel.estimatedCount === 0) {
         try {
-          const result = await fetchEstimatedRecordCount({
-            connectionId: state.connectionId,
-            baseId: state.selectedBase.id,
-            tableId,
-          });
+          const result = state.platform === 'notion'
+            ? await fetchNotionEstimatedRecordCount({
+                connectionId: state.connectionId,
+                databaseId: tableId,
+              })
+            : await fetchEstimatedRecordCount({
+                connectionId: state.connectionId,
+                baseId: state.selectedBase.id,
+                tableId,
+              });
           dispatch({
             type: 'SET_TABLE_COUNT',
             tableId,
@@ -441,7 +508,7 @@ export function SyncSetupWizard({
         }
       }
     },
-    [state.tableSelections, state.connectionId, state.selectedBase],
+    [state.tableSelections, state.connectionId, state.selectedBase, state.platform],
   );
 
   const handleFilterChange = useCallback(
@@ -514,18 +581,27 @@ export function SyncSetupWizard({
           </div>
         )}
 
-        {/* Step 1: Authenticate */}
+        {/* Step 1: Authenticate — Platform Selection */}
         {state.step === 1 && (
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">{t('step1_description')}</p>
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-3">
               <Button
-                onClick={handleConnect}
+                onClick={() => handleConnect('airtable')}
                 disabled={state.loading}
                 data-testid="connect-airtable-button"
               >
-                {state.loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {state.loading && state.platform === 'airtable' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {t('connect_airtable')}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => handleConnect('notion')}
+                disabled={state.loading}
+                data-testid="connect-notion-button"
+              >
+                {state.loading && state.platform === 'notion' && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {t('connect_notion')}
               </Button>
             </div>
           </div>
@@ -561,9 +637,11 @@ export function SyncSetupWizard({
                   <div className="font-medium text-sm">{base.name}</div>
                   <div className="text-xs text-muted-foreground">{base.id}</div>
                 </div>
-                <Badge variant="default" className="text-xs">
-                  {base.permissionLevel}
-                </Badge>
+                {base.detail && (
+                  <Badge variant="default" className="text-xs">
+                    {base.detail}
+                  </Badge>
+                )}
               </Card>
             ))}
           </div>

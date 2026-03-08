@@ -19,6 +19,7 @@ import {
   tables,
   fields,
   baseConnections,
+  syncedFieldMappings,
   views,
   crossLinks,
   portals,
@@ -50,6 +51,8 @@ import type {
   Field,
   NewBaseConnection,
   BaseConnection,
+  NewSyncedFieldMapping,
+  SyncedFieldMapping,
   NewView,
   View,
   NewCrossLink,
@@ -323,6 +326,35 @@ export async function createTestBase(
   };
 
   return firstRow(await db.insert(baseConnections).values(values).returning());
+}
+
+/**
+ * Creates a synced field mapping with sensible defaults.
+ * Auto-creates dependent entities when not provided.
+ */
+export async function createTestSyncedFieldMapping(
+  overrides?: Partial<NewSyncedFieldMapping>,
+): Promise<SyncedFieldMapping> {
+  const db = getTestDb();
+
+  const tenantId = overrides?.tenantId ?? (await createTestTenant()).id;
+  const baseConnectionId = overrides?.baseConnectionId ?? (await createTestBase({ tenantId })).id;
+  const tableId = overrides?.tableId ?? (await createTestTable({ tenantId })).id;
+  const fieldId = overrides?.fieldId ?? (await createTestField({ tenantId, tableId })).id;
+
+  const values: NewSyncedFieldMapping = {
+    id: generateUUIDv7(),
+    tenantId,
+    baseConnectionId,
+    tableId,
+    fieldId,
+    externalFieldId: `ext_${randomSuffix()}`,
+    externalFieldType: 'singleLineText',
+    status: 'active',
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(syncedFieldMappings).values(values).returning());
 }
 
 // ---------------------------------------------------------------------------

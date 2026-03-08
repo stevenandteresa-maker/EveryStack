@@ -85,6 +85,27 @@ export type {
   FilterRule,
   SyncTableConfig,
   SyncConfig,
+  // Connection health
+  SyncErrorCode,
+  SyncError,
+  ConnectionHealth,
+  // Smart polling
+  TableVisibility,
+  SyncConfigWebhooks,
+  ConvertedSyncStatus,
+  SyncStatus,
+  // Priority scheduling
+  PriorityDecision,
+} from './types';
+
+// Smart polling constants
+export { POLLING_INTERVALS } from './types';
+
+// Priority scheduling
+export {
+  SyncPriority,
+  PRIORITY_CAPACITY_THRESHOLDS,
+  MAX_TENANT_CAPACITY_PERCENT,
 } from './types';
 
 // Filter & sync config schemas
@@ -95,7 +116,18 @@ export {
   SyncConfigSchema,
   SyncedFieldValueSchema,
   SyncMetadataSchema,
+  SyncErrorCodeSchema,
+  SyncErrorSchema,
+  ConnectionHealthSchema,
 } from './types';
+
+// Connection health utilities
+export {
+  deriveSyncHealthState,
+  updateConnectionHealth,
+  DEFAULT_CONNECTION_HEALTH,
+} from './health';
+export type { SyncHealthState } from './health';
 
 // Sync metadata utilities
 export {
@@ -131,11 +163,22 @@ export type {
   RetryStrategy,
 } from './adapters/types';
 
+// Priority scheduler
+export {
+  evaluatePriority,
+  getRateLimitCapacity,
+  getNextTenantForPlatform,
+  isTenantWithinBudget,
+  recordTenantUsage,
+  visibilityToPriority,
+} from './priority-scheduler';
+
 // Rate limiter
 export {
   RateLimiter,
   rateLimiter,
   AIRTABLE_RATE_LIMITS,
+  NOTION_RATE_LIMITS,
 } from './rate-limiter';
 export type { RateLimitResult } from './rate-limiter';
 
@@ -193,3 +236,106 @@ export type {
   AirtableTableMeta,
   AirtableFieldMeta,
 } from './adapters/airtable/oauth';
+
+// Notion adapter
+export {
+  NotionAdapter,
+  registerNotionTransforms,
+  translateToNotionFilter,
+  NotionApiClient,
+} from './adapters/notion';
+export type {
+  NotionPage,
+  NotionProperty,
+  NotionPropertyType,
+  NotionRichText,
+  NotionUser,
+  NotionSelectOption,
+  NotionDate,
+  NotionFile,
+} from './adapters/notion/notion-types';
+
+// Notion OAuth
+export {
+  getNotionAuthUrl,
+  exchangeNotionCodeForTokens,
+  listNotionDatabases,
+  getNotionDatabaseSchema,
+  estimateNotionRecordCount,
+} from './adapters/notion/oauth';
+export type {
+  NotionTokens,
+  NotionDatabase,
+  NotionPropertyMeta,
+  NotionDatabaseMeta,
+} from './adapters/notion/oauth';
+
+// Notion API client types
+export type {
+  NotionQueryResponse,
+  NotionPageResult,
+  NotionQueryOptions,
+} from './adapters/notion/api-client';
+
+// Sync failures
+export {
+  createSyncFailure,
+  getSyncFailuresForConnection,
+  getPendingRetriableFailures,
+  retrySyncFailure,
+  skipSyncFailure,
+  bulkRetrySyncFailures,
+  bulkSkipSyncFailures,
+  incrementRetryCount,
+  markFailureResolved,
+  MAX_AUTO_RETRY_COUNT,
+  RESOLVED_RETENTION_MS,
+} from './sync-failures';
+export type { CreateSyncFailureInput } from './sync-failures';
+
+// Sync notifications
+export {
+  sendSyncNotification,
+  isDuplicateNotification,
+  markNotificationSent,
+  setNotificationRedisClient,
+} from './sync-notifications';
+export type {
+  SyncNotificationEventType,
+  SyncNotificationDetails,
+  SyncNotificationPayload,
+} from './sync-notifications';
+
+// Notification queue
+export { setEnqueueEmail, getEnqueueEmail } from './notification-queue';
+export type { EnqueueEmailFn, NotificationEmailJob } from './notification-queue';
+
+// Schema change detection
+export {
+  detectSchemaChanges,
+} from './schema-change-detector';
+export type {
+  SchemaChange,
+  LocalFieldMapping,
+  PlatformFieldDefinition,
+} from './schema-change-detector';
+
+// Sync schema changes (data access)
+export {
+  createSchemaChange,
+  getSchemaChangesForConnection,
+  countPendingSchemaChanges,
+  hasPendingSchemaChange,
+  acceptSchemaChange,
+  rejectSchemaChange,
+  computeSchemaChangeImpact,
+  updateFieldTypeFromSchemaChange,
+  disconnectFieldMapping,
+  archiveField,
+  renameField,
+} from './sync-schema-changes';
+export type {
+  SchemaChangeImpact,
+  CreateSchemaChangeInput,
+  SyncSchemaChangeRow,
+} from './sync-schema-changes';

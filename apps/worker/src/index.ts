@@ -13,8 +13,11 @@ import { FileThumbnailProcessor } from './processors/file-thumbnail';
 import { FileScanProcessor } from './processors/file-scan';
 import { FileOrphanCleanupProcessor } from './processors/file-orphan-cleanup';
 import { FileProcessingRouter } from './processors/file-processing-router';
+import type { Queue } from 'bullmq';
+import type { IncrementalSyncJobData } from '@everystack/shared/queue';
 import { InitialSyncProcessor } from './processors/sync/initial-sync';
 import { InboundSyncProcessor } from './processors/sync/sync-inbound';
+import { SyncScheduler } from './processors/sync/sync-scheduler';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -52,6 +55,13 @@ initialSyncProcessor.start();
 const inboundSyncProcessor = new InboundSyncProcessor(eventPublisher);
 inboundSyncProcessor.start();
 
+// Sync scheduler: adaptive polling via BullMQ repeatable job
+const schedulerRedis = createRedisClient('sync-scheduler');
+const syncScheduler = new SyncScheduler(
+  schedulerRedis,
+  getQueue('sync') as unknown as Queue<IncrementalSyncJobData>,
+);
+
 // ---------------------------------------------------------------------------
 // Shutdown handlers (order: processors → queues → telemetry → redis)
 // ---------------------------------------------------------------------------
@@ -60,8 +70,12 @@ registerShutdownHandler(async () => fileRouter.close());
 registerShutdownHandler(async () => orphanProcessor.close());
 registerShutdownHandler(async () => initialSyncProcessor.close());
 registerShutdownHandler(async () => inboundSyncProcessor.close());
+registerShutdownHandler(async () => syncScheduler.stop());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);
+registerShutdownHandler(async () => {
+  await schedulerRedis.quit();
+});
 registerShutdownHandler(async () => {
   await publisherRedis.quit();
 });
@@ -76,6 +90,9 @@ setupGracefulShutdown(workerLogger);
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function scheduleRecurringJobs(): Promise<void> {
+  // Sync scheduler: repeatable 30s tick for adaptive polling
+  await syncScheduler.start();
+
   const cleanupQueue = getQueue('cleanup');
   await cleanupQueue.upsertJobScheduler(
     'daily-orphan-cleanup',

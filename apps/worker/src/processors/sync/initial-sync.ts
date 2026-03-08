@@ -28,13 +28,17 @@ import {
 import {
   AirtableApiClient,
   AirtableAdapter,
+  NotionAdapter,
+  NotionApiClient,
   registerAirtableTransforms,
+  registerNotionTransforms,
   translateFilterToFormula,
+  translateToNotionFilter,
   enforceQuotaOnBatch,
   incrementQuotaCache,
   rateLimiter,
 } from '@everystack/shared/sync';
-import type { SyncConfig, FieldMapping, AirtableTokens } from '@everystack/shared/sync';
+import type { SyncConfig, FieldMapping, AirtableTokens, NotionTokens, PlatformAdapter, SyncPlatform } from '@everystack/shared/sync';
 import { createInitialSyncMetadata } from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { BaseProcessor } from '../../lib/base-processor';
@@ -42,6 +46,7 @@ import { syncSchema } from './schema-sync';
 
 // Ensure transforms are registered
 registerAirtableTransforms();
+registerNotionTransforms();
 
 // ---------------------------------------------------------------------------
 // Processor
@@ -49,11 +54,18 @@ registerAirtableTransforms();
 
 export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
   private readonly eventPublisher: EventPublisher;
-  private readonly adapter = new AirtableAdapter();
+  private readonly airtableAdapter = new AirtableAdapter();
+  private readonly notionAdapter = new NotionAdapter();
 
   constructor(eventPublisher: EventPublisher) {
     super('sync', { concurrency: 3 });
     this.eventPublisher = eventPublisher;
+  }
+
+  /** Resolve the correct adapter for the connection's platform. */
+  private getAdapter(platform: string): PlatformAdapter {
+    if (platform === 'notion') return this.notionAdapter;
+    return this.airtableAdapter;
   }
 
   async processJob(job: Job<InitialSyncJobData>, logger: Logger): Promise<void> {
@@ -67,13 +79,21 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
       throw new Error('Connection missing tokens or base ID');
     }
 
-    // 2. Decrypt tokens
-    const tokens = decryptTokens<Record<string, unknown>>(connection.oauthTokens) as unknown as AirtableTokens;
+    // 2. Decrypt tokens and create platform-specific API client
+    const rawTokens = decryptTokens<Record<string, unknown>>(connection.oauthTokens);
     const baseId = connection.externalBaseId;
     const syncConfig = connection.syncConfig as unknown as SyncConfig;
+    const platform = (connection.platform ?? 'airtable') as SyncPlatform;
 
-    // 3. Create API client
-    const apiClient = new AirtableApiClient(tokens.access_token, baseId);
+    const airtableClient = platform !== 'notion'
+      ? new AirtableApiClient((rawTokens as unknown as AirtableTokens).access_token, baseId ?? '')
+      : null;
+    const notionClient = platform === 'notion'
+      ? new NotionApiClient((rawTokens as unknown as NotionTokens).access_token)
+      : null;
+
+    // Legacy alias for schema sync (expects AirtableApiClient)
+    const apiClient = airtableClient ?? new AirtableApiClient('', '');
 
     // 4. Emit SYNC_STARTED
     await this.eventPublisher.publish({
@@ -111,13 +131,15 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
         const recordsSynced = await this.syncTableRecords({
           tenantId,
           connectionId,
-          baseId,
+          baseId: baseId ?? '',
           workspaceId,
           esTableId,
           externalTableId: tableConfig.external_table_id,
           syncFilter: tableConfig.sync_filter,
           createdBy: connection.createdBy,
-          apiClient,
+          platform,
+          airtableClient,
+          notionClient,
           logger,
         });
 
@@ -213,7 +235,9 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
     externalTableId: string;
     syncFilter: SyncConfig['tables'][0]['sync_filter'];
     createdBy: string;
-    apiClient: AirtableApiClient;
+    platform: SyncPlatform;
+    airtableClient: AirtableApiClient | null;
+    notionClient: NotionApiClient | null;
     logger: Logger;
   }): Promise<number> {
     const {
@@ -225,60 +249,52 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
       externalTableId,
       syncFilter,
       createdBy,
-      apiClient,
+      platform,
+      airtableClient,
+      notionClient,
       logger,
     } = params;
+
+    const adapter = this.getAdapter(platform);
 
     // Build field mappings from synced_field_mappings + fields
     const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, esTableId);
 
-    // Build fieldMap for filter translation: ES UUID → Airtable fldXxx
-    const fieldMap = new Map<string, string>();
-    for (const mapping of fieldMappings) {
-      fieldMap.set(mapping.fieldId, mapping.externalFieldId);
-    }
-
-    // Translate sync filters to Airtable formula
-    let filterFormula = '';
+    // Platform-specific filter setup
+    let airtableFilterFormula = '';
+    let notionFilter: Record<string, unknown> | undefined;
     if (syncFilter && syncFilter.length > 0) {
-      filterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      if (platform === 'notion') {
+        notionFilter = translateToNotionFilter(syncFilter, fieldMappings) as Record<string, unknown> | undefined;
+      } else {
+        const fieldMap = new Map<string, string>();
+        for (const mapping of fieldMappings) {
+          fieldMap.set(mapping.fieldId, mapping.externalFieldId);
+        }
+        airtableFilterFormula = translateFilterToFormula(syncFilter, fieldMap);
+      }
     }
 
-    let offset: string | undefined;
     let syncedCount = 0;
     let pageNum = 0;
     let quotaExceeded = false;
 
-    do {
-      // Rate limit before each page
-      await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
-
-      // Fetch page
-      const page = await apiClient.listRecords(externalTableId, {
-        pageSize: 100,
-        offset,
-        filterByFormula: filterFormula || undefined,
+    /**
+     * Inner helper: process a batch of platform records into canonical inserts.
+     * Shared by both Airtable and Notion pagination branches.
+     */
+    const processBatch = async (
+      platformRecords: Array<{ id: string }>,
+    ): Promise<boolean> => {
+      const canonicalRecords = platformRecords.map((record) => {
+        const canonical = adapter.toCanonical(record, fieldMappings);
+        return { platformId: record.id, canonical };
       });
 
-      if (page.records.length === 0) {
-        break;
-      }
-
-      // Transform records to canonical
-      const canonicalRecords = page.records.map((record) => {
-        const canonical = this.adapter.toCanonical(record, fieldMappings);
-        return {
-          airtableId: record.id,
-          canonical,
-        };
-      });
-
-      // Check quota
       const quotaResult = await enforceQuotaOnBatch(tenantId, canonicalRecords.length);
       const acceptedRecords = canonicalRecords.slice(0, quotaResult.acceptedCount);
 
       if (acceptedRecords.length > 0) {
-        // Batch insert records
         const db = getDbForTenant(tenantId);
         const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
         const recordValues = acceptedRecords.map((r) => ({
@@ -287,7 +303,7 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
           tableId: esTableId,
           canonicalData: r.canonical,
           syncMetadata: createInitialSyncMetadata(
-            r.airtableId,
+            r.platformId,
             r.canonical,
             syncedFieldIds,
           ) as unknown as Record<string, unknown>,
@@ -301,7 +317,6 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
 
       pageNum++;
 
-      // Emit SYNC_PROGRESS
       await this.eventPublisher.publish({
         tenantId,
         channel: `workspace:${workspaceId}`,
@@ -322,11 +337,55 @@ export class InitialSyncProcessor extends BaseProcessor<InitialSyncJobData> {
       if (quotaResult.quotaExceeded) {
         logger.warn({ tenantId, esTableId, syncedCount }, 'Quota exceeded — stopping table sync');
         quotaExceeded = true;
-        break;
+        return false; // stop pagination
       }
 
-      offset = page.offset;
-    } while (offset);
+      return true; // continue
+    };
+
+    if (platform === 'notion' && notionClient) {
+      // Notion pagination: start_cursor / has_more
+      let startCursor: string | null = null;
+      let hasMore = true;
+
+      while (hasMore) {
+        await rateLimiter.waitForCapacity('notion', `integration:${connectionId}`);
+
+        const queryResult = await notionClient.queryDatabase(externalTableId, {
+          pageSize: 100,
+          startCursor,
+          filter: notionFilter,
+        });
+
+        if (queryResult.results.length === 0) break;
+
+        const shouldContinue = await processBatch(queryResult.results);
+        if (!shouldContinue) break;
+
+        hasMore = queryResult.has_more;
+        startCursor = queryResult.next_cursor;
+      }
+    } else if (airtableClient) {
+      // Airtable pagination: offset string
+      let offset: string | undefined;
+
+      do {
+        await rateLimiter.waitForCapacity('airtable', `base:${baseId}`);
+
+        const page = await airtableClient.listRecords(externalTableId, {
+          pageSize: 100,
+          offset,
+          filterByFormula: airtableFilterFormula || undefined,
+        });
+
+        if (page.records.length === 0) break;
+
+        const shouldContinue = await processBatch(page.records);
+        if (!shouldContinue) break;
+
+        offset = page.offset;
+      } while (offset);
+    }
 
     if (quotaExceeded) {
       // Update connection health to reflect partial sync

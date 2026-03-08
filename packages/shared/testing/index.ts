@@ -22,6 +22,7 @@ export {
   createTestBoard,
   createTestWorkspaceMembership,
   createTestSyncConflict,
+  createTestSyncedFieldMapping,
 } from './factories';
 
 export type { TestApiKeyResult } from './factories';

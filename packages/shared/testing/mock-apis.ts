@@ -148,6 +148,75 @@ export const notionHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Notion OAuth Handlers
+// ---------------------------------------------------------------------------
+
+export const notionOAuthHandlers = [
+  // Token exchange
+  http.post('https://api.notion.com/v1/oauth/token', () => {
+    return HttpResponse.json({
+      access_token: 'ntn_mock_access_token',
+      token_type: 'bearer',
+      bot_id: 'bot_mock_001',
+      workspace_id: 'ws_mock_001',
+      workspace_name: 'Mock Workspace',
+      workspace_icon: null,
+      owner: {
+        type: 'user',
+        user: { id: 'user_mock_001', name: 'Test User' },
+      },
+    });
+  }),
+
+  // Search (list databases)
+  http.post('https://api.notion.com/v1/search', () => {
+    return HttpResponse.json({
+      object: 'list',
+      results: [
+        {
+          object: 'database',
+          id: 'db_mock_001',
+          title: [{ plain_text: 'Mock Database 1' }],
+          icon: { type: 'emoji', emoji: '📋' },
+        },
+        {
+          object: 'database',
+          id: 'db_mock_002',
+          title: [{ plain_text: 'Mock Database 2' }],
+          icon: null,
+        },
+      ],
+      has_more: false,
+      next_cursor: null,
+    });
+  }),
+
+  // Retrieve database (schema)
+  http.get('https://api.notion.com/v1/databases/:databaseId', () => {
+    return HttpResponse.json({
+      object: 'database',
+      id: 'db_mock_001',
+      title: [{ plain_text: 'Mock Database 1' }],
+      properties: {
+        Name: { id: 'title', name: 'Name', type: 'title', title: {} },
+        Status: {
+          id: 'prop_status',
+          name: 'Status',
+          type: 'select',
+          select: {
+            options: [
+              { id: 'opt_1', name: 'Active', color: 'green' },
+              { id: 'opt_2', name: 'Inactive', color: 'red' },
+            ],
+          },
+        },
+        Email: { id: 'prop_email', name: 'Email', type: 'email', email: {} },
+      },
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // SmartSuite Handlers (placeholder stubs)
 // ---------------------------------------------------------------------------
 
@@ -178,6 +247,7 @@ export const mockApiServer: SetupServer = setupServer(
   ...airtableHandlers,
   ...airtableOAuthHandlers,
   ...notionHandlers,
+  ...notionOAuthHandlers,
   ...smartsuiteHandlers,
 );
 

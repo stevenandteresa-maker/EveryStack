@@ -92,8 +92,19 @@ vi.mock('@everystack/shared/sync', () => ({
     this.toCanonical = vi.fn((record: { fields: Record<string, unknown> }) => record.fields);
     this.fromCanonical = vi.fn();
   }),
+  NotionAdapter: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
+    this.platform = 'notion';
+    this.toCanonical = vi.fn((record: { properties: Record<string, unknown> }) => record.properties ?? {});
+    this.fromCanonical = vi.fn();
+  }),
+  NotionApiClient: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
+    this.queryDatabase = vi.fn().mockResolvedValue({ results: [], has_more: false, next_cursor: null });
+    this.updatePage = vi.fn();
+  }),
   registerAirtableTransforms: vi.fn(),
+  registerNotionTransforms: vi.fn(),
   translateFilterToFormula: vi.fn(() => ''),
+  translateToNotionFilter: vi.fn(() => undefined),
   enforceQuotaOnBatch: mockEnforceQuotaOnBatch,
   incrementQuotaCache: mockIncrementQuotaCache,
   rateLimiter: { waitForCapacity: mockWaitForCapacity },

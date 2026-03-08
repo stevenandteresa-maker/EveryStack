@@ -730,3 +730,180 @@ export interface ConflictDetectionResult {
   /** Fields where both sides changed to the same value — no conflict. */
   convergentFieldIds: string[];
 }
+
+// ---------------------------------------------------------------------------
+// Smart Polling — adaptive intervals based on table visibility state
+// @see docs/reference/sync-engine.md § Smart Polling & Real-Time Push
+// ---------------------------------------------------------------------------
+
+/**
+ * Polling interval tiers in milliseconds.
+ * Determined by table visibility state via Socket.io room membership.
+ */
+export const POLLING_INTERVALS = {
+  /** 30 seconds — user has this table open */
+  ACTIVE_VIEWING: 30_000,
+  /** 5 minutes — workspace open but table not active */
+  TAB_OPEN_NOT_VISIBLE: 300_000,
+  /** 30 minutes — workspace not accessed recently */
+  WORKSPACE_INACTIVE: 1_800_000,
+  /** null — Airtable webhooks, event-driven (no polling) */
+  EVENT_DRIVEN: null,
+} as const;
+
+/**
+ * Visibility state of a table, derived from Socket.io room membership.
+ * - `active` — at least one connected client has this table's room joined
+ * - `background` — at least one connected client in the same workspace, but not viewing this table
+ * - `inactive` — no connected clients in the workspace
+ */
+export type TableVisibility = 'active' | 'background' | 'inactive';
+
+/**
+ * Webhook configuration stored in base_connections.sync_config.webhooks.
+ * Used for Airtable event-driven sync.
+ */
+export interface SyncConfigWebhooks {
+  airtable_webhook_id?: string;
+  airtable_webhook_cursor?: string;
+  webhook_registered_at?: string;
+}
+
+/**
+ * Sync statuses that indicate a table has been converted to native EveryStack.
+ * These tables are either skipped entirely or synced to shadow only.
+ */
+export type ConvertedSyncStatus = 'converted' | 'converted_dual_write' | 'converted_finalized';
+
+/**
+ * All possible sync statuses for a base_connection.
+ */
+export type SyncStatus = 'active' | 'paused' | 'error' | 'auth_required' | ConvertedSyncStatus;
+
+// ---------------------------------------------------------------------------
+// Connection Health — shape of base_connections.health (JSONB)
+// @see docs/reference/sync-engine.md § Sync Connection Status Model
+// ---------------------------------------------------------------------------
+
+/**
+ * Error codes for sync failures.
+ * Used in SyncError.code and for driving error recovery flows.
+ */
+export type SyncErrorCode =
+  | 'auth_expired'
+  | 'rate_limited'
+  | 'platform_unavailable'
+  | 'schema_mismatch'
+  | 'permission_denied'
+  | 'partial_failure'
+  | 'quota_exceeded'
+  | 'unknown';
+
+/**
+ * A structured sync error stored in ConnectionHealth.last_error.
+ */
+export interface SyncError {
+  code: SyncErrorCode;
+  message: string;
+  timestamp: string;
+  retryable: boolean;
+  details: Record<string, unknown>;
+}
+
+/**
+ * Shape of the base_connections.health JSONB column.
+ * Tracks sync health metrics for a connection.
+ */
+export interface ConnectionHealth {
+  last_success_at: string | null;
+  last_error: SyncError | null;
+  consecutive_failures: number;
+  next_retry_at: string | null;
+  records_synced: number;
+  records_failed: number;
+}
+
+// ---------------------------------------------------------------------------
+// Zod schemas for ConnectionHealth and SyncError
+// ---------------------------------------------------------------------------
+
+export const SyncErrorCodeSchema = z.enum([
+  'auth_expired',
+  'rate_limited',
+  'platform_unavailable',
+  'schema_mismatch',
+  'permission_denied',
+  'partial_failure',
+  'quota_exceeded',
+  'unknown',
+]);
+
+export const SyncErrorSchema = z.object({
+  code: SyncErrorCodeSchema,
+  message: z.string(),
+  timestamp: z.string(),
+  retryable: z.boolean(),
+  details: z.record(z.string(), z.unknown()),
+});
+
+export const ConnectionHealthSchema = z.object({
+  last_success_at: z.string().nullable(),
+  last_error: SyncErrorSchema.nullable(),
+  consecutive_failures: z.number().int().min(0),
+  next_retry_at: z.string().nullable(),
+  records_synced: z.number().int().min(0),
+  records_failed: z.number().int().min(0),
+});
+
+// ---------------------------------------------------------------------------
+// Priority-Based Scheduling — P0–P3 tiers for sync job dispatch
+// @see docs/reference/sync-engine.md § Priority-Based Scheduling
+// ---------------------------------------------------------------------------
+
+/**
+ * Priority tiers for sync job dispatch under rate limit pressure.
+ *
+ * Lower numeric value = higher priority.
+ * P0 always dispatches regardless of capacity.
+ * P1–P3 are throttled based on remaining rate limit capacity.
+ */
+export enum SyncPriority {
+  /** Outbound sync (cell edits), webhook-triggered inbound. Always dispatched. */
+  P0_CRITICAL = 0,
+  /** Inbound polling for actively viewed tables. Dispatched if capacity >30%. */
+  P1_ACTIVE = 1,
+  /** Inbound polling for non-visible tables. Dispatched if capacity >50%. */
+  P2_BACKGROUND = 2,
+  /** Inbound polling for inactive workspaces. Dispatched if capacity >70%. */
+  P3_INACTIVE = 3,
+}
+
+/**
+ * Result of evaluating whether a sync job should be dispatched
+ * given its priority and the current rate limit capacity.
+ */
+export interface PriorityDecision {
+  /** Whether this job should run now. */
+  dispatch: boolean;
+  /** If not dispatching, suggested delay in milliseconds before retry. */
+  delay?: number;
+  /** Human-readable reason for the decision (for logging). */
+  reason?: string;
+}
+
+/**
+ * Capacity thresholds for each priority tier.
+ * P0 has no threshold (always dispatched).
+ */
+export const PRIORITY_CAPACITY_THRESHOLDS: Record<SyncPriority, number> = {
+  [SyncPriority.P0_CRITICAL]: 0,
+  [SyncPriority.P1_ACTIVE]: 30,
+  [SyncPriority.P2_BACKGROUND]: 50,
+  [SyncPriority.P3_INACTIVE]: 70,
+};
+
+/**
+ * Maximum percentage of a platform's rate limit capacity that a single
+ * tenant can consume. P0 is exempt from this cap.
+ */
+export const MAX_TENANT_CAPACITY_PERCENT = 20;

@@ -108,8 +108,16 @@ vi.mock('@everystack/shared/sync', () => {
   return {
     AirtableApiClient: MockAirtableApiClient,
     AirtableAdapter: MockAirtableAdapter,
+    NotionAdapter: function MockNotionAdapter() {
+      return { toCanonical: vi.fn() };
+    },
+    NotionApiClient: function MockNotionApiClient() {
+      return { queryDatabase: vi.fn(), updatePage: vi.fn() };
+    },
     registerAirtableTransforms: vi.fn(),
+    registerNotionTransforms: vi.fn(),
     translateFilterToFormula: vi.fn().mockReturnValue(''),
+    translateToNotionFilter: vi.fn().mockReturnValue(undefined),
     rateLimiter: { waitForCapacity: mockWaitForCapacity },
     createInitialSyncMetadata: vi.fn().mockReturnValue({
       platform_record_id: 'rec_new',
@@ -132,6 +140,10 @@ vi.mock('@everystack/shared/sync', () => {
     detectConflicts: mockDetectConflicts,
     writeConflictRecords: mockWriteConflictRecords,
     applyLastWriteWins: mockApplyLastWriteWins,
+    createSyncFailure: vi.fn().mockResolvedValue({ id: 'fail-mock' }),
+    getPendingRetriableFailures: vi.fn().mockResolvedValue([]),
+    incrementRetryCount: vi.fn().mockResolvedValue({ newRetryCount: 1, requiresManual: false }),
+    markFailureResolved: vi.fn().mockResolvedValue(undefined),
   };
 });
 
