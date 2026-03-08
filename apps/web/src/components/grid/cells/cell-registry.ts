@@ -17,6 +17,11 @@ import { CheckboxCellDisplay } from './CheckboxCell';
 import { RatingCellDisplay } from './RatingCell';
 import { CurrencyCellDisplay, CurrencyCellEdit } from './CurrencyCell';
 import { PercentCellDisplay, PercentCellEdit } from './PercentCell';
+import { SingleSelectCellDisplay, SingleSelectCellEdit } from './SingleSelectCell';
+import { MultiSelectCellDisplay, MultiSelectCellEdit } from './MultiSelectCell';
+import { PeopleCellDisplay, PeopleCellEdit } from './PeopleCell';
+import { LinkedRecordCellDisplay, LinkedRecordCellEdit } from './LinkedRecordCell';
+import { AttachmentCellDisplay, AttachmentCellEdit } from './AttachmentCell';
 
 /**
  * Register all Prompt 3 cell renderers.
@@ -64,6 +69,37 @@ export function registerPrompt3Cells(): void {
   registerCellRenderer('percent', {
     DisplayComponent: PercentCellDisplay,
     EditComponent: PercentCellEdit,
+  });
+}
+
+/**
+ * Register all Prompt 4 cell renderers.
+ * Call this once at app initialization to populate the registry.
+ */
+export function registerPrompt4Cells(): void {
+  registerCellRenderer('single_select', {
+    DisplayComponent: SingleSelectCellDisplay,
+    EditComponent: SingleSelectCellEdit,
+  });
+
+  registerCellRenderer('multi_select', {
+    DisplayComponent: MultiSelectCellDisplay,
+    EditComponent: MultiSelectCellEdit,
+  });
+
+  registerCellRenderer('people', {
+    DisplayComponent: PeopleCellDisplay,
+    EditComponent: PeopleCellEdit,
+  });
+
+  registerCellRenderer('linked_record', {
+    DisplayComponent: LinkedRecordCellDisplay,
+    EditComponent: LinkedRecordCellEdit,
+  });
+
+  registerCellRenderer('attachment', {
+    DisplayComponent: AttachmentCellDisplay,
+    EditComponent: AttachmentCellEdit,
   });
 }
 

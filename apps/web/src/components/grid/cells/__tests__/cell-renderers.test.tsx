@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { IntlWrapper } from '@/test-utils/intl-wrapper';
 import type { CellRendererProps } from '../../GridCell';
 import { getCellRenderer } from '../../GridCell';
-import { registerPrompt3Cells } from '../cell-registry';
+import { registerPrompt3Cells, registerPrompt4Cells } from '../cell-registry';
 import { TextCellDisplay, TextCellEdit } from '../TextCell';
 import { NumberCellDisplay, NumberCellEdit } from '../NumberCell';
 import { DateCellDisplay, DateCellEdit } from '../DateCell';
@@ -12,6 +12,11 @@ import { CheckboxCellDisplay } from '../CheckboxCell';
 import { RatingCellDisplay } from '../RatingCell';
 import { CurrencyCellDisplay, CurrencyCellEdit } from '../CurrencyCell';
 import { PercentCellDisplay, PercentCellEdit } from '../PercentCell';
+import { SingleSelectCellDisplay, SingleSelectCellEdit } from '../SingleSelectCell';
+import { MultiSelectCellDisplay, MultiSelectCellEdit } from '../MultiSelectCell';
+import { PeopleCellDisplay, PeopleCellEdit } from '../PeopleCell';
+import { LinkedRecordCellDisplay, LinkedRecordCellEdit } from '../LinkedRecordCell';
+import { AttachmentCellDisplay, AttachmentCellEdit } from '../AttachmentCell';
 import type { GridField } from '@/lib/types/grid';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +72,7 @@ function renderWithIntl(ui: React.ReactElement) {
 describe('Cell registry', () => {
   beforeAll(() => {
     registerPrompt3Cells();
+    registerPrompt4Cells();
   });
 
   it.each([
@@ -79,6 +85,11 @@ describe('Cell registry', () => {
     'rating',
     'currency',
     'percent',
+    'single_select',
+    'multi_select',
+    'people',
+    'linked_record',
+    'attachment',
   ])('registers %s field type', (fieldType) => {
     const entry = getCellRenderer(fieldType);
     expect(entry).toBeDefined();
@@ -96,6 +107,14 @@ describe('Cell registry', () => {
 
   it('rating has no separate edit component', () => {
     expect(getCellRenderer('rating')?.EditComponent).toBeUndefined();
+  });
+
+  it('all prompt 4 types have edit components', () => {
+    expect(getCellRenderer('single_select')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('multi_select')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('people')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('linked_record')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('attachment')?.EditComponent).toBeDefined();
   });
 });
 
@@ -532,6 +551,480 @@ describe('PercentCellEdit', () => {
       />,
     );
     fireEvent.keyDown(screen.getByRole('spinbutton'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SingleSelectCell
+// ---------------------------------------------------------------------------
+
+const selectField = makeField({
+  fieldType: 'single_select',
+  config: {
+    options: [
+      { value: 'opt1', label: 'Option 1', color: 0 },
+      { value: 'opt2', label: 'Option 2', color: 1 },
+      { value: 'opt3', label: 'Option 3', color: 2 },
+    ],
+  },
+});
+
+describe('SingleSelectCellDisplay', () => {
+  it('renders selected option as pill by default', () => {
+    renderWithIntl(
+      <SingleSelectCellDisplay
+        {...makeProps({ value: 'opt1', field: selectField })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+  });
+
+  it('renders dot+text style', () => {
+    const dotField = makeField({
+      ...selectField,
+      display: { style: 'dot' },
+    });
+    renderWithIntl(
+      <SingleSelectCellDisplay
+        {...makeProps({ value: 'opt1', field: dotField })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+  });
+
+  it('renders block style', () => {
+    const blockField = makeField({
+      ...selectField,
+      display: { style: 'block' },
+    });
+    renderWithIntl(
+      <SingleSelectCellDisplay
+        {...makeProps({ value: 'opt1', field: blockField })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+  });
+
+  it('renders plain style', () => {
+    const plainField = makeField({
+      ...selectField,
+      display: { style: 'plain' },
+    });
+    renderWithIntl(
+      <SingleSelectCellDisplay
+        {...makeProps({ value: 'opt1', field: plainField })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+  });
+
+  it('renders null for empty value', () => {
+    const { container } = renderWithIntl(
+      <SingleSelectCellDisplay {...makeProps({ value: null, field: selectField })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <SingleSelectCellDisplay
+        {...makeProps({ value: 'opt1', field: makeField({ ...selectField, readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('SingleSelectCellEdit', () => {
+  it('renders dropdown with all options', () => {
+    renderWithIntl(
+      <SingleSelectCellEdit
+        {...makeProps({ value: 'opt1', field: selectField, isEditing: true })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+    expect(screen.getByText('Option 2')).toBeInTheDocument();
+    expect(screen.getByText('Option 3')).toBeInTheDocument();
+  });
+
+  it('calls onSave when option clicked', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <SingleSelectCellEdit
+        {...makeProps({ value: 'opt1', field: selectField, onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.click(screen.getByText('Option 2'));
+    expect(onSave).toHaveBeenCalledWith('opt2');
+  });
+
+  it('filters options by search', () => {
+    renderWithIntl(
+      <SingleSelectCellEdit
+        {...makeProps({ value: null, field: selectField, isEditing: true })}
+      />,
+    );
+    const input = screen.getByPlaceholderText('Search options...');
+    fireEvent.change(input, { target: { value: 'Option 2' } });
+    expect(screen.getByText('Option 2')).toBeInTheDocument();
+    expect(screen.queryByText('Option 1')).not.toBeInTheDocument();
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <SingleSelectCellEdit
+        {...makeProps({ value: null, field: selectField, onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByPlaceholderText('Search options...'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MultiSelectCell
+// ---------------------------------------------------------------------------
+
+describe('MultiSelectCellDisplay', () => {
+  it('renders multiple pills', () => {
+    renderWithIntl(
+      <MultiSelectCellDisplay
+        {...makeProps({ value: ['opt1', 'opt2'], field: selectField })}
+      />,
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+    expect(screen.getByText('Option 2')).toBeInTheDocument();
+  });
+
+  it('renders overflow badge when more than 3 items', () => {
+    const multiField = makeField({
+      fieldType: 'multi_select',
+      config: {
+        options: [
+          { value: 'a', label: 'A', color: 0 },
+          { value: 'b', label: 'B', color: 1 },
+          { value: 'c', label: 'C', color: 2 },
+          { value: 'd', label: 'D', color: 3 },
+          { value: 'e', label: 'E', color: 4 },
+        ],
+      },
+    });
+    renderWithIntl(
+      <MultiSelectCellDisplay
+        {...makeProps({ value: ['a', 'b', 'c', 'd', 'e'], field: multiField })}
+      />,
+    );
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('renders null for empty array', () => {
+    const { container } = renderWithIntl(
+      <MultiSelectCellDisplay {...makeProps({ value: [], field: selectField })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <MultiSelectCellDisplay
+        {...makeProps({ value: ['opt1'], field: makeField({ ...selectField, readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('MultiSelectCellEdit', () => {
+  it('toggles option selection', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <MultiSelectCellEdit
+        {...makeProps({ value: ['opt1'], field: selectField, onSave, isEditing: true })}
+      />,
+    );
+    // Click Option 2 to add it
+    fireEvent.click(screen.getByText('Option 2'));
+    expect(onSave).toHaveBeenCalledWith(['opt1', 'opt2']);
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <MultiSelectCellEdit
+        {...makeProps({ value: [], field: selectField, onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByPlaceholderText('Search options...'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PeopleCell
+// ---------------------------------------------------------------------------
+
+const peopleValue = [
+  { id: 'u1', name: 'Alice Smith', avatarUrl: undefined },
+  { id: 'u2', name: 'Bob Jones', avatarUrl: undefined },
+];
+
+describe('PeopleCellDisplay', () => {
+  it('renders people with pill+avatar style by default', () => {
+    renderWithIntl(
+      <PeopleCellDisplay
+        {...makeProps({ value: peopleValue, field: makeField({ fieldType: 'people' }) })}
+      />,
+    );
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+    expect(screen.getByText('Bob Jones')).toBeInTheDocument();
+  });
+
+  it('renders avatar-only style', () => {
+    const avatarField = makeField({ fieldType: 'people', display: { style: 'avatar_only' } });
+    renderWithIntl(
+      <PeopleCellDisplay
+        {...makeProps({ value: peopleValue, field: avatarField })}
+      />,
+    );
+    // Initials shown
+    expect(screen.getByText('AS')).toBeInTheDocument();
+    expect(screen.getByText('BJ')).toBeInTheDocument();
+  });
+
+  it('renders pill+name style', () => {
+    const nameField = makeField({ fieldType: 'people', display: { style: 'pill_name' } });
+    renderWithIntl(
+      <PeopleCellDisplay
+        {...makeProps({ value: peopleValue, field: nameField })}
+      />,
+    );
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+  });
+
+  it('renders overflow badge with more than 3 people', () => {
+    const manyPeople = [
+      { id: 'u1', name: 'Alice' },
+      { id: 'u2', name: 'Bob' },
+      { id: 'u3', name: 'Charlie' },
+      { id: 'u4', name: 'Diana' },
+    ];
+    renderWithIntl(
+      <PeopleCellDisplay
+        {...makeProps({ value: manyPeople, field: makeField({ fieldType: 'people' }) })}
+      />,
+    );
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('renders null for empty array', () => {
+    const { container } = renderWithIntl(
+      <PeopleCellDisplay {...makeProps({ value: [], field: makeField({ fieldType: 'people' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <PeopleCellDisplay
+        {...makeProps({
+          value: peopleValue,
+          field: makeField({ fieldType: 'people', readOnly: true }),
+        })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('PeopleCellEdit', () => {
+  it('renders people picker dropdown', () => {
+    renderWithIntl(
+      <PeopleCellEdit
+        {...makeProps({ value: peopleValue, field: makeField({ fieldType: 'people' }), isEditing: true })}
+      />,
+    );
+    expect(screen.getByPlaceholderText('Search people...')).toBeInTheDocument();
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <PeopleCellEdit
+        {...makeProps({ value: peopleValue, field: makeField({ fieldType: 'people' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByPlaceholderText('Search people...'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LinkedRecordCell
+// ---------------------------------------------------------------------------
+
+const linkedRecordValue = [
+  { id: 'r1', primaryFieldValue: 'Project Alpha' },
+  { id: 'r2', primaryFieldValue: 'Project Beta' },
+];
+
+describe('LinkedRecordCellDisplay', () => {
+  it('renders pills with primary field values', () => {
+    renderWithIntl(
+      <LinkedRecordCellDisplay
+        {...makeProps({ value: linkedRecordValue, field: makeField({ fieldType: 'linked_record' }) })}
+      />,
+    );
+    expect(screen.getByText('Project Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Project Beta')).toBeInTheDocument();
+  });
+
+  it('renders overflow badge for more than 3 records', () => {
+    const manyRecords = [
+      { id: 'r1', primaryFieldValue: 'A' },
+      { id: 'r2', primaryFieldValue: 'B' },
+      { id: 'r3', primaryFieldValue: 'C' },
+      { id: 'r4', primaryFieldValue: 'D' },
+    ];
+    renderWithIntl(
+      <LinkedRecordCellDisplay
+        {...makeProps({ value: manyRecords, field: makeField({ fieldType: 'linked_record' }) })}
+      />,
+    );
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('renders null for empty array', () => {
+    const { container } = renderWithIntl(
+      <LinkedRecordCellDisplay
+        {...makeProps({ value: [], field: makeField({ fieldType: 'linked_record' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <LinkedRecordCellDisplay
+        {...makeProps({
+          value: linkedRecordValue,
+          field: makeField({ fieldType: 'linked_record', readOnly: true }),
+        })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+
+  it('uses record id as fallback when primaryFieldValue missing', () => {
+    renderWithIntl(
+      <LinkedRecordCellDisplay
+        {...makeProps({ value: [{ id: 'r1' }], field: makeField({ fieldType: 'linked_record' }) })}
+      />,
+    );
+    expect(screen.getByText('r1')).toBeInTheDocument();
+  });
+});
+
+describe('LinkedRecordCellEdit', () => {
+  it('renders placeholder message', () => {
+    renderWithIntl(
+      <LinkedRecordCellEdit
+        {...makeProps({ value: linkedRecordValue, field: makeField({ fieldType: 'linked_record' }), isEditing: true })}
+      />,
+    );
+    expect(screen.getByText('Link Picker ships in Phase 3B-i')).toBeInTheDocument();
+  });
+
+  it('calls onCancel when close clicked', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <LinkedRecordCellEdit
+        {...makeProps({ value: [], field: makeField({ fieldType: 'linked_record' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.click(screen.getByText('Close'));
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AttachmentCell
+// ---------------------------------------------------------------------------
+
+const attachmentValue = [
+  { id: 'f1', filename: 'photo.jpg', mimeType: 'image/jpeg', thumbnailUrl: '/thumb/photo.jpg' },
+  { id: 'f2', filename: 'doc.pdf', mimeType: 'application/pdf' },
+];
+
+describe('AttachmentCellDisplay', () => {
+  it('renders thumbnails for images and icons for documents', () => {
+    renderWithIntl(
+      <AttachmentCellDisplay
+        {...makeProps({ value: attachmentValue, field: makeField({ fieldType: 'attachment' }) })}
+      />,
+    );
+    // Image thumbnail
+    const img = screen.getByAltText('photo.jpg');
+    expect(img).toBeInTheDocument();
+  });
+
+  it('renders overflow badge for more than 4 attachments', () => {
+    const manyAttachments = [
+      { id: 'f1', filename: 'a.jpg', mimeType: 'image/jpeg' },
+      { id: 'f2', filename: 'b.jpg', mimeType: 'image/jpeg' },
+      { id: 'f3', filename: 'c.jpg', mimeType: 'image/jpeg' },
+      { id: 'f4', filename: 'd.jpg', mimeType: 'image/jpeg' },
+      { id: 'f5', filename: 'e.jpg', mimeType: 'image/jpeg' },
+    ];
+    renderWithIntl(
+      <AttachmentCellDisplay
+        {...makeProps({ value: manyAttachments, field: makeField({ fieldType: 'attachment' }) })}
+      />,
+    );
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('renders null for empty array', () => {
+    const { container } = renderWithIntl(
+      <AttachmentCellDisplay
+        {...makeProps({ value: [], field: makeField({ fieldType: 'attachment' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <AttachmentCellDisplay
+        {...makeProps({
+          value: attachmentValue,
+          field: makeField({ fieldType: 'attachment', readOnly: true }),
+        })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('AttachmentCellEdit', () => {
+  it('renders placeholder message', () => {
+    renderWithIntl(
+      <AttachmentCellEdit
+        {...makeProps({ value: [], field: makeField({ fieldType: 'attachment' }), isEditing: true })}
+      />,
+    );
+    expect(screen.getByText('Attachment manager opens in Record View')).toBeInTheDocument();
+  });
+
+  it('calls onCancel when close clicked', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <AttachmentCellEdit
+        {...makeProps({ value: [], field: makeField({ fieldType: 'attachment' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.click(screen.getByText('Close'));
     expect(onCancel).toHaveBeenCalledOnce();
   });
 });
