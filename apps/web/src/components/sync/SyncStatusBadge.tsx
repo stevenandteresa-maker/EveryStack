@@ -19,6 +19,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { SyncHealthState } from '@everystack/shared/sync';
+import type { ConnectionHealth } from '@everystack/shared/sync';
+import { SyncStatusTooltip } from './SyncStatusTooltip';
 
 // ---------------------------------------------------------------------------
 // Relative time formatter
@@ -56,6 +58,8 @@ export interface SyncStatusBadgeProps {
   lastSyncAt: Date | null;
   /** Number of pending conflicts. */
   pendingConflictCount: number;
+  /** Connection health JSONB data for rich tooltip. */
+  health?: ConnectionHealth | null;
   /** Error message for tooltip (from health.last_error.message). */
   errorMessage?: string;
   /** Next retry time for retrying state. */
@@ -98,6 +102,7 @@ export function SyncStatusBadge({
   platform,
   lastSyncAt,
   pendingConflictCount,
+  health,
   errorMessage,
   nextRetryAt,
   onClickSyncSettings,
@@ -210,7 +215,17 @@ export function SyncStatusBadge({
       <Tooltip>
         <TooltipTrigger asChild>{badge}</TooltipTrigger>
         <TooltipContent>
-          <p className="text-[13px]">{getTooltipText()}</p>
+          {health ? (
+            <SyncStatusTooltip
+              healthState={healthState}
+              platform={platform}
+              lastSyncAt={lastSyncAt}
+              health={health}
+              pendingConflictCount={pendingConflictCount}
+            />
+          ) : (
+            <p className="text-[13px]">{getTooltipText()}</p>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
