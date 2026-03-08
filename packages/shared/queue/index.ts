@@ -8,6 +8,7 @@ export type {
   SyncJobData,
   InitialSyncJobData,
   IncrementalSyncJobData,
+  SyncSchedulerTickJobData,
   OutboundSyncJobData,
   EmailJobData,
   AutomationJobData,

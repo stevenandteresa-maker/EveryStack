@@ -854,3 +854,56 @@ export const ConnectionHealthSchema = z.object({
   records_synced: z.number().int().min(0),
   records_failed: z.number().int().min(0),
 });
+
+// ---------------------------------------------------------------------------
+// Priority-Based Scheduling — P0–P3 tiers for sync job dispatch
+// @see docs/reference/sync-engine.md § Priority-Based Scheduling
+// ---------------------------------------------------------------------------
+
+/**
+ * Priority tiers for sync job dispatch under rate limit pressure.
+ *
+ * Lower numeric value = higher priority.
+ * P0 always dispatches regardless of capacity.
+ * P1–P3 are throttled based on remaining rate limit capacity.
+ */
+export enum SyncPriority {
+  /** Outbound sync (cell edits), webhook-triggered inbound. Always dispatched. */
+  P0_CRITICAL = 0,
+  /** Inbound polling for actively viewed tables. Dispatched if capacity >30%. */
+  P1_ACTIVE = 1,
+  /** Inbound polling for non-visible tables. Dispatched if capacity >50%. */
+  P2_BACKGROUND = 2,
+  /** Inbound polling for inactive workspaces. Dispatched if capacity >70%. */
+  P3_INACTIVE = 3,
+}
+
+/**
+ * Result of evaluating whether a sync job should be dispatched
+ * given its priority and the current rate limit capacity.
+ */
+export interface PriorityDecision {
+  /** Whether this job should run now. */
+  dispatch: boolean;
+  /** If not dispatching, suggested delay in milliseconds before retry. */
+  delay?: number;
+  /** Human-readable reason for the decision (for logging). */
+  reason?: string;
+}
+
+/**
+ * Capacity thresholds for each priority tier.
+ * P0 has no threshold (always dispatched).
+ */
+export const PRIORITY_CAPACITY_THRESHOLDS: Record<SyncPriority, number> = {
+  [SyncPriority.P0_CRITICAL]: 0,
+  [SyncPriority.P1_ACTIVE]: 30,
+  [SyncPriority.P2_BACKGROUND]: 50,
+  [SyncPriority.P3_INACTIVE]: 70,
+};
+
+/**
+ * Maximum percentage of a platform's rate limit capacity that a single
+ * tenant can consume. P0 is exempt from this cap.
+ */
+export const MAX_TENANT_CAPACITY_PERCENT = 20;

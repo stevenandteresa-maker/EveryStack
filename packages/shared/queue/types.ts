@@ -55,6 +55,11 @@ export interface IncrementalSyncJobData extends SyncJobData {
   jobType: 'incremental';
 }
 
+export interface SyncSchedulerTickJobData extends BaseJobData {
+  /** Job type discriminant for the scheduler tick. */
+  jobType: 'scheduler_tick';
+}
+
 export interface EmailJobData extends BaseJobData {
   to: string;
   templateId: string;
@@ -79,7 +84,7 @@ export interface DocumentGenJobData extends BaseJobData {
  * Used for type-safe queue/worker generics.
  */
 export interface QueueJobDataMap {
-  sync: SyncJobData | InitialSyncJobData | IncrementalSyncJobData;
+  sync: SyncJobData | InitialSyncJobData | IncrementalSyncJobData | SyncSchedulerTickJobData;
   'sync:outbound': OutboundSyncJobData;
   'file-processing': FileThumbnailJobData | FileScanJobData;
   email: EmailJobData;

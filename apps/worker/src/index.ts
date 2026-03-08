@@ -55,13 +55,12 @@ initialSyncProcessor.start();
 const inboundSyncProcessor = new InboundSyncProcessor(eventPublisher);
 inboundSyncProcessor.start();
 
-// Sync scheduler: adaptive polling based on table visibility
+// Sync scheduler: adaptive polling via BullMQ repeatable job
 const schedulerRedis = createRedisClient('sync-scheduler');
 const syncScheduler = new SyncScheduler(
   schedulerRedis,
   getQueue('sync') as unknown as Queue<IncrementalSyncJobData>,
 );
-syncScheduler.start();
 
 // ---------------------------------------------------------------------------
 // Shutdown handlers (order: processors → queues → telemetry → redis)
@@ -71,7 +70,7 @@ registerShutdownHandler(async () => fileRouter.close());
 registerShutdownHandler(async () => orphanProcessor.close());
 registerShutdownHandler(async () => initialSyncProcessor.close());
 registerShutdownHandler(async () => inboundSyncProcessor.close());
-registerShutdownHandler(() => { syncScheduler.stop(); return Promise.resolve(); });
+registerShutdownHandler(async () => syncScheduler.stop());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);
 registerShutdownHandler(async () => {
@@ -91,6 +90,9 @@ setupGracefulShutdown(workerLogger);
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function scheduleRecurringJobs(): Promise<void> {
+  // Sync scheduler: repeatable 30s tick for adaptive polling
+  await syncScheduler.start();
+
   const cleanupQueue = getQueue('cleanup');
   await cleanupQueue.upsertJobScheduler(
     'daily-orphan-cleanup',

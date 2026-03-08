@@ -51,6 +51,28 @@ vi.mock('@everystack/shared/db', () => ({
   eq: vi.fn(),
 }));
 
+vi.mock('@everystack/shared/redis', () => ({
+  getRedisConfig: vi.fn(() => ({ host: 'localhost', port: 6379 })),
+}));
+
+const { MockWorkerInstances } = vi.hoisted(() => {
+  const instances: Array<{ on: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> }> = [];
+  return { MockWorkerInstances: instances };
+});
+
+vi.mock('bullmq', () => {
+  class WorkerMock {
+    on = vi.fn().mockReturnThis();
+    close = vi.fn().mockResolvedValue(undefined);
+    name: string;
+    constructor(name: string) {
+      this.name = name;
+      MockWorkerInstances.push(this);
+    }
+  }
+  return { Worker: WorkerMock };
+});
+
 vi.mock('@everystack/shared/logging', () => ({
   workerLogger: mockLoggerInstance,
   realtimeLogger: mockLoggerInstance,
@@ -77,6 +99,8 @@ import {
   registerAirtableWebhook,
   runSchedulerTick,
   SCHEDULER_INTERVAL_MS,
+  SCHEDULER_JOB_ID,
+  SyncScheduler,
 } from '../sync-scheduler';
 import { POLLING_INTERVALS } from '@everystack/shared/sync';
 
@@ -89,6 +113,12 @@ function createMockRedis(): Redis {
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue('OK'),
     scard: vi.fn().mockResolvedValue(0),
+    eval: vi.fn().mockResolvedValue([0, 5]),   // capacity query: 0 used of 5 = 100%
+    incr: vi.fn().mockResolvedValue(1),
+    expire: vi.fn().mockResolvedValue(1),
+    zremrangebyscore: vi.fn().mockResolvedValue(0),
+    zcard: vi.fn().mockResolvedValue(0),       // tenant usage: 0 (within budget)
+    zadd: vi.fn().mockResolvedValue(1),
   } as unknown as Redis;
 }
 
@@ -357,7 +387,7 @@ describe('runSchedulerTick', () => {
   it('returns zeroes when no connections exist', async () => {
     // getAllActiveConnections returns empty (default mock)
     const result = await runSchedulerTick(redis, queue, logger as never);
-    expect(result).toEqual({ evaluated: 0, dispatched: 0, skipped: 0 });
+    expect(result).toEqual({ evaluated: 0, dispatched: 0, skipped: 0, delayed: 0 });
   });
 
   it('skips converted connections', async () => {
@@ -506,5 +536,76 @@ describe('runSchedulerTick', () => {
     const result = await runSchedulerTick(redis, queue, logger as never);
     expect(result.dispatched).toBe(0);
     expect(result.evaluated).toBe(0);
+  });
+});
+
+describe('SyncScheduler (BullMQ repeatable)', () => {
+  beforeEach(() => {
+    MockWorkerInstances.length = 0;
+  });
+
+  it('has a stable scheduler job ID', () => {
+    expect(SCHEDULER_JOB_ID).toBe('sync-scheduler-tick');
+  });
+
+  it('registers a repeatable job and creates a Worker on start()', async () => {
+    const redis = createMockRedis();
+    const queue = createMockQueue();
+    (queue as unknown as { upsertJobScheduler: ReturnType<typeof vi.fn>; name: string }).upsertJobScheduler = vi.fn().mockResolvedValue({});
+    (queue as unknown as { name: string }).name = 'sync';
+
+    const scheduler = new SyncScheduler(redis, queue);
+    await scheduler.start();
+
+    // Should have registered the repeatable job
+    const upsert = (queue as unknown as { upsertJobScheduler: ReturnType<typeof vi.fn> }).upsertJobScheduler;
+    expect(upsert).toHaveBeenCalledWith(
+      SCHEDULER_JOB_ID,
+      { every: SCHEDULER_INTERVAL_MS },
+      expect.objectContaining({
+        name: 'sync.scheduler_tick',
+        data: expect.objectContaining({
+          jobType: 'scheduler_tick',
+          tenantId: 'system',
+        }),
+      }),
+    );
+
+    // Should have created a Worker
+    expect(MockWorkerInstances).toHaveLength(1);
+    expect(MockWorkerInstances[0]!.on).toHaveBeenCalled();
+
+    await scheduler.stop();
+  });
+
+  it('stop() closes the worker', async () => {
+    const redis = createMockRedis();
+    const queue = createMockQueue();
+    (queue as unknown as { upsertJobScheduler: ReturnType<typeof vi.fn>; name: string }).upsertJobScheduler = vi.fn().mockResolvedValue({});
+    (queue as unknown as { name: string }).name = 'sync';
+
+    const scheduler = new SyncScheduler(redis, queue);
+    await scheduler.start();
+    await scheduler.stop();
+
+    expect(MockWorkerInstances[0]!.close).toHaveBeenCalled();
+
+    // Calling stop again is a no-op
+    await scheduler.stop();
+  });
+
+  it('does not start twice', async () => {
+    const redis = createMockRedis();
+    const queue = createMockQueue();
+    (queue as unknown as { upsertJobScheduler: ReturnType<typeof vi.fn>; name: string }).upsertJobScheduler = vi.fn().mockResolvedValue({});
+    (queue as unknown as { name: string }).name = 'sync';
+
+    const scheduler = new SyncScheduler(redis, queue);
+    await scheduler.start();
+    await scheduler.start(); // second call should warn, not create second worker
+
+    expect(MockWorkerInstances).toHaveLength(1);
+
+    await scheduler.stop();
   });
 });

@@ -94,10 +94,19 @@ export type {
   SyncConfigWebhooks,
   ConvertedSyncStatus,
   SyncStatus,
+  // Priority scheduling
+  PriorityDecision,
 } from './types';
 
 // Smart polling constants
 export { POLLING_INTERVALS } from './types';
+
+// Priority scheduling
+export {
+  SyncPriority,
+  PRIORITY_CAPACITY_THRESHOLDS,
+  MAX_TENANT_CAPACITY_PERCENT,
+} from './types';
 
 // Filter & sync config schemas
 export {
@@ -153,6 +162,16 @@ export type {
   RateLimit,
   RetryStrategy,
 } from './adapters/types';
+
+// Priority scheduler
+export {
+  evaluatePriority,
+  getRateLimitCapacity,
+  getNextTenantForPlatform,
+  isTenantWithinBudget,
+  recordTenantUsage,
+  visibilityToPriority,
+} from './priority-scheduler';
 
 // Rate limiter
 export {

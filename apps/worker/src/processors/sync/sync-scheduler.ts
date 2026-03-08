@@ -18,7 +18,8 @@
  */
 
 import type Redis from 'ioredis';
-import type { Queue } from 'bullmq';
+import { Worker } from 'bullmq';
+import type { Job, Queue } from 'bullmq';
 import type { Logger } from '@everystack/shared/logging';
 import {
   workerLogger,
@@ -32,9 +33,15 @@ import {
   sql,
   inArray,
 } from '@everystack/shared/db';
-import type { IncrementalSyncJobData } from '@everystack/shared/queue';
+import { getRedisConfig } from '@everystack/shared/redis';
+import type { IncrementalSyncJobData, SyncSchedulerTickJobData } from '@everystack/shared/queue';
 import {
   POLLING_INTERVALS,
+  evaluatePriority,
+  getRateLimitCapacity,
+  visibilityToPriority,
+  isTenantWithinBudget,
+  recordTenantUsage,
 } from '@everystack/shared/sync';
 import type {
   TableVisibility,
@@ -222,18 +229,29 @@ interface SchedulerConnection {
 type WorkspaceMap = Map<string, string>;
 
 /**
+ * Platform rate limit defaults for capacity queries.
+ * Keyed by platform, returns the most restrictive scope's config.
+ */
+const PLATFORM_RATE_LIMIT_DEFAULTS: Record<string, { scopeKey: string; maxRequests: number; windowSeconds: number }> = {
+  airtable: { scopeKey: 'base:default', maxRequests: 5, windowSeconds: 1 },
+  notion: { scopeKey: 'integration:default', maxRequests: 3, windowSeconds: 1 },
+  smartsuite: { scopeKey: 'api_key:default', maxRequests: 10, windowSeconds: 1 },
+};
+
+/**
  * Runs a single scheduler tick: evaluates all active base_connections,
- * resolves visibility for each table, and enqueues sync jobs when
- * enough time has elapsed.
+ * resolves visibility for each table, evaluates priority against current
+ * rate limit capacity, and enqueues sync jobs when eligible.
  */
 export async function runSchedulerTick(
   redis: Redis,
   syncQueue: Queue<IncrementalSyncJobData>,
   logger: Logger,
-): Promise<{ evaluated: number; dispatched: number; skipped: number }> {
+): Promise<{ evaluated: number; dispatched: number; skipped: number; delayed: number }> {
   let evaluated = 0;
   let dispatched = 0;
   let skipped = 0;
+  let delayed = 0;
 
   // Fetch all active connections across all tenants
   const connections = await getAllActiveConnections();
@@ -249,6 +267,9 @@ export async function runSchedulerTick(
   }
 
   const workspaceMap = await resolveWorkspaceIds(allTableIds);
+
+  // Cache capacity per platform to avoid repeated Redis queries within one tick
+  const capacityCache = new Map<string, number>();
 
   for (const connection of connections) {
     const dispatchMode = getSyncDispatchMode(connection.syncStatus);
@@ -301,6 +322,76 @@ export async function runSchedulerTick(
 
       if (elapsed < interval) continue;
 
+      // Map visibility to priority tier for inbound polling jobs
+      const priority = visibilityToPriority(visibility);
+
+      // Query rate limit capacity (cached per platform per tick)
+      let capacityPercent = capacityCache.get(connection.platform);
+      if (capacityPercent === undefined) {
+        const rateConfig = PLATFORM_RATE_LIMIT_DEFAULTS[connection.platform];
+        if (rateConfig) {
+          capacityPercent = await getRateLimitCapacity(
+            redis,
+            connection.platform,
+            rateConfig.scopeKey,
+            rateConfig.maxRequests,
+            rateConfig.windowSeconds,
+          );
+        } else {
+          capacityPercent = 100; // Unknown platform — assume full capacity
+        }
+        capacityCache.set(connection.platform, capacityPercent);
+      }
+
+      // Evaluate priority against capacity
+      const decision = evaluatePriority(priority, capacityPercent);
+
+      if (!decision.dispatch) {
+        if (decision.delay) {
+          delayed++;
+        } else {
+          skipped++;
+        }
+        logger.debug(
+          {
+            connectionId: connection.id,
+            tableId: tableConfig.es_table_id,
+            priority,
+            capacityPercent,
+            reason: decision.reason,
+          },
+          'Sync job throttled by priority scheduler',
+        );
+        continue;
+      }
+
+      // Check per-tenant budget (P0 exempt)
+      const rateConfig = PLATFORM_RATE_LIMIT_DEFAULTS[connection.platform];
+      if (rateConfig) {
+        const withinBudget = await isTenantWithinBudget(
+          redis,
+          connection.platform,
+          connection.tenantId,
+          rateConfig.maxRequests,
+          rateConfig.windowSeconds,
+          priority,
+        );
+
+        if (!withinBudget) {
+          skipped++;
+          logger.debug(
+            {
+              connectionId: connection.id,
+              tenantId: connection.tenantId,
+              platform: connection.platform,
+              priority,
+            },
+            'Tenant exceeded per-tenant capacity budget',
+          );
+          continue;
+        }
+      }
+
       // Enqueue incremental sync job
       const traceId = generateTraceId();
       await syncQueue.add(
@@ -319,7 +410,10 @@ export async function runSchedulerTick(
         },
       );
 
-      // Update last poll time
+      // Record tenant usage and update last poll time
+      if (rateConfig) {
+        await recordTenantUsage(redis, connection.platform, connection.tenantId, rateConfig.windowSeconds);
+      }
       await setLastPollTime(redis, connection.id, tableConfig.es_table_id);
       dispatched++;
 
@@ -328,6 +422,8 @@ export async function runSchedulerTick(
           connectionId: connection.id,
           tableId: tableConfig.es_table_id,
           visibility,
+          priority,
+          capacityPercent,
           interval,
           elapsed,
         },
@@ -336,7 +432,7 @@ export async function runSchedulerTick(
     }
   }
 
-  return { evaluated, dispatched, skipped };
+  return { evaluated, dispatched, skipped, delayed };
 }
 
 /**
@@ -443,14 +539,17 @@ export async function registerAirtableWebhook(
 }
 
 // ---------------------------------------------------------------------------
-// SyncScheduler class — manages the scheduling loop
+// SyncScheduler class — BullMQ repeatable job
 // ---------------------------------------------------------------------------
+
+/** The repeatable job scheduler ID used by upsertJobScheduler. */
+export const SCHEDULER_JOB_ID = 'sync-scheduler-tick';
 
 export class SyncScheduler {
   private readonly redis: Redis;
   private readonly syncQueue: Queue<IncrementalSyncJobData>;
   private readonly logger: Logger;
-  private intervalHandle: ReturnType<typeof setInterval> | null = null;
+  private worker: Worker<SyncSchedulerTickJobData> | null = null;
 
   constructor(
     redis: Redis,
@@ -462,59 +561,91 @@ export class SyncScheduler {
   }
 
   /**
-   * Starts the scheduler loop, running a tick every SCHEDULER_INTERVAL_MS.
+   * Registers the repeatable BullMQ job and starts a Worker to process ticks.
+   *
+   * The repeatable job fires every SCHEDULER_INTERVAL_MS (30s). BullMQ
+   * guarantees only one instance runs across all workers via Redis-based
+   * coordination — no duplicate scheduling even with multiple worker processes.
    */
-  start(): void {
-    if (this.intervalHandle) {
+  async start(): Promise<void> {
+    if (this.worker) {
       this.logger.warn('Scheduler already running');
       return;
     }
 
-    this.logger.info(
-      { intervalMs: SCHEDULER_INTERVAL_MS },
-      'Sync scheduler started',
+    // Register (or update) the repeatable job schedule
+    await (this.syncQueue as unknown as Queue<SyncSchedulerTickJobData>).upsertJobScheduler(
+      SCHEDULER_JOB_ID,
+      { every: SCHEDULER_INTERVAL_MS },
+      {
+        name: 'sync.scheduler_tick',
+        data: {
+          tenantId: 'system',
+          traceId: '',
+          triggeredBy: 'scheduler',
+          jobType: 'scheduler_tick',
+        },
+      },
     );
 
-    // Run first tick immediately
-    void this.tick();
+    // Start a dedicated Worker that only processes scheduler tick jobs
+    const connection = getRedisConfig('worker:sync-scheduler');
+    this.worker = new Worker<SyncSchedulerTickJobData>(
+      this.syncQueue.name,
+      async (job: Job<SyncSchedulerTickJobData>) => this.handleTick(job),
+      {
+        connection,
+        concurrency: 1,
+        // Only pick up scheduler tick jobs — leave sync jobs for other workers
+        name: 'sync-scheduler',
+      },
+    );
 
-    this.intervalHandle = setInterval(() => {
-      void this.tick();
-    }, SCHEDULER_INTERVAL_MS);
+    this.worker.on('failed', (job, err) => {
+      this.logger.error(
+        { jobId: job?.id, err: err.message },
+        'Scheduler tick job failed',
+      );
+    });
+
+    this.worker.on('error', (err) => {
+      this.logger.error({ err: err.message }, 'Scheduler worker error');
+    });
+
+    this.logger.info(
+      { intervalMs: SCHEDULER_INTERVAL_MS },
+      'Sync scheduler started (BullMQ repeatable)',
+    );
   }
 
   /**
-   * Stops the scheduler loop.
+   * Stops the worker and removes the repeatable job schedule.
    */
-  stop(): void {
-    if (this.intervalHandle) {
-      clearInterval(this.intervalHandle);
-      this.intervalHandle = null;
+  async stop(): Promise<void> {
+    if (this.worker) {
+      await this.worker.close();
+      this.worker = null;
       this.logger.info('Sync scheduler stopped');
     }
   }
 
   /**
-   * Runs a single scheduler tick.
+   * Handles a single scheduler tick job.
    */
-  private async tick(): Promise<void> {
-    try {
-      const result = await runSchedulerTick(
-        this.redis,
-        this.syncQueue,
-        this.logger,
-      );
+  private async handleTick(job: Job<SyncSchedulerTickJobData>): Promise<void> {
+    // Skip non-tick jobs that may land on this worker
+    if (job.data.jobType !== 'scheduler_tick') return;
 
-      if (result.dispatched > 0 || result.skipped > 0) {
-        this.logger.info(
-          result,
-          'Scheduler tick complete',
-        );
-      }
-    } catch (err) {
-      this.logger.error(
-        { err: err instanceof Error ? err.message : String(err) },
-        'Scheduler tick failed',
+    const result = await runSchedulerTick(
+      this.redis,
+      this.syncQueue,
+      this.logger,
+    );
+
+    if (result.dispatched > 0 || result.skipped > 0 || result.delayed > 0) {
+      this.logger.info(
+        result,
+        'Scheduler tick complete',
       );
     }
   }
