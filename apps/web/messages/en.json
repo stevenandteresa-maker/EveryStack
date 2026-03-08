@@ -257,6 +257,34 @@
   "sync_notifications": {
     "view_details": "View Details"
   },
+  "grid": {
+    "loading": "Loading records...",
+    "empty": "No records yet. Click below to add your first record.",
+    "error": "Failed to load records. Please try again.",
+    "row_number": "Row {number}",
+    "checkbox_select": "Select row",
+    "checkbox_select_all": "Select all rows",
+    "expand_record": "Expand record",
+    "drag_handle": "Drag to reorder",
+    "add_field": "Add field",
+    "header_select_column": "Select column {name}",
+    "sort_placeholder": "Sort",
+    "filter_placeholder": "Filter",
+    "cells": {
+      "read_only": "Read-only",
+      "percent_value": "{value}%",
+      "rating_label": "Rating out of {max}",
+      "rating_star": "Star {star} of {max}",
+      "select_search": "Search options...",
+      "select_no_results": "No matching options",
+      "people_search": "Search people...",
+      "people_no_results": "No matching people",
+      "linked_record_placeholder": "Link Picker ships in Phase 3B-i",
+      "linked_record_close": "Close",
+      "attachment_placeholder": "Attachment manager opens in Record View",
+      "attachment_close": "Close"
+    }
+  },
   "sync_dashboard": {
     "title": "Sync Settings",
     "status_healthy": "Healthy",

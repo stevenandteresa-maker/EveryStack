@@ -86,6 +86,7 @@ export const GridCell = memo(function GridCell({
 
   const entry = getCellRenderer(field.fieldType);
   const DisplayComponent = entry?.DisplayComponent ?? DefaultCellDisplay;
+  const EditComponent = entry?.EditComponent;
 
   const rendererProps: CellRendererProps = {
     value,
@@ -95,6 +96,9 @@ export const GridCell = memo(function GridCell({
     onCancel,
   };
 
+  // Use edit component when editing and one exists
+  const ActiveComponent = isEditing && EditComponent ? EditComponent : DisplayComponent;
+
   return (
     <div
       role="gridcell"
@@ -102,16 +106,17 @@ export const GridCell = memo(function GridCell({
         'flex items-center overflow-hidden px-3 py-2',
         'border-r border-b',
         isActive && 'ring-2 ring-inset z-10',
+        isEditing && 'ring-2 ring-inset z-20 shadow-sm',
       )}
       style={{
         borderColor: GRID_TOKENS.borderDefault,
-        ...(isActive ? { '--tw-ring-color': GRID_TOKENS.activeCellBorder } as React.CSSProperties : {}),
+        ...(isActive || isEditing ? { '--tw-ring-color': GRID_TOKENS.activeCellBorder } as React.CSSProperties : {}),
         ...style,
       }}
       onClick={onClick}
     >
       <div className="w-full truncate">
-        <DisplayComponent {...rendererProps} />
+        <ActiveComponent {...rendererProps} />
       </div>
     </div>
   );

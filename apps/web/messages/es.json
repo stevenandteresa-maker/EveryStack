@@ -257,6 +257,34 @@
   "sync_notifications": {
     "view_details": "Ver detalles"
   },
+  "grid": {
+    "loading": "Cargando registros...",
+    "empty": "Aún no hay registros. Haz clic abajo para agregar tu primer registro.",
+    "error": "Error al cargar los registros. Inténtalo de nuevo.",
+    "row_number": "Fila {number}",
+    "checkbox_select": "Seleccionar fila",
+    "checkbox_select_all": "Seleccionar todas las filas",
+    "expand_record": "Expandir registro",
+    "drag_handle": "Arrastra para reordenar",
+    "add_field": "Agregar campo",
+    "header_select_column": "Seleccionar columna {name}",
+    "sort_placeholder": "Ordenar",
+    "filter_placeholder": "Filtrar",
+    "cells": {
+      "read_only": "Solo lectura",
+      "percent_value": "{value}%",
+      "rating_label": "Calificación de {max}",
+      "rating_star": "Estrella {star} de {max}",
+      "select_search": "Buscar opciones...",
+      "select_no_results": "Sin opciones coincidentes",
+      "people_search": "Buscar personas...",
+      "people_no_results": "Sin personas coincidentes",
+      "linked_record_placeholder": "El selector de enlaces se incluirá en la Fase 3B-i",
+      "linked_record_close": "Cerrar",
+      "attachment_placeholder": "El gestor de archivos se abre en la Vista de Registro",
+      "attachment_close": "Cerrar"
+    }
+  },
   "sync_dashboard": {
     "title": "Configuración de sincronización",
     "status_healthy": "Saludable",
