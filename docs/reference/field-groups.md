@@ -17,18 +17,18 @@
 | ---------------------------------------- | ------- | ------------------------------------------------------------- |
 | Strategic Rationale                      | 35–44   | Why field groups, value proposition for data organization     |
 | Field Group Anatomy                      | 45–105  | Group definition, coloring (3 modes), member fields, ordering |
-| Per-Field Emphasis                       | 106–144 | Bold header, accent color, visual weight per field            |
-| Conditional Cell Coloring                | 145–176 | 4-level priority cascade for cell background colors           |
-| Enhanced Hide/Show Panel                 | 177–275 | Field visibility panel with group awareness, bulk toggle      |
-| Synced Table Tab Badges                  | 276–326 | Platform badge, sync status indicator, 6 health states        |
-| Board Collapse Behavior                  | 327–360 | Sidebar board/workspace collapse, saved state                 |
-| Sidebar Visual Hierarchy Summary         | 361–392 | Complete sidebar rendering rules                              |
-| Data Model                               | 393–462 | field_groups table, fields.group_id, group coloring config    |
-| Field Group Lifecycle                    | 463–488 | Create, edit, reorder, delete, merge groups                   |
-| Interaction with Existing Features       | 489–506 | How groups interact with views, permissions, export           |
-| Column Header Right-Click Menu (Updated) | 507–532 | Group assignment from column header context menu              |
-| Group Header Right-Click Menu (New)      | 533–549 | Context menu on group headers in grid view                    |
-| Phase Integration                        | 550–569 | MVP — Core UX delivery scope                                  |
+| Per-Field Emphasis                       | 106–145 | Bold header, accent color, visual weight per field            |
+| Conditional Cell Coloring                | 146–177 | 4-level priority cascade for cell background colors           |
+| Enhanced Hide/Show Panel                 | 178–279 | Field visibility panel with group awareness, bulk toggle      |
+| Synced Table Tab Badges                  | 280–330 | Platform badge, sync status indicator, 6 health states        |
+| Board Collapse Behavior                  | 331–364 | Sidebar board/workspace collapse, saved state                 |
+| Sidebar Visual Hierarchy Summary         | 365–396 | Complete sidebar rendering rules                              |
+| Data Model                               | 397–466 | field_groups table, fields.group_id, group coloring config    |
+| Field Group Lifecycle                    | 467–492 | Create, edit, reorder, delete, merge groups                   |
+| Interaction with Existing Features       | 493–510 | How groups interact with views, permissions, export           |
+| Column Header Right-Click Menu (Updated) | 511–537 | Group assignment from column header context menu              |
+| Group Header Right-Click Menu (New)      | 538–554 | Context menu on group headers in grid view                    |
+| Phase Integration                        | 555–574 | MVP — Core UX delivery scope                                  |
 
 ---
 

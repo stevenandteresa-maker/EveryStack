@@ -17,13 +17,13 @@
 | Core Pattern                                  | 30–46     | Adapter → Canonical JSONB → Adapter flow, adding new platforms                                         |
 | Source References for Lossless Round-Tripping | 47–68     | source_refs map for platform-specific identifiers                                                      |
 | Field Type Registry                           | 69–87     | Per-platform transforms, lossy field handling, type mapping                                            |
-| Sync Setup & Table Selection                  | 88–399    | OAuth wizard, table selection, sync filters, record quotas, orphan handling                            |
-| Synced Data Performance Strategy              | 400–458   | 6-layer performance: progressive sync, JSONB source of truth, read cache, optimistic UI, smart polling |
-| External API Rate Limit Management            | 459–513   | Platform rate limits, token bucket, priority scheduling, multi-tenant fairness                         |
-| Conflict Resolution UX                        | 514–772   | Detection, manual resolution UI, diff view, grid rendering, mobile conflicts, audit trail              |
-| Sync Error Recovery UX                        | 773–1063  | 8 error categories, connection status model, UI indicators, 5 recovery flows, settings dashboard       |
-| Schema Sync                                   | 1064–1071 | Schema change detection and handling                                                                   |
-| Phase Implementation                          | 1072–1079 | MVP — Sync delivery scope and ordering                                                                 |
+| Sync Setup & Table Selection                  | 88–419    | OAuth wizard, table selection, sync filters, record quotas, orphan handling                            |
+| Synced Data Performance Strategy              | 420–479   | 6-layer performance: progressive sync, JSONB source of truth, read cache, optimistic UI, smart polling |
+| External API Rate Limit Management            | 480–534   | Platform rate limits, token bucket, priority scheduling, multi-tenant fairness                         |
+| Conflict Resolution UX                        | 535–796   | Detection, manual resolution UI, diff view, grid rendering, mobile conflicts, audit trail              |
+| Sync Error Recovery UX                        | 797–1088  | 8 error categories, connection status model, UI indicators, 5 recovery flows, settings dashboard       |
+| Schema Sync                                   | 1089–1096 | Schema change detection and handling                                                                   |
+| Phase Implementation                          | 1097–1104 | MVP — Sync delivery scope and ordering                                                                 |
 
 ---
 
