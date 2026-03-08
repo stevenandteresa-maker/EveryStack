@@ -171,6 +171,14 @@
     "tooltip_action_resolve": "Haz clic para resolver.",
     "tooltip_action_check_connection": "Haz clic para verificar la conexión."
   },
+  "sync_sidebar": {
+    "tooltip_healthy": "Sincronizado con {platform}.",
+    "tooltip_healthy_with_time": "Sincronizado con {platform}. Última sincronización: {time}",
+    "tooltip_syncing": "Sincronizando con {platform}\u2026",
+    "tooltip_conflicts": "{count, plural, one {# conflicto de sincronización. Haz clic para resolver.} other {# conflictos de sincronización. Haz clic para resolver.}}",
+    "tooltip_paused": "Sincronización pausada. Haz clic para reanudar.",
+    "tooltip_error": "Error de sincronización. Haz clic para más detalles."
+  },
   "sync_failures_tab": {
     "empty": "Sin fallos de sincronización. Todos los registros se sincronizaron correctamente.",
     "failure_count": "{count, plural, one {# fallo pendiente} other {# fallos pendientes}}",

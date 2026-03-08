@@ -30,6 +30,11 @@ import type {
   SyncErrorCode,
 } from '@everystack/shared/sync';
 import { ConnectionHealthSchema } from '@everystack/shared/sync';
+import {
+  sendSyncNotification,
+  isDuplicateNotification,
+  markNotificationSent,
+} from '@everystack/shared/sync';
 import { getQueue } from '../../queues';
 
 // ---------------------------------------------------------------------------
@@ -66,6 +71,12 @@ export interface SyncJobContext {
   connectionId: string;
   traceId: string;
   logger: Logger;
+  /** Workspace ID for resolving notification recipients. */
+  workspaceId?: string;
+  /** Platform display name for notification context. */
+  platform?: string;
+  /** Table name for notification context (optional). */
+  tableName?: string;
 }
 
 /**
@@ -306,6 +317,103 @@ export async function handleSyncError(
       'Sync stopped — manual intervention required',
     );
   }
+
+  // 7. Fire notifications based on error classification
+  await fireNotifications(
+    tenantId,
+    baseConnectionId,
+    classification.code,
+    finalHealth,
+    context,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Notification triggers — wires error codes to sendSyncNotification()
+// ---------------------------------------------------------------------------
+
+/**
+ * Fires the appropriate sync notification(s) based on the error code
+ * and connection health state. Rate-limited errors are excluded (auto-resolve).
+ */
+async function fireNotifications(
+  tenantId: string,
+  connectionId: string,
+  errorCode: SyncErrorCode,
+  health: ConnectionHealth,
+  context: SyncJobContext,
+): Promise<void> {
+  const { workspaceId, platform, tableName, traceId } = context;
+  if (!workspaceId || !platform) return; // Missing context — skip notifications
+
+  const details = {
+    connectionId,
+    platform,
+    workspaceId,
+    tableName,
+  };
+
+  try {
+    switch (errorCode) {
+      case 'auth_expired':
+      case 'permission_denied': {
+        const isDup = await isDuplicateNotification(tenantId, 'auth_expired', connectionId);
+        if (!isDup) {
+          await sendSyncNotification(tenantId, 'auth_expired', details, traceId);
+          await markNotificationSent(tenantId, 'auth_expired', connectionId);
+        }
+        break;
+      }
+
+      case 'schema_mismatch': {
+        await sendSyncNotification(tenantId, 'schema_mismatch', details, traceId);
+        break;
+      }
+
+      case 'partial_failure': {
+        // Only notify if >10 records failed
+        if (health.records_failed > 10) {
+          await sendSyncNotification(
+            tenantId,
+            'partial_failure',
+            { ...details, affectedRecordCount: health.records_failed },
+            traceId,
+          );
+        }
+        break;
+      }
+
+      case 'quota_exceeded': {
+        // Quota exceeded notifications are handled by the quota-specific flow
+        // (QuotaExceededPanel in the UI). No toast notification needed.
+        break;
+      }
+
+      case 'rate_limited': {
+        // Rate-limited events do NOT generate notifications (auto-resolving)
+        break;
+      }
+
+      default: {
+        // For platform_unavailable, unknown — check consecutive failure count
+        if (health.consecutive_failures === 3) {
+          await sendSyncNotification(
+            tenantId,
+            'consecutive_failures',
+            details,
+            traceId,
+          );
+        }
+        break;
+      }
+    }
+  } catch (err: unknown) {
+    // Notification failures must never break the error handler
+    context.logger.error(
+      { err, connectionId, errorCode },
+      'Failed to fire sync notification',
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -409,6 +517,82 @@ export async function retryNow(
     {
       priority: 0, // P0 — critical
       jobId: `retry-now:${baseConnectionId}:${Date.now()}`,
+      removeOnComplete: true,
+      removeOnFail: 10,
+    },
+  );
+}
+
+/**
+ * Resume sync after quota has been freed — resets the error state and
+ * enqueues an immediate P0 sync job. Called when a user clicks "Resume Sync"
+ * on the QuotaExceededPanel.
+ */
+export async function resumeSync(
+  baseConnectionId: string,
+  tenantId: string,
+  traceId: string,
+): Promise<void> {
+  const writeDb = getDbForTenant(tenantId, 'write');
+  const db = getDbForTenant(tenantId, 'read');
+
+  const [connection] = await db
+    .select({ health: baseConnections.health })
+    .from(baseConnections)
+    .where(
+      and(
+        eq(baseConnections.id, baseConnectionId),
+        eq(baseConnections.tenantId, tenantId),
+      ),
+    )
+    .limit(1);
+
+  const parseResult = ConnectionHealthSchema.safeParse(connection?.health);
+  const currentHealth: ConnectionHealth | null = parseResult.success
+    ? parseResult.data
+    : null;
+
+  // Clear quota_exceeded error and reset health
+  const resetHealth: ConnectionHealth = {
+    ...(currentHealth ?? {
+      last_success_at: null,
+      last_error: null,
+      consecutive_failures: 0,
+      next_retry_at: null,
+      records_synced: 0,
+      records_failed: 0,
+    }),
+    last_error: null,
+    consecutive_failures: 0,
+    next_retry_at: null,
+  };
+
+  await writeDb
+    .update(baseConnections)
+    .set({
+      health: resetHealth as unknown as Record<string, unknown>,
+      syncStatus: 'active',
+    })
+    .where(
+      and(
+        eq(baseConnections.id, baseConnectionId),
+        eq(baseConnections.tenantId, tenantId),
+      ),
+    );
+
+  // Enqueue immediate catch-up sync
+  const queue = getQueue('sync');
+  await queue.add(
+    'resume-after-quota',
+    {
+      connectionId: baseConnectionId,
+      tenantId,
+      traceId,
+      triggeredBy: 'user:resume_sync',
+    },
+    {
+      priority: 0, // P0 — critical
+      jobId: `resume-quota:${baseConnectionId}:${Date.now()}`,
       removeOnComplete: true,
       removeOnFail: 10,
     },

@@ -293,6 +293,23 @@ export {
 } from './sync-failures';
 export type { CreateSyncFailureInput } from './sync-failures';
 
+// Sync notifications
+export {
+  sendSyncNotification,
+  isDuplicateNotification,
+  markNotificationSent,
+  setNotificationRedisClient,
+} from './sync-notifications';
+export type {
+  SyncNotificationEventType,
+  SyncNotificationDetails,
+  SyncNotificationPayload,
+} from './sync-notifications';
+
+// Notification queue
+export { setEnqueueEmail, getEnqueueEmail } from './notification-queue';
+export type { EnqueueEmailFn, NotificationEmailJob } from './notification-queue';
+
 // Schema change detection
 export {
   detectSchemaChanges,

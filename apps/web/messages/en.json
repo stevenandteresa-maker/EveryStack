@@ -171,6 +171,14 @@
     "tooltip_action_resolve": "Click to resolve.",
     "tooltip_action_check_connection": "Click to check connection."
   },
+  "sync_sidebar": {
+    "tooltip_healthy": "Synced with {platform}.",
+    "tooltip_healthy_with_time": "Synced with {platform}. Last sync: {time}",
+    "tooltip_syncing": "Syncing with {platform}\u2026",
+    "tooltip_conflicts": "{count, plural, one {# sync conflict. Click to resolve.} other {# sync conflicts. Click to resolve.}}",
+    "tooltip_paused": "Sync paused. Click to resume.",
+    "tooltip_error": "Sync failed. Click for details."
+  },
   "sync_failures_tab": {
     "empty": "No sync failures. All records synced successfully.",
     "failure_count": "{count, plural, one {# pending failure} other {# pending failures}}",
