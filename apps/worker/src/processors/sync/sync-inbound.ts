@@ -40,6 +40,7 @@ import {
   rateLimiter,
   createInitialSyncMetadata,
   updateLastSyncedValues,
+  getNotionDatabaseSchema,
 } from '@everystack/shared/sync';
 import type {
   PlatformAdapter,
@@ -57,8 +58,16 @@ import {
   getPendingRetriableFailures,
   incrementRetryCount,
   markFailureResolved,
+  detectSchemaChanges,
+  createSchemaChange,
+  hasPendingSchemaChange,
+  computeSchemaChangeImpact,
 } from '@everystack/shared/sync';
-import type { CreateSyncFailureInput } from '@everystack/shared/sync';
+import type {
+  CreateSyncFailureInput,
+  LocalFieldMapping,
+  PlatformFieldDefinition,
+} from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { REALTIME_EVENTS } from '@everystack/shared/realtime';
 import type { EventPublisher } from '@everystack/shared/realtime';
@@ -154,6 +163,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     for (const tableConfig of syncConfig.tables) {
       if (!tableConfig.enabled || !tableConfig.es_table_id) continue;
 
+      const notionAccessToken = platform === 'notion' ? (rawTokens as unknown as NotionTokens).access_token : null;
       const result = await this.syncTableInbound({
         tenantId,
         connectionId,
@@ -165,6 +175,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         conflictResolution,
         airtableClient,
         notionClient,
+        notionAccessToken,
         logger,
       });
 
@@ -221,6 +232,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     conflictResolution: ConflictResolutionStrategy;
     airtableClient: AirtableApiClient | null;
     notionClient: NotionApiClient | null;
+    notionAccessToken: string | null;
     logger: Logger;
   }): Promise<{ updated: number; created: number; conflicts: number; failed: number }> {
     const {
@@ -234,6 +246,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       conflictResolution,
       airtableClient,
       notionClient,
+      notionAccessToken,
       logger,
     } = params;
 
@@ -241,11 +254,29 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
 
     // Build field mappings
     const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, esTableId);
-    const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
+
+    // Schema change detection: compare platform fields against local mappings
+    const skippedFieldIds = await this.detectAndRecordSchemaChanges({
+      tenantId,
+      connectionId,
+      esTableId,
+      platform,
+      airtableClient,
+      notionAccessToken,
+      externalTableId,
+      fieldMappings,
+      logger,
+    });
+
+    // Filter out skipped fields (type_changed or deleted pending resolution)
+    const activeFieldMappings = skippedFieldIds.size > 0
+      ? fieldMappings.filter((m) => !skippedFieldIds.has(m.fieldId))
+      : fieldMappings;
+    const syncedFieldIds = activeFieldMappings.map((m) => m.fieldId);
 
     // Build fieldMap for filter translation
     const fieldMap = new Map<string, string>();
-    for (const mapping of fieldMappings) {
+    for (const mapping of activeFieldMappings) {
       fieldMap.set(mapping.fieldId, mapping.externalFieldId);
     }
 
@@ -727,6 +758,168 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         );
       }
     }
+  }
+
+  /**
+   * Detect schema changes between the platform's current fields and local mappings.
+   * Writes detected changes to sync_schema_changes (deduped) and returns
+   * the set of field IDs that should be skipped during this sync cycle.
+   */
+  private async detectAndRecordSchemaChanges(params: {
+    tenantId: string;
+    connectionId: string;
+    esTableId: string;
+    platform: string;
+    airtableClient: AirtableApiClient | null;
+    notionAccessToken: string | null;
+    externalTableId: string;
+    fieldMappings: FieldMapping[];
+    logger: Logger;
+  }): Promise<Set<string>> {
+    const {
+      tenantId,
+      connectionId,
+      esTableId,
+      platform,
+      airtableClient,
+      notionAccessToken,
+      externalTableId,
+      fieldMappings,
+      logger,
+    } = params;
+
+    const skippedFieldIds = new Set<string>();
+
+    try {
+      // Fetch current platform field definitions
+      let platformFields: PlatformFieldDefinition[] = [];
+
+      if (platform === 'notion' && notionAccessToken) {
+        const schema = await getNotionDatabaseSchema(notionAccessToken, externalTableId);
+        platformFields = (schema.properties ?? []).map((prop) => ({
+          id: prop.id,
+          name: prop.name,
+          type: prop.type,
+        }));
+      } else if (airtableClient) {
+        const airtableFields = await airtableClient.listFields(externalTableId);
+        platformFields = airtableFields.map((f) => ({
+          id: f.id,
+          name: f.name,
+          type: f.type,
+          options: f.options,
+        }));
+      }
+
+      if (platformFields.length === 0) return skippedFieldIds;
+
+      // Build local mappings with field names for the detector
+      const db = getDbForTenant(tenantId, 'read');
+      const fieldRows = await db
+        .select({ id: fields.id, name: fields.name })
+        .from(fields)
+        .where(eq(fields.tenantId, tenantId));
+
+      const fieldNameMap = new Map<string, string>();
+      for (const row of fieldRows) {
+        fieldNameMap.set(row.id, row.name);
+      }
+
+      const localMappings: LocalFieldMapping[] = fieldMappings.map((m) => ({
+        fieldId: m.fieldId,
+        externalFieldId: m.externalFieldId,
+        externalFieldType: m.externalFieldType,
+        fieldName: fieldNameMap.get(m.fieldId) ?? '',
+      }));
+
+      // Detect changes
+      const changes = detectSchemaChanges(localMappings, platformFields);
+
+      if (changes.length === 0) return skippedFieldIds;
+
+      logger.info(
+        { changeCount: changes.length, changeTypes: changes.map((c) => c.changeType) },
+        'Schema changes detected during inbound sync',
+      );
+
+      // Write changes to sync_schema_changes (deduped — skip if pending already exists)
+      for (const change of changes) {
+        const alreadyPending = await hasPendingSchemaChange(
+          tenantId,
+          connectionId,
+          change.platformFieldId,
+          change.changeType,
+        );
+
+        if (alreadyPending) {
+          // Still pending from previous cycle — skip but still mark field for skipping
+          if (
+            change.fieldId &&
+            (change.changeType === 'field_type_changed' || change.changeType === 'field_deleted')
+          ) {
+            skippedFieldIds.add(change.fieldId);
+          }
+          continue;
+        }
+
+        // Compute impact for existing fields
+        let impact = { formulaCount: 0, automationCount: 0, portalFieldCount: 0, crossLinkCount: 0 };
+        if (change.fieldId) {
+          impact = await computeSchemaChangeImpact(tenantId, change.fieldId);
+        }
+
+        await createSchemaChange(tenantId, {
+          baseConnectionId: connectionId,
+          changeType: change.changeType,
+          fieldId: change.fieldId,
+          platformFieldId: change.platformFieldId,
+          oldSchema: change.oldSchema,
+          newSchema: change.newSchema,
+          impact,
+        });
+
+        // Skip syncing affected fields until Manager resolves
+        if (
+          change.fieldId &&
+          (change.changeType === 'field_type_changed' || change.changeType === 'field_deleted')
+        ) {
+          skippedFieldIds.add(change.fieldId);
+        }
+
+        logger.info(
+          {
+            changeType: change.changeType,
+            fieldId: change.fieldId,
+            platformFieldId: change.platformFieldId,
+            impact,
+          },
+          'Schema change recorded',
+        );
+      }
+
+      // Emit real-time event so the UI can refresh the Schema Changes tab
+      if (skippedFieldIds.size > 0 || changes.length > 0) {
+        await this.eventPublisher.publish({
+          tenantId,
+          channel: `table:${esTableId}`,
+          event: REALTIME_EVENTS.SYNC_SCHEMA_CHANGE_DETECTED,
+          payload: {
+            connectionId,
+            tableId: esTableId,
+            changeCount: changes.length,
+            changeTypes: [...new Set(changes.map((c) => c.changeType))],
+          },
+        });
+      }
+    } catch (error) {
+      // Schema detection failure should not block the sync
+      logger.error(
+        { error },
+        'Schema change detection failed — continuing sync without detection',
+      );
+    }
+
+    return skippedFieldIds;
   }
 
   /**

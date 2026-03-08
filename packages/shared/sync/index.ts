@@ -292,3 +292,33 @@ export {
   RESOLVED_RETENTION_MS,
 } from './sync-failures';
 export type { CreateSyncFailureInput } from './sync-failures';
+
+// Schema change detection
+export {
+  detectSchemaChanges,
+} from './schema-change-detector';
+export type {
+  SchemaChange,
+  LocalFieldMapping,
+  PlatformFieldDefinition,
+} from './schema-change-detector';
+
+// Sync schema changes (data access)
+export {
+  createSchemaChange,
+  getSchemaChangesForConnection,
+  countPendingSchemaChanges,
+  hasPendingSchemaChange,
+  acceptSchemaChange,
+  rejectSchemaChange,
+  computeSchemaChangeImpact,
+  updateFieldTypeFromSchemaChange,
+  disconnectFieldMapping,
+  archiveField,
+  renameField,
+} from './sync-schema-changes';
+export type {
+  SchemaChangeImpact,
+  CreateSchemaChangeInput,
+  SyncSchemaChangeRow,
+} from './sync-schema-changes';

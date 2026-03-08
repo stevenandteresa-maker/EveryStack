@@ -104,6 +104,10 @@ export {
   syncConflictsRelations,
   syncFailures,
   syncFailuresRelations,
+  syncSchemaChanges,
+  syncSchemaChangesRelations,
+  automations,
+  automationsRelations,
   fieldExpressionIndexes,
 } from './schema';
 export type {
@@ -130,5 +134,7 @@ export type {
   SyncedFieldMapping, NewSyncedFieldMapping,
   SyncConflict, NewSyncConflict,
   SyncFailure, NewSyncFailure,
+  SyncSchemaChange, NewSyncSchemaChange,
+  Automation, NewAutomation,
   FieldExpressionIndex, NewFieldExpressionIndex,
 } from './schema';

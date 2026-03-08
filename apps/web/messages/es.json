@@ -205,5 +205,30 @@
     "reauth_success": "Reautenticado exitosamente. Sincronización de recuperación iniciada.",
     "retry_success": "Reintento en cola. La sincronización se reanudará en breve.",
     "pause_success": "Sincronización pausada."
+  },
+  "sync_schema_changes": {
+    "empty": "No se detectaron cambios de esquema. Las definiciones de campo están sincronizadas.",
+    "pending_count": "{count, plural, one {# cambio de esquema pendiente} other {# cambios de esquema pendientes}}",
+    "type_changed": "Tipo de campo \"{name}\" cambiado: {oldType} → {newType}",
+    "field_deleted": "Campo \"{name}\" eliminado en {platform}",
+    "field_added": "Nuevo campo \"{name}\" ({type}) añadido en {platform}",
+    "field_renamed": "Campo \"{oldName}\" renombrado a \"{newName}\" en {platform}",
+    "impact_prefix": "Esto puede afectar ",
+    "impact_formulas": "{count, plural, one {# campo de fórmula} other {# campos de fórmula}}",
+    "impact_automations": "{count, plural, one {# automatización} other {# automatizaciones}}",
+    "impact_portals": "{count, plural, one {# vínculo de portal} other {# vínculos de portal}}",
+    "impact_cross_links": "{count, plural, one {# enlace cruzado} other {# enlaces cruzados}}",
+    "accept_change": "Aceptar cambio",
+    "reject_keep_local": "Rechazar — Mantener tipo local",
+    "archive_field": "Archivar campo",
+    "delete_field": "Eliminar campo",
+    "add_to_everystack": "Añadir a EveryStack",
+    "ignore": "Ignorar",
+    "accept_rename": "Aceptar renombre",
+    "keep_local_name": "Mantener nombre local",
+    "status_pending": "Pendiente",
+    "status_accepted": "Aceptado",
+    "status_rejected": "Rechazado",
+    "action_error": "Error al aplicar el cambio. Inténtalo de nuevo."
   }
 }

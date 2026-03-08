@@ -205,5 +205,30 @@
     "reauth_success": "Re-authenticated successfully. Catch-up sync started.",
     "retry_success": "Retry enqueued. Sync will resume shortly.",
     "pause_success": "Sync paused."
+  },
+  "sync_schema_changes": {
+    "empty": "No schema changes detected. Field definitions are in sync.",
+    "pending_count": "{count, plural, one {# pending schema change} other {# pending schema changes}}",
+    "type_changed": "Field \"{name}\" type changed: {oldType} → {newType}",
+    "field_deleted": "Field \"{name}\" deleted on {platform}",
+    "field_added": "New field \"{name}\" ({type}) added on {platform}",
+    "field_renamed": "Field \"{oldName}\" renamed to \"{newName}\" on {platform}",
+    "impact_prefix": "This may affect ",
+    "impact_formulas": "{count, plural, one {# formula field} other {# formula fields}}",
+    "impact_automations": "{count, plural, one {# automation} other {# automations}}",
+    "impact_portals": "{count, plural, one {# portal binding} other {# portal bindings}}",
+    "impact_cross_links": "{count, plural, one {# cross-link} other {# cross-links}}",
+    "accept_change": "Accept Change",
+    "reject_keep_local": "Reject — Keep Local Type",
+    "archive_field": "Archive Field",
+    "delete_field": "Delete Field",
+    "add_to_everystack": "Add to EveryStack",
+    "ignore": "Ignore",
+    "accept_rename": "Accept Rename",
+    "keep_local_name": "Keep Local Name",
+    "status_pending": "Pending",
+    "status_accepted": "Accepted",
+    "status_rejected": "Rejected",
+    "action_error": "Failed to apply change. Please try again."
   }
 }

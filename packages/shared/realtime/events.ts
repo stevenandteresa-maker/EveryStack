@@ -21,6 +21,7 @@ export const REALTIME_EVENTS = {
   SYNC_RECORDS_ORPHANED: 'sync.records_orphaned',
   SYNC_CONFLICT_DETECTED: 'sync.conflict_detected',
   SYNC_CONFLICT_RESOLVED: 'sync.conflict_resolved',
+  SYNC_SCHEMA_CHANGE_DETECTED: 'sync.schema_change_detected',
 
   // Schema events
   FIELD_CREATED: 'schema.field.created',
