@@ -102,6 +102,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />
@@ -125,6 +127,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />
@@ -148,6 +152,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />
@@ -171,6 +177,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />
@@ -201,6 +209,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />
@@ -227,6 +237,8 @@ describe('GridRow', () => {
             activeCell={null}
             editingCell={null}
             onCellClick={vi.fn()}
+            onCellDoubleClick={vi.fn()}
+            onCellStartReplace={vi.fn()}
             onCellSave={vi.fn()}
             onCellCancel={vi.fn()}
           />

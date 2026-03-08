@@ -35,6 +35,8 @@ export interface GridRowProps {
   activeCell: CellPosition | null;
   editingCell: CellPosition | null;
   onCellClick: (rowId: string, fieldId: string) => void;
+  onCellDoubleClick: (rowId: string, fieldId: string) => void;
+  onCellStartReplace: (rowId: string, fieldId: string) => void;
   onCellSave: (rowId: string, fieldId: string, value: unknown) => void;
   onCellCancel: () => void;
   style?: React.CSSProperties;
@@ -53,6 +55,8 @@ export const GridRow = memo(function GridRow({
   activeCell,
   editingCell,
   onCellClick,
+  onCellDoubleClick,
+  onCellStartReplace,
   onCellSave,
   onCellCancel,
   style,
@@ -142,6 +146,8 @@ export const GridRow = memo(function GridRow({
               onSave={(value) => onCellSave(record.id, field.id, value)}
               onCancel={onCellCancel}
               onClick={() => onCellClick(record.id, field.id)}
+              onDoubleClick={() => onCellDoubleClick(record.id, field.id)}
+              onStartReplace={() => onCellStartReplace(record.id, field.id)}
               style={{ height: rowHeight }}
             />
             {/* Expand icon on primary field hover */}

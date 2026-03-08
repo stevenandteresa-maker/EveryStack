@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { GridCell, registerCellRenderer, getCellRenderer } from '../GridCell';
 import type { GridRecord, GridField } from '@/lib/types/grid';
 
@@ -161,7 +161,8 @@ describe('GridCell', () => {
     expect(cell.className).not.toContain('ring-2');
   });
 
-  it('fires onClick when cell is clicked', () => {
+  it('fires onClick when cell is clicked (after debounce)', () => {
+    vi.useFakeTimers();
     const onClick = vi.fn();
 
     render(
@@ -177,7 +178,12 @@ describe('GridCell', () => {
     );
 
     fireEvent.click(screen.getByRole('gridcell'));
+    // onClick is deferred by 200ms to allow double-click detection
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(onClick).toHaveBeenCalledOnce();
+    vi.useRealTimers();
   });
 });
 

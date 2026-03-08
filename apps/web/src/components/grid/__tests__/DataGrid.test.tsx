@@ -81,6 +81,8 @@ const defaultProps = {
   columnWidths: {},
   columnOrder: [],
   onCellClick: vi.fn(),
+  onCellDoubleClick: vi.fn(),
+  onCellStartReplace: vi.fn(),
   onCellSave: vi.fn(),
   onCellCancel: vi.fn(),
   onSelectColumn: vi.fn(),

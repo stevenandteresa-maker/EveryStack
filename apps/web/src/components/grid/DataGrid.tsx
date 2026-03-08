@@ -60,6 +60,8 @@ export interface DataGridProps {
   columnWidths: Record<string, number>;
   columnOrder: string[];
   onCellClick: (rowId: string, fieldId: string) => void;
+  onCellDoubleClick: (rowId: string, fieldId: string) => void;
+  onCellStartReplace: (rowId: string, fieldId: string) => void;
   onCellSave: (rowId: string, fieldId: string, value: unknown) => void;
   onCellCancel: () => void;
   onSelectColumn: (fieldId: string) => void;
@@ -84,6 +86,8 @@ export function DataGrid({
   columnWidths,
   columnOrder,
   onCellClick,
+  onCellDoubleClick,
+  onCellStartReplace,
   onCellSave,
   onCellCancel,
   onSelectColumn,
@@ -271,6 +275,8 @@ export function DataGrid({
               activeCell={activeCell}
               editingCell={editingCell}
               onCellClick={onCellClick}
+              onCellDoubleClick={onCellDoubleClick}
+              onCellStartReplace={onCellStartReplace}
               onCellSave={onCellSave}
               onCellCancel={onCellCancel}
               style={{

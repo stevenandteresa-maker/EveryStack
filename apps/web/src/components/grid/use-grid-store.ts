@@ -15,9 +15,12 @@ import type { RowDensity } from '@/lib/types/grid';
 // State shape
 // ---------------------------------------------------------------------------
 
+export type EditMode = 'replace' | 'edit';
+
 export interface GridState {
   activeCell: CellPosition | null;
   editingCell: CellPosition | null;
+  editMode: EditMode;
   density: RowDensity;
   frozenColumnCount: number;
   columnWidths: Record<string, number>;
@@ -30,7 +33,7 @@ export interface GridState {
 
 export interface GridActions {
   setActiveCell: (cell: CellPosition | null) => void;
-  startEditing: (cell: CellPosition) => void;
+  startEditing: (cell: CellPosition, mode?: EditMode) => void;
   stopEditing: () => void;
   setDensity: (density: RowDensity) => void;
   setColumnWidth: (fieldId: string, width: number) => void;
@@ -50,6 +53,7 @@ export function createGridStore(initialState?: Partial<GridState>) {
     // Default state
     activeCell: null,
     editingCell: null,
+    editMode: 'edit',
     density: 'medium',
     frozenColumnCount: 0,
     columnWidths: {},
@@ -59,9 +63,10 @@ export function createGridStore(initialState?: Partial<GridState>) {
     // Actions
     setActiveCell: (cell) => set({ activeCell: cell }),
 
-    startEditing: (cell) => set({ activeCell: cell, editingCell: cell }),
+    startEditing: (cell, mode = 'edit') =>
+      set({ activeCell: cell, editingCell: cell, editMode: mode }),
 
-    stopEditing: () => set({ editingCell: null }),
+    stopEditing: () => set({ editingCell: null, editMode: 'edit' }),
 
     setDensity: (density) => set({ density }),
 
