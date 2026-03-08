@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-06
+**Last updated:** 2026-03-08
 **Branch:** `main`
 **Latest tag:** `v0.2.0-phase-2a`
-**Total commits:** 22 (squash merges)
+**Total commits:** 24 (squash merges)
 
 ---
 
@@ -662,13 +662,133 @@ FieldTypeRegistry singleton, 60+ canonical value types, complete Airtable adapte
 
 **Patterns established:** FieldTypeRegistry singleton for all field type operations (no switch statements). Canonical JSONB discrimination via `{ type, value }` objects. `isLossless` flag on transforms for sync algorithm decisions. `supportedOperations` array declaring read/write/filter/sort capabilities. `source_refs` for platform-native ID preservation (lossless round-tripping). Filter pushdown optimization (push to platform formula vs. local fallback). Proactive rate limiting via `rateLimiter.waitForCapacity()` before every API call. Redis-cached quota with INCRBY/DECRBY mutations. AES-256-GCM token encryption with versioning. PKCE OAuth flow with Redis state + popup `postMessage` communication. `registerAirtableTransforms()` called once at startup. `resolveAccessToken()` shared helper with 5-min auto-refresh threshold. `previous_sync_filter` tracking for undo support. Orphan detection 6-step pipeline with verification against platform API. `AIRTABLE_TO_CANONICAL_TYPE` static map for schema sync. `FIELD_TYPE_OPERATORS` Map (not switch) in filter builder UI.
 
+### Phase 2B — Synced Data Performance, Outbound Sync, Conflict Resolution (Complete)
+
+Performance optimizations, outbound (bidirectional) sync, and conflict resolution UX.
+
+**Key files:**
+- `packages/shared/sync/outbound.ts` — Outbound sync processor (canonical → platform write-back via `fromCanonical()`)
+- `packages/shared/sync/health.ts` — `ConnectionHealth` JSONB shape, health evaluation helpers
+- `packages/shared/sync/rate-limiter.ts` — Enhanced rate limiter with priority-aware dispatch
+- `packages/shared/sync/types.ts` — Added `TableVisibility`, `SyncPriority`, `ConnectionHealth`, `SyncError`, `SyncErrorCode`, `POLLING_INTERVALS`, `PRIORITY_CAPACITY_THRESHOLDS`
+- `apps/web/src/components/sync/ConflictsTab.tsx` — Conflict resolution UI (diff view, per-field accept/reject)
+- `apps/web/src/data/sync-dashboard-conflicts.ts` — Conflict queries for dashboard
+
+### Phase 2C — Notion Adapter, Error Recovery, Sync Dashboard (Complete)
+
+Notion platform adapter, sync error recovery flows, and the sync settings dashboard.
+
+**Key files (Notion adapter):**
+- `packages/shared/sync/adapters/notion/notion-adapter.ts` — `NotionAdapter` implementing `PlatformAdapter` (18 property types)
+- `packages/shared/sync/adapters/notion/notion-field-transforms.ts` — 18 field transforms registered via `registerNotionTransforms()`
+- `packages/shared/sync/adapters/notion/notion-types.ts` — `NotionPropertyType`, `NotionProperty`, `NotionPage`, `NotionDatabase`, all property interfaces
+- `packages/shared/sync/adapters/notion/notion-filter.ts` — `translateToNotionFilter()` for filter pushdown
+- `packages/shared/sync/adapters/notion/api-client.ts` — `NotionApiClient` with rate limiting and pagination
+- `packages/shared/sync/adapters/notion/oauth.ts` — Notion OAuth 2.0 flow (`getNotionAuthUrl()`)
+- `apps/web/src/app/api/oauth/notion/callback/route.ts` — Notion OAuth callback handler
+
+**Key files (error recovery & scheduling):**
+- `packages/shared/sync/sync-error-handler.ts` — `classifyError()` mapping errors to `SyncErrorCode`, `getBackoffDelay()` with exponential backoff
+- `packages/shared/sync/priority-scheduler.ts` — `getSyncDispatchMode()` evaluating priority vs capacity
+- `packages/shared/sync/sync-failures.ts` — Sync failure persistence and query helpers
+- `packages/shared/sync/sync-notifications.ts` — Real-time sync event notifications
+- `packages/shared/sync/schema-change-detector.ts` — Detects schema diffs between platform and local
+- `packages/shared/sync/notification-queue.ts` — Notification queuing for sync events
+- `apps/worker/src/processors/sync/sync-scheduler.ts` — `SyncScheduler` (30s tick, priority-based dispatch)
+- `apps/worker/src/processors/sync/sync-error-handler.ts` — Error classification and retry logic in worker
+- `apps/worker/src/processors/sync/escalation-check.ts` — Escalation check processor
+- `apps/worker/src/processors/sync/sync-inbound.ts` — Enhanced inbound sync with error handling
+- `apps/worker/src/processors/sync/initial-sync.ts` — Updated with Notion support
+
+**Key files (sync dashboard UI):**
+- `apps/web/src/app/(app)/[workspaceId]/settings/sync/[baseConnectionId]/page.tsx` — Sync dashboard route
+- `apps/web/src/components/sync/SyncDashboard.tsx` — Tabbed dashboard (Overview, Tables & Filters, Conflicts, Failures, Schema Changes, History)
+- `apps/web/src/components/sync/OverviewTab.tsx` — Connection health overview
+- `apps/web/src/components/sync/TablesFiltersTab.tsx` — Per-table sync configuration
+- `apps/web/src/components/sync/FailuresTab.tsx` — Error log with retry/dismiss
+- `apps/web/src/components/sync/SchemaChangesTab.tsx` — Schema diff display
+- `apps/web/src/components/sync/HistoryTab.tsx` — Sync event timeline
+- `apps/web/src/components/sync/SyncStatusBadge.tsx` — Status badge component
+- `apps/web/src/components/sync/SyncStatusTooltip.tsx` — Status tooltip with details
+- `apps/web/src/components/sync/SyncNotificationToast.tsx` — Toast notifications for sync events
+- `apps/web/src/components/sync/ReauthBanner.tsx` — Re-authentication prompt banner
+- `apps/web/src/components/sync/QuotaExceededPanel.tsx` — Quota overage panel with upgrade options
+
+**Key files (sidebar sync indicators):**
+- `apps/web/src/components/sidebar/PlatformBadge.tsx` — 14px platform logo overlay on table icon
+- `apps/web/src/components/sidebar/SyncStatusIcon.tsx` — 6-state sync health icon
+- `apps/web/src/components/sidebar/TableTabItem.tsx` — Table tab with badge + status integration
+- `apps/web/src/components/icons/platforms/` — AirtableLogo, NotionLogo, SmartSuiteLogo SVG components
+
+**Server Actions (2C):**
+- `sync-dashboard-actions.ts` — Dashboard data mutations (retry, dismiss, acknowledge)
+- `sync-failure-actions.ts` — Failure management (retry individual, bulk retry, dismiss)
+- `sync-reauth.ts` — Re-authentication flow for expired tokens
+- `sync-schema-actions.ts` — Schema change acknowledgement and migration
+
+**Data Functions (2C):**
+- `sync-dashboard.ts` — Dashboard overview queries (health, history, stats)
+- `sync-dashboard-conflicts.ts` — Conflict queries for resolution UI
+- `sync-failures.ts` — Failure log queries with filtering
+- `sync-schema-changes.ts` — Schema change detection queries
+- `sync-status.ts` — Connection status and health queries
+
+**Realtime Events (2C):**
+- Added sync notification events to `packages/shared/realtime/events.ts`
+
+**Queue Types (2C):**
+- Added `EscalationCheckJobData` to `packages/shared/queue/types.ts`
+
+**i18n (2C):**
+- New namespaces in `en.json`/`es.json`: sync dashboard, sync failures, sync notifications, reauth, schema changes
+
+**Tests (Phase 2C):**
+- `packages/shared/sync/adapters/notion/__tests__/notion-adapter.test.ts`
+- `packages/shared/sync/adapters/notion/__tests__/notion-field-transforms.test.ts`
+- `packages/shared/sync/adapters/notion/__tests__/notion-filter.test.ts`
+- `packages/shared/sync/adapters/notion/__tests__/notion-pipeline-e2e.test.ts`
+- `packages/shared/sync/adapters/notion/__tests__/oauth.test.ts`
+- `packages/shared/sync/__tests__/health.test.ts`
+- `packages/shared/sync/__tests__/priority-scheduler.test.ts`
+- `packages/shared/sync/__tests__/priority-scheduling-verify.test.ts`
+- `packages/shared/sync/__tests__/schema-change-detector.test.ts`
+- `packages/shared/sync/__tests__/sync-failures.test.ts`
+- `packages/shared/sync/__tests__/sync-notifications.test.ts`
+- `packages/shared/realtime/__tests__/types.test.ts`
+- `apps/worker/src/processors/sync/__tests__/sync-scheduler.test.ts`
+- `apps/worker/src/processors/sync/__tests__/sync-error-handler.test.ts`
+- `apps/worker/src/processors/sync/__tests__/sync-inbound.test.ts`
+- `apps/worker/src/processors/sync/__tests__/escalation-check.test.ts`
+- `apps/worker/src/processors/sync/__tests__/smart-polling-verify.test.ts`
+- `apps/worker/src/processors/sync/__tests__/initial-sync.test.ts` (updated)
+- `apps/web/src/actions/__tests__/sync-dashboard-actions.test.ts`
+- `apps/web/src/data/__tests__/sync-dashboard.test.ts`
+- `apps/web/src/data/__tests__/sync-dashboard-conflicts.test.ts`
+- `apps/web/src/data/__tests__/sync-failures.test.ts`
+- `apps/web/src/data/__tests__/sync-schema-changes.integration.test.ts`
+- `apps/web/src/data/__tests__/sync-status.integration.test.ts`
+- `apps/web/src/components/sync/__tests__/FailuresTab.test.tsx`
+- `apps/web/src/components/sync/__tests__/QuotaExceededPanel.test.tsx`
+- `apps/web/src/components/sync/__tests__/ReauthBanner.test.tsx`
+- `apps/web/src/components/sync/__tests__/SyncNotificationToast.test.tsx`
+- `apps/web/src/components/sync/__tests__/SyncStatusBadge.test.tsx`
+- `apps/web/src/components/sync/__tests__/SyncStatusTooltip.test.tsx`
+- `apps/web/src/components/sidebar/__tests__/PlatformBadge.test.tsx`
+- `apps/web/src/components/sidebar/__tests__/SyncStatusIcon.test.tsx`
+- `apps/web/src/components/sidebar/__tests__/TableTabItem.test.tsx`
+
+**Shared package exports added in 2C:**
+- `@everystack/shared/sync` — NotionAdapter, registerNotionTransforms, NotionApiClient, Notion OAuth functions, NotionPropertyType, NotionProperty, NotionPage, NotionDatabase, translateToNotionFilter, TableVisibility, SyncPriority, ConnectionHealth, SyncError, SyncErrorCode, ConnectionHealthSchema, SyncErrorSchema, POLLING_INTERVALS, PRIORITY_CAPACITY_THRESHOLDS, getSyncDispatchMode, getPollingInterval, getBackoffDelay, classifyError, SyncScheduler, hasActiveWebhook, health utilities, sync-failures, sync-notifications, schema-change-detector
+
+**Patterns established in 2C:** NotionAdapter follows same FieldTypeRegistry pattern as AirtableAdapter (`registerNotionTransforms()` at startup). `NotionApiClient` with rate limiting and cursor-based pagination. `classifyError()` maps platform errors to `SyncErrorCode` for driving recovery flows. `SyncScheduler` 30s tick with P0–P3 priority dispatch. Multi-tenant fairness cap (20% per tenant, P0 exempt). Exponential backoff via `BACKOFF_SCHEDULE` array. `ConnectionHealth` JSONB on `base_connections` for health tracking. Sync dashboard as tabbed settings page pattern. `PlatformBadge` + `SyncStatusIcon` as independent visual channels in sidebar. `SyncNotificationToast` for real-time sync event feedback. Schema change detection with diff-based comparison.
+
 ---
 
 ## What Does NOT Exist Yet
 
-**Sync Engine** — FieldTypeRegistry, canonical types, and Airtable adapter (32 field types, OAuth, API client, filter pushdown) are operational. Initial sync processor, schema sync, and orphan detection are operational. Notion and SmartSuite adapters not yet implemented (adapter stubs only). No incremental/delta sync yet. No webhook-based change detection. No outbound sync (write-back to platforms). No conflict resolution.
+**Sync Engine** — FieldTypeRegistry, canonical types, Airtable adapter (32 field types), and Notion adapter (18 property types) are operational. Initial sync, schema sync, orphan detection, outbound sync, conflict resolution, error recovery, priority scheduling, and smart polling are operational. SmartSuite adapter not yet implemented (adapter stub only). No webhook-based change detection (Airtable webhooks specced but not connected). No incremental/delta sync processor (uses full-table polling).
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
 
 **Views / Grid / Card** — No view rendering code. Schema for `views` exists but no UI.
 
@@ -692,17 +812,17 @@ FieldTypeRegistry singleton, 60+ canonical value types, complete Airtable adapte
 
 **Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
-**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans + sync_dashboard/sync_failures/sync_notifications/reauth/schema_changes keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
 **Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, and event publishing are fully operational. No presence tracking yet (stubs exist, marked for MVP — Core UX).
 
-**Worker Jobs** — BullMQ worker with 6 queues, 3 file processors (thumbnail, scan, orphan cleanup), and 1 sync processor (initial sync with schema sync + orphan detection helpers) operational. Email, automation, and document-gen processors not yet implemented. No incremental sync processor yet.
+**Worker Jobs** — BullMQ worker with 6 queues, 3 file processors (thumbnail, scan, orphan cleanup), initial sync processor, inbound sync processor, sync scheduler (30s tick), escalation check processor, and sync error handler operational. Email, automation, and document-gen processors not yet implemented.
 
 **File Storage** — StorageClient interface, R2/MinIO client, presigned upload pipeline, MIME/magic byte validation, thumbnail generation, virus scanning, and orphan cleanup are operational. No file attachment UI yet (no record attachment picker, no file browser).
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — `apps/web/src/actions/api-keys.ts`, `apps/web/src/actions/tenant-switch.ts`, `apps/web/src/actions/sync-connections.ts`, `apps/web/src/actions/sync-setup.ts`, `apps/web/src/actions/sync-filters.ts`, `apps/web/src/actions/sync-orphans.ts`, `apps/web/src/data/api-keys.ts`, `apps/web/src/data/sidebar-navigation.ts`, `apps/web/src/data/sync-connections.ts`, and `apps/web/src/data/sync-setup.ts` exist. No record CRUD actions, no workspace/table management actions yet.
+**Server Actions / Data Functions** — Actions: `api-keys.ts`, `tenant-switch.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-filters.ts`, `sync-orphans.ts`, `sync-dashboard-actions.ts`, `sync-failure-actions.ts`, `sync-reauth.ts`, `sync-schema-actions.ts`. Data: `api-keys.ts`, `sidebar-navigation.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-dashboard.ts`, `sync-dashboard-conflicts.ts`, `sync-failures.ts`, `sync-schema-changes.ts`, `sync-status.ts`. No record CRUD actions, no workspace/table management actions yet.
 
 ---
 
@@ -733,7 +853,7 @@ FieldTypeRegistry singleton, 60+ canonical value types, complete Airtable adapte
 | **Tags** | `v0.1.X-phase-YZ` |
 | **Security headers** | CSP + HSTS + X-Frame-Options. Platform (strict) vs Portal (embeddable) |
 | **Webhook verification** | Svix for Clerk, generic HMAC for others |
-| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. 23 event types in `REALTIME_EVENTS` (16 original + 7 sync events added in 2A) |
+| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. Sync notification events for toast-style UI feedback. 23+ event types in `REALTIME_EVENTS` |
 | **Room authorization** | Tenant-scoped rooms (`t:{tenantId}:{resourceType}:{resourceId}`). 5 resource types with query-based authorization |
 | **Worker processors** | Extend `BaseProcessor<TData>`. Trace propagation + Pino child logger + Sentry. `processJob(job, logger)` abstract method |
 | **Graceful shutdown** | `setupGracefulShutdown()` with ordered handlers. Realtime: 10s, Worker: 30s forced exit |
@@ -780,7 +900,14 @@ FieldTypeRegistry singleton, 60+ canonical value types, complete Airtable adapte
 | **Filter builder** | `SyncFilterBuilder` uses `FIELD_TYPE_OPERATORS` Map (not switch). Two modes: 'platform' (external field IDs) and 'es' (ES UUIDs). Reusable across wizard and post-setup filter editor |
 | **Orphan handling** | `previous_sync_filter` stored for undo support. Orphan detection: diff local vs platform-filtered IDs → verify against API → mark `sync_status: 'orphaned'`. 3 user actions: delete, keep local, undo filter change |
 | **Sync schema sync** | `AIRTABLE_TO_CANONICAL_TYPE` static map (32 types). Creates tables + fields + synced_field_mappings. `remapFilterFieldIds()` translates platform IDs → ES UUIDs |
-| **Sync initial sync** | `InitialSyncProcessor` extends `BaseProcessor`. 3-phase: schema sync → paginated record fetch (Airtable API → `toCanonical()`) → quota enforcement. 5 realtime events |
+| **Sync initial sync** | `InitialSyncProcessor` extends `BaseProcessor`. 3-phase: schema sync → paginated record fetch (Airtable/Notion API → `toCanonical()`) → quota enforcement. 5 realtime events |
+| **Notion adapter** | `NotionAdapter` implements `PlatformAdapter`. 18 field transforms via `registerNotionTransforms()`. `NotionApiClient` with rate limiting + cursor pagination. OAuth 2.0 via `getNotionAuthUrl()` |
+| **Sync error handling** | `classifyError()` maps platform errors → `SyncErrorCode`. `BACKOFF_SCHEDULE` array for exponential retry delays. `ConnectionHealth` JSONB tracks consecutive failures + next retry |
+| **Priority scheduling** | `SyncScheduler` 30s tick. P0–P3 dispatch tiers via `getSyncDispatchMode()`. Multi-tenant fairness: max 20% capacity per tenant (P0 exempt). `PRIORITY_CAPACITY_THRESHOLDS` constants |
+| **Smart polling (impl)** | `getPollingInterval(visibility, hasWebhook)` resolves to 30s/5min/30min/null. `TableVisibility` derived from Socket.io room membership. `hasActiveWebhook()` for event-driven skip |
+| **Sync dashboard** | Tabbed settings page at `/[workspaceId]/settings/sync/[baseConnectionId]`. 6 tabs: Overview, Tables & Filters, Conflicts, Failures, Schema Changes, History. Skeleton loading states |
+| **Sidebar sync badges** | `PlatformBadge` (14px logo overlay) + `SyncStatusIcon` (6 health states) as independent visual channels. `TableTabItem` integrates both into sidebar |
+| **Sync notifications** | `SyncNotificationToast` for real-time sync event feedback via Socket.io. Tenant-scoped delivery via standard event bus |
 
 ---
 

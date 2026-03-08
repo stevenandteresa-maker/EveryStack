@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-05 — Applied CP-001 (portal URL pattern update) and CP-002 (personal tenant, agency model, effective_memberships, cross-tenant linking prohibition).
+> Last updated: 2026-03-08 — Post-Phase 2C docs sync: added 12 new terms (NotionAdapter, NotionPropertyType, TableVisibility, SyncPriority, ConnectionHealth, SyncError/SyncErrorCode, Sync Notifications, PlatformBadge, SyncStatusIcon, Priority Scheduler, Sync Dashboard). Prior: 2026-03-05 — Applied CP-001 + CP-002.
 
 ---
 
@@ -548,6 +548,50 @@ Adaptive polling strategy that adjusts sync frequency based on user activity con
 ### Converted Table
 
 A synced table that has been migrated to a native EveryStack table via the "Convert to Native Table" flow. Conversion progresses through statuses on `base_connections.sync_status`: `converted` (migration in progress, dual-write to shadow table), `converted_finalized` (migration complete, sync fully stopped). Converted tables are excluded from polling entirely. See `cross-linking.md` > "Convert to Native Table" Migration.
+
+### NotionAdapter
+
+The Notion platform adapter implementing the `PlatformAdapter` interface. Handles OAuth 2.0 authentication, Notion API communication via `NotionApiClient`, and field type transforms for 18 Notion property types. Registered via `registerNotionTransforms()` at startup. See `sync-engine.md`.
+
+### NotionPropertyType
+
+TypeScript union type enumerating all Notion database property types (title, rich_text, number, select, multi_select, date, people, files, checkbox, url, email, phone_number, formula, relation, rollup, created_time, created_by, last_edited_time, last_edited_by, status, unique_id). Used by the Notion adapter's field transform registry. See `packages/shared/sync/adapters/notion/notion-types.ts`.
+
+### TableVisibility
+
+Visibility state of a synced table derived from Socket.io room membership: `active` (user has this table open, 30s polling), `background` (workspace open but table not visible, 5min polling), `inactive` (workspace not accessed, 30min polling). Used by smart polling to determine sync intervals. See `sync-engine.md` > Smart Polling.
+
+### SyncPriority
+
+Priority tiers (P0–P3) for sync job dispatch under rate limit pressure. P0 (critical — outbound sync, webhook-triggered) always dispatches. P1 (active viewing) dispatches if capacity >30%. P2 (background) >50%. P3 (inactive) >70%. Ensures actively viewed tables are prioritized when API rate limits are constrained. See `sync-engine.md` > Priority-Based Scheduling.
+
+### ConnectionHealth
+
+Shape of the `base_connections.health` JSONB column. Tracks: `last_success_at`, `last_error` (structured `SyncError`), `consecutive_failures`, `next_retry_at`, `records_synced`, `records_failed`. Used by the sync dashboard and error recovery flows. Validated via `ConnectionHealthSchema` (Zod). See `sync-engine.md` > Sync Connection Status Model.
+
+### SyncError / SyncErrorCode
+
+Structured error types for sync failures. `SyncErrorCode` enumerates 8 error codes: `auth_expired`, `rate_limited`, `platform_unavailable`, `schema_mismatch`, `permission_denied`, `partial_failure`, `quota_exceeded`, `unknown`. Each `SyncError` includes `code`, `message`, `timestamp`, `retryable`, and `details`. Stored in `ConnectionHealth.last_error`. See `sync-engine.md` > Sync Error Recovery.
+
+### Sync Notifications
+
+Real-time toast notifications for sync events delivered via Socket.io. Covers: sync completion, sync failures, schema changes detected, quota warnings. Rendered by `SyncNotificationToast` component. Events are tenant-scoped via the standard realtime event bus. See `packages/shared/sync/sync-notifications.ts`.
+
+### PlatformBadge
+
+UI component rendering a 14px platform logo (Airtable, Notion, SmartSuite) as an overlay on the table type icon in the sidebar. Absence of badge indicates a native EveryStack table. Independent of tab color — two visual channels, no conflict. See `field-groups.md` > Synced Table Tab Badges.
+
+### SyncStatusIcon
+
+UI component rendering sync health status next to table names in the sidebar. Six states: healthy (bidirectional arrows), syncing now (animated), conflicts pending (amber warning), sync paused, sync error (red), converted (no icon). Click action opens the Sync Dashboard. See `field-groups.md` > Sync Status Indicator.
+
+### Priority Scheduler
+
+BullMQ-based scheduler (`SyncScheduler`) running on a 30-second tick interval. Evaluates all active connections and dispatches sync jobs according to `SyncPriority` tiers and current rate limit capacity. Enforces multi-tenant fairness (no single tenant >20% of platform API capacity, P0 exempt). See `sync-engine.md` > Priority-Based Scheduling.
+
+### Sync Dashboard
+
+Settings page for managing a sync connection (`/[workspaceId]/settings/sync/[baseConnectionId]`). Tabbed interface: Overview (connection health, sync history chart), Tables & Filters (per-table sync config), Conflicts (resolution UI), Failures (error log with retry/dismiss), Schema Changes (detected diffs), History (event timeline). See `sync-engine.md` > Sync Settings Dashboard.
 
 ---
 
