@@ -11,7 +11,7 @@
  * @see docs/reference/tables-and-views.md § Scrolling & Performance
  */
 
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -23,6 +23,8 @@ import { roleAtLeast, type EffectiveRole } from '@everystack/shared/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GridHeader } from './GridHeader';
 import { GridRow } from './GridRow';
+import { useKeyboardNavigation } from './use-keyboard-navigation';
+import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import {
   getDefaultColumnWidth,
   DRAG_HANDLE_WIDTH,
@@ -65,6 +67,18 @@ export interface DataGridProps {
   onCellSave: (rowId: string, fieldId: string, value: unknown) => void;
   onCellCancel: () => void;
   onSelectColumn: (fieldId: string) => void;
+  // Keyboard navigation
+  editMode: 'replace' | 'edit';
+  selectedRows: Set<string>;
+  selectionAnchor: CellPosition | null;
+  selectionRange: CellPosition | null;
+  setActiveCell: (cell: CellPosition | null) => void;
+  startEditing: (cell: CellPosition, mode: 'replace' | 'edit') => void;
+  stopEditing: () => void;
+  setSelectedRows: (rows: Set<string>) => void;
+  setSelectionAnchor: (cell: CellPosition | null) => void;
+  setSelectionRange: (cell: CellPosition | null) => void;
+  onAddRecord?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,9 +105,21 @@ export function DataGrid({
   onCellSave,
   onCellCancel,
   onSelectColumn,
+  editMode: _editMode,
+  selectedRows,
+  selectionAnchor,
+  selectionRange,
+  setActiveCell,
+  startEditing,
+  stopEditing,
+  setSelectedRows,
+  setSelectionAnchor,
+  setSelectionRange,
+  onAddRecord,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const rowHeight = ROW_DENSITY_HEIGHTS[density];
   const showAddColumn = roleAtLeast(userRole, 'manager');
@@ -178,6 +204,48 @@ export function DataGrid({
   });
 
   // -----------------------------------------------------------------------
+  // Visible row count (for Page Up / Page Down)
+  // -----------------------------------------------------------------------
+  const visibleRowCount = useMemo(() => {
+    const containerHeight = scrollContainerRef.current?.clientHeight ?? 600;
+    return Math.max(1, Math.floor(containerHeight / rowHeight));
+  }, [rowHeight]);
+
+  // -----------------------------------------------------------------------
+  // Scroll-to-cell callback for keyboard navigation
+  // -----------------------------------------------------------------------
+  const scrollToCell = useCallback(
+    (rowIndex: number, _colIndex: number) => {
+      rowVirtualizer.scrollToIndex(rowIndex, { align: 'auto' });
+    },
+    [rowVirtualizer],
+  );
+
+  // -----------------------------------------------------------------------
+  // Keyboard navigation hook
+  // -----------------------------------------------------------------------
+  const { handleKeyDown } = useKeyboardNavigation({
+    fields: orderedFields,
+    records,
+    activeCell,
+    editingCell,
+    visibleRowCount,
+    setActiveCell,
+    startEditing,
+    stopEditing,
+    onCellSave,
+    selectedRows,
+    setSelectedRows,
+    selectionAnchor,
+    setSelectionAnchor,
+    selectionRange,
+    setSelectionRange,
+    onAddRecord,
+    onOpenShortcutsHelp: () => setShortcutsOpen(true),
+    scrollToCell,
+  });
+
+  // -----------------------------------------------------------------------
   // Fixed column width (drag handle + checkbox + row number)
   // -----------------------------------------------------------------------
   const fixedLeftWidth = DRAG_HANDLE_WIDTH + CHECKBOX_COLUMN_WIDTH + ROW_NUMBER_WIDTH;
@@ -237,10 +305,12 @@ export function DataGrid({
   return (
     <div
       ref={scrollContainerRef}
-      className="relative overflow-auto flex-1"
+      className="relative overflow-auto flex-1 outline-none"
       role="grid"
       aria-rowcount={totalCount}
       aria-colcount={orderedFields.length}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       <div
         style={{
@@ -289,6 +359,11 @@ export function DataGrid({
           );
         })}
       </div>
+
+      <KeyboardShortcutsDialog
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+      />
     </div>
   );
 }

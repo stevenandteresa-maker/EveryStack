@@ -86,6 +86,17 @@ const defaultProps = {
   onCellSave: vi.fn(),
   onCellCancel: vi.fn(),
   onSelectColumn: vi.fn(),
+  editMode: 'edit' as const,
+  selectedRows: new Set<string>(),
+  selectionAnchor: null,
+  selectionRange: null,
+  setActiveCell: vi.fn(),
+  startEditing: vi.fn(),
+  stopEditing: vi.fn(),
+  setSelectedRows: vi.fn(),
+  setSelectionAnchor: vi.fn(),
+  setSelectionRange: vi.fn(),
+  onAddRecord: vi.fn(),
 };
 
 // ---------------------------------------------------------------------------

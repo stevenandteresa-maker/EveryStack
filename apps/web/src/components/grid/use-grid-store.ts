@@ -25,6 +25,9 @@ export interface GridState {
   frozenColumnCount: number;
   columnWidths: Record<string, number>;
   columnOrder: string[];
+  selectedRows: Set<string>;
+  selectionAnchor: CellPosition | null;
+  selectionRange: CellPosition | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,6 +43,9 @@ export interface GridActions {
   reorderColumn: (fieldId: string, newIndex: number) => void;
   setFrozenCount: (count: number) => void;
   setColumnOrder: (order: string[]) => void;
+  setSelectedRows: (rows: Set<string>) => void;
+  setSelectionAnchor: (cell: CellPosition | null) => void;
+  setSelectionRange: (cell: CellPosition | null) => void;
 }
 
 export type GridStore = GridState & GridActions;
@@ -58,6 +64,9 @@ export function createGridStore(initialState?: Partial<GridState>) {
     frozenColumnCount: 0,
     columnWidths: {},
     columnOrder: [],
+    selectedRows: new Set<string>(),
+    selectionAnchor: null,
+    selectionRange: null,
     ...initialState,
 
     // Actions
@@ -89,5 +98,11 @@ export function createGridStore(initialState?: Partial<GridState>) {
     setFrozenCount: (count) => set({ frozenColumnCount: count }),
 
     setColumnOrder: (order) => set({ columnOrder: order }),
+
+    setSelectedRows: (rows) => set({ selectedRows: rows }),
+
+    setSelectionAnchor: (cell) => set({ selectionAnchor: cell }),
+
+    setSelectionRange: (cell) => set({ selectionRange: cell }),
   }));
 }
