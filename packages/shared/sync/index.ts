@@ -276,3 +276,19 @@ export type {
   NotionPageResult,
   NotionQueryOptions,
 } from './adapters/notion/api-client';
+
+// Sync failures
+export {
+  createSyncFailure,
+  getSyncFailuresForConnection,
+  getPendingRetriableFailures,
+  retrySyncFailure,
+  skipSyncFailure,
+  bulkRetrySyncFailures,
+  bulkSkipSyncFailures,
+  incrementRetryCount,
+  markFailureResolved,
+  MAX_AUTO_RETRY_COUNT,
+  RESOLVED_RETENTION_MS,
+} from './sync-failures';
+export type { CreateSyncFailureInput } from './sync-failures';

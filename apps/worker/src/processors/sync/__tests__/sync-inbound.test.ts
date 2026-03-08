@@ -140,6 +140,10 @@ vi.mock('@everystack/shared/sync', () => {
     detectConflicts: mockDetectConflicts,
     writeConflictRecords: mockWriteConflictRecords,
     applyLastWriteWins: mockApplyLastWriteWins,
+    createSyncFailure: vi.fn().mockResolvedValue({ id: 'fail-mock' }),
+    getPendingRetriableFailures: vi.fn().mockResolvedValue([]),
+    incrementRetryCount: vi.fn().mockResolvedValue({ newRetryCount: 1, requiresManual: false }),
+    markFailureResolved: vi.fn().mockResolvedValue(undefined),
   };
 });
 

@@ -6,7 +6,7 @@
  * capacity thresholds. Also verifies per-tenant 20% budget enforcement.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type Redis from 'ioredis';
 
 // ---------------------------------------------------------------------------

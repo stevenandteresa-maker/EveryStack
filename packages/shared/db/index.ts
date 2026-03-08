@@ -102,6 +102,8 @@ export {
   syncedFieldMappingsRelations,
   syncConflicts,
   syncConflictsRelations,
+  syncFailures,
+  syncFailuresRelations,
   fieldExpressionIndexes,
 } from './schema';
 export type {
@@ -127,5 +129,6 @@ export type {
   PortalAccess, NewPortalAccess,
   SyncedFieldMapping, NewSyncedFieldMapping,
   SyncConflict, NewSyncConflict,
+  SyncFailure, NewSyncFailure,
   FieldExpressionIndex, NewFieldExpressionIndex,
 } from './schema';

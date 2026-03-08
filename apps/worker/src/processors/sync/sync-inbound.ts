@@ -52,6 +52,13 @@ import type {
 } from '@everystack/shared/sync';
 import { detectConflicts, writeConflictRecords, applyLastWriteWins } from '@everystack/shared/sync';
 import type { ConflictResolutionStrategy, WrittenConflict } from '@everystack/shared/sync';
+import {
+  createSyncFailure,
+  getPendingRetriableFailures,
+  incrementRetryCount,
+  markFailureResolved,
+} from '@everystack/shared/sync';
+import type { CreateSyncFailureInput } from '@everystack/shared/sync';
 import { decryptTokens } from '@everystack/shared/crypto';
 import { REALTIME_EVENTS } from '@everystack/shared/realtime';
 import type { EventPublisher } from '@everystack/shared/realtime';
@@ -127,10 +134,22 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       ? new NotionApiClient((rawTokens as unknown as NotionTokens).access_token)
       : null;
 
-    // 2. Process each enabled table
+    // 2. Auto-retry pending failures from previous sync cycles
+    await this.retryPendingFailures({
+      tenantId,
+      connectionId,
+      platform,
+      conflictResolution,
+      airtableClient,
+      notionClient,
+      logger,
+    });
+
+    // 3. Process each enabled table
     let totalUpdated = 0;
     let totalCreated = 0;
     let totalConflicts = 0;
+    let totalFailed = 0;
 
     for (const tableConfig of syncConfig.tables) {
       if (!tableConfig.enabled || !tableConfig.es_table_id) continue;
@@ -152,18 +171,27 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       totalUpdated += result.updated;
       totalCreated += result.created;
       totalConflicts += result.conflicts;
+      totalFailed += result.failed;
     }
 
-    // 3. Update connection lastSyncAt
+    // 4. Update connection lastSyncAt + health
     const writeDb = getDbForTenant(tenantId);
+    const syncStatusValue = totalFailed > 0 ? 'completed_with_errors' : undefined;
     await writeDb
       .update(baseConnections)
       .set({
         lastSyncAt: new Date(),
+        ...(syncStatusValue ? { syncStatus: syncStatusValue } : {}),
         health: {
           last_sync_type: 'incremental',
           last_sync_completed_at: new Date().toISOString(),
-          last_sync_stats: { updated: totalUpdated, created: totalCreated, conflicts: totalConflicts },
+          last_sync_stats: {
+            updated: totalUpdated,
+            created: totalCreated,
+            conflicts: totalConflicts,
+            failed: totalFailed,
+          },
+          records_failed: totalFailed,
         },
       })
       .where(
@@ -174,8 +202,8 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
       );
 
     logger.info(
-      { totalUpdated, totalCreated, totalConflicts },
-      'Incremental inbound sync completed',
+      { totalUpdated, totalCreated, totalConflicts, totalFailed },
+      totalFailed > 0 ? 'Incremental inbound sync completed with errors' : 'Incremental inbound sync completed',
     );
   }
 
@@ -194,7 +222,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     airtableClient: AirtableApiClient | null;
     notionClient: NotionApiClient | null;
     logger: Logger;
-  }): Promise<{ updated: number; created: number; conflicts: number }> {
+  }): Promise<{ updated: number; created: number; conflicts: number; failed: number }> {
     const {
       tenantId,
       connectionId,
@@ -235,6 +263,7 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     let updated = 0;
     let created = 0;
     let conflicts = 0;
+    let failed = 0;
 
     if (platform === 'notion' && notionClient) {
       // Notion pagination: uses start_cursor / has_more
@@ -254,33 +283,38 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         if (queryResult.results.length === 0) break;
 
         for (const page of queryResult.results) {
-          const inboundCanonical = adapter.toCanonical(page, fieldMappings);
-          const platformRecordId = page.id;
+          try {
+            const inboundCanonical = adapter.toCanonical(page, fieldMappings);
+            const platformRecordId = page.id;
 
-          const result = await this.reconcileRecord({
-            tenantId,
-            esTableId,
-            platformRecordId,
-            inboundCanonical,
-            syncedFieldIds,
-            platform,
-            conflictResolution,
-            fieldMappings,
-            logger,
-          });
-
-          if (result.status === 'created') created++;
-          else if (result.status === 'updated') updated++;
-          else if (result.status === 'conflict') conflicts++;
-
-          if (result.writtenConflicts.length > 0) {
-            await this.emitConflictDetectedEvents(
+            const result = await this.reconcileRecord({
               tenantId,
               esTableId,
-              result.recordId,
-              result.writtenConflicts,
+              platformRecordId,
+              inboundCanonical,
+              syncedFieldIds,
               platform,
-            );
+              conflictResolution,
+              fieldMappings,
+              logger,
+            });
+
+            if (result.status === 'created') created++;
+            else if (result.status === 'updated') updated++;
+            else if (result.status === 'conflict') conflicts++;
+
+            if (result.writtenConflicts.length > 0) {
+              await this.emitConflictDetectedEvents(
+                tenantId,
+                esTableId,
+                result.recordId,
+                result.writtenConflicts,
+                platform,
+              );
+            }
+          } catch (recordError) {
+            failed++;
+            await this.recordSyncFailure(tenantId, connectionId, page.id, recordError, page, 'inbound', logger);
           }
         }
 
@@ -303,33 +337,38 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
         if (page.records.length === 0) break;
 
         for (const platformRecord of page.records) {
-          const inboundCanonical = adapter.toCanonical(platformRecord, fieldMappings);
-          const platformRecordId = platformRecord.id;
+          try {
+            const inboundCanonical = adapter.toCanonical(platformRecord, fieldMappings);
+            const platformRecordId = platformRecord.id;
 
-          const result = await this.reconcileRecord({
-            tenantId,
-            esTableId,
-            platformRecordId,
-            inboundCanonical,
-            syncedFieldIds,
-            platform,
-            conflictResolution,
-            fieldMappings,
-            logger,
-          });
-
-          if (result.status === 'created') created++;
-          else if (result.status === 'updated') updated++;
-          else if (result.status === 'conflict') conflicts++;
-
-          if (result.writtenConflicts.length > 0) {
-            await this.emitConflictDetectedEvents(
+            const result = await this.reconcileRecord({
               tenantId,
               esTableId,
-              result.recordId,
-              result.writtenConflicts,
+              platformRecordId,
+              inboundCanonical,
+              syncedFieldIds,
               platform,
-            );
+              conflictResolution,
+              fieldMappings,
+              logger,
+            });
+
+            if (result.status === 'created') created++;
+            else if (result.status === 'updated') updated++;
+            else if (result.status === 'conflict') conflicts++;
+
+            if (result.writtenConflicts.length > 0) {
+              await this.emitConflictDetectedEvents(
+                tenantId,
+                esTableId,
+                result.recordId,
+                result.writtenConflicts,
+                platform,
+              );
+            }
+          } catch (recordError) {
+            failed++;
+            await this.recordSyncFailure(tenantId, connectionId, platformRecord.id, recordError, platformRecord, 'inbound', logger);
           }
         }
 
@@ -338,11 +377,11 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
     }
 
     logger.info(
-      { esTableId, updated, created, conflicts },
-      'Table inbound sync complete',
+      { esTableId, updated, created, conflicts, failed },
+      failed > 0 ? 'Table inbound sync complete with failures' : 'Table inbound sync complete',
     );
 
-    return { updated, created, conflicts };
+    return { updated, created, conflicts, failed };
   }
 
   /**
@@ -547,6 +586,146 @@ export class InboundSyncProcessor extends BaseProcessor<IncrementalSyncJobData> 
           platform,
         },
       });
+    }
+  }
+
+  /**
+   * Record a sync failure for an individual record that failed during processing.
+   * Classifies the error and writes to sync_failures. Does not rethrow.
+   */
+  private async recordSyncFailure(
+    tenantId: string,
+    connectionId: string,
+    platformRecordId: string,
+    error: unknown,
+    rawPayload: unknown,
+    direction: 'inbound' | 'outbound',
+    logger: Logger,
+  ): Promise<void> {
+    try {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = this.classifyRecordError(errorMessage);
+
+      await createSyncFailure(tenantId, {
+        baseConnectionId: connectionId,
+        direction,
+        errorCode,
+        errorMessage,
+        platformRecordId,
+        payload: rawPayload,
+      });
+
+      logger.warn(
+        { platformRecordId, errorCode, errorMessage },
+        'Individual record sync failure recorded',
+      );
+    } catch (writeError) {
+      // Failure recording itself failed — log but don't propagate
+      logger.error(
+        { platformRecordId, writeError },
+        'Failed to write sync failure record',
+      );
+    }
+  }
+
+  /**
+   * Classify a record-level error into a sync failure error code.
+   */
+  private classifyRecordError(
+    message: string,
+  ): CreateSyncFailureInput['errorCode'] {
+    const lower = message.toLowerCase();
+    if (lower.includes('validation') || lower.includes('invalid value') || lower.includes('field type mismatch')) {
+      return 'validation';
+    }
+    if (lower.includes('schema') || lower.includes('field not found')) {
+      return 'schema_mismatch';
+    }
+    if (lower.includes('too large') || lower.includes('payload')) {
+      return 'payload_too_large';
+    }
+    if (lower.includes('rejected') || lower.includes('refused')) {
+      return 'platform_rejected';
+    }
+    return 'unknown';
+  }
+
+  /**
+   * Auto-retry pending failures from previous sync cycles.
+   *
+   * Fetches pending failures with retry_count < MAX_AUTO_RETRY_COUNT,
+   * re-attempts toCanonical + reconcile, and either resolves or
+   * increments the retry count.
+   */
+  private async retryPendingFailures(params: {
+    tenantId: string;
+    connectionId: string;
+    platform: SyncPlatform;
+    conflictResolution: ConflictResolutionStrategy;
+    airtableClient: AirtableApiClient | null;
+    notionClient: NotionApiClient | null;
+    logger: Logger;
+  }): Promise<void> {
+    const { tenantId, connectionId, logger } = params;
+
+    const pendingFailures = await getPendingRetriableFailures(tenantId, connectionId);
+    if (pendingFailures.length === 0) return;
+
+    logger.info(
+      { count: pendingFailures.length },
+      'Auto-retrying pending sync failures',
+    );
+
+    for (const failure of pendingFailures) {
+      try {
+        if (!failure.payload || !failure.platformRecordId) {
+          await incrementRetryCount(tenantId, failure.id);
+          continue;
+        }
+
+        const adapter = this.getAdapter(params.platform);
+        const fieldMappings = await this.buildFieldMappings(tenantId, connectionId, '');
+        const syncedFieldIds = fieldMappings.map((m) => m.fieldId);
+
+        const inboundCanonical = adapter.toCanonical(
+          failure.payload as Record<string, unknown>,
+          fieldMappings,
+        );
+
+        await this.reconcileRecord({
+          tenantId,
+          esTableId: '', // Will be resolved from the record if it exists
+          platformRecordId: failure.platformRecordId,
+          inboundCanonical,
+          syncedFieldIds,
+          platform: params.platform,
+          conflictResolution: params.conflictResolution,
+          fieldMappings,
+          logger,
+        });
+
+        // Success — mark as resolved
+        await markFailureResolved(tenantId, failure.id);
+
+        logger.info(
+          { failureId: failure.id, platformRecordId: failure.platformRecordId },
+          'Auto-retry succeeded — failure resolved',
+        );
+      } catch {
+        // Still failing — increment retry count
+        const result = await incrementRetryCount(tenantId, failure.id);
+
+        logger.warn(
+          {
+            failureId: failure.id,
+            retryCount: result.newRetryCount,
+            requiresManual: result.requiresManual,
+          },
+          result.requiresManual
+            ? 'Auto-retry failed — requires manual resolution'
+            : 'Auto-retry failed — will retry next cycle',
+        );
+      }
     }
   }
 

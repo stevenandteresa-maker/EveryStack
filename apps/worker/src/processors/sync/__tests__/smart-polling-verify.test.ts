@@ -8,7 +8,7 @@
  * polling interval selection → event-driven skip logic.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type Redis from 'ioredis';
 
 // ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ import {
   resolveTableVisibility,
   getPollingInterval,
   getSyncDispatchMode,
-  getSocketIoRoomSize,
+  getSocketIoRoomSize as _getSocketIoRoomSize,
   SCHEDULER_INTERVAL_MS,
 } from '../sync-scheduler';
 import { POLLING_INTERVALS } from '@everystack/shared/sync';
