@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { IntlWrapper } from '@/test-utils/intl-wrapper';
 import type { CellRendererProps } from '../../GridCell';
 import { getCellRenderer } from '../../GridCell';
-import { registerPrompt3Cells, registerPrompt4Cells } from '../cell-registry';
+import { registerPrompt3Cells, registerPrompt4Cells, registerPrompt5Cells } from '../cell-registry';
 import { TextCellDisplay, TextCellEdit } from '../TextCell';
 import { NumberCellDisplay, NumberCellEdit } from '../NumberCell';
 import { DateCellDisplay, DateCellEdit } from '../DateCell';
@@ -17,6 +17,12 @@ import { MultiSelectCellDisplay, MultiSelectCellEdit } from '../MultiSelectCell'
 import { PeopleCellDisplay, PeopleCellEdit } from '../PeopleCell';
 import { LinkedRecordCellDisplay, LinkedRecordCellEdit } from '../LinkedRecordCell';
 import { AttachmentCellDisplay, AttachmentCellEdit } from '../AttachmentCell';
+import { UrlCellDisplay, UrlCellEdit } from '../UrlCell';
+import { EmailCellDisplay, EmailCellEdit } from '../EmailCell';
+import { PhoneCellDisplay, PhoneCellEdit } from '../PhoneCell';
+import { SmartDocCellDisplay, SmartDocCellEdit } from '../SmartDocCell';
+import { BarcodeCellDisplay, BarcodeCellEdit } from '../BarcodeCell';
+import { ChecklistCellDisplay, ChecklistCellEdit } from '../ChecklistCell';
 import type { GridField } from '@/lib/types/grid';
 
 // ---------------------------------------------------------------------------
@@ -73,6 +79,7 @@ describe('Cell registry', () => {
   beforeAll(() => {
     registerPrompt3Cells();
     registerPrompt4Cells();
+    registerPrompt5Cells();
   });
 
   it.each([
@@ -90,6 +97,12 @@ describe('Cell registry', () => {
     'people',
     'linked_record',
     'attachment',
+    'url',
+    'email',
+    'phone',
+    'smart_doc',
+    'barcode',
+    'checklist',
   ])('registers %s field type', (fieldType) => {
     const entry = getCellRenderer(fieldType);
     expect(entry).toBeDefined();
@@ -115,6 +128,15 @@ describe('Cell registry', () => {
     expect(getCellRenderer('people')?.EditComponent).toBeDefined();
     expect(getCellRenderer('linked_record')?.EditComponent).toBeDefined();
     expect(getCellRenderer('attachment')?.EditComponent).toBeDefined();
+  });
+
+  it('all prompt 5 types have edit components', () => {
+    expect(getCellRenderer('url')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('email')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('phone')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('smart_doc')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('barcode')?.EditComponent).toBeDefined();
+    expect(getCellRenderer('checklist')?.EditComponent).toBeDefined();
   });
 });
 
@@ -1025,6 +1047,565 @@ describe('AttachmentCellEdit', () => {
       />,
     );
     fireEvent.click(screen.getByText('Close'));
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UrlCell
+// ---------------------------------------------------------------------------
+
+describe('UrlCellDisplay', () => {
+  it('renders clickable link that opens in new tab', () => {
+    renderWithIntl(
+      <UrlCellDisplay
+        {...makeProps({ value: 'https://example.com', field: makeField({ fieldType: 'url' }) })}
+      />,
+    );
+    const link = screen.getByText('https://example.com');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('target', '_blank');
+    expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link.closest('a')).toHaveAttribute('href', 'https://example.com');
+  });
+
+  it('renders null for empty value', () => {
+    const { container } = renderWithIntl(
+      <UrlCellDisplay {...makeProps({ value: null, field: makeField({ fieldType: 'url' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null for empty string', () => {
+    const { container } = renderWithIntl(
+      <UrlCellDisplay {...makeProps({ value: '', field: makeField({ fieldType: 'url' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <UrlCellDisplay
+        {...makeProps({ value: 'https://example.com', field: makeField({ fieldType: 'url', readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('UrlCellEdit', () => {
+  it('renders input with current value', () => {
+    renderWithIntl(
+      <UrlCellEdit
+        {...makeProps({ value: 'https://example.com', field: makeField({ fieldType: 'url' }), isEditing: true })}
+      />,
+    );
+    const input = document.querySelector('input[type="url"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue('https://example.com');
+  });
+
+  it('calls onSave on blur', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <UrlCellEdit
+        {...makeProps({ value: 'https://test.com', field: makeField({ fieldType: 'url' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(document.querySelector('input[type="url"]')!);
+    expect(onSave).toHaveBeenCalledWith('https://test.com');
+  });
+
+  it('calls onSave on Enter', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <UrlCellEdit
+        {...makeProps({ value: 'https://test.com', field: makeField({ fieldType: 'url' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(document.querySelector('input[type="url"]')!, { key: 'Enter' });
+    expect(onSave).toHaveBeenCalledWith('https://test.com');
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <UrlCellEdit
+        {...makeProps({ value: 'https://test.com', field: makeField({ fieldType: 'url' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(document.querySelector('input[type="url"]')!, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('saves null for empty input', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <UrlCellEdit
+        {...makeProps({ value: '', field: makeField({ fieldType: 'url' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(document.querySelector('input[type="url"]')!);
+    expect(onSave).toHaveBeenCalledWith(null);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// EmailCell
+// ---------------------------------------------------------------------------
+
+describe('EmailCellDisplay', () => {
+  it('renders clickable mailto link', () => {
+    renderWithIntl(
+      <EmailCellDisplay
+        {...makeProps({ value: 'test@example.com', field: makeField({ fieldType: 'email' }) })}
+      />,
+    );
+    const link = screen.getByText('test@example.com');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', 'mailto:test@example.com');
+  });
+
+  it('renders null for empty value', () => {
+    const { container } = renderWithIntl(
+      <EmailCellDisplay {...makeProps({ value: null, field: makeField({ fieldType: 'email' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null for empty string', () => {
+    const { container } = renderWithIntl(
+      <EmailCellDisplay {...makeProps({ value: '', field: makeField({ fieldType: 'email' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <EmailCellDisplay
+        {...makeProps({ value: 'test@example.com', field: makeField({ fieldType: 'email', readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('EmailCellEdit', () => {
+  it('renders email input with current value', () => {
+    renderWithIntl(
+      <EmailCellEdit
+        {...makeProps({ value: 'test@example.com', field: makeField({ fieldType: 'email' }), isEditing: true })}
+      />,
+    );
+    const input = document.querySelector('input[type="email"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue('test@example.com');
+  });
+
+  it('calls onSave on blur', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <EmailCellEdit
+        {...makeProps({ value: 'test@example.com', field: makeField({ fieldType: 'email' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(document.querySelector('input[type="email"]')!);
+    expect(onSave).toHaveBeenCalledWith('test@example.com');
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <EmailCellEdit
+        {...makeProps({ value: 'test@example.com', field: makeField({ fieldType: 'email' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(document.querySelector('input[type="email"]')!, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PhoneCell
+// ---------------------------------------------------------------------------
+
+describe('PhoneCellDisplay', () => {
+  it('renders formatted number with phone icon', () => {
+    renderWithIntl(
+      <PhoneCellDisplay
+        {...makeProps({ value: '+1-555-123-4567', field: makeField({ fieldType: 'phone' }) })}
+      />,
+    );
+    const link = screen.getByText('+1-555-123-4567');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', 'tel:+1-555-123-4567');
+  });
+
+  it('renders null for empty value', () => {
+    const { container } = renderWithIntl(
+      <PhoneCellDisplay {...makeProps({ value: null, field: makeField({ fieldType: 'phone' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null for empty string', () => {
+    const { container } = renderWithIntl(
+      <PhoneCellDisplay {...makeProps({ value: '', field: makeField({ fieldType: 'phone' }) })} />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <PhoneCellDisplay
+        {...makeProps({ value: '+1-555-123-4567', field: makeField({ fieldType: 'phone', readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('PhoneCellEdit', () => {
+  it('renders tel input with current value', () => {
+    renderWithIntl(
+      <PhoneCellEdit
+        {...makeProps({ value: '+1-555-123-4567', field: makeField({ fieldType: 'phone' }), isEditing: true })}
+      />,
+    );
+    const input = document.querySelector('input[type="tel"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue('+1-555-123-4567');
+  });
+
+  it('calls onSave on blur', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <PhoneCellEdit
+        {...makeProps({ value: '+1-555', field: makeField({ fieldType: 'phone' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(document.querySelector('input[type="tel"]')!);
+    expect(onSave).toHaveBeenCalledWith('+1-555');
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <PhoneCellEdit
+        {...makeProps({ value: '+1-555', field: makeField({ fieldType: 'phone' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(document.querySelector('input[type="tel"]')!, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SmartDocCell
+// ---------------------------------------------------------------------------
+
+describe('SmartDocCellDisplay', () => {
+  it('renders badge when content exists', () => {
+    renderWithIntl(
+      <SmartDocCellDisplay
+        {...makeProps({ value: { content: 'Some doc content' }, field: makeField({ fieldType: 'smart_doc' }) })}
+      />,
+    );
+    expect(screen.getByText('Doc')).toBeInTheDocument();
+  });
+
+  it('renders null when value is null', () => {
+    const { container } = renderWithIntl(
+      <SmartDocCellDisplay
+        {...makeProps({ value: null, field: makeField({ fieldType: 'smart_doc' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null when value is empty string', () => {
+    const { container } = renderWithIntl(
+      <SmartDocCellDisplay
+        {...makeProps({ value: '', field: makeField({ fieldType: 'smart_doc' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null when value is false', () => {
+    const { container } = renderWithIntl(
+      <SmartDocCellDisplay
+        {...makeProps({ value: false, field: makeField({ fieldType: 'smart_doc' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <SmartDocCellDisplay
+        {...makeProps({
+          value: { content: 'test' },
+          field: makeField({ fieldType: 'smart_doc', readOnly: true }),
+        })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('SmartDocCellEdit', () => {
+  it('renders placeholder message', () => {
+    renderWithIntl(
+      <SmartDocCellEdit
+        {...makeProps({ value: { content: 'test' }, field: makeField({ fieldType: 'smart_doc' }), isEditing: true })}
+      />,
+    );
+    expect(screen.getByText('Opens in Smart Doc editor (Phase 3D)')).toBeInTheDocument();
+  });
+
+  it('calls onCancel when close clicked', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <SmartDocCellEdit
+        {...makeProps({ value: null, field: makeField({ fieldType: 'smart_doc' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.click(screen.getByText('Close'));
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BarcodeCell
+// ---------------------------------------------------------------------------
+
+describe('BarcodeCellDisplay', () => {
+  it('renders text with barcode icon', () => {
+    renderWithIntl(
+      <BarcodeCellDisplay
+        {...makeProps({ value: 'ABC-12345', field: makeField({ fieldType: 'barcode' }) })}
+      />,
+    );
+    expect(screen.getByText('ABC-12345')).toBeInTheDocument();
+  });
+
+  it('renders null for empty value', () => {
+    const { container } = renderWithIntl(
+      <BarcodeCellDisplay
+        {...makeProps({ value: null, field: makeField({ fieldType: 'barcode' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null for empty string', () => {
+    const { container } = renderWithIntl(
+      <BarcodeCellDisplay
+        {...makeProps({ value: '', field: makeField({ fieldType: 'barcode' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <BarcodeCellDisplay
+        {...makeProps({ value: 'ABC-12345', field: makeField({ fieldType: 'barcode', readOnly: true }) })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+});
+
+describe('BarcodeCellEdit', () => {
+  it('renders text input with current value', () => {
+    renderWithIntl(
+      <BarcodeCellEdit
+        {...makeProps({ value: 'ABC-12345', field: makeField({ fieldType: 'barcode' }), isEditing: true })}
+      />,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('ABC-12345');
+  });
+
+  it('calls onSave on blur', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <BarcodeCellEdit
+        {...makeProps({ value: 'ABC', field: makeField({ fieldType: 'barcode' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(screen.getByRole('textbox'));
+    expect(onSave).toHaveBeenCalledWith('ABC');
+  });
+
+  it('calls onSave on Enter', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <BarcodeCellEdit
+        {...makeProps({ value: 'ABC', field: makeField({ fieldType: 'barcode' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(onSave).toHaveBeenCalledWith('ABC');
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <BarcodeCellEdit
+        {...makeProps({ value: 'ABC', field: makeField({ fieldType: 'barcode' }), onCancel, isEditing: true })}
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('saves null for empty input', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <BarcodeCellEdit
+        {...makeProps({ value: '', field: makeField({ fieldType: 'barcode' }), onSave, isEditing: true })}
+      />,
+    );
+    fireEvent.blur(screen.getByRole('textbox'));
+    expect(onSave).toHaveBeenCalledWith(null);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ChecklistCell
+// ---------------------------------------------------------------------------
+
+const checklistValue = [
+  { id: 'c1', text: 'Buy milk', checked: true },
+  { id: 'c2', text: 'Walk dog', checked: false },
+  { id: 'c3', text: 'Write code', checked: true },
+];
+
+describe('ChecklistCellDisplay', () => {
+  it('renders "X/Y done" with progress bar', () => {
+    renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({ value: checklistValue, field: makeField({ fieldType: 'checklist' }) })}
+      />,
+    );
+    expect(screen.getByText('2/3 done')).toBeInTheDocument();
+  });
+
+  it('renders null for empty array', () => {
+    const { container } = renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({ value: [], field: makeField({ fieldType: 'checklist' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders null for null value', () => {
+    const { container } = renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({ value: null, field: makeField({ fieldType: 'checklist' }) })}
+      />,
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('shows lock icon for read-only field', () => {
+    renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({
+          value: checklistValue,
+          field: makeField({ fieldType: 'checklist', readOnly: true }),
+        })}
+      />,
+    );
+    expect(screen.getByLabelText('Read-only')).toBeInTheDocument();
+  });
+
+  it('handles all items checked', () => {
+    const allChecked = [
+      { id: 'c1', text: 'A', checked: true },
+      { id: 'c2', text: 'B', checked: true },
+    ];
+    renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({ value: allChecked, field: makeField({ fieldType: 'checklist' }) })}
+      />,
+    );
+    expect(screen.getByText('2/2 done')).toBeInTheDocument();
+  });
+
+  it('handles no items checked', () => {
+    const noneChecked = [
+      { id: 'c1', text: 'A', checked: false },
+      { id: 'c2', text: 'B', checked: false },
+    ];
+    renderWithIntl(
+      <ChecklistCellDisplay
+        {...makeProps({ value: noneChecked, field: makeField({ fieldType: 'checklist' }) })}
+      />,
+    );
+    expect(screen.getByText('0/2 done')).toBeInTheDocument();
+  });
+});
+
+describe('ChecklistCellEdit', () => {
+  it('renders checklist items with checkboxes', () => {
+    renderWithIntl(
+      <ChecklistCellEdit
+        {...makeProps({ value: checklistValue, field: makeField({ fieldType: 'checklist' }), isEditing: true })}
+      />,
+    );
+    expect(screen.getByText('Buy milk')).toBeInTheDocument();
+    expect(screen.getByText('Walk dog')).toBeInTheDocument();
+    expect(screen.getByText('Write code')).toBeInTheDocument();
+  });
+
+  it('toggles item on checkbox click', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <ChecklistCellEdit
+        {...makeProps({ value: checklistValue, field: makeField({ fieldType: 'checklist' }), onSave, isEditing: true })}
+      />,
+    );
+    // Click the checkbox for 'Walk dog' (unchecked → checked)
+    const walkDogCheckbox = screen.getByLabelText('Walk dog');
+    fireEvent.click(walkDogCheckbox);
+    expect(onSave).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'c2', text: 'Walk dog', checked: true }),
+      ]),
+    );
+  });
+
+  it('adds new item on Enter in add input', () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <ChecklistCellEdit
+        {...makeProps({ value: checklistValue, field: makeField({ fieldType: 'checklist' }), onSave, isEditing: true })}
+      />,
+    );
+    const addInput = screen.getByPlaceholderText('Add item');
+    fireEvent.change(addInput, { target: { value: 'New task' } });
+    fireEvent.keyDown(addInput, { key: 'Enter' });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ text: 'New task', checked: false }),
+      ]),
+    );
+  });
+
+  it('calls onCancel on Escape', () => {
+    const onCancel = vi.fn();
+    renderWithIntl(
+      <ChecklistCellEdit
+        {...makeProps({ value: checklistValue, field: makeField({ fieldType: 'checklist' }), onCancel, isEditing: true })}
+      />,
+    );
+    const container = screen.getByPlaceholderText('Add item').closest('div[class]')!;
+    fireEvent.keyDown(container, { key: 'Escape' });
     expect(onCancel).toHaveBeenCalledOnce();
   });
 });

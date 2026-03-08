@@ -22,6 +22,12 @@ import { MultiSelectCellDisplay, MultiSelectCellEdit } from './MultiSelectCell';
 import { PeopleCellDisplay, PeopleCellEdit } from './PeopleCell';
 import { LinkedRecordCellDisplay, LinkedRecordCellEdit } from './LinkedRecordCell';
 import { AttachmentCellDisplay, AttachmentCellEdit } from './AttachmentCell';
+import { UrlCellDisplay, UrlCellEdit } from './UrlCell';
+import { EmailCellDisplay, EmailCellEdit } from './EmailCell';
+import { PhoneCellDisplay, PhoneCellEdit } from './PhoneCell';
+import { SmartDocCellDisplay, SmartDocCellEdit } from './SmartDocCell';
+import { BarcodeCellDisplay, BarcodeCellEdit } from './BarcodeCell';
+import { ChecklistCellDisplay, ChecklistCellEdit } from './ChecklistCell';
 
 /**
  * Register all Prompt 3 cell renderers.
@@ -100,6 +106,42 @@ export function registerPrompt4Cells(): void {
   registerCellRenderer('attachment', {
     DisplayComponent: AttachmentCellDisplay,
     EditComponent: AttachmentCellEdit,
+  });
+}
+
+/**
+ * Register all Prompt 5 cell renderers.
+ * Call this once at app initialization to populate the registry.
+ */
+export function registerPrompt5Cells(): void {
+  registerCellRenderer('url', {
+    DisplayComponent: UrlCellDisplay,
+    EditComponent: UrlCellEdit,
+  });
+
+  registerCellRenderer('email', {
+    DisplayComponent: EmailCellDisplay,
+    EditComponent: EmailCellEdit,
+  });
+
+  registerCellRenderer('phone', {
+    DisplayComponent: PhoneCellDisplay,
+    EditComponent: PhoneCellEdit,
+  });
+
+  registerCellRenderer('smart_doc', {
+    DisplayComponent: SmartDocCellDisplay,
+    EditComponent: SmartDocCellEdit,
+  });
+
+  registerCellRenderer('barcode', {
+    DisplayComponent: BarcodeCellDisplay,
+    EditComponent: BarcodeCellEdit,
+  });
+
+  registerCellRenderer('checklist', {
+    DisplayComponent: ChecklistCellDisplay,
+    EditComponent: ChecklistCellEdit,
   });
 }
 
