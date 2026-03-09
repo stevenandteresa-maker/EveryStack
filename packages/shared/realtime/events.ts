@@ -34,6 +34,11 @@ export const REALTIME_EVENTS = {
   FILE_SCAN_COMPLETE: 'file.scan_complete',
   FILE_THUMBNAIL_READY: 'file.thumbnail_ready',
 
+  // Field lock events
+  FIELD_LOCKED: 'field.locked',
+  FIELD_UNLOCKED: 'field.unlocked',
+  FIELD_LOCK_RENEWED: 'field.lock_renewed',
+
   // Notification events
   NOTIFICATION_CREATED: 'notification.created',
 } as const;

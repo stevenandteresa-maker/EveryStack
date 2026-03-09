@@ -5,6 +5,7 @@ import { createRedisClient } from '@everystack/shared/redis';
 import { realtimeLogger } from '@everystack/shared/logging';
 import { authenticateSocket } from './middleware/auth';
 import { registerRoomHandlers } from './handlers/room-handler';
+import { registerLockHandlers } from './handlers/lock-handler';
 import { startRedisEventSubscriber } from './subscribers/redis-event-subscriber';
 
 const logger = realtimeLogger;
@@ -37,6 +38,9 @@ export function createRealtimeServer() {
   // Dedicated Redis client for event subscriber (subscribe mode — cannot run other commands)
   const eventSubClient = createRedisClient('realtime-event-sub');
 
+  // Dedicated Redis client for field lock operations (get/set/del)
+  const lockRedisClient = createRedisClient('realtime-lock');
+
   const adapterReady = Promise.all([
     pubClient.connect(),
     subClient.connect(),
@@ -64,6 +68,9 @@ export function createRealtimeServer() {
     // Register room:join and room:leave handlers
     registerRoomHandlers(socket);
 
+    // Register field lock handlers
+    registerLockHandlers(socket, io, lockRedisClient);
+
     socket.on('disconnect', (reason) => {
       logger.info(
         { socketId: socket.id, userId, tenantId, reason },
@@ -79,7 +86,7 @@ export function createRealtimeServer() {
     });
   });
 
-  return { httpServer, io, pubClient, subClient, eventSubClient, adapterReady };
+  return { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, adapterReady };
 }
 
 /**
@@ -87,10 +94,13 @@ export function createRealtimeServer() {
  * Called from index.ts entry point.
  */
 export async function startServer() {
-  const { httpServer, io, pubClient, subClient, eventSubClient, adapterReady } =
+  const { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, adapterReady } =
     createRealtimeServer();
 
   await adapterReady;
+
+  // Connect lock Redis client
+  await lockRedisClient.connect();
 
   // Start Redis event subscriber with dedicated client
   await eventSubClient.connect();
@@ -106,7 +116,7 @@ export async function startServer() {
 
     io.close();
 
-    await Promise.all([pubClient.quit(), subClient.quit(), eventSubClient.quit()]).catch((err) => {
+    await Promise.all([pubClient.quit(), subClient.quit(), eventSubClient.quit(), lockRedisClient.quit()]).catch((err) => {
       logger.warn({ err }, 'Error closing Redis connections');
     });
 

@@ -20,6 +20,8 @@ import { memo, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { GRID_TOKENS } from './grid-types';
 import type { GridField, GridRecord } from '@/lib/types/grid';
+import type { FieldLockInfo } from '@/lib/hooks/use-field-lock';
+import { FieldLockIndicator } from './FieldLockIndicator';
 
 // ---------------------------------------------------------------------------
 // Cell renderer registry (populated by Prompt 3/4/5)
@@ -85,6 +87,8 @@ export interface GridCellProps {
   onStartReplace?: () => void;
   validationError?: string | null;
   style?: React.CSSProperties;
+  /** Lock info if this field is locked by another user. */
+  lockInfo?: FieldLockInfo | null;
 }
 
 export const GridCell = memo(function GridCell({
@@ -99,6 +103,7 @@ export const GridCell = memo(function GridCell({
   onStartReplace,
   validationError,
   style,
+  lockInfo,
 }: GridCellProps) {
   const canonicalData = record.canonicalData as Record<string, unknown> | null;
   const value = canonicalData?.[field.id] ?? null;
@@ -121,9 +126,11 @@ export const GridCell = memo(function GridCell({
   // Use edit component when editing and one exists
   const ActiveComponent = isEditing && EditComponent ? EditComponent : DisplayComponent;
 
+  const isLocked = lockInfo != null;
+
   const handleClick = useCallback(() => {
-    // Read-only cells: just set active, no edit
-    if (field.readOnly) {
+    // Read-only cells or locked by another user: just set active, no edit
+    if (field.readOnly || isLocked) {
       onClick();
       return;
     }
@@ -151,15 +158,15 @@ export const GridCell = memo(function GridCell({
       clickCountRef.current = 0;
       onDoubleClick?.();
     }
-  }, [field.readOnly, isDirectToggle, onClick, onDoubleClick]);
+  }, [field.readOnly, isLocked, isDirectToggle, onClick, onDoubleClick]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       // If already editing, let the edit component handle keys
       if (isEditing) return;
 
-      // Read-only cells ignore keyboard input
-      if (field.readOnly) return;
+      // Read-only cells or locked cells ignore keyboard input
+      if (field.readOnly || isLocked) return;
 
       // Direct toggle types don't use replace mode
       if (isDirectToggle) return;
@@ -177,7 +184,7 @@ export const GridCell = memo(function GridCell({
         onStartReplace?.();
       }
     },
-    [isActive, isEditing, field.readOnly, isDirectToggle, onStartReplace],
+    [isActive, isEditing, field.readOnly, isLocked, isDirectToggle, onStartReplace],
   );
 
   return (
@@ -204,9 +211,10 @@ export const GridCell = memo(function GridCell({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      <div className="w-full truncate">
+      <div className={cn('w-full truncate', isLocked && 'opacity-60')}>
         <ActiveComponent {...rendererProps} />
       </div>
+      {lockInfo && <FieldLockIndicator lockInfo={lockInfo} />}
       {validationError && (
         <div className="absolute left-0 top-full z-30 bg-red-50 border border-red-200 px-2 py-1 text-xs text-red-600 shadow-sm whitespace-nowrap">
           {validationError}

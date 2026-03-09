@@ -581,6 +581,11 @@
       "error_rename": "Failed to rename view.",
       "error_duplicate": "Failed to duplicate view.",
       "cannot_delete_default": "Cannot delete the default view."
+    },
+    "collaboration": {
+      "user_editing": "{userName} is editing",
+      "field_locked": "This field is being edited by another user",
+      "updating": "Updating..."
     }
   },
   "table_tab": {

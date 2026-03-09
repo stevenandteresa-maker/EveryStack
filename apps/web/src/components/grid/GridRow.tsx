@@ -26,6 +26,8 @@ import {
 import type { GridRecord, GridField, RowDensity } from '@/lib/types/grid';
 import type { CellPosition } from './grid-types';
 import { DATA_COLORS } from '@/lib/design-system/colors';
+import { RowPresenceIndicator } from './RowPresenceIndicator';
+import type { FieldLockInfo } from '@/lib/hooks/use-field-lock';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -69,6 +71,11 @@ export interface GridRowProps {
   // Color coding
   rowTintColor?: string | null;
   cellTintColors?: Record<string, string>;
+  // Collaboration — field locks & row presence
+  /** Get lock info for a field in this record. Returns null if free. */
+  getFieldLock?: (recordId: string, fieldId: string) => FieldLockInfo | null;
+  /** Color for the row presence indicator (left border). Empty string = no presence. */
+  presenceColor?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,6 +117,8 @@ export const GridRow = memo(function GridRow({
   onCopyRecordLink,
   rowTintColor,
   cellTintColors,
+  getFieldLock,
+  presenceColor,
 }: GridRowProps) {
   const t = useTranslations('grid');
   const [isHovered, setIsHovered] = useState(false);
@@ -121,7 +130,7 @@ export const GridRow = memo(function GridRow({
   const rowContent = (
     <div
       role="row"
-      className={cn('flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
+      className={cn('relative flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
       style={{
         height: rowHeight,
         backgroundColor: isSelected
@@ -148,6 +157,11 @@ export const GridRow = memo(function GridRow({
           : undefined
       }
     >
+      {/* Row presence indicator */}
+      {presenceColor && (
+        <RowPresenceIndicator color={presenceColor} height={rowHeight} />
+      )}
+
       {/* Drag handle */}
       <div
         className={cn(
@@ -231,6 +245,8 @@ export const GridRow = memo(function GridRow({
         const cellTint = cellTintColors?.[field.id];
         const cellBg = cellTint ?? columnColorBg;
 
+        const fieldLock = getFieldLock?.(record.id, field.id) ?? null;
+
         return (
           <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: cellBg }}>
             <GridCell
@@ -244,6 +260,7 @@ export const GridRow = memo(function GridRow({
               onDoubleClick={() => onCellDoubleClick(record.id, field.id)}
               onStartReplace={() => onCellStartReplace(record.id, field.id)}
               style={{ height: rowHeight }}
+              lockInfo={fieldLock}
             />
             {/* Expand icon on primary field hover */}
             {isPrimary && isHovered && (
