@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-09 — Added new section "Definitions — AI Skills & Platform Agents (Post-MVP)" with 9 terms (Runtime AI Skill, Feature Skill Registry, Skill Condensation Level, Integration Skill, Workspace Usage Descriptor, Token Budget Allocator, Skill Maintenance Agent, Platform Maintenance Agent, Platform Agent Runtime) from `ai-skills-architecture.md` and `platform-maintenance-agents.md`. Prior: 2026-03-09 — Post-Phase 3A-i docs sync: added 4 new terms (Grid View, TableType, Tab Color + sub-definitions for DataGrid, Cell Registry, GridStore, ViewConfig, CellPosition).
+> Last updated: 2026-03-09 — Phase 3A-ii prep: added 6 terms (Card View, Summary Footer, Color Coding, Inline Sub-Table, CSV Import, Field-Level Presence Locking); broadened Section definition from sidebar-only to universal list organizer. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
 
 ---
 
@@ -255,6 +255,30 @@ A contextual communication panel tied to a specific record. Opens alongside the 
 
 **What Record Thread is:** Communication _about_ a specific record.
 **What Record Thread is NOT:** Personal DMs or team chat. Those live in Quick Panels. Record Thread is always scoped to one record.
+
+### Card View
+
+A card-based Table View type (`view_type: card`). MVP view type alongside Grid. Cards display fields in order defined by the view's `field_config`, with inline editing (click, edit, blur to save). Three layout options: single column (full-width), grid (2–3 cols), compact list. Shares all Grid capabilities: hide/show fields, filtering, grouping, sorting, color coding. Mobile uses compact list layout with swipe actions. See `tables-and-views.md` > Card View.
+
+### Summary Footer
+
+An optional row below the grid data area. Each column is independently configurable with field-type-appropriate aggregations (sum, avg, min, max, count, earliest, latest, etc.). Click a footer cell to pick the aggregation type. Sticky to bottom of the viewport. Per-group footers also available when grouping is active. See `tables-and-views.md` > Summary Footer Row.
+
+### Color Coding
+
+Conditional visual coding applied to grid rows and cells. Two combinable levels: **row-level** (entire row background tint based on conditions) and **cell-level** (individual cells colored by value or conditions). Configured per view. Separate from structural column coloring and tab colors. See `tables-and-views.md` > Color Coding, `field-groups.md` > conditional cell coloring cascade.
+
+### Inline Sub-Table
+
+A compact linked record widget that displays linked records as an embedded mini-grid within Record View. Configured via the `display` property on a Linked Record field (`style: "inline_table"`). Designed for parent-child patterns (invoice → line items, project → tasks). Supports inline creation, deletion, reorder, and spreadsheet-like editing (Tab, Enter, Escape). No new tables — purely a rendering mode on existing Linked Record fields. Summary row deferred to post-MVP (requires rollups). See `tables-and-views.md` > Inline Sub-Table Display for Linked Records.
+
+### CSV Import
+
+A guided data import flow for adding records to existing tables from CSV/TSV files. Five steps: upload (max 10MB, Papaparse client-side parsing), preview & header detection, field mapping (fuzzy auto-match), validation preview (dry-run via `FieldTypeRegistry.validate()`), import execution (batches of 100 via standard `createRecord` path). Manager+ role required. MVP scope: CSV only; Excel import, linked record resolution, and update-by-match are post-MVP. See `tables-and-views.md` > CSV/Data Import — MVP.
+
+### Field-Level Presence Locking
+
+A real-time collaboration mechanism that prevents concurrent editing of the same field on the same record. When a user focuses a field, a Redis lock is acquired (`lock:{tenantId}:{recordId}:{fieldId}` → `{userId, avatar, timestamp}`, TTL 60s). Other users see the editing user's avatar on the field and the field becomes temporarily non-interactive. Lock releases on blur (auto-save) or after 60 seconds of no keystrokes. No queue — if locked, other users wait. WebSocket broadcasts lock/unlock events. See `tables-and-views.md` > Multi-User Collaboration.
 
 ---
 
@@ -776,7 +800,7 @@ Corresponds to the `workspaces` table in the database. A workspace is a containe
 
 ### Section
 
-An optional visual grouping of tables within a workspace's sidebar. Sections allow users to organize tables into named groups (e.g., "Client Data," "Operations"). Sections are presentational only — they do not affect permissions or data access. Tables can be ungrouped.
+A universal UI primitive for organizing any long list. A section is a named, collapsible group header that items can be dragged into. Sections apply to: sidebar table lists, view switchers, automations lists, cross-links lists, document/template lists, and any future list surface. Two tiers: personal sections (any user, visible only to creator) and manager-created sections (Manager+, visible to all workspace members). Sections are presentational only — they do not affect permissions or data access. Items can be ungrouped. See `tables-and-views.md` > Sections — Universal List Organizer.
 
 ### Command Bar
 
