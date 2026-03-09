@@ -5,6 +5,10 @@ import { useClipboard } from '../use-clipboard';
 import type { GridRecord, GridField } from '@/lib/types/grid';
 import type { CellPosition } from '../grid-types';
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 // ---------------------------------------------------------------------------
 // Mock navigator.clipboard
 // ---------------------------------------------------------------------------
