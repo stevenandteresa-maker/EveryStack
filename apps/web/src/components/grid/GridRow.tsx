@@ -40,6 +40,8 @@ export interface GridRowProps {
   activeCell: CellPosition | null;
   editingCell: CellPosition | null;
   columnColors: Record<string, string>;
+  isSelected?: boolean;
+  onRowSelect?: (recordId: string, event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => void;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -79,6 +81,8 @@ export const GridRow = memo(function GridRow({
   activeCell,
   editingCell,
   columnColors,
+  isSelected,
+  onRowSelect,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -115,11 +119,13 @@ export const GridRow = memo(function GridRow({
       className={cn('flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
       style={{
         height: rowHeight,
-        backgroundColor: isHovered
-          ? GRID_TOKENS.rowHover
-          : isOdd
-            ? GRID_TOKENS.rowStripeOdd
-            : GRID_TOKENS.rowStripeEven,
+        backgroundColor: isSelected
+          ? '#EFF6FF'
+          : isHovered
+            ? GRID_TOKENS.rowHover
+            : isOdd
+              ? GRID_TOKENS.rowStripeOdd
+              : GRID_TOKENS.rowStripeEven,
         ...style,
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -169,8 +175,20 @@ export const GridRow = memo(function GridRow({
           width: CHECKBOX_COLUMN_WIDTH,
           borderColor: GRID_TOKENS.borderDefault,
         }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRowSelect?.(record.id, {
+            shiftKey: e.shiftKey,
+            metaKey: e.metaKey,
+            ctrlKey: e.ctrlKey,
+          });
+        }}
       >
-        <Checkbox aria-label={t('checkbox_select')} />
+        <Checkbox
+          aria-label={t('checkbox_select')}
+          checked={isSelected ?? false}
+          tabIndex={-1}
+        />
       </div>
 
       {/* Row number */}

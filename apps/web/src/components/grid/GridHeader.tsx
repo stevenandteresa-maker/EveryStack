@@ -79,6 +79,9 @@ export interface GridHeaderProps {
   addColumnWidth: number;
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
+  allSelected?: boolean;
+  someSelected?: boolean;
+  onToggleSelectAll?: () => void;
   onSelectColumn: (fieldId: string) => void;
   onStartResize: (fieldId: string, width: number, e: React.MouseEvent) => void;
   onDragStart: (fieldId: string, e: React.DragEvent) => void;
@@ -100,6 +103,9 @@ export const GridHeader = memo(function GridHeader({
   addColumnWidth,
   userRole,
   columnColors,
+  allSelected,
+  someSelected,
+  onToggleSelectAll,
   onSelectColumn,
   onStartResize,
   onDragStart,
@@ -137,7 +143,11 @@ export const GridHeader = memo(function GridHeader({
           borderColor: GRID_TOKENS.borderDefault,
         }}
       >
-        <Checkbox aria-label={t('checkbox_select_all')} />
+        <Checkbox
+          aria-label={t('checkbox_select_all')}
+          checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+          onCheckedChange={onToggleSelectAll}
+        />
       </div>
 
       {/* Row number header */}

@@ -380,6 +380,24 @@
       "title": "Aún no hay registros",
       "description": "Comienza agregando tu primer registro.",
       "new_record": "Nuevo registro"
+    },
+    "bulk": {
+      "toolbar_label": "Acciones masivas",
+      "selected_count": "{count} seleccionados",
+      "delete": "Eliminar",
+      "edit_field": "Editar campo",
+      "pick_field": "Elige un campo…",
+      "new_value": "Nuevo valor…",
+      "apply": "Aplicar",
+      "duplicate": "Duplicar",
+      "copy": "Copiar",
+      "clear_selection": "Limpiar selección",
+      "delete_title": "Eliminar registros",
+      "delete_description": "¿Estás seguro de que deseas eliminar {count} registros? Esta acción no se puede deshacer.",
+      "delete_cancel": "Cancelar",
+      "delete_confirm": "Eliminar",
+      "duplicated": "{count} registros duplicados",
+      "copied": "Copiado al portapapeles"
     }
   },
   "table_tab": {

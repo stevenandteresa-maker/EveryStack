@@ -380,6 +380,24 @@
       "title": "No records yet",
       "description": "Get started by adding your first record.",
       "new_record": "New Record"
+    },
+    "bulk": {
+      "toolbar_label": "Bulk actions",
+      "selected_count": "{count} selected",
+      "delete": "Delete",
+      "edit_field": "Edit field",
+      "pick_field": "Pick a field…",
+      "new_value": "New value…",
+      "apply": "Apply",
+      "duplicate": "Duplicate",
+      "copy": "Copy",
+      "clear_selection": "Clear selection",
+      "delete_title": "Delete records",
+      "delete_description": "Are you sure you want to delete {count} records? This action cannot be undone.",
+      "delete_cancel": "Cancel",
+      "delete_confirm": "Delete",
+      "duplicated": "{count} records duplicated",
+      "copied": "Copied to clipboard"
     }
   },
   "table_tab": {

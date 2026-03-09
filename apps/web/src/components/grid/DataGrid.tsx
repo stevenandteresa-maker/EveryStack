@@ -27,7 +27,9 @@ import { NewRowInput } from './NewRowInput';
 import { GridSkeleton } from './GridSkeleton';
 import { GridEmptyState } from './GridEmptyState';
 import { PerformanceBanner } from './PerformanceBanner';
+import { BulkActionsToolbar } from './BulkActionsToolbar';
 import { useKeyboardNavigation } from './use-keyboard-navigation';
+import { useRowSelection } from './use-row-selection';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { useColumnResize } from './use-column-resize';
 import { useColumnReorder } from './use-column-reorder';
@@ -112,6 +114,10 @@ export interface DataGridProps {
   onInsertBelow?: (recordId: string) => void;
   onCopyRecordLink?: (recordId: string) => void;
   onShowToast?: (message: string) => void;
+  // Bulk action callbacks
+  onBulkDelete?: (recordIds: string[]) => void;
+  onBulkUpdateField?: (recordIds: string[], fieldId: string, value: unknown) => void;
+  onBulkDuplicate?: (recordIds: string[]) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -169,6 +175,9 @@ export function DataGrid({
   onInsertBelow,
   onCopyRecordLink,
   onShowToast,
+  onBulkDelete,
+  onBulkUpdateField,
+  onBulkDuplicate,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -294,6 +303,37 @@ export function DataGrid({
   });
 
   // -----------------------------------------------------------------------
+  // Row selection hook
+  // -----------------------------------------------------------------------
+  const rowSelection = useRowSelection({
+    records,
+    selectedRows,
+    setSelectedRows,
+  });
+
+  // -----------------------------------------------------------------------
+  // Bulk action handlers
+  // -----------------------------------------------------------------------
+  const handleBulkDelete = useCallback(() => {
+    const ids = Array.from(selectedRows);
+    onBulkDelete?.(ids);
+    setSelectedRows(new Set());
+  }, [selectedRows, onBulkDelete, setSelectedRows]);
+
+  const handleBulkUpdateField = useCallback(
+    (fieldId: string, value: unknown) => {
+      const ids = Array.from(selectedRows);
+      onBulkUpdateField?.(ids, fieldId, value);
+    },
+    [selectedRows, onBulkUpdateField],
+  );
+
+  const handleBulkDuplicate = useCallback(() => {
+    const ids = Array.from(selectedRows);
+    onBulkDuplicate?.(ids);
+  }, [selectedRows, onBulkDuplicate]);
+
+  // -----------------------------------------------------------------------
   // Cell save wrapper — pushes edits to undo stack
   // -----------------------------------------------------------------------
   const handleCellSaveWithUndo = useCallback(
@@ -320,6 +360,10 @@ export function DataGrid({
     onUpdateCell: handleCellSaveWithUndo,
     onShowToast: onShowToast ?? (() => {}),
   });
+
+  const handleBulkCopy = useCallback(() => {
+    clipboard.handleCopy();
+  }, [clipboard]);
 
   // -----------------------------------------------------------------------
   // Context menu callbacks
@@ -629,6 +673,15 @@ export function DataGrid({
         totalRowCount={totalCount}
         visibleColumnCount={orderedFields.length}
       />
+      <BulkActionsToolbar
+        selectedCount={selectedRows.size}
+        fields={orderedFields}
+        onDelete={handleBulkDelete}
+        onBulkUpdateField={handleBulkUpdateField}
+        onDuplicate={handleBulkDuplicate}
+        onCopy={handleBulkCopy}
+        onClearSelection={rowSelection.clearSelection}
+      />
     <div
       ref={scrollContainerRef}
       className="relative overflow-auto flex-1 outline-none"
@@ -654,6 +707,9 @@ export function DataGrid({
           addColumnWidth={ADD_FIELD_COLUMN_WIDTH}
           userRole={userRole}
           columnColors={columnColors}
+          allSelected={rowSelection.allSelected}
+          someSelected={rowSelection.someSelected}
+          onToggleSelectAll={rowSelection.toggleSelectAll}
           onSelectColumn={onSelectColumn}
           onStartResize={startResize}
           onDragStart={colDragStart}
@@ -683,6 +739,8 @@ export function DataGrid({
               activeCell={activeCell}
               editingCell={editingCell}
               columnColors={columnColors}
+              isSelected={selectedRows.has(row.original.id)}
+              onRowSelect={rowSelection.handleRowSelect}
               onCellClick={onCellClick}
               onCellDoubleClick={onCellDoubleClick}
               onCellStartReplace={onCellStartReplace}

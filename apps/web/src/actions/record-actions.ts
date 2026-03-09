@@ -16,6 +16,7 @@ import {
   and,
   isNull,
   isNotNull,
+  inArray,
   sql,
   records,
   tables,
@@ -468,6 +469,223 @@ export async function insertRecord(
     }
 
     return result;
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Zod schemas — tab color
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Zod schemas — bulk actions
+// ---------------------------------------------------------------------------
+
+const MAX_BULK_DELETE = 500;
+const MAX_BULK_UPDATE = 500;
+const MAX_BULK_DUPLICATE = 100;
+
+const bulkDeleteRecordsSchema = z.object({
+  recordIds: z.array(z.string().uuid()).min(1).max(MAX_BULK_DELETE),
+});
+
+const bulkUpdateRecordFieldSchema = z.object({
+  recordIds: z.array(z.string().uuid()).min(1).max(MAX_BULK_UPDATE),
+  fieldId: z.string().uuid(),
+  value: z.unknown(),
+});
+
+const duplicateRecordsSchema = z.object({
+  recordIds: z.array(z.string().uuid()).min(1).max(MAX_BULK_DUPLICATE),
+});
+
+// ---------------------------------------------------------------------------
+// bulkDeleteRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Soft-delete multiple records in a single transaction.
+ * Maximum 500 records per call.
+ */
+export async function bulkDeleteRecords(
+  input: z.input<typeof bulkDeleteRecordsSchema>,
+): Promise<{ count: number }> {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = bulkDeleteRecordsSchema.parse(input);
+
+  const db = getDbForTenant(tenantId, 'write');
+
+  try {
+    const count = await db.transaction(async (tx) => {
+      const result = await tx
+        .update(records)
+        .set({
+          archivedAt: new Date(),
+          updatedBy: userId,
+        })
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            inArray(records.id, validated.recordIds),
+            isNull(records.archivedAt),
+          ),
+        )
+        .returning({ id: records.id });
+
+      await writeAuditLog(tx as DrizzleTransaction, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'record.bulk_deleted',
+        entityType: 'record',
+        entityId: tenantId,
+        details: {
+          recordIds: validated.recordIds,
+          count: result.length,
+        },
+        traceId: getTraceId(),
+      });
+
+      return result.length;
+    });
+
+    return { count };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// bulkUpdateRecordField
+// ---------------------------------------------------------------------------
+
+/**
+ * Update a single field value on multiple records.
+ * Maximum 500 records per call.
+ */
+export async function bulkUpdateRecordField(
+  input: z.input<typeof bulkUpdateRecordFieldSchema>,
+): Promise<{ count: number }> {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = bulkUpdateRecordFieldSchema.parse(input);
+
+  const db = getDbForTenant(tenantId, 'write');
+
+  try {
+    const count = await db.transaction(async (tx) => {
+      const serializedValue = JSON.stringify(validated.value);
+      const jsonPath = `{${validated.fieldId}}`;
+
+      const result = await tx
+        .update(records)
+        .set({
+          canonicalData: sql`jsonb_set(
+            COALESCE(${records.canonicalData}, '{}'::jsonb),
+            ${jsonPath}::text[],
+            ${serializedValue}::jsonb
+          )`,
+          updatedBy: userId,
+        })
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            inArray(records.id, validated.recordIds),
+            isNull(records.archivedAt),
+          ),
+        )
+        .returning({ id: records.id });
+
+      await writeAuditLog(tx as DrizzleTransaction, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'record.bulk_field_updated',
+        entityType: 'record',
+        entityId: tenantId,
+        details: {
+          recordIds: validated.recordIds,
+          fieldId: validated.fieldId,
+          count: result.length,
+        },
+        traceId: getTraceId(),
+      });
+
+      return result.length;
+    });
+
+    return { count };
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// duplicateRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Duplicate multiple records in a single transaction.
+ * Maximum 100 records per call.
+ */
+export async function duplicateRecords(
+  input: z.input<typeof duplicateRecordsSchema>,
+): Promise<{ newRecordIds: string[] }> {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = duplicateRecordsSchema.parse(input);
+
+  const db = getDbForTenant(tenantId, 'write');
+
+  try {
+    const newRecordIds = await db.transaction(async (tx) => {
+      // Fetch existing records
+      const existing = await tx
+        .select()
+        .from(records)
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            inArray(records.id, validated.recordIds),
+            isNull(records.archivedAt),
+          ),
+        );
+
+      const newIds: string[] = [];
+
+      for (const source of existing) {
+        const newId = generateUUIDv7();
+        await tx
+          .insert(records)
+          .values({
+            id: newId,
+            tenantId,
+            tableId: source.tableId,
+            canonicalData: source.canonicalData,
+            createdBy: userId,
+            updatedBy: userId,
+          });
+        newIds.push(newId);
+      }
+
+      await writeAuditLog(tx as DrizzleTransaction, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'record.bulk_duplicated',
+        entityType: 'record',
+        entityId: tenantId,
+        details: {
+          sourceRecordIds: validated.recordIds,
+          newRecordIds: newIds,
+          count: newIds.length,
+        },
+        traceId: getTraceId(),
+      });
+
+      return newIds;
+    });
+
+    return { newRecordIds };
   } catch (error) {
     throw wrapUnknownError(error);
   }
