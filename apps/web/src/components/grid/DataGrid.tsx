@@ -21,10 +21,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { roleAtLeast, type EffectiveRole } from '@everystack/shared/auth';
-import { Skeleton } from '@/components/ui/skeleton';
 import { GridHeader } from './GridHeader';
 import { GridRow } from './GridRow';
 import { NewRowInput } from './NewRowInput';
+import { GridSkeleton } from './GridSkeleton';
+import { GridEmptyState } from './GridEmptyState';
+import { PerformanceBanner } from './PerformanceBanner';
 import { useKeyboardNavigation } from './use-keyboard-navigation';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { useColumnResize } from './use-column-resize';
@@ -522,11 +524,10 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-1 p-4" role="status" aria-label={t('loading')}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
-        ))}
-      </div>
+      <GridSkeleton
+        columnCount={orderedFields.length || 6}
+        rowHeight={rowHeight}
+      />
     );
   }
 
@@ -546,18 +547,18 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-sm" style={{ color: GRID_TOKENS.textSecondary }}>
-        <p>{t('empty')}</p>
-        {onCreateRecord && (
-          <NewRowInput
-            fields={orderedFields}
-            rowHeight={rowHeight}
-            totalWidth={totalWidth}
-            rowCount={0}
-            onCreateRecord={onCreateRecord}
-          />
-        )}
-      </div>
+      <GridEmptyState
+        onCreateRecord={
+          onCreateRecord
+            ? () => {
+                const primaryField = orderedFields.find((f) => f.isPrimary);
+                if (primaryField) {
+                  onCreateRecord(primaryField.id, '');
+                }
+              }
+            : undefined
+        }
+      />
     );
   }
 
@@ -567,6 +568,11 @@ export function DataGrid({
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   return (
+    <div className="flex flex-col flex-1">
+      <PerformanceBanner
+        totalRowCount={totalCount}
+        visibleColumnCount={orderedFields.length}
+      />
     <div
       ref={scrollContainerRef}
       className="relative overflow-auto flex-1 outline-none"
@@ -678,6 +684,7 @@ export function DataGrid({
         open={shortcutsOpen}
         onOpenChange={setShortcutsOpen}
       />
+    </div>
     </div>
   );
 }
