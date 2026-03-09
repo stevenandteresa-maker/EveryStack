@@ -393,101 +393,15 @@ export function flattenGroupTree(
 }
 
 // ---------------------------------------------------------------------------
-// Aggregation helpers (shared between GroupFooter and future SummaryFooter)
+// Re-export aggregation helpers from shared module
 // ---------------------------------------------------------------------------
 
-export type AggregationType = 'count' | 'sum' | 'avg' | 'min' | 'max' | 'empty' | 'filled' | 'unique' | 'none';
-
-/**
- * Returns the default aggregation type for a field type.
- */
-export function getDefaultAggregation(fieldType: string): AggregationType {
-  switch (fieldType) {
-    case 'number':
-    case 'currency':
-    case 'percent':
-    case 'duration':
-      return 'sum';
-    case 'rating':
-      return 'avg';
-    case 'checkbox':
-      return 'filled';
-    case 'date':
-    case 'datetime':
-      return 'count';
-    default:
-      return 'count';
-  }
-}
-
-/**
- * Compute an aggregation over a set of records for a given field.
- */
-export function computeAggregation(
-  records: GridRecord[],
-  fieldId: string,
-  aggregation: AggregationType,
-): { value: string; raw: number | null } {
-  const values: unknown[] = [];
-  for (const record of records) {
-    const data = record.canonicalData as Record<string, unknown> | null;
-    values.push(data?.[fieldId] ?? null);
-  }
-
-  const numericValues = values
-    .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v));
-
-  switch (aggregation) {
-    case 'count':
-      return { value: String(records.length), raw: records.length };
-
-    case 'sum': {
-      const sum = numericValues.reduce((acc, v) => acc + v, 0);
-      return { value: formatNumber(sum), raw: sum };
-    }
-
-    case 'avg': {
-      if (numericValues.length === 0) return { value: '-', raw: null };
-      const avg = numericValues.reduce((acc, v) => acc + v, 0) / numericValues.length;
-      return { value: formatNumber(avg), raw: avg };
-    }
-
-    case 'min': {
-      if (numericValues.length === 0) return { value: '-', raw: null };
-      const min = Math.min(...numericValues);
-      return { value: formatNumber(min), raw: min };
-    }
-
-    case 'max': {
-      if (numericValues.length === 0) return { value: '-', raw: null };
-      const max = Math.max(...numericValues);
-      return { value: formatNumber(max), raw: max };
-    }
-
-    case 'empty': {
-      const emptyCount = values.filter((v) => v == null || v === '').length;
-      return { value: String(emptyCount), raw: emptyCount };
-    }
-
-    case 'filled': {
-      const filledCount = values.filter((v) => v != null && v !== '').length;
-      return { value: String(filledCount), raw: filledCount };
-    }
-
-    case 'unique': {
-      const unique = new Set(values.filter((v) => v != null).map(String));
-      return { value: String(unique.size), raw: unique.size };
-    }
-
-    case 'none':
-    default:
-      return { value: '', raw: null };
-  }
-}
-
-function formatNumber(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(2);
-}
+export {
+  computeAggregation,
+  getDefaultAggregation,
+  getAggregationOptions,
+  type AggregationType,
+} from './aggregation-utils';
 
 /**
  * Check if a field type supports drag-to-regroup.

@@ -6,7 +6,7 @@
  * Renders field-type-appropriate summaries for each column within
  * a group. Uses a lighter background to distinguish from data rows.
  *
- * Aggregation logic is shared with the future SummaryFooter (Prompt 5).
+ * Uses shared aggregation-utils for computation (shared with SummaryFooter).
  *
  * @see docs/reference/tables-and-views.md § Grouping
  */
@@ -14,10 +14,11 @@
 import { memo, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { GRID_TOKENS, DRAG_HANDLE_WIDTH, CHECKBOX_COLUMN_WIDTH, ROW_NUMBER_WIDTH } from './grid-types';
-import { GROUP_FOOTER_HEIGHT, GROUP_INDENT_PX, computeAggregation, getDefaultAggregation } from './use-grouping';
+import { GROUP_FOOTER_HEIGHT, GROUP_INDENT_PX } from './use-grouping';
 import type { GroupNode } from './use-grouping';
 import type { GridField, GridRecord } from '@/lib/types/grid';
 import { getDefaultColumnWidth } from './grid-types';
+import { computeAggregation, getDefaultAggregation } from './aggregation-utils';
 
 // ---------------------------------------------------------------------------
 // Props

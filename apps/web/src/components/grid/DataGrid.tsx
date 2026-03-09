@@ -58,12 +58,17 @@ import type {
 import { ROW_DENSITY_HEIGHTS } from '@/lib/types/grid';
 import { GroupHeader } from './GroupHeader';
 import { GroupFooter } from './GroupFooter';
+import { SummaryFooter } from './SummaryFooter';
 import {
   computeGroups,
   flattenGroupTree,
   isDragRegroupSupported,
   type VirtualGroupItem,
 } from './use-grouping';
+import { evaluateColorRules, type ColorRulesConfig, createEmptyColorRulesConfig } from './use-color-rules';
+import type { SummaryFooterConfig } from './use-summary-footer';
+import { createDefaultSummaryFooterConfig } from './use-summary-footer';
+import type { AggregationType } from './aggregation-utils';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -139,6 +144,11 @@ export interface DataGridProps {
   collapsedGroups?: Set<string>;
   onToggleGroupCollapsed?: (groupKey: string) => void;
   onRecordRegroup?: (recordId: string, fieldId: string, newValue: unknown) => void;
+  // Color coding
+  colorRules?: ColorRulesConfig;
+  // Summary footer
+  summaryFooterConfig?: SummaryFooterConfig;
+  onSetColumnAggregation?: (fieldId: string, aggregationType: AggregationType) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,6 +220,9 @@ export function DataGrid({
   collapsedGroups = new Set<string>(),
   onToggleGroupCollapsed,
   onRecordRegroup,
+  colorRules = createEmptyColorRulesConfig(),
+  summaryFooterConfig = createDefaultSummaryFooterConfig(),
+  onSetColumnAggregation,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -357,6 +370,24 @@ export function DataGrid({
     if (!isGrouped) return [];
     return flattenGroupTree(groupTree, collapsedGroups, rowHeight);
   }, [isGrouped, groupTree, collapsedGroups, rowHeight]);
+
+  // -----------------------------------------------------------------------
+  // Color coding — evaluate rules for all records
+  // -----------------------------------------------------------------------
+  const hasColorRules =
+    colorRules.row_rules.length > 0 || colorRules.cell_rules.length > 0;
+
+  const colorEvaluations = useMemo(() => {
+    if (!hasColorRules) return new Map<string, { rowColor: string | null; cellColors: Record<string, string> }>();
+    const map = new Map<string, { rowColor: string | null; cellColors: Record<string, string> }>();
+    for (const record of records) {
+      map.set(record.id, evaluateColorRules(record, colorRules));
+    }
+    return map;
+  }, [hasColorRules, records, colorRules]);
+
+  // Summary footer enabled
+  const showSummaryFooter = summaryFooterConfig.enabled;
 
   // Drag-to-regroup state
   const [draggingRecordId, setDraggingRecordId] = useState<string | null>(null);
@@ -875,6 +906,8 @@ export function DataGrid({
                 ? isDragRegroupSupported(groupField.fieldType)
                 : false;
 
+              const colorEval = colorEvaluations.get(item.record.id);
+
               return (
                 <GridRow
                   key={row.id}
@@ -922,12 +955,16 @@ export function DataGrid({
                   onPaste={handlePaste}
                   onClearCellValue={handleClearCellValue}
                   onCopyRecordLink={onCopyRecordLink}
+                  rowTintColor={colorEval?.rowColor}
+                  cellTintColors={colorEval?.cellColors}
                 />
               );
             })
           : virtualRows.map((virtualRow) => {
               const row = rows[virtualRow.index];
               if (!row) return null;
+
+              const colorEval = colorEvaluations.get(row.original.id);
 
               return (
                 <GridRow
@@ -969,6 +1006,8 @@ export function DataGrid({
                   onPaste={handlePaste}
                   onClearCellValue={handleClearCellValue}
                   onCopyRecordLink={onCopyRecordLink}
+                  rowTintColor={colorEval?.rowColor}
+                  cellTintColors={colorEval?.cellColors}
                 />
               );
             })}
@@ -998,6 +1037,18 @@ export function DataGrid({
         onOpenChange={setShortcutsOpen}
       />
     </div>
+
+      {/* Summary footer — sticky bottom */}
+      {showSummaryFooter && onSetColumnAggregation && (
+        <SummaryFooter
+          records={records}
+          fields={visibleFields}
+          columnWidths={columnWidths}
+          totalWidth={totalWidth}
+          config={summaryFooterConfig}
+          onSetColumnAggregation={onSetColumnAggregation}
+        />
+      )}
     </div>
   );
 }

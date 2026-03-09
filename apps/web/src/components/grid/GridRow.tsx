@@ -66,6 +66,9 @@ export interface GridRowProps {
   onPaste?: () => void;
   onClearCellValue?: () => void;
   onCopyRecordLink?: (recordId: string) => void;
+  // Color coding
+  rowTintColor?: string | null;
+  cellTintColors?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +108,8 @@ export const GridRow = memo(function GridRow({
   onPaste,
   onClearCellValue,
   onCopyRecordLink,
+  rowTintColor,
+  cellTintColors,
 }: GridRowProps) {
   const t = useTranslations('grid');
   const [isHovered, setIsHovered] = useState(false);
@@ -123,9 +128,11 @@ export const GridRow = memo(function GridRow({
           ? '#EFF6FF'
           : isHovered
             ? GRID_TOKENS.rowHover
-            : isOdd
-              ? GRID_TOKENS.rowStripeOdd
-              : GRID_TOKENS.rowStripeEven,
+            : rowTintColor
+              ? rowTintColor
+              : isOdd
+                ? GRID_TOKENS.rowStripeOdd
+                : GRID_TOKENS.rowStripeEven,
         ...style,
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -217,12 +224,15 @@ export const GridRow = memo(function GridRow({
         const isPrimary = field.id === primaryField?.id;
 
         const colorName = columnColors[field.id];
-        const colorBg = colorName
+        const columnColorBg = colorName
           ? DATA_COLORS.find((c) => c.name === colorName)?.light
           : undefined;
+        // Cell-level color rule overrides column color (higher specificity)
+        const cellTint = cellTintColors?.[field.id];
+        const cellBg = cellTint ?? columnColorBg;
 
         return (
-          <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: colorBg }}>
+          <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: cellBg }}>
             <GridCell
               record={record}
               field={field}

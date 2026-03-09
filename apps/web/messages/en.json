@@ -466,6 +466,43 @@
       "empty_value": "(empty)",
       "max_groups_reached": "Maximum of {max} group levels.",
       "drag_regroup_hint": "Drag records between groups to change their value"
+    },
+    "color": {
+      "title": "Color Rules",
+      "clear_all": "Clear all",
+      "row_rules": "Row rules",
+      "cell_rules": "Cell rules",
+      "no_row_rules": "No row color rules.",
+      "no_cell_rules": "No cell color rules.",
+      "add_row_rule": "Add row rule",
+      "add_cell_rule": "Add cell rule",
+      "cell_field": "Field: {field}",
+      "pick_color": "Pick color"
+    },
+    "summary": {
+      "label": "Summary",
+      "pick_aggregation": "Pick aggregation for {field}",
+      "type_none": "None",
+      "type_count": "Count",
+      "type_sum": "Sum",
+      "type_avg": "Average",
+      "type_min": "Min",
+      "type_max": "Max",
+      "type_earliest": "Earliest",
+      "type_latest": "Latest",
+      "type_range": "Range",
+      "type_checked_count": "Checked",
+      "type_unchecked_count": "Unchecked",
+      "type_percent_checked": "% Checked",
+      "type_count_per_value": "Count per value",
+      "type_unique_count": "Unique count",
+      "type_total_count": "Total count",
+      "type_linked_row_count": "Linked rows",
+      "type_total_link_count": "Total links",
+      "type_rows_with_files": "Rows with files",
+      "type_total_file_count": "Total files",
+      "type_filled_count": "Filled",
+      "type_empty_count": "Empty"
     }
   },
   "table_tab": {

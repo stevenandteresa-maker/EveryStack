@@ -466,6 +466,43 @@
       "empty_value": "(vacío)",
       "max_groups_reached": "Máximo de {max} niveles de agrupación.",
       "drag_regroup_hint": "Arrastre registros entre grupos para cambiar su valor"
+    },
+    "color": {
+      "title": "Reglas de color",
+      "clear_all": "Borrar todo",
+      "row_rules": "Reglas de fila",
+      "cell_rules": "Reglas de celda",
+      "no_row_rules": "Sin reglas de color de fila.",
+      "no_cell_rules": "Sin reglas de color de celda.",
+      "add_row_rule": "Agregar regla de fila",
+      "add_cell_rule": "Agregar regla de celda",
+      "cell_field": "Campo: {field}",
+      "pick_color": "Elegir color"
+    },
+    "summary": {
+      "label": "Resumen",
+      "pick_aggregation": "Elegir agregación para {field}",
+      "type_none": "Ninguno",
+      "type_count": "Recuento",
+      "type_sum": "Suma",
+      "type_avg": "Promedio",
+      "type_min": "Mínimo",
+      "type_max": "Máximo",
+      "type_earliest": "Más antiguo",
+      "type_latest": "Más reciente",
+      "type_range": "Rango",
+      "type_checked_count": "Marcados",
+      "type_unchecked_count": "Sin marcar",
+      "type_percent_checked": "% Marcados",
+      "type_count_per_value": "Recuento por valor",
+      "type_unique_count": "Valores únicos",
+      "type_total_count": "Recuento total",
+      "type_linked_row_count": "Filas vinculadas",
+      "type_total_link_count": "Total de vínculos",
+      "type_rows_with_files": "Filas con archivos",
+      "type_total_file_count": "Total de archivos",
+      "type_filled_count": "Completados",
+      "type_empty_count": "Vacíos"
     }
   },
   "table_tab": {

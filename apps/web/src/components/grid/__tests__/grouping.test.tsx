@@ -378,18 +378,18 @@ describe('computeAggregation', () => {
     expect(result.raw).toBe(200);
   });
 
-  it('computes empty', () => {
-    const result = computeAggregation(records, 'amount', 'empty');
+  it('computes empty count', () => {
+    const result = computeAggregation(records, 'amount', 'empty_count');
     expect(result.raw).toBe(1);
   });
 
-  it('computes filled', () => {
-    const result = computeAggregation(records, 'done', 'filled');
+  it('computes filled count', () => {
+    const result = computeAggregation(records, 'done', 'filled_count');
     expect(result.raw).toBe(3);
   });
 
-  it('computes unique', () => {
-    const result = computeAggregation(records, 'status', 'unique');
+  it('computes unique count', () => {
+    const result = computeAggregation(records, 'status', 'unique_count');
     expect(result.raw).toBe(2); // 'active', 'inactive' — null excluded
   });
 
@@ -422,14 +422,14 @@ describe('getDefaultAggregation', () => {
     expect(getDefaultAggregation('rating')).toBe('avg');
   });
 
-  it('returns filled for checkbox', () => {
-    expect(getDefaultAggregation('checkbox')).toBe('filled');
+  it('returns checked_count for checkbox', () => {
+    expect(getDefaultAggregation('checkbox')).toBe('checked_count');
   });
 
-  it('returns count for other types', () => {
-    expect(getDefaultAggregation('text')).toBe('count');
-    expect(getDefaultAggregation('single_select')).toBe('count');
-    expect(getDefaultAggregation('date')).toBe('count');
+  it('returns field-appropriate defaults for other types', () => {
+    expect(getDefaultAggregation('text')).toBe('filled_count');
+    expect(getDefaultAggregation('single_select')).toBe('count_per_value');
+    expect(getDefaultAggregation('date')).toBe('earliest');
   });
 });
 
