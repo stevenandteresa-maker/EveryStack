@@ -275,6 +275,10 @@ export const GridRow = memo(function GridRow({
                 )}
                 style={{ color: GRID_TOKENS.textSecondary }}
                 aria-label={t('expand_record')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExpandRecord?.(record.id);
+                }}
               >
                 ⤢
               </button>

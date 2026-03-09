@@ -697,5 +697,18 @@
     "history_ms": "{value}ms",
     "history_seconds": "{value}s",
     "history_minutes": "{value}m"
+  },
+  "record_view": {
+    "overlay_label": "Record View",
+    "untitled_record": "Untitled record",
+    "close": "Close",
+    "navigate_prev": "Previous record",
+    "navigate_next": "Next record",
+    "chat_placeholder": "Record thread (coming soon)",
+    "field_read_only": "Read-only",
+    "no_fields": "No fields configured for this view.",
+    "record_not_found": "Record not found.",
+    "config_name_default": "Default",
+    "save_error": "Failed to save record view config."
   }
 }

@@ -113,6 +113,10 @@ export {
   automations,
   automationsRelations,
   fieldExpressionIndexes,
+  recordViewConfigs,
+  recordViewConfigsRelations,
+  forms,
+  formsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -143,4 +147,6 @@ export type {
   SyncSchemaChange, NewSyncSchemaChange,
   Automation, NewAutomation,
   FieldExpressionIndex, NewFieldExpressionIndex,
+  RecordViewConfig, NewRecordViewConfig,
+  Form, NewForm,
 } from './schema';

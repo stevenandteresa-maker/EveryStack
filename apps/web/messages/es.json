@@ -697,5 +697,18 @@
     "history_ms": "{value}ms",
     "history_seconds": "{value}s",
     "history_minutes": "{value}m"
+  },
+  "record_view": {
+    "overlay_label": "Vista de registro",
+    "untitled_record": "Registro sin título",
+    "close": "Cerrar",
+    "navigate_prev": "Registro anterior",
+    "navigate_next": "Siguiente registro",
+    "chat_placeholder": "Hilo del registro (próximamente)",
+    "field_read_only": "Solo lectura",
+    "no_fields": "No hay campos configurados para esta vista.",
+    "record_not_found": "Registro no encontrado.",
+    "config_name_default": "Predeterminado",
+    "save_error": "Error al guardar la configuración de vista de registro."
   }
 }
