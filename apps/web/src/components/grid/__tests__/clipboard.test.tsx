@@ -5,6 +5,10 @@ import { useClipboard } from '../use-clipboard';
 import type { GridRecord, GridField } from '@/lib/types/grid';
 import type { CellPosition } from '../grid-types';
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 // ---------------------------------------------------------------------------
 // Mock navigator.clipboard
 // ---------------------------------------------------------------------------
@@ -183,8 +187,9 @@ describe('useClipboard', () => {
       });
 
       expect(onUpdateCell).not.toHaveBeenCalled();
+      // Mock returns the translation key; real UI would show "1 cell skipped…"
       expect(onShowToast).toHaveBeenCalledWith(
-        expect.stringContaining('1 cell'),
+        expect.stringContaining('cells_skipped'),
       );
     });
 
