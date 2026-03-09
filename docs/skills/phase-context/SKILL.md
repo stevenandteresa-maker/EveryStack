@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-08
+**Last updated:** 2026-03-09
 **Branch:** `main`
 **Latest tag:** `v0.2.0-phase-2a`
-**Total commits:** 24 (squash merges)
+**Total commits:** 9 (squash merges)
 
 ---
 
@@ -788,9 +788,9 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 
 **Sync Engine** — FieldTypeRegistry, canonical types, Airtable adapter (32 field types), and Notion adapter (18 property types) are operational. Initial sync, schema sync, orphan detection, outbound sync, conflict resolution, error recovery, priority scheduling, and smart polling are operational. SmartSuite adapter not yet implemented (adapter stub only). No webhook-based change detection (Airtable webhooks specced but not connected). No incremental/delta sync processor (uses full-table polling).
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. No TanStack Query/Virtual yet. No Zustand stores beyond sidebar-store.
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. TanStack Table + TanStack Virtual used by DataGrid. Zustand stores: sidebar-store (global) + use-grid-store (per-grid-instance).
 
-**Views / Grid / Card** — No view rendering code. Schema for `views` exists but no UI.
+**Views / Grid / Card** — Grid view is operational (DataGrid, 18 cell renderers, inline editing, keyboard navigation, clipboard, undo/redo, drag-to-fill, column resize/reorder/color, row reorder, row density, frozen columns, performance banner, empty state, skeleton loading). Card view not yet implemented. No view filters/sorts/grouping UI (server actions exist but no toolbar).
 
 **Record View** — No overlay component. Schema for `record_view_configs` exists but no UI.
 
@@ -908,6 +908,73 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 | **Sync dashboard** | Tabbed settings page at `/[workspaceId]/settings/sync/[baseConnectionId]`. 6 tabs: Overview, Tables & Filters, Conflicts, Failures, Schema Changes, History. Skeleton loading states |
 | **Sidebar sync badges** | `PlatformBadge` (14px logo overlay) + `SyncStatusIcon` (6 health states) as independent visual channels. `TableTabItem` integrates both into sidebar |
 | **Sync notifications** | `SyncNotificationToast` for real-time sync event feedback via Socket.io. Tenant-scoped delivery via standard event bus |
+
+### Phase 3A-i — Grid View Core (Complete)
+
+Grid view layout, 18 cell renderers, inline editing, keyboard navigation, clipboard, undo/redo, drag-to-fill, column management, row management, and data access layer.
+
+**Key files:**
+- `apps/web/src/components/grid/DataGrid.tsx` — Root grid component: TanStack Table + TanStack Virtual, frozen columns, row density, keyboard shortcuts dialog
+- `apps/web/src/components/grid/GridHeader.tsx` — Virtualized column headers with sort/filter indicators, column header menu
+- `apps/web/src/components/grid/GridRow.tsx` — Virtualized row with selection checkbox, row number, drag handle
+- `apps/web/src/components/grid/GridCell.tsx` — Cell renderer dispatcher: resolves field type → display/edit component via cell registry
+- `apps/web/src/components/grid/cells/cell-registry.ts` — Registry pattern mapping `field_type` → `{ DisplayComponent, EditComponent }`. 18 field types registered via `registerPrompt3Cells()`
+- `apps/web/src/components/grid/cells/*.tsx` — 18 cell renderers: Text, Number, Date, Checkbox, Rating, Currency, Percent, SingleSelect, MultiSelect, People, LinkedRecord, Attachment, Url, Email, Phone, SmartDoc, Barcode, Checklist
+- `apps/web/src/components/grid/cells/PillBadge.tsx` — Shared pill badge for select/people cells with 4 display styles (pill, block, dot, plain)
+- `apps/web/src/components/grid/cells/OverflowBadge.tsx` — "+N" overflow indicator for multi-value cells
+- `apps/web/src/components/grid/grid-types.ts` — Default column widths by field type, fixed column widths, virtualization constants, grid design tokens, `CellPosition` type
+- `apps/web/src/components/grid/use-grid-store.ts` — Per-instance Zustand store: active cell, editing state, density, frozen columns, column widths/order/colors, hidden fields, row selection
+- `apps/web/src/components/grid/use-keyboard-navigation.ts` — Arrow keys, Tab/Shift+Tab, Enter/Escape, Home/End, Ctrl+Home/End, Page Up/Down, F2 to edit
+- `apps/web/src/components/grid/use-clipboard.ts` — Copy/paste (single cell, multi-cell range), TSV format for multi-cell
+- `apps/web/src/components/grid/use-column-resize.ts` — Drag-to-resize columns (min 60px, max 800px), persists to view config
+- `apps/web/src/components/grid/use-column-reorder.ts` — Drag-and-drop column reorder, persists to view config
+- `apps/web/src/components/grid/use-row-reorder.ts` — Drag-and-drop row reorder with optimistic update
+- `apps/web/src/components/grid/ColumnResizer.tsx` — Visual drag handle between column headers
+- `apps/web/src/components/grid/ColumnHeaderMenu.tsx` — Right-click/dropdown menu: sort, hide, freeze, color, resize to fit
+- `apps/web/src/components/grid/RowContextMenu.tsx` — Right-click menu: expand, duplicate, delete, copy link
+- `apps/web/src/components/grid/NewRowInput.tsx` — Inline row creation at bottom of grid
+- `apps/web/src/components/grid/DragToFillHandle.tsx` — Drag handle for filling cell values down (smart fill by field type)
+- `apps/web/src/components/grid/CellErrorOverlay.tsx` — Validation error overlay on cells
+- `apps/web/src/components/grid/PerformanceBanner.tsx` — Warning banner when row count exceeds performance threshold
+- `apps/web/src/components/grid/GridSkeleton.tsx` — Skeleton loading state matching grid layout shape
+- `apps/web/src/components/grid/GridEmptyState.tsx` — Empty state with "Create your first record" CTA
+- `apps/web/src/components/grid/TableTypeIcon.tsx` — Lucide icon for table type (5 types)
+- `apps/web/src/components/grid/KeyboardShortcutsDialog.tsx` — Keyboard shortcuts help dialog
+- `apps/web/src/lib/types/grid.ts` — `GridRecord`, `GridField`, `GridView`, `ViewConfig` (Zod schema), `RowDensity`, `ROW_DENSITY_HEIGHTS`
+- `apps/web/src/lib/constants/table-types.ts` — `TableType` union, `TABLE_TYPES` metadata, `TAB_COLOR_PALETTE` (10 colors), `resolveTabColor()`, `isValidTableType()`
+- `apps/web/src/data/tables.ts` — Server-side table queries (tenant-scoped)
+- `apps/web/src/data/fields.ts` — Server-side field queries (tenant-scoped)
+- `apps/web/src/data/records.ts` — Server-side record queries (tenant-scoped, paginated)
+- `apps/web/src/data/views.ts` — Server-side view queries (tenant-scoped)
+- `apps/web/src/actions/record-actions.ts` — Server Actions: create, update, delete, duplicate, reorder records
+- `apps/web/src/actions/view-actions.ts` — Server Actions: create, update, delete views; update view config (column widths, order, colors, density, frozen columns)
+- `apps/web/src/app/api/grid-data/route.ts` — API route for paginated grid data fetch
+
+**Patterns established:**
+- Cell Registry pattern: `registerCellRenderer()` / `getCellRenderer()` — maps field types to display/edit React components (no switch statements, consistent with FieldTypeRegistry)
+- Per-grid-instance Zustand stores (not global — each DataGrid manages its own state)
+- `ViewConfig` Zod schema for typed, validated view configuration JSONB
+- Three row densities: compact (32px), medium (44px), tall (64px)
+- CellPosition `{ rowId, fieldId }` as the universal grid coordinate
+- Table type metadata system with icon/color/label for 5 table types
+- Tab color palette (10 colors) with light/dark mode hex pairs
+- TanStack Table for column/row model + TanStack Virtual for row/column virtualization
+- Keyboard navigation with cell-level focus management (arrow keys, Tab, Enter, Escape, F2)
+- Clipboard with TSV format for multi-cell copy/paste
+- Drag-to-fill with field-type-aware smart fill behaviors
+- `PillBadge` shared component with 4 display styles for consistent select/people rendering
+
+| Convention | Detail |
+| --- | --- |
+| **Cell registry** | `registerCellRenderer(fieldType, { DisplayComponent, EditComponent })` — no switch statements on field types. `getCellRenderer(fieldType)` to resolve. All 18 MVP field types registered via `registerPrompt3Cells()` |
+| **Grid store** | Per-instance via `create<GridState & GridActions>()`. Not global. Manages `activeCell`, `editingCell`, `editMode` ('replace' \| 'edit'), `density`, `frozenColumnCount`, `columnWidths`, `columnOrder`, `columnColors`, `hiddenFieldIds`, `selectedRows` |
+| **ViewConfig** | Zod schema: `columns` (fieldId + width + visible), `frozenColumns` (0–5), `density` (compact\|medium\|tall), `isDefault`, `columnOrder`, `columnColors`. Stored in `views.config` JSONB |
+| **Table types** | 5 types: table, projects, calendar, documents, wiki. Each has icon (Lucide), defaultTabColor, defaultView ('grid'), labelKey. `TABLE_TYPES` constant + `TableType` union |
+| **Tab colors** | 10-color palette with light + dark hex. `resolveTabColor(tableType, tabColor, useDarkMode)` selects correct variant. Independent of PlatformBadge |
+| **Row density** | `ROW_DENSITY_HEIGHTS`: compact=32, medium=44, tall=64. `RowDensity` = `keyof typeof ROW_DENSITY_HEIGHTS` |
+| **Grid tokens** | `GRID_TOKENS` constant: borderDefault, panelBg, textPrimary, textSecondary, rowHover, rowStripeEven/Odd, activeCellBorder. In `grid-types.ts` |
+| **Column widths** | `DEFAULT_COLUMN_WIDTHS` map by field type. `DEFAULT_COLUMN_WIDTH_FALLBACK` = 160. `getDefaultColumnWidth(fieldType, isPrimary)`. Min 60px, max 800px |
+| **Virtualization** | `ROW_OVERSCAN` = 10, `COLUMN_OVERSCAN` = 3, `MAX_FROZEN_COLUMNS` = 5 (excluding primary). TanStack Virtual for row + column virtualization |
 
 ---
 
