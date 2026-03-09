@@ -58,6 +58,8 @@ export interface KeyboardNavigationOptions {
   // Callbacks
   onAddRecord?: () => void;
   onOpenShortcutsHelp?: () => void;
+  onToggleFilterPanel?: () => void;
+  onToggleSortPanel?: () => void;
 
   // Scroll helper — ensures the active cell is visible
   scrollToCell?: (rowIndex: number, colIndex: number) => void;
@@ -86,6 +88,8 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions) {
     setSelectionRange,
     onAddRecord,
     onOpenShortcutsHelp,
+    onToggleFilterPanel,
+    onToggleSortPanel,
     scrollToCell,
   } = options;
 
@@ -191,15 +195,17 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions) {
       // Placeholder shortcuts (no-ops wired here, functional in later prompts)
       // -------------------------------------------------------------------
 
-      // Cmd+Shift+F — Toggle filter panel (3A-ii)
+      // Cmd+Shift+F — Toggle filter panel
       if (mod && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault();
+        onToggleFilterPanel?.();
         return;
       }
 
-      // Cmd+Shift+S — Toggle sort panel (3A-ii)
+      // Cmd+Shift+S — Toggle sort panel
       if (mod && e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
+        onToggleSortPanel?.();
         return;
       }
 
@@ -475,6 +481,8 @@ export function useKeyboardNavigation(options: KeyboardNavigationOptions) {
       setSelectionRange,
       onAddRecord,
       onOpenShortcutsHelp,
+      onToggleFilterPanel,
+      onToggleSortPanel,
       moveTo,
       getRowIndex,
       getColIndex,

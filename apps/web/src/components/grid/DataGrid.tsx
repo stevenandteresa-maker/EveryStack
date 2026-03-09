@@ -69,6 +69,12 @@ import { evaluateColorRules, type ColorRulesConfig, createEmptyColorRulesConfig 
 import type { SummaryFooterConfig } from './use-summary-footer';
 import { createDefaultSummaryFooterConfig } from './use-summary-footer';
 import type { AggregationType } from './aggregation-utils';
+import { GridToolbar } from './GridToolbar';
+import { RecordCount } from './RecordCount';
+import type { SortPanelProps } from './SortPanel';
+import type { FilterBuilderProps } from './FilterBuilder';
+import type { ColorRuleBuilderProps } from './ColorRuleBuilder';
+import type { HideFieldsPanelProps } from './HideFieldsPanel';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -149,6 +155,25 @@ export interface DataGridProps {
   // Summary footer
   summaryFooterConfig?: SummaryFooterConfig;
   onSetColumnAggregation?: (fieldId: string, aggregationType: AggregationType) => void;
+  // Toolbar
+  viewName?: string;
+  viewType?: 'grid' | 'card';
+  sortPanelProps?: Omit<SortPanelProps, never>;
+  filterBuilderProps?: Omit<FilterBuilderProps, never>;
+  colorRuleBuilderProps?: Omit<ColorRuleBuilderProps, never>;
+  hideFieldsPanelProps?: Omit<HideFieldsPanelProps, never>;
+  groupPanelProps?: {
+    groups: { fieldId: string; direction: 'asc' | 'desc' }[];
+    fields: SortPanelProps['fields'];
+    onAddGroup: (fieldId: string, direction: 'asc' | 'desc') => void;
+    onRemoveGroup: (fieldId: string) => void;
+    onUpdateDirection: (fieldId: string, direction: 'asc' | 'desc') => void;
+    onReorderGroups: (fromIndex: number, toIndex: number) => void;
+    onClearGroups: () => void;
+    isAtLimit: boolean;
+  };
+  onSetDensity?: (density: RowDensity) => void;
+  activeFilterCount?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -223,10 +248,26 @@ export function DataGrid({
   colorRules = createEmptyColorRulesConfig(),
   summaryFooterConfig = createDefaultSummaryFooterConfig(),
   onSetColumnAggregation,
+  viewName = 'Grid',
+  viewType = 'grid',
+  sortPanelProps,
+  filterBuilderProps,
+  colorRuleBuilderProps,
+  hideFieldsPanelProps,
+  groupPanelProps,
+  onSetDensity,
+  activeFilterCount = 0,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Toolbar panel open states
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [colorOpen, setColorOpen] = useState(false);
+  const [hideFieldsOpen, setHideFieldsOpen] = useState(false);
 
   const rowHeight = ROW_DENSITY_HEIGHTS[density];
   const showAddColumn = roleAtLeast(userRole, 'manager');
@@ -667,6 +708,8 @@ export function DataGrid({
     setSelectionRange,
     onAddRecord,
     onOpenShortcutsHelp: () => setShortcutsOpen(true),
+    onToggleFilterPanel: () => setFilterOpen((prev) => !prev),
+    onToggleSortPanel: () => setSortOpen((prev) => !prev),
     scrollToCell,
   });
 
@@ -789,6 +832,34 @@ export function DataGrid({
         totalRowCount={totalCount}
         visibleColumnCount={orderedFields.length}
       />
+      {sortPanelProps && filterBuilderProps && colorRuleBuilderProps && hideFieldsPanelProps && groupPanelProps && onSetDensity && (
+        <GridToolbar
+          viewName={viewName}
+          viewType={viewType}
+          density={density}
+          onSetDensity={onSetDensity}
+          filterOpen={filterOpen}
+          onFilterOpenChange={setFilterOpen}
+          sortOpen={sortOpen}
+          onSortOpenChange={setSortOpen}
+          groupOpen={groupOpen}
+          onGroupOpenChange={setGroupOpen}
+          colorOpen={colorOpen}
+          onColorOpenChange={setColorOpen}
+          hideFieldsOpen={hideFieldsOpen}
+          onHideFieldsOpenChange={setHideFieldsOpen}
+          activeFilterCount={activeFilterCount}
+          activeSortCount={sorts.length}
+          activeGroupCount={groupLevels.length}
+          hasColorRules={hasColorRules}
+          hiddenFieldCount={hiddenFieldIds.size}
+          sortPanelProps={sortPanelProps}
+          filterBuilderProps={filterBuilderProps}
+          colorRuleBuilderProps={colorRuleBuilderProps}
+          hideFieldsPanelProps={hideFieldsPanelProps}
+          groupPanelProps={groupPanelProps}
+        />
+      )}
       <BulkActionsToolbar
         selectedCount={selectedRows.size}
         fields={orderedFields}
@@ -1049,6 +1120,13 @@ export function DataGrid({
           onSetColumnAggregation={onSetColumnAggregation}
         />
       )}
+
+      {/* Record count — always visible in footer area */}
+      <RecordCount
+        filteredCount={records.length}
+        totalCount={totalCount}
+        isFiltered={activeFilterCount > 0}
+      />
     </div>
   );
 }

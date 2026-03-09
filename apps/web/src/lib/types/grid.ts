@@ -98,6 +98,7 @@ export const viewConfigSchema = z.object({
   isDefault: z.boolean().optional(),
   columnOrder: z.array(z.string().uuid()).optional(),
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
+  hidden_fields: z.array(z.string().uuid()).optional(),
   sorts: z.array(sortLevelSchema).optional(),
   filters: filterConfigSchema.optional(),
   groups: z.array(groupLevelSchema).optional(),
