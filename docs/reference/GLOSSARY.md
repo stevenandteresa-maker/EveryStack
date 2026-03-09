@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-08 — Post-Phase 2C docs sync: added 12 new terms (NotionAdapter, NotionPropertyType, TableVisibility, SyncPriority, ConnectionHealth, SyncError/SyncErrorCode, Sync Notifications, PlatformBadge, SyncStatusIcon, Priority Scheduler, Sync Dashboard). Prior: 2026-03-05 — Applied CP-001 + CP-002.
+> Last updated: 2026-03-09 — Post-Phase 3A-i docs sync: added 4 new terms (Grid View, TableType, Tab Color + sub-definitions for DataGrid, Cell Registry, GridStore, ViewConfig, CellPosition). Prior: 2026-03-08 — Post-Phase 2C: added 12 terms (NotionAdapter, NotionPropertyType, TableVisibility, SyncPriority, ConnectionHealth, SyncError/SyncErrorCode, Sync Notifications, PlatformBadge, SyncStatusIcon, Priority Scheduler, Sync Dashboard).
 
 ---
 
@@ -200,6 +200,26 @@ A configured way of looking at a table's records. Table Views define which recor
 
 **What Table Views are:** Filtered, sorted, configured lenses on table data.
 **What Table Views are NOT:** Custom spatial layouts. Table Views follow a predefined structure (grid columns, card layouts, kanban columns). For custom spatial layouts, see: App Designer (post-MVP).
+
+### Grid View
+
+The primary Table View type at MVP. Renders records as rows in a virtualized spreadsheet-style grid (TanStack Virtual). Key architectural components:
+
+- **DataGrid** — Root component: virtualizes rows/columns, manages frozen columns, row density, keyboard navigation, clipboard, undo/redo, drag-to-fill, column resize/reorder, row reorder.
+- **Cell Registry** — Registry pattern (no switch statements) mapping `field_type` → `{ DisplayComponent, EditComponent }`. Uses `registerCellRenderer()` / `getCellRenderer()`, consistent with the FieldTypeRegistry pattern. See `apps/web/src/components/grid/cells/cell-registry.ts`.
+- **GridStore** — Per-grid-instance Zustand store managing active cell, editing state, density, frozen columns, column widths, column order, column colors, hidden fields, and row selection. Not a global store — each DataGrid instance creates its own. See `apps/web/src/components/grid/use-grid-store.ts`.
+- **ViewConfig** — Zod-validated schema for `views.config` JSONB: column widths, frozen column count, row density (`compact` | `medium` | `tall`), column order, column colors, default flag. See `apps/web/src/lib/types/grid.ts`.
+- **CellPosition** — `{ rowId, fieldId }` coordinate pair identifying a single cell in the grid. Used by keyboard navigation, clipboard, and editing state.
+
+**Row density:** Three density levels — compact (32px), medium (44px), tall (64px). Stored in ViewConfig. Medium is the default.
+
+### TableType
+
+TypeScript union type (`'table' | 'projects' | 'calendar' | 'documents' | 'wiki'`) defining the five table types. Each type has metadata: icon (Lucide), default tab color, default view type (all `'grid'` for MVP), and i18n label key. MVP table types: `table`, `projects`. See `apps/web/src/lib/constants/table-types.ts`.
+
+### Tab Color
+
+Customizable color assigned to a table via `tables.tab_color`. If null, defaults to the table type's default color. Ten-color palette with light and dark mode hex values. Resolved by `resolveTabColor()` which auto-selects dark hex for sidebar context. Independent of PlatformBadge — two separate visual channels. See `apps/web/src/lib/constants/table-types.ts`.
 
 ### Record View
 
