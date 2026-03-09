@@ -2,7 +2,7 @@
 
 /**
  * DataGrid — core grid component using TanStack Table for column model
- * and TanStack Virtual for windowed row/column virtualization.
+ * and TanStack Virtual for windowed row virtualization.
  *
  * Grid anatomy (left to right):
  * Drag Handle → Checkbox → Row # → Primary Field (frozen) → Fields → "+" Column

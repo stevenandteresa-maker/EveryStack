@@ -121,9 +121,10 @@ describe('View Data Functions', () => {
 
     it('throws NotFoundError for non-existent view', async () => {
       const tenant = await createTestTenant();
+      const nonExistentId = crypto.randomUUID();
 
       await expect(
-        getViewById(tenant.id, '00000000-0000-0000-0000-000000000000'),
+        getViewById(tenant.id, nonExistentId),
       ).rejects.toThrow(NotFoundError);
     }, 30_000);
   });

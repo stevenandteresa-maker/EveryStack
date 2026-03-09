@@ -96,7 +96,8 @@ export const ADD_FIELD_COLUMN_WIDTH = 44;
 /** Number of rows to render above and below the visible area. */
 export const ROW_OVERSCAN = 10;
 
-/** Number of columns to render before and after the visible area. */
+/** Number of columns to render before and after the visible area (reserved for column virtualization). */
+// TODO: Wire up column virtualization when grids commonly exceed 30 columns
 export const COLUMN_OVERSCAN = 3;
 
 /** Maximum user-frozen columns (excluding primary which is always frozen). */

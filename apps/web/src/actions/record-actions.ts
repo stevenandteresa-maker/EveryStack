@@ -141,15 +141,16 @@ export async function updateRecordField(
         throw new NotFoundError('Record not found');
       }
 
-      // Update the single field using jsonb_set
+      // Update the single field using jsonb_set with parameterized values
       const serializedValue = JSON.stringify(validated.value);
+      const jsonPath = `{${validated.fieldId}}`;
       const [updated] = await tx
         .update(records)
         .set({
           canonicalData: sql`jsonb_set(
             COALESCE(${records.canonicalData}, '{}'::jsonb),
-            ${sql.raw(`'{${validated.fieldId}}'`)},
-            ${sql.raw(`'${serializedValue}'::jsonb`)}
+            ${jsonPath}::text[],
+            ${serializedValue}::jsonb
           )`,
           updatedBy: userId,
         })

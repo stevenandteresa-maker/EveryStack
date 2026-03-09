@@ -55,9 +55,10 @@ describe('Table Data Functions', () => {
 
     it('throws NotFoundError for non-existent table', async () => {
       const tenant = await createTestTenant();
+      const nonExistentId = crypto.randomUUID();
 
       await expect(
-        getTableById(tenant.id, '00000000-0000-0000-0000-000000000000'),
+        getTableById(tenant.id, nonExistentId),
       ).rejects.toThrow(NotFoundError);
     }, 30_000);
 

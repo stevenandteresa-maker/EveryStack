@@ -9,6 +9,7 @@
  */
 
 import { useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 import type { CellPosition } from './grid-types';
 import type { GridRecord, GridField } from '@/lib/types/grid';
@@ -83,55 +84,65 @@ function valueToString(value: unknown): string {
 }
 
 /**
- * Coerce a pasted string to the target field type.
+ * Clipboard coercion registry — maps field types to paste coercion functions.
+ * Uses a registry pattern (not switch) per CLAUDE.md § Critical Rules.
+ */
+type ClipboardCoercer = (text: string) => { value: unknown; skipped: boolean };
+
+function coerceNumeric(text: string): { value: unknown; skipped: boolean } {
+  const num = parseFloat(text);
+  if (Number.isNaN(num)) return { value: null, skipped: true };
+  return { value: num, skipped: false };
+}
+
+function coerceCheckbox(text: string): { value: unknown; skipped: boolean } {
+  const lower = text.toLowerCase().trim();
+  const truthy = ['true', '1', 'yes'];
+  const falsy = ['false', '0', 'no'];
+  if (truthy.includes(lower)) return { value: true, skipped: false };
+  if (falsy.includes(lower)) return { value: false, skipped: false };
+  return { value: null, skipped: true };
+}
+
+function coercePassthrough(text: string): { value: unknown; skipped: boolean } {
+  return { value: text, skipped: false };
+}
+
+const clipboardCoercionRegistry = new Map<string, ClipboardCoercer>([
+  // Numeric types
+  ['number', coerceNumeric],
+  ['currency', coerceNumeric],
+  ['percent', coerceNumeric],
+  ['duration', coerceNumeric],
+  ['rating', coerceNumeric],
+  // Boolean
+  ['checkbox', coerceCheckbox],
+  // Text-like types — accept as-is
+  ['text', coercePassthrough],
+  ['textarea', coercePassthrough],
+  ['url', coercePassthrough],
+  ['email', coercePassthrough],
+  ['phone', coercePassthrough],
+  ['barcode', coercePassthrough],
+  // Types where server validates — accept paste as-is
+  ['single_select', coercePassthrough],
+  ['date', coercePassthrough],
+  ['datetime', coercePassthrough],
+]);
+
+/**
+ * Coerce a pasted string to the target field type using the coercion registry.
  * Returns `{ value, skipped }` — `skipped` is true when the value is
- * incompatible with the target type.
+ * incompatible with the target type (e.g. multi_select, linked_record, attachment).
  */
 function coerceToFieldType(
   text: string,
   fieldType: string,
 ): { value: unknown; skipped: boolean } {
-  switch (fieldType) {
-    case 'number':
-    case 'currency':
-    case 'percent':
-    case 'duration':
-    case 'rating': {
-      const num = parseFloat(text);
-      if (Number.isNaN(num)) return { value: null, skipped: true };
-      return { value: num, skipped: false };
-    }
-
-    case 'checkbox': {
-      const lower = text.toLowerCase().trim();
-      const truthy = ['true', '1', 'yes'];
-      const falsy = ['false', '0', 'no'];
-      if (truthy.includes(lower)) return { value: true, skipped: false };
-      if (falsy.includes(lower)) return { value: false, skipped: false };
-      return { value: null, skipped: true };
-    }
-
-    case 'text':
-    case 'textarea':
-    case 'url':
-    case 'email':
-    case 'phone':
-    case 'barcode':
-      return { value: text, skipped: false };
-
-    default:
-      // For complex types (multi_select, linked_record, attachment, etc.)
-      // we skip rather than blindly paste incompatible data.
-      if (
-        fieldType === 'single_select' ||
-        fieldType === 'date' ||
-        fieldType === 'datetime'
-      ) {
-        // Allow paste as-is — the server will validate.
-        return { value: text, skipped: false };
-      }
-      return { value: null, skipped: true };
-  }
+  const coercer = clipboardCoercionRegistry.get(fieldType);
+  if (coercer) return coercer(text);
+  // Complex types (multi_select, linked_record, attachment, etc.) — skip
+  return { value: null, skipped: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -147,6 +158,7 @@ export function useClipboard({
   onUpdateCell,
   onShowToast,
 }: UseClipboardOptions): UseClipboardReturn {
+  const t = useTranslations('grid');
   // -----------------------------------------------------------------------
   // Copy — Cmd+C
   // -----------------------------------------------------------------------
@@ -232,11 +244,9 @@ export function useClipboard({
     }
 
     if (skippedCount > 0) {
-      onShowToast(
-        `${skippedCount} cell${skippedCount === 1 ? '' : 's'} skipped due to incompatible types`,
-      );
+      onShowToast(t('cells_skipped', { count: skippedCount }));
     }
-  }, [records, fields, activeCell, onUpdateCell, onShowToast]);
+  }, [records, fields, activeCell, onUpdateCell, onShowToast, t]);
 
   // -----------------------------------------------------------------------
   // Fill Down — Cmd+D
