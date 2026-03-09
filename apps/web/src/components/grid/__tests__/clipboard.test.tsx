@@ -187,8 +187,9 @@ describe('useClipboard', () => {
       });
 
       expect(onUpdateCell).not.toHaveBeenCalled();
+      // Mock returns the translation key; real UI would show "1 cell skipped…"
       expect(onShowToast).toHaveBeenCalledWith(
-        expect.stringContaining('1 cell'),
+        expect.stringContaining('cells_skipped'),
       );
     });
 
