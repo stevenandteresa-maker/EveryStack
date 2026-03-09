@@ -17,19 +17,23 @@ beforeAll(async () => {
 afterEach(async () => {
   if (!hasTestDb) return;
   const db = getTestDb();
-  // Use a single TRUNCATE for all tables to avoid deadlocks between forked processes.
-  // Individual per-table TRUNCATE with CASCADE causes lock contention.
+  // Use DELETE with disabled triggers to avoid both:
+  // 1. TRUNCATE's relfilenode bloat (hundreds of thousands of files over test runs)
+  // 2. FK constraint violations from unordered DELETE
+  // session_replication_role = 'replica' disables FK trigger checks.
   await db.execute(sql`
     DO $$ DECLARE
-      tables_to_truncate TEXT;
+      tbl TEXT;
     BEGIN
-      SELECT string_agg(quote_ident(tablename), ', ')
-        INTO tables_to_truncate
-        FROM pg_tables
-       WHERE schemaname = 'public';
-      IF tables_to_truncate IS NOT NULL THEN
-        EXECUTE 'TRUNCATE TABLE ' || tables_to_truncate || ' CASCADE';
-      END IF;
+      SET session_replication_role = 'replica';
+      FOR tbl IN
+        SELECT quote_ident(tablename)
+          FROM pg_tables
+         WHERE schemaname = 'public'
+      LOOP
+        EXECUTE 'DELETE FROM ' || tbl;
+      END LOOP;
+      SET session_replication_role = 'origin';
     END $$;
   `);
 });

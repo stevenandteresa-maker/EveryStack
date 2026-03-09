@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { AppShell } from '@/components/layout/app-shell';
+import { QueryProvider } from '@/lib/query-provider';
 
 export default async function AppLayout({
   children,
@@ -11,7 +12,9 @@ export default async function AppLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <AppShell>{children}</AppShell>
+      <QueryProvider>
+        <AppShell>{children}</AppShell>
+      </QueryProvider>
     </NextIntlClientProvider>
   );
 }
