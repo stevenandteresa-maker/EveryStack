@@ -11,7 +11,7 @@
  * @see docs/reference/tables-and-views.md § Scrolling & Performance
  */
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -41,6 +41,7 @@ import {
   ROW_NUMBER_WIDTH,
   ADD_FIELD_COLUMN_WIDTH,
   ROW_OVERSCAN,
+  COLUMN_OVERSCAN,
   MAX_FROZEN_COLUMNS,
   GRID_TOKENS,
 } from './grid-types';
@@ -413,6 +414,55 @@ export function DataGrid({
   });
 
   // -----------------------------------------------------------------------
+  // Non-frozen fields for column virtualization
+  // -----------------------------------------------------------------------
+  const scrollableFields = useMemo(() => {
+    return orderedFields.filter((f) => !effectiveFrozenFieldIds.includes(f.id));
+  }, [orderedFields, effectiveFrozenFieldIds]);
+
+  // -----------------------------------------------------------------------
+  // Column virtualizer (horizontal — excludes frozen columns)
+  // -----------------------------------------------------------------------
+  const columnVirtualizer = useVirtualizer({
+    count: scrollableFields.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: (index) => {
+      const field = scrollableFields[index];
+      if (!field) return 160;
+      const storeWidth = columnWidths[field.id];
+      const configWidth = viewConfig.columns?.find(
+        (c) => c.fieldId === field.id,
+      )?.width;
+      return storeWidth ?? configWidth ?? getDefaultColumnWidth(field.fieldType, field.isPrimary);
+    },
+    horizontal: true,
+    overscan: COLUMN_OVERSCAN,
+  });
+
+  // -----------------------------------------------------------------------
+  // Derive the visible fields: frozen (always) + virtualized scrollable
+  // -----------------------------------------------------------------------
+  const visibleFieldIds = useMemo(() => {
+    const ids = new Set<string>(effectiveFrozenFieldIds);
+    for (const vCol of columnVirtualizer.getVirtualItems()) {
+      const field = scrollableFields[vCol.index];
+      if (field) ids.add(field.id);
+    }
+    return ids;
+  }, [effectiveFrozenFieldIds, columnVirtualizer, scrollableFields]);
+
+  const visibleFields = useMemo(() => {
+    return orderedFields.filter((f) => visibleFieldIds.has(f.id));
+  }, [orderedFields, visibleFieldIds]);
+
+  // -----------------------------------------------------------------------
+  // Re-measure column virtualizer when column widths change
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    columnVirtualizer.measure();
+  }, [columnWidths, columnVirtualizer]);
+
+  // -----------------------------------------------------------------------
   // Visible row count (for Page Up / Page Down)
   // -----------------------------------------------------------------------
   const visibleRowCount = useMemo(() => {
@@ -424,10 +474,16 @@ export function DataGrid({
   // Scroll-to-cell callback for keyboard navigation
   // -----------------------------------------------------------------------
   const scrollToCell = useCallback(
-    (rowIndex: number, _colIndex: number) => {
+    (rowIndex: number, colIndex: number) => {
       rowVirtualizer.scrollToIndex(rowIndex, { align: 'auto' });
+      // Scroll column into view (adjust for frozen columns)
+      const frozenCount = effectiveFrozenFieldIds.length;
+      const scrollableColIndex = colIndex - frozenCount;
+      if (scrollableColIndex >= 0) {
+        columnVirtualizer.scrollToIndex(scrollableColIndex, { align: 'auto' });
+      }
     },
-    [rowVirtualizer],
+    [rowVirtualizer, columnVirtualizer, effectiveFrozenFieldIds.length],
   );
 
   // -----------------------------------------------------------------------
@@ -592,7 +648,7 @@ export function DataGrid({
         {/* Header */}
         <GridHeader
           headers={table.getHeaderGroups()[0]?.headers ?? []}
-          fields={orderedFields}
+          fields={visibleFields}
           frozenFieldIds={effectiveFrozenFieldIds}
           showAddColumn={showAddColumn}
           addColumnWidth={ADD_FIELD_COLUMN_WIDTH}
@@ -621,7 +677,7 @@ export function DataGrid({
               key={row.id}
               row={row}
               rowIndex={virtualRow.index}
-              fields={orderedFields}
+              fields={visibleFields}
               density={density}
               rowHeight={rowHeight}
               activeCell={activeCell}

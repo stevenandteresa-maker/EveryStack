@@ -263,6 +263,55 @@ describe('updateViewConfig', () => {
   });
 });
 
+describe('updateViewConfig — tenant isolation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const _mockLimit = vi.fn().mockResolvedValue([{ id: VIEW_ID }]);
+    const _mockWhere = vi.fn().mockReturnValue({ limit: _mockLimit });
+    const _mockFrom = vi.fn().mockReturnValue({ where: _mockWhere });
+    mockSelect.mockReturnValue({ from: _mockFrom });
+  });
+
+  it('scopes view lookup to authenticated tenant ID (cross-tenant query returns not found)', async () => {
+    const OTHER_TENANT_ID = crypto.randomUUID();
+
+    // Simulate a different tenant context
+    mockGetAuthContext.mockResolvedValueOnce({
+      userId: crypto.randomUUID(),
+      tenantId: OTHER_TENANT_ID,
+      clerkUserId: 'clerk_other',
+      agencyTenantId: null,
+    });
+
+    // The mocked select returns empty when tenant ID doesn't match
+    const _mockLimitEmpty = vi.fn().mockResolvedValue([]);
+    const _mockWhereEmpty = vi.fn().mockReturnValue({ limit: _mockLimitEmpty });
+    const _mockFromEmpty = vi.fn().mockReturnValue({ where: _mockWhereEmpty });
+    mockSelect.mockReturnValue({ from: _mockFromEmpty });
+
+    const { updateViewConfig } = await import('../view-actions');
+
+    await expect(
+      updateViewConfig({
+        viewId: VIEW_ID,
+        configPatch: { frozenColumns: 1 },
+      }),
+    ).rejects.toThrow('View not found');
+  });
+
+  it('calls getDbForTenant with the authenticated tenant ID', async () => {
+    const { getDbForTenant } = await import('@everystack/shared/db');
+    const { updateViewConfig } = await import('../view-actions');
+
+    await updateViewConfig({
+      viewId: VIEW_ID,
+      configPatch: { frozenColumns: 1 },
+    });
+
+    expect(getDbForTenant).toHaveBeenCalledWith(TENANT_ID, 'write');
+  });
+});
+
 describe('renameField', () => {
   beforeEach(() => {
     vi.clearAllMocks();

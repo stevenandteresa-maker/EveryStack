@@ -29,12 +29,66 @@ export interface DragToFillHandleProps {
 }
 
 // ---------------------------------------------------------------------------
-// Fill value logic
+// Fill behavior registry — maps field types to fill strategies.
+// Uses the registry pattern (no if/else on field types) per CLAUDE.md § Critical Rules.
 // ---------------------------------------------------------------------------
 
+type FillBehavior = (sourceValue: unknown, stepIndex: number) => unknown;
+
+function fillIncrement(sourceValue: unknown, stepIndex: number): unknown {
+  if (typeof sourceValue === 'number') return sourceValue + stepIndex;
+  return sourceValue;
+}
+
+function fillDateByDay(sourceValue: unknown, stepIndex: number): unknown {
+  if (typeof sourceValue !== 'string') return sourceValue;
+  const d = new Date(sourceValue);
+  if (Number.isNaN(d.getTime())) return sourceValue;
+  d.setDate(d.getDate() + stepIndex);
+  return d.toISOString().split('T')[0];
+}
+
+function fillDatetimeByDay(sourceValue: unknown, stepIndex: number): unknown {
+  if (typeof sourceValue !== 'string') return sourceValue;
+  const d = new Date(sourceValue);
+  if (Number.isNaN(d.getTime())) return sourceValue;
+  d.setDate(d.getDate() + stepIndex);
+  return d.toISOString();
+}
+
+function fillRepeat(sourceValue: unknown): unknown {
+  return sourceValue;
+}
+
+const fillBehaviorRegistry = new Map<string, FillBehavior>([
+  // Numeric types — increment
+  ['number', fillIncrement],
+  ['currency', fillIncrement],
+  ['percent', fillIncrement],
+  ['rating', fillIncrement],
+  // Date types — increment by day
+  ['date', fillDateByDay],
+  ['datetime', fillDatetimeByDay],
+  // Text-like types — repeat
+  ['text', fillRepeat],
+  ['textarea', fillRepeat],
+  ['url', fillRepeat],
+  ['email', fillRepeat],
+  ['phone', fillRepeat],
+  ['barcode', fillRepeat],
+  ['single_select', fillRepeat],
+  ['multi_select', fillRepeat],
+  ['checkbox', fillRepeat],
+  ['people', fillRepeat],
+  ['linked_record', fillRepeat],
+  ['attachment', fillRepeat],
+  ['smart_doc', fillRepeat],
+  ['duration', fillRepeat],
+]);
+
 /**
- * Compute the next value for filling. Numbers increment, dates
- * increment by day, text and other types simply repeat.
+ * Compute the next value for filling using the fill behavior registry.
+ * Numbers increment, dates increment by day, everything else repeats.
  */
 function computeFillValue(
   sourceValue: unknown,
@@ -42,34 +96,8 @@ function computeFillValue(
   stepIndex: number,
 ): unknown {
   if (sourceValue === null || sourceValue === undefined) return sourceValue;
-
-  // Numbers: increment
-  if (
-    (fieldType === 'number' ||
-      fieldType === 'currency' ||
-      fieldType === 'percent' ||
-      fieldType === 'rating') &&
-    typeof sourceValue === 'number'
-  ) {
-    return sourceValue + stepIndex;
-  }
-
-  // Dates: increment by day
-  if (
-    (fieldType === 'date' || fieldType === 'datetime') &&
-    typeof sourceValue === 'string'
-  ) {
-    const d = new Date(sourceValue);
-    if (!Number.isNaN(d.getTime())) {
-      d.setDate(d.getDate() + stepIndex);
-      return fieldType === 'date'
-        ? d.toISOString().split('T')[0]
-        : d.toISOString();
-    }
-  }
-
-  // Everything else: repeat
-  return sourceValue;
+  const behavior = fillBehaviorRegistry.get(fieldType) ?? fillRepeat;
+  return behavior(sourceValue, stepIndex);
 }
 
 // ---------------------------------------------------------------------------
