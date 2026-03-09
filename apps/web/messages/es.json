@@ -457,6 +457,15 @@
       "delete_confirm": "Eliminar",
       "duplicated": "{count} registros duplicados",
       "copied": "Copiado al portapapeles"
+    },
+    "grouping": {
+      "record_count": "{count, plural, one {# registro} other {# registros}}",
+      "unknown_field": "Campo desconocido",
+      "summary": "Resumen",
+      "footer_label": "Resumen de {group}",
+      "empty_value": "(vacío)",
+      "max_groups_reached": "Máximo de {max} niveles de agrupación.",
+      "drag_regroup_hint": "Arrastre registros entre grupos para cambiar su valor"
     }
   },
   "table_tab": {

@@ -457,6 +457,15 @@
       "delete_confirm": "Delete",
       "duplicated": "{count} records duplicated",
       "copied": "Copied to clipboard"
+    },
+    "grouping": {
+      "record_count": "{count, plural, one {# record} other {# records}}",
+      "unknown_field": "Unknown field",
+      "summary": "Summary",
+      "footer_label": "Summary for {group}",
+      "empty_value": "(empty)",
+      "max_groups_reached": "Maximum of {max} group levels.",
+      "drag_regroup_hint": "Drag records between groups to change their value"
     }
   },
   "table_tab": {

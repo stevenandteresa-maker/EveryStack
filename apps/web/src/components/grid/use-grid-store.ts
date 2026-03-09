@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import type { CellPosition } from './grid-types';
-import type { RowDensity, SortLevel } from '@/lib/types/grid';
+import type { RowDensity, SortLevel, GroupLevel } from '@/lib/types/grid';
 import type { FilterConfig } from './filter-types';
 import { createEmptyFilterConfig } from './filter-types';
 
@@ -36,6 +36,9 @@ export interface GridState {
   isSortActive: boolean;
   filters: FilterConfig;
   isFilterActive: boolean;
+  groups: GroupLevel[];
+  isGroupActive: boolean;
+  collapsedGroups: Set<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +64,10 @@ export interface GridActions {
   setIsSortActive: (active: boolean) => void;
   setFilters: (filters: FilterConfig) => void;
   setIsFilterActive: (active: boolean) => void;
+  setGroups: (groups: GroupLevel[]) => void;
+  setIsGroupActive: (active: boolean) => void;
+  setCollapsedGroups: (collapsed: Set<string>) => void;
+  toggleGroupCollapsed: (groupKey: string) => void;
 }
 
 export type GridStore = GridState & GridActions;
@@ -88,6 +95,9 @@ export function createGridStore(initialState?: Partial<GridState>) {
     isSortActive: false,
     filters: createEmptyFilterConfig(),
     isFilterActive: false,
+    groups: [],
+    isGroupActive: false,
+    collapsedGroups: new Set<string>(),
     ...initialState,
 
     // Actions
@@ -163,5 +173,22 @@ export function createGridStore(initialState?: Partial<GridState>) {
       }),
 
     setIsFilterActive: (active) => set({ isFilterActive: active }),
+
+    setGroups: (groups) => set({ groups, isGroupActive: groups.length > 0 }),
+
+    setIsGroupActive: (active) => set({ isGroupActive: active }),
+
+    setCollapsedGroups: (collapsed) => set({ collapsedGroups: collapsed }),
+
+    toggleGroupCollapsed: (groupKey) =>
+      set((state) => {
+        const updated = new Set(state.collapsedGroups);
+        if (updated.has(groupKey)) {
+          updated.delete(groupKey);
+        } else {
+          updated.add(groupKey);
+        }
+        return { collapsedGroups: updated };
+      }),
   }));
 }

@@ -53,8 +53,17 @@ import type {
   GridField,
   ViewConfig,
   RowDensity,
+  GroupLevel,
 } from '@/lib/types/grid';
 import { ROW_DENSITY_HEIGHTS } from '@/lib/types/grid';
+import { GroupHeader } from './GroupHeader';
+import { GroupFooter } from './GroupFooter';
+import {
+  computeGroups,
+  flattenGroupTree,
+  isDragRegroupSupported,
+  type VirtualGroupItem,
+} from './use-grouping';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -125,6 +134,11 @@ export interface DataGridProps {
   onBulkDelete?: (recordIds: string[]) => void;
   onBulkUpdateField?: (recordIds: string[], fieldId: string, value: unknown) => void;
   onBulkDuplicate?: (recordIds: string[]) => void;
+  // Grouping
+  groups?: GroupLevel[];
+  collapsedGroups?: Set<string>;
+  onToggleGroupCollapsed?: (groupKey: string) => void;
+  onRecordRegroup?: (recordId: string, fieldId: string, newValue: unknown) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -192,6 +206,10 @@ export function DataGrid({
   onBulkDelete,
   onBulkUpdateField,
   onBulkDuplicate,
+  groups: groupLevels = [],
+  collapsedGroups = new Set<string>(),
+  onToggleGroupCollapsed,
+  onRecordRegroup,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -326,6 +344,50 @@ export function DataGrid({
   });
 
   // -----------------------------------------------------------------------
+  // Grouping computation
+  // -----------------------------------------------------------------------
+  const isGrouped = groupLevels.length > 0;
+
+  const groupTree = useMemo(() => {
+    if (!isGrouped) return [];
+    return computeGroups(records, groupLevels, fields, sorts);
+  }, [isGrouped, records, groupLevels, fields, sorts]);
+
+  const groupedItems = useMemo<VirtualGroupItem[]>(() => {
+    if (!isGrouped) return [];
+    return flattenGroupTree(groupTree, collapsedGroups, rowHeight);
+  }, [isGrouped, groupTree, collapsedGroups, rowHeight]);
+
+  // Drag-to-regroup state
+  const [draggingRecordId, setDraggingRecordId] = useState<string | null>(null);
+
+  const handleGroupDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleGroupDrop = useCallback(
+    (e: React.DragEvent, fieldId: string, newValue: unknown) => {
+      e.preventDefault();
+      if (draggingRecordId && onRecordRegroup) {
+        onRecordRegroup(draggingRecordId, fieldId, newValue);
+      }
+      setDraggingRecordId(null);
+    },
+    [draggingRecordId, onRecordRegroup],
+  );
+
+  const handleRecordDragStartForRegroup = useCallback(
+    (e: React.DragEvent, recordId: string) => {
+      if (!isGrouped) return;
+      setDraggingRecordId(recordId);
+      e.dataTransfer.setData('text/plain', recordId);
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    [isGrouped],
+  );
+
+  // -----------------------------------------------------------------------
   // Bulk action handlers
   // -----------------------------------------------------------------------
   const handleBulkDelete = useCallback(() => {
@@ -451,7 +513,6 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   // TanStack Table instance
   // -----------------------------------------------------------------------
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: records,
     columns,
@@ -462,12 +523,22 @@ export function DataGrid({
   const { rows } = table.getRowModel();
 
   // -----------------------------------------------------------------------
-  // Row virtualizer
+  // Row virtualizer — adapts to grouped or flat mode
   // -----------------------------------------------------------------------
+  const virtualItemCount = isGrouped ? groupedItems.length : rows.length;
+  const getItemSize = useCallback(
+    (index: number) => {
+      if (!isGrouped) return rowHeight;
+      const item = groupedItems[index];
+      return item?.height ?? rowHeight;
+    },
+    [isGrouped, groupedItems, rowHeight],
+  );
+
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
+    count: virtualItemCount,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => rowHeight,
+    estimateSize: getItemSize,
     overscan: ROW_OVERSCAN,
   });
 
@@ -744,56 +815,163 @@ export function DataGrid({
           onRenameField={onRenameField}
         />
 
-        {/* Virtual rows */}
-        {virtualRows.map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          if (!row) return null;
+        {/* Virtual rows — grouped or flat */}
+        {isGrouped
+          ? virtualRows.map((virtualRow) => {
+              const item = groupedItems[virtualRow.index];
+              if (!item) return null;
 
-          return (
-            <GridRow
-              key={row.id}
-              row={row}
-              rowIndex={virtualRow.index}
-              fields={visibleFields}
-              density={density}
-              rowHeight={rowHeight}
-              activeCell={activeCell}
-              editingCell={editingCell}
-              columnColors={columnColors}
-              isSelected={selectedRows.has(row.original.id)}
-              onRowSelect={rowSelection.handleRowSelect}
-              onCellClick={onCellClick}
-              onCellDoubleClick={onCellDoubleClick}
-              onCellStartReplace={onCellStartReplace}
-              onCellSave={handleCellSaveWithUndo}
-              onCellCancel={onCellCancel}
-              style={{
-                position: 'absolute',
-                top: virtualRow.start + rowHeight, // offset by header
-                left: 0,
-                width: totalWidth,
-              }}
-              // Row reorder
-              isDragDisabled={rowReorder.isDisabled}
-              isDropTarget={rowReorder.dropTargetIndex === virtualRow.index}
-              onRowDragStart={rowReorder.handleDragStart}
-              onRowDragOver={rowReorder.handleDragOver}
-              onRowDragEnd={rowReorder.handleDragEnd}
-              onRowDrop={rowReorder.handleDrop}
-              // Context menu
-              onExpandRecord={() => {}} // Placeholder — Record View ships in 3A-ii
-              onCopyRecord={handleCopyRecord}
-              onDuplicateRecord={onDuplicateRecord}
-              onDeleteRecord={handleDeleteWithUndo}
-              onInsertAbove={onInsertAbove}
-              onInsertBelow={onInsertBelow}
-              onCopyCellValue={handleCopyCellValue}
-              onPaste={handlePaste}
-              onClearCellValue={handleClearCellValue}
-              onCopyRecordLink={onCopyRecordLink}
-            />
-          );
-        })}
+              if (item.type === 'group-header') {
+                const groupField = fields.find((f) => f.id === item.group.fieldId);
+                const canDragRegroup = groupField
+                  ? isDragRegroupSupported(groupField.fieldType)
+                  : false;
+
+                return (
+                  <GroupHeader
+                    key={`gh-${item.group.key}`}
+                    group={item.group}
+                    field={groupField}
+                    isCollapsed={collapsedGroups.has(item.group.key)}
+                    totalWidth={totalWidth}
+                    onToggleCollapse={onToggleGroupCollapsed ?? (() => {})}
+                    isDragTarget={canDragRegroup && draggingRecordId !== null}
+                    onDragOver={handleGroupDragOver}
+                    onDrop={(e) => handleGroupDrop(e, item.group.fieldId, item.group.value)}
+                    style={{
+                      position: 'absolute',
+                      top: virtualRow.start + rowHeight,
+                      left: 0,
+                    }}
+                  />
+                );
+              }
+
+              if (item.type === 'group-footer') {
+                return (
+                  <GroupFooter
+                    key={`gf-${item.group.key}`}
+                    group={item.group}
+                    fields={visibleFields}
+                    columnWidths={columnWidths}
+                    totalWidth={totalWidth}
+                    style={{
+                      position: 'absolute',
+                      top: virtualRow.start + rowHeight,
+                      left: 0,
+                    }}
+                  />
+                );
+              }
+
+              // Record row within a group
+              const row = rows.find((r) => r.original.id === item.record.id);
+              if (!row) return null;
+
+              const groupField = groupLevels[0]
+                ? fields.find((f) => f.id === groupLevels[0]?.fieldId)
+                : undefined;
+              const canDragRegroup = groupField
+                ? isDragRegroupSupported(groupField.fieldType)
+                : false;
+
+              return (
+                <GridRow
+                  key={row.id}
+                  row={row}
+                  rowIndex={virtualRow.index}
+                  fields={visibleFields}
+                  density={density}
+                  rowHeight={rowHeight}
+                  activeCell={activeCell}
+                  editingCell={editingCell}
+                  columnColors={columnColors}
+                  isSelected={selectedRows.has(row.original.id)}
+                  onRowSelect={rowSelection.handleRowSelect}
+                  onCellClick={onCellClick}
+                  onCellDoubleClick={onCellDoubleClick}
+                  onCellStartReplace={onCellStartReplace}
+                  onCellSave={handleCellSaveWithUndo}
+                  onCellCancel={onCellCancel}
+                  style={{
+                    position: 'absolute',
+                    top: virtualRow.start + rowHeight,
+                    left: 0,
+                    width: totalWidth,
+                  }}
+                  isDragDisabled={!canDragRegroup}
+                  isDropTarget={false}
+                  onRowDragStart={
+                    canDragRegroup
+                      ? (e, recordId) => handleRecordDragStartForRegroup(e, recordId)
+                      : rowReorder.handleDragStart
+                  }
+                  onRowDragOver={rowReorder.handleDragOver}
+                  onRowDragEnd={() => {
+                    setDraggingRecordId(null);
+                    rowReorder.handleDragEnd();
+                  }}
+                  onRowDrop={rowReorder.handleDrop}
+                  onExpandRecord={() => {}}
+                  onCopyRecord={handleCopyRecord}
+                  onDuplicateRecord={onDuplicateRecord}
+                  onDeleteRecord={handleDeleteWithUndo}
+                  onInsertAbove={onInsertAbove}
+                  onInsertBelow={onInsertBelow}
+                  onCopyCellValue={handleCopyCellValue}
+                  onPaste={handlePaste}
+                  onClearCellValue={handleClearCellValue}
+                  onCopyRecordLink={onCopyRecordLink}
+                />
+              );
+            })
+          : virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) return null;
+
+              return (
+                <GridRow
+                  key={row.id}
+                  row={row}
+                  rowIndex={virtualRow.index}
+                  fields={visibleFields}
+                  density={density}
+                  rowHeight={rowHeight}
+                  activeCell={activeCell}
+                  editingCell={editingCell}
+                  columnColors={columnColors}
+                  isSelected={selectedRows.has(row.original.id)}
+                  onRowSelect={rowSelection.handleRowSelect}
+                  onCellClick={onCellClick}
+                  onCellDoubleClick={onCellDoubleClick}
+                  onCellStartReplace={onCellStartReplace}
+                  onCellSave={handleCellSaveWithUndo}
+                  onCellCancel={onCellCancel}
+                  style={{
+                    position: 'absolute',
+                    top: virtualRow.start + rowHeight,
+                    left: 0,
+                    width: totalWidth,
+                  }}
+                  isDragDisabled={rowReorder.isDisabled}
+                  isDropTarget={rowReorder.dropTargetIndex === virtualRow.index}
+                  onRowDragStart={rowReorder.handleDragStart}
+                  onRowDragOver={rowReorder.handleDragOver}
+                  onRowDragEnd={rowReorder.handleDragEnd}
+                  onRowDrop={rowReorder.handleDrop}
+                  onExpandRecord={() => {}}
+                  onCopyRecord={handleCopyRecord}
+                  onDuplicateRecord={onDuplicateRecord}
+                  onDeleteRecord={handleDeleteWithUndo}
+                  onInsertAbove={onInsertAbove}
+                  onInsertBelow={onInsertBelow}
+                  onCopyCellValue={handleCopyCellValue}
+                  onPaste={handlePaste}
+                  onClearCellValue={handleClearCellValue}
+                  onCopyRecordLink={onCopyRecordLink}
+                />
+              );
+            })}
 
         {/* New row input — always at bottom */}
         {onCreateRecord && (

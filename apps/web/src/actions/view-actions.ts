@@ -51,6 +51,11 @@ const filterConfigPatchSchema = z.object({
   groups: z.array(filterGroupPatchSchema),
 });
 
+const groupLevelSchema = z.object({
+  fieldId: z.string().uuid(),
+  direction: z.enum(['asc', 'desc']),
+});
+
 const viewConfigPatchSchema = z.object({
   columns: z
     .array(
@@ -68,6 +73,7 @@ const viewConfigPatchSchema = z.object({
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
   sorts: z.array(sortLevelSchema).optional(),
   filters: filterConfigPatchSchema.optional(),
+  groups: z.array(groupLevelSchema).optional(),
 });
 
 const updateViewConfigSchema = z.object({

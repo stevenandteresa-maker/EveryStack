@@ -52,6 +52,16 @@ export const sortLevelSchema = z.object({
 
 export type SortLevel = z.infer<typeof sortLevelSchema>;
 
+/**
+ * Group level — one grouping criterion in a multi-level group.
+ */
+export const groupLevelSchema = z.object({
+  fieldId: z.string().uuid(),
+  direction: z.enum(['asc', 'desc']),
+});
+
+export type GroupLevel = z.infer<typeof groupLevelSchema>;
+
 export const viewConfigSchema = z.object({
   columns: z.array(columnConfigSchema).optional(),
   frozenColumns: z.number().int().min(0).max(5).optional(),
@@ -61,6 +71,7 @@ export const viewConfigSchema = z.object({
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
   sorts: z.array(sortLevelSchema).optional(),
   filters: filterConfigSchema.optional(),
+  groups: z.array(groupLevelSchema).optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
