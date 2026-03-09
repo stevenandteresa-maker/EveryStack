@@ -77,6 +77,10 @@ export interface DataGridProps {
   columnColors: Record<string, string>;
   hiddenFieldIds: Set<string>;
   isSortActive: boolean;
+  sorts: { fieldId: string; direction: 'asc' | 'desc' }[];
+  onToggleSort: (fieldId: string) => void;
+  onSortAscending: (fieldId: string) => void;
+  onSortDescending: (fieldId: string) => void;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -141,6 +145,10 @@ export function DataGrid({
   columnColors,
   hiddenFieldIds,
   isSortActive,
+  sorts,
+  onToggleSort,
+  onSortAscending,
+  onSortDescending,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -707,10 +715,14 @@ export function DataGrid({
           addColumnWidth={ADD_FIELD_COLUMN_WIDTH}
           userRole={userRole}
           columnColors={columnColors}
+          sorts={sorts}
           allSelected={rowSelection.allSelected}
           someSelected={rowSelection.someSelected}
           onToggleSelectAll={rowSelection.toggleSelectAll}
           onSelectColumn={onSelectColumn}
+          onToggleSort={onToggleSort}
+          onSortAscending={onSortAscending}
+          onSortDescending={onSortDescending}
           onStartResize={startResize}
           onDragStart={colDragStart}
           onDragOver={colDragOver}

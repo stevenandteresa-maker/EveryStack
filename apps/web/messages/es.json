@@ -381,6 +381,18 @@
       "description": "Comienza agregando tu primer registro.",
       "new_record": "Nuevo registro"
     },
+    "sort_panel": {
+      "title": "Ordenar",
+      "empty": "No se aplicaron ordenamientos.",
+      "add_sort": "Agregar orden",
+      "remove": "Eliminar orden",
+      "clear_all": "Limpiar todo",
+      "direction_asc": "Ascendente",
+      "direction_desc": "Descendente",
+      "unknown_field": "Campo desconocido",
+      "limit_warning": "Máximo de {max} niveles de orden.",
+      "sort_disabled_reorder": "Desactiva los ordenamientos para reordenar filas manualmente"
+    },
     "bulk": {
       "toolbar_label": "Acciones masivas",
       "selected_count": "{count} seleccionados",

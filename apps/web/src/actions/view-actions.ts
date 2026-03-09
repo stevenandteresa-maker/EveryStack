@@ -27,6 +27,11 @@ import { getTraceId } from '@everystack/shared/logging';
 // Zod schemas
 // ---------------------------------------------------------------------------
 
+const sortLevelSchema = z.object({
+  fieldId: z.string().uuid(),
+  direction: z.enum(['asc', 'desc']),
+});
+
 const viewConfigPatchSchema = z.object({
   columns: z
     .array(
@@ -42,6 +47,7 @@ const viewConfigPatchSchema = z.object({
   isDefault: z.boolean().optional(),
   columnOrder: z.array(z.string().uuid()).optional(),
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
+  sorts: z.array(sortLevelSchema).optional(),
 });
 
 const updateViewConfigSchema = z.object({

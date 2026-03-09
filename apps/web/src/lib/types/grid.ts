@@ -41,6 +41,16 @@ const columnConfigSchema = z.object({
  * Controls column widths, frozen columns, row density, and the
  * manager-assigned default flag.
  */
+/**
+ * Sort level — one sort criterion in a multi-level sort.
+ */
+export const sortLevelSchema = z.object({
+  fieldId: z.string().uuid(),
+  direction: z.enum(['asc', 'desc']),
+});
+
+export type SortLevel = z.infer<typeof sortLevelSchema>;
+
 export const viewConfigSchema = z.object({
   columns: z.array(columnConfigSchema).optional(),
   frozenColumns: z.number().int().min(0).max(5).optional(),
@@ -48,6 +58,7 @@ export const viewConfigSchema = z.object({
   isDefault: z.boolean().optional(),
   columnOrder: z.array(z.string().uuid()).optional(),
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
+  sorts: z.array(sortLevelSchema).optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;

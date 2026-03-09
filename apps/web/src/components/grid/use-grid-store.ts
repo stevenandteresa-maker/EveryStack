@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import type { CellPosition } from './grid-types';
-import type { RowDensity } from '@/lib/types/grid';
+import type { RowDensity, SortLevel } from '@/lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -30,6 +30,7 @@ export interface GridState {
   selectedRows: Set<string>;
   selectionAnchor: CellPosition | null;
   selectionRange: CellPosition | null;
+  sorts: SortLevel[];
   isSortActive: boolean;
 }
 
@@ -52,6 +53,7 @@ export interface GridActions {
   setSelectedRows: (rows: Set<string>) => void;
   setSelectionAnchor: (cell: CellPosition | null) => void;
   setSelectionRange: (cell: CellPosition | null) => void;
+  setSorts: (sorts: SortLevel[]) => void;
   setIsSortActive: (active: boolean) => void;
 }
 
@@ -76,6 +78,7 @@ export function createGridStore(initialState?: Partial<GridState>) {
     selectedRows: new Set<string>(),
     selectionAnchor: null,
     selectionRange: null,
+    sorts: [],
     isSortActive: false,
     ...initialState,
 
@@ -138,6 +141,8 @@ export function createGridStore(initialState?: Partial<GridState>) {
     setSelectionAnchor: (cell) => set({ selectionAnchor: cell }),
 
     setSelectionRange: (cell) => set({ selectionRange: cell }),
+
+    setSorts: (sorts) => set({ sorts, isSortActive: sorts.length > 0 }),
 
     setIsSortActive: (active) => set({ isSortActive: active }),
   }));

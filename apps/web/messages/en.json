@@ -381,6 +381,18 @@
       "description": "Get started by adding your first record.",
       "new_record": "New Record"
     },
+    "sort_panel": {
+      "title": "Sort",
+      "empty": "No sorts applied.",
+      "add_sort": "Add sort",
+      "remove": "Remove sort",
+      "clear_all": "Clear all",
+      "direction_asc": "Ascending",
+      "direction_desc": "Descending",
+      "unknown_field": "Unknown field",
+      "limit_warning": "Maximum of {max} sort levels.",
+      "sort_disabled_reorder": "Disable sorts to reorder rows manually"
+    },
     "bulk": {
       "toolbar_label": "Bulk actions",
       "selected_count": "{count} selected",
