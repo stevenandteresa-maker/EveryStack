@@ -42,6 +42,7 @@ import { SortPanel, type SortPanelProps } from './SortPanel';
 import { FilterBuilder, type FilterBuilderProps } from './FilterBuilder';
 import { ColorRuleBuilder, type ColorRuleBuilderProps } from './ColorRuleBuilder';
 import { HideFieldsPanel, type HideFieldsPanelProps } from './HideFieldsPanel';
+import { ViewSwitcher, type ViewSwitcherProps } from './ViewSwitcher';
 import type { RowDensity } from '@/lib/types/grid';
 
 // ---------------------------------------------------------------------------
@@ -53,6 +54,8 @@ export interface GridToolbarProps {
   viewName: string;
   /** Current view type icon label */
   viewType: 'grid' | 'card';
+  /** View switcher props — when provided, renders the full ViewSwitcher instead of placeholder */
+  viewSwitcherProps?: ViewSwitcherProps;
   /** Density state */
   density: RowDensity;
   onSetDensity: (density: RowDensity) => void;
@@ -108,6 +111,7 @@ const DENSITY_OPTIONS: RowDensity[] = ['compact', 'medium', 'tall'];
 export const GridToolbar = memo(function GridToolbar({
   viewName,
   viewType: _viewType,
+  viewSwitcherProps,
   density,
   onSetDensity,
   filterOpen,
@@ -150,11 +154,15 @@ export const GridToolbar = memo(function GridToolbar({
     >
       {/* Left group */}
       <div className="flex items-center gap-1">
-        {/* View switcher placeholder */}
-        <Button variant="ghost" size="sm" className="gap-1.5 text-xs font-medium" disabled>
-          <Grid3X3 className="h-3.5 w-3.5" />
-          {viewName}
-        </Button>
+        {/* View switcher */}
+        {viewSwitcherProps ? (
+          <ViewSwitcher {...viewSwitcherProps} />
+        ) : (
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs font-medium" disabled>
+            <Grid3X3 className="h-3.5 w-3.5" />
+            {viewName}
+          </Button>
+        )}
 
         {/* Hide fields */}
         <Popover open={hideFieldsOpen} onOpenChange={onHideFieldsOpenChange}>

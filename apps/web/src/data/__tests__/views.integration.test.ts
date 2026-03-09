@@ -3,9 +3,15 @@ import {
   createTestTenant,
   createTestTable,
   createTestView,
+  createTestUser,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getViewsByTable, getViewById, getDefaultView } from '../../data/views';
+import {
+  getViewsByTable,
+  getViewById,
+  getDefaultView,
+  getUserViewPreferences,
+} from '../../data/views';
 import { NotFoundError } from '../../lib/errors';
 
 describe('View Data Functions', () => {
@@ -24,7 +30,8 @@ describe('View Data Functions', () => {
           await createTestView({ tenantId, tableId: table.id });
         },
         query: async (tenantId) => {
-          return getViewsByTable(tenantId, tableId);
+          const { sharedViews, myViews } = await getViewsByTable(tenantId, tableId);
+          return [...sharedViews, ...myViews];
         },
       });
     }, 30_000);
@@ -50,7 +57,7 @@ describe('View Data Functions', () => {
   });
 
   // -------------------------------------------------------------------------
-  // getViewsByTable
+  // getViewsByTable — split into shared / my views
   // -------------------------------------------------------------------------
 
   describe('getViewsByTable', () => {
@@ -77,21 +84,75 @@ describe('View Data Functions', () => {
         position: 2,
       });
 
-      const result = await getViewsByTable(tenant.id, table.id);
+      const { sharedViews } = await getViewsByTable(tenant.id, table.id);
 
-      expect(result).toHaveLength(3);
-      expect(result[0]?.name).toBe('First');
-      expect(result[1]?.name).toBe('Second');
-      expect(result[2]?.name).toBe('Third');
+      expect(sharedViews).toHaveLength(3);
+      expect(sharedViews[0]?.name).toBe('First');
+      expect(sharedViews[1]?.name).toBe('Second');
+      expect(sharedViews[2]?.name).toBe('Third');
     }, 30_000);
 
-    it('returns empty array for table with no views', async () => {
+    it('returns empty arrays for table with no views', async () => {
       const tenant = await createTestTenant();
       const table = await createTestTable({ tenantId: tenant.id });
 
       const result = await getViewsByTable(tenant.id, table.id);
 
-      expect(result).toEqual([]);
+      expect(result.sharedViews).toEqual([]);
+      expect(result.myViews).toEqual([]);
+    }, 30_000);
+
+    it('splits shared and my views correctly', async () => {
+      const tenant = await createTestTenant();
+      const table = await createTestTable({ tenantId: tenant.id });
+      const user = await createTestUser();
+
+      await createTestView({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'Shared Grid',
+        isShared: true,
+      });
+      await createTestView({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'My Grid',
+        isShared: false,
+        createdBy: user.id,
+      });
+      // Another user's private view — should not appear in my views
+      await createTestView({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'Other Private',
+        isShared: false,
+      });
+
+      const result = await getViewsByTable(tenant.id, table.id, user.id);
+
+      expect(result.sharedViews).toHaveLength(1);
+      expect(result.sharedViews[0]?.name).toBe('Shared Grid');
+      expect(result.myViews).toHaveLength(1);
+      expect(result.myViews[0]?.name).toBe('My Grid');
+    }, 30_000);
+
+    it('returns no my views when userId is not provided', async () => {
+      const tenant = await createTestTenant();
+      const table = await createTestTable({ tenantId: tenant.id });
+      const user = await createTestUser();
+
+      await createTestView({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'Private View',
+        isShared: false,
+        createdBy: user.id,
+      });
+
+      const result = await getViewsByTable(tenant.id, table.id);
+
+      expect(result.sharedViews).toEqual([]);
+      expect(result.myViews).toEqual([]);
     }, 30_000);
   });
 
@@ -250,6 +311,23 @@ describe('View Data Functions', () => {
 
       expect(result.name).toBe('All Records');
       expect(result.viewType).toBe('grid');
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // getUserViewPreferences
+  // -------------------------------------------------------------------------
+
+  describe('getUserViewPreferences', () => {
+    it('returns null when no preferences exist', async () => {
+      const tenant = await createTestTenant();
+      const table = await createTestTable({ tenantId: tenant.id });
+      const view = await createTestView({ tenantId: tenant.id, tableId: table.id });
+      const user = await createTestUser();
+
+      const result = await getUserViewPreferences(tenant.id, user.id, view.id);
+
+      expect(result).toBeNull();
     }, 30_000);
   });
 });
