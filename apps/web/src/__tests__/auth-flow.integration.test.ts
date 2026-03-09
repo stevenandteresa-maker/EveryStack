@@ -91,7 +91,7 @@ vi.mock('@everystack/shared/logging', () => ({
 // Import the module under test (uses mocked dependencies)
 // ---------------------------------------------------------------------------
 
-import { getAuthContext } from '@/lib/auth-context';
+import { getAuthContext } from '../lib/auth-context';
 
 // ---------------------------------------------------------------------------
 // Tests

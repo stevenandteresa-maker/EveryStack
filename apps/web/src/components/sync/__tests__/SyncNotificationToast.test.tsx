@@ -13,7 +13,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { SyncNotificationToast } from '../SyncNotificationToast';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import type { SyncNotificationPayload } from '@everystack/shared/sync';
 
 // ---------------------------------------------------------------------------

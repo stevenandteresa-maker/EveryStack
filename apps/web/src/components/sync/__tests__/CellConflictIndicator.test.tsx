@@ -2,13 +2,13 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import {
   CellConflictIndicator,
   RowConflictBadge,
   CellWrapper,
 } from '../CellConflictIndicator';
-import type { ConflictMeta } from '@/data/sync-conflicts';
+import type { ConflictMeta } from '../../../data/sync-conflicts';
 
 // ---------------------------------------------------------------------------
 // Polyfill ResizeObserver for Radix tooltip

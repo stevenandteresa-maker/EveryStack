@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Header } from './header';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../test-utils/intl-wrapper';
 
 describe('Header', () => {
   it('renders with shell accent color background', () => {

@@ -5,8 +5,8 @@ import {
   createTestField,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getFieldsByTable, getFieldById } from '@/data/fields';
-import { NotFoundError } from '@/lib/errors';
+import { getFieldsByTable, getFieldById } from '../../data/fields';
+import { NotFoundError } from '../../lib/errors';
 
 describe('Field Data Functions', () => {
   // -------------------------------------------------------------------------

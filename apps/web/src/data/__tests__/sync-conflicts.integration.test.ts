@@ -10,8 +10,8 @@ import {
 import {
   getPendingConflictsForTable,
   getPendingConflictCount,
-} from '@/data/sync-conflicts';
-import type { ConflictMap } from '@/data/sync-conflicts';
+} from '../../data/sync-conflicts';
+import type { ConflictMap } from '../../data/sync-conflicts';
 
 describe('Sync Conflict Data Functions', () => {
   // -------------------------------------------------------------------------

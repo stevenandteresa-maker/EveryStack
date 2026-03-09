@@ -8,7 +8,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import {
   useGrouping,
   MAX_GROUP_LEVELS,
@@ -23,7 +23,7 @@ import {
 } from '../use-grouping';
 import { GroupHeader } from '../GroupHeader';
 import { GroupFooter } from '../GroupFooter';
-import type { GroupLevel, SortLevel, GridRecord, GridField } from '@/lib/types/grid';
+import type { GroupLevel, SortLevel, GridRecord, GridField } from '../../../lib/types/grid';
 import type { GroupNode } from '../use-grouping';
 
 // ---------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import {
   computeAggregation,
   getAggregationOptions,
@@ -30,7 +30,7 @@ import {
 } from '../use-summary-footer';
 import { SummaryFooter } from '../SummaryFooter';
 import { ColorRuleBuilder } from '../ColorRuleBuilder';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 import { generateUUIDv7 } from '@everystack/shared/db';
 
 // ---------------------------------------------------------------------------

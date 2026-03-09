@@ -8,7 +8,7 @@ import {
   testTenantIsolation,
 } from '@everystack/shared/testing';
 import { createSchemaChange } from '@everystack/shared/sync';
-import { getSyncSchemaChanges, getPendingSchemaChangeCount } from '@/data/sync-schema-changes';
+import { getSyncSchemaChanges, getPendingSchemaChangeCount } from '../../data/sync-schema-changes';
 
 // ---------------------------------------------------------------------------
 // getSyncSchemaChanges

@@ -5,9 +5,9 @@ import {
   createTestBase,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getConflictResolutionMode } from '@/data/sync-settings';
+import { getConflictResolutionMode } from '../../data/sync-settings';
 import { getDbForTenant, baseConnections, eq, and } from '@everystack/shared/db';
-import { NotFoundError } from '@/lib/errors';
+import { NotFoundError } from '../../lib/errors';
 
 // ---------------------------------------------------------------------------
 // getConflictResolutionMode

@@ -3,8 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TenantSection } from '../TenantSection';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
-import type { TenantNavSection } from '@/data/sidebar-navigation';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
+import type { TenantNavSection } from '../../../data/sidebar-navigation';
 
 function makeSection(overrides?: Partial<TenantNavSection>): TenantNavSection {
   return {

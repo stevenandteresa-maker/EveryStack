@@ -9,7 +9,7 @@ import {
   PERSONAL_TENANT_ACCENT,
   PORTAL_ACCENT,
   DEFAULT_ACCENT_COLOR,
-} from '@/lib/design-system/shell-accent';
+} from '../../../lib/design-system/shell-accent';
 
 /** Helper component that exposes context actions via buttons. */
 function TestConsumer() {

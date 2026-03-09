@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { DataGrid } from '../DataGrid';
-import type { GridRecord, GridField, ViewConfig } from '@/lib/types/grid';
+import type { GridRecord, GridField, ViewConfig } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Test data factories

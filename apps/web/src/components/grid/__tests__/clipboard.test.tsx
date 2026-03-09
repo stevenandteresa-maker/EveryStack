@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useClipboard } from '../use-clipboard';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 import type { CellPosition } from '../grid-types';
 
 vi.mock('next-intl', () => ({

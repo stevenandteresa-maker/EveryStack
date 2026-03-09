@@ -13,12 +13,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { createGridStore } from '../use-grid-store';
 import { useSort, MAX_SORT_LEVELS } from '../use-sort';
 import { SortPanel } from '../SortPanel';
-import type { SortLevel, GridField } from '@/lib/types/grid';
-import { viewConfigSchema, sortLevelSchema } from '@/lib/types/grid';
+import type { SortLevel, GridField } from '../../../lib/types/grid';
+import { viewConfigSchema, sortLevelSchema } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Helpers

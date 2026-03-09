@@ -3,11 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { useRowReorder } from '../use-row-reorder';
 import { useUndoRedo } from '../use-undo-redo';
 import { NewRowInput } from '../NewRowInput';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Mock data

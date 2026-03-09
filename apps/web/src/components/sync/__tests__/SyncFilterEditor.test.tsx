@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { SyncFilterEditor } from '../SyncFilterEditor';
 import type { SyncFilterEditorProps } from '../SyncFilterEditor';
 import type { FilterField } from '../SyncFilterBuilder';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 
 // ---------------------------------------------------------------------------
 // Mocks

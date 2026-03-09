@@ -7,13 +7,13 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { useKeyboardNavigation } from '../use-keyboard-navigation';
 import { CellErrorOverlay } from '../CellErrorOverlay';
 import { KeyboardShortcutsDialog } from '../KeyboardShortcutsDialog';
 import type { KeyboardNavigationOptions } from '../use-keyboard-navigation';
 import type { CellErrorInfo } from '../CellErrorOverlay';
-import type { GridField, GridRecord } from '@/lib/types/grid';
+import type { GridField, GridRecord } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Helpers

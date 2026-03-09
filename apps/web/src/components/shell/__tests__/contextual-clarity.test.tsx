@@ -7,13 +7,13 @@ import { MyOfficeHeading } from '../MyOfficeHeading';
 import { TenantSection } from '../TenantSection';
 import { TenantSwitcher } from '../TenantSwitcher';
 import { ShellAccentProvider } from '../ShellAccentProvider';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import {
   PERSONAL_TENANT_ACCENT,
   ORG_ACCENT_OPTIONS,
-} from '@/lib/design-system/shell-accent';
-import type { TenantNavSection } from '@/data/sidebar-navigation';
-import type { TenantSwitchResult } from '@/lib/auth/tenant-switch';
+} from '../../../lib/design-system/shell-accent';
+import type { TenantNavSection } from '../../../data/sidebar-navigation';
+import type { TenantSwitchResult } from '../../../lib/auth/tenant-switch';
 
 // ---------------------------------------------------------------------------
 // Mocks

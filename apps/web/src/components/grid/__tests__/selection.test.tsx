@@ -2,10 +2,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { useRowSelection } from '../use-row-selection';
 import { BulkActionsToolbar } from '../BulkActionsToolbar';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Mock sonner toast

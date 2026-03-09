@@ -5,8 +5,8 @@ import {
   createTestBase,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getSyncConfig, updateSyncConfig } from '@/data/sync-setup';
-import { NotFoundError } from '@/lib/errors';
+import { getSyncConfig, updateSyncConfig } from '../../data/sync-setup';
+import { NotFoundError } from '../../lib/errors';
 import type { SyncConfig } from '@everystack/shared/sync';
 
 // ---------------------------------------------------------------------------

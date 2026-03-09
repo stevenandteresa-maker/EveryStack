@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { SyncStatusTooltip } from '../SyncStatusTooltip';
 import type { SyncStatusTooltipProps } from '../SyncStatusTooltip';
 import type { ConnectionHealth } from '@everystack/shared/sync';

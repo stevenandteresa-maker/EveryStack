@@ -5,8 +5,8 @@ import {
   createTestView,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getViewsByTable, getViewById, getDefaultView } from '@/data/views';
-import { NotFoundError } from '@/lib/errors';
+import { getViewsByTable, getViewById, getDefaultView } from '../../data/views';
+import { NotFoundError } from '../../lib/errors';
 
 describe('View Data Functions', () => {
   // -------------------------------------------------------------------------

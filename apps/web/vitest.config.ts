@@ -1,9 +1,19 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tsconfigPaths({
+      projects: [path.resolve(configDir, 'tsconfig.json')],
+      loose: true,
+    }),
+  ],
   test: {
     globals: true,
     environment: 'node',
@@ -35,8 +45,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@everystack/db': path.resolve(__dirname, '../../packages/shared/db'),
+      '@everystack/db': path.resolve(configDir, '../../packages/shared/db'),
     },
   },
 });

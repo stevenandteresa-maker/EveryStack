@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WorkspaceTree } from '../WorkspaceTree';
-import type { BoardNavGroup, WorkspaceNavEntry } from '@/data/sidebar-navigation';
+import type { BoardNavGroup, WorkspaceNavEntry } from '../../../data/sidebar-navigation';
 
 const boards: BoardNavGroup[] = [
   {

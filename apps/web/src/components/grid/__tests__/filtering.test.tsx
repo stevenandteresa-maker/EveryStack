@@ -21,7 +21,7 @@ import {
 
 import { useFilters } from '../use-filters';
 import { createGridStore } from '../use-grid-store';
-import { buildFilterClauses } from '@/data/records';
+import { buildFilterClauses } from '../../../data/records';
 
 // ---------------------------------------------------------------------------
 // filter-types.ts tests

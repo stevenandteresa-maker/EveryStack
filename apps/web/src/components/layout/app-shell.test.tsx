@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AppShell } from './app-shell';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../test-utils/intl-wrapper';
 
 // Mock Clerk (required by SidebarHeader + TenantSwitcher via Sidebar)
 vi.mock('@clerk/nextjs', () => ({

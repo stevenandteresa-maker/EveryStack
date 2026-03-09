@@ -144,7 +144,7 @@ function makeClerkEvent(overrides: Record<string, unknown> = {}) {
 // Import route handler (uses mocked db + real svix)
 // ---------------------------------------------------------------------------
 
-import { POST } from '@/app/api/webhooks/clerk/route';
+import { POST } from '../app/api/webhooks/clerk/route';
 
 // ---------------------------------------------------------------------------
 // Tests

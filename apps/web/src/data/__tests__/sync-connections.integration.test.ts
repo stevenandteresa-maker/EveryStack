@@ -12,8 +12,8 @@ import {
   createConnection,
   updateConnectionBase,
   updateConnectionTokens,
-} from '@/data/sync-connections';
-import { NotFoundError } from '@/lib/errors';
+} from '../../data/sync-connections';
+import { NotFoundError } from '../../lib/errors';
 
 describe('Sync Connection Data Functions', () => {
   // -------------------------------------------------------------------------
