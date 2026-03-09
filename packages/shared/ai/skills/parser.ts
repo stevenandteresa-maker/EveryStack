@@ -56,6 +56,7 @@ export function parseSkillDocument(rawMarkdown: string): SkillDocument {
  */
 export function parseSkillDirectory(dirPath: string): SkillDocument[] {
   const documents: SkillDocument[] = [];
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dirPath is controlled by skill loader, not user input
   const entries = readdirSync(dirPath, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -63,6 +64,7 @@ export function parseSkillDirectory(dirPath: string): SkillDocument[] {
 
     if (entry.isDirectory()) {
       // Recurse one level into subdirectories
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- fullPath derived from controlled dirPath
       const subEntries = readdirSync(fullPath, { withFileTypes: true });
       for (const subEntry of subEntries) {
         if (subEntry.isFile() && subEntry.name.endsWith('.md')) {
@@ -84,6 +86,7 @@ export function parseSkillDirectory(dirPath: string): SkillDocument[] {
 
 function tryParseFile(filePath: string, documents: SkillDocument[]): void {
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath derived from controlled directory traversal
     const raw = readFileSync(filePath, 'utf-8');
     const doc = parseSkillDocument(raw);
     documents.push(doc);
@@ -104,6 +107,7 @@ function extractSections(rawMarkdown: string): Record<SkillCondensationLevel, st
 
   for (const level of SECTION_HEADINGS) {
     const heading = `## ${level.charAt(0).toUpperCase() + level.slice(1)}`;
+    // eslint-disable-next-line security/detect-non-literal-regexp -- pattern built from known constant headings, not user input
     const regex = new RegExp(
       `${escapeRegExp(heading)}\\n([\\s\\S]*?)(?=\\n## |$)`,
     );

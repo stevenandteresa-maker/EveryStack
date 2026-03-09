@@ -28,7 +28,6 @@ export class SkillRegistry {
   /** Get all registered skill metadata (lightweight — strips content). */
   listMetadata(): SkillMetadata[] {
     return Array.from(this.skills.values()).map((skill) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { content: _content, ...metadata } = skill;
       return metadata;
     });
