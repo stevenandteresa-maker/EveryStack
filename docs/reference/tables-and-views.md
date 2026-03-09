@@ -3,7 +3,7 @@
 > **Reference doc.** Table type system, table tab colors, grid view architecture (74 design decisions), Card view, Record View (configurable field canvas overlay), saved views, sections.
 > See `GLOSSARY.md` for all concept definitions and naming conventions.
 > Cross-references: `data-model.md` (field types, schema, record_view_configs), `cross-linking.md` (Linked Record display), `permissions.md` (role-based access, field-level permissions), `mobile.md` (mobile-specific rendering)
-> Last updated: 2026-02-28 — View terminology standardized (My Views / Shared Views). Inline Sub-Table summary row deferred to post-MVP.
+> Last updated: 2026-03-09 — Section index corrected (line ranges shifted after CSV Import section addition). CSV Import added to section index. View terminology standardized (My Views / Shared Views). Inline Sub-Table summary row deferred to post-MVP.
 
 ---
 
@@ -11,16 +11,17 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section                                     | Lines   | Covers                                                                                      |
-| ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| Table Type System                           | 27–119  | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior    |
-| Table (Grid) View Architecture              | 120–553 | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
-| Record View                                 | 554–615 | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs                |
-| Card View                                   | 616–656 | Card layout, card fields, grouping, mobile card list                                        |
-| Sections — Universal List Organizer         | 657–689 | Sidebar sections, drag-to-reorder, section-scoped operations                                |
-| Inline Sub-Table Display for Linked Records | 690–793 | Linked record expansion, inline sub-table rendering in Record View                          |
-| Kanban View — Post-MVP                      | 794–805 | Kanban columns, drag-and-drop, WIP limits                                                   |
-| Quick Entry — Post-MVP                      | 806–812 | Rapid record creation mode, barcode scanning                                                |
+| Section                                     | Lines     | Covers                                                                                      |
+| ------------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| Table Type System                           | 27–119    | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior    |
+| Table (Grid) View Architecture              | 121–565   | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
+| Record View                                 | 568–628   | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs                |
+| Card View                                   | 631–668   | Card layout, card fields, grouping, mobile card list                                        |
+| Sections — Universal List Organizer         | 672–701   | Universal list sections, drag-to-reorder, section-scoped operations                         |
+| Inline Sub-Table Display for Linked Records | 705–811   | Linked record expansion, inline sub-table rendering in Record View                          |
+| CSV/Data Import — MVP                       | 814–841   | CSV import flow (5 steps), field mapping, validation preview, permissions                   |
+| Kanban View — Post-MVP                      | 844–853   | Kanban columns, drag-and-drop, WIP limits                                                   |
+| Quick Entry — Post-MVP                      | 856–862   | Rapid record creation mode, barcode scanning                                                |
 
 ---
 

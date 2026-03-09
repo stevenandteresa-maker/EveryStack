@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-09 — Post-Phase 3A-i docs sync: added 4 new terms (Grid View, TableType, Tab Color + sub-definitions for DataGrid, Cell Registry, GridStore, ViewConfig, CellPosition). Prior: 2026-03-08 — Post-Phase 2C: added 12 terms (NotionAdapter, NotionPropertyType, TableVisibility, SyncPriority, ConnectionHealth, SyncError/SyncErrorCode, Sync Notifications, PlatformBadge, SyncStatusIcon, Priority Scheduler, Sync Dashboard).
+> Last updated: 2026-03-09 — Phase 3A-ii prep: added 6 terms (Card View, Summary Footer, Color Coding, Inline Sub-Table, CSV Import, Field-Level Presence Locking); broadened Section definition from sidebar-only to universal list organizer. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
 
 ---
 
@@ -256,6 +256,30 @@ A contextual communication panel tied to a specific record. Opens alongside the 
 **What Record Thread is:** Communication _about_ a specific record.
 **What Record Thread is NOT:** Personal DMs or team chat. Those live in Quick Panels. Record Thread is always scoped to one record.
 
+### Card View
+
+A card-based Table View type (`view_type: card`). MVP view type alongside Grid. Cards display fields in order defined by the view's `field_config`, with inline editing (click, edit, blur to save). Three layout options: single column (full-width), grid (2–3 cols), compact list. Shares all Grid capabilities: hide/show fields, filtering, grouping, sorting, color coding. Mobile uses compact list layout with swipe actions. See `tables-and-views.md` > Card View.
+
+### Summary Footer
+
+An optional row below the grid data area. Each column is independently configurable with field-type-appropriate aggregations (sum, avg, min, max, count, earliest, latest, etc.). Click a footer cell to pick the aggregation type. Sticky to bottom of the viewport. Per-group footers also available when grouping is active. See `tables-and-views.md` > Summary Footer Row.
+
+### Color Coding
+
+Conditional visual coding applied to grid rows and cells. Two combinable levels: **row-level** (entire row background tint based on conditions) and **cell-level** (individual cells colored by value or conditions). Configured per view. Separate from structural column coloring and tab colors. See `tables-and-views.md` > Color Coding, `field-groups.md` > conditional cell coloring cascade.
+
+### Inline Sub-Table
+
+A compact linked record widget that displays linked records as an embedded mini-grid within Record View. Configured via the `display` property on a Linked Record field (`style: "inline_table"`). Designed for parent-child patterns (invoice → line items, project → tasks). Supports inline creation, deletion, reorder, and spreadsheet-like editing (Tab, Enter, Escape). No new tables — purely a rendering mode on existing Linked Record fields. Summary row deferred to post-MVP (requires rollups). See `tables-and-views.md` > Inline Sub-Table Display for Linked Records.
+
+### CSV Import
+
+A guided data import flow for adding records to existing tables from CSV/TSV files. Five steps: upload (max 10MB, Papaparse client-side parsing), preview & header detection, field mapping (fuzzy auto-match), validation preview (dry-run via `FieldTypeRegistry.validate()`), import execution (batches of 100 via standard `createRecord` path). Manager+ role required. MVP scope: CSV only; Excel import, linked record resolution, and update-by-match are post-MVP. See `tables-and-views.md` > CSV/Data Import — MVP.
+
+### Field-Level Presence Locking
+
+A real-time collaboration mechanism that prevents concurrent editing of the same field on the same record. When a user focuses a field, a Redis lock is acquired (`lock:{tenantId}:{recordId}:{fieldId}` → `{userId, avatar, timestamp}`, TTL 60s). Other users see the editing user's avatar on the field and the field becomes temporarily non-interactive. Lock releases on blur (auto-save) or after 60 seconds of no keystrokes. No queue — if locked, other users wait. WebSocket broadcasts lock/unlock events. See `tables-and-views.md` > Multi-User Collaboration.
+
 ---
 
 ## Definitions — External-Facing (MVP)
@@ -456,6 +480,74 @@ When generating a document from a template, an "AI Draft" option generates prose
 During table setup or when connecting new tables, AI suggests: field types based on data patterns, cross-link candidates across existing tables, and missing fields common for the table's use case.
 
 Example: "You have a Clients table and an Invoices table. Want to link them by the Client field?"
+
+---
+
+## Definitions — AI Skills & Platform Agents (Post-MVP)
+
+### Runtime AI Skill
+
+A curated knowledge document that the AI Context Builder loads alongside schema context to eliminate orientation cost. Skills encode how features work, how integrations behave, and how a specific workspace uses them — so the AI spends its token budget on productive work instead of rediscovering the platform every session.
+
+Skills operate at three tiers:
+
+| Tier | What It Encodes | Generated By | Storage |
+|------|----------------|-------------|---------|
+| **Tier 1 — Platform Skills** | How EveryStack features work (static, human-written) | Platform team or Skill Maintenance Agent (human-approved) | `packages/shared/ai/skills/documents/` (version-controlled) |
+| **Tier 2 — Workspace Context Skills** | How a specific workspace uses features and integrations (dynamic) | Workspace Usage Descriptor | Redis cache (`wud:{workspaceId}:{configHash}`) |
+| **Tier 3 — Behavioral Skills** | Patterns observed from actual usage (learned over time) | Usage pattern analysis from `ai_usage_log` | Redis cache (keyed per user within workspace) |
+
+**Full specification:** `ai-skills-architecture.md`.
+
+### Feature Skill Registry
+
+The module at `packages/shared/ai/skills/` that manages runtime AI skills. Contains the `SkillRegistry` class, a loader (fits skills within token budgets using three pre-written condensation levels: full/standard/minimal), a parser for markdown skill files with YAML frontmatter, and type definitions (`SkillDocument`, `LoadedSkill`).
+
+### Skill Condensation Level
+
+Each skill document has three pre-written versions at different token budgets — `full`, `standard`, and `minimal`. A human decides which facts are essential at each level because feature knowledge doesn't condense well algorithmically. The Token Budget Allocator selects the appropriate level based on available context window budget.
+
+### Integration Skill
+
+A Tier 1 skill document that encodes knowledge about an external platform (HubSpot, Google Analytics, Stripe, etc.). Covers MCP tools, common query patterns, response shapes, rate limits, EveryStack field mapping conventions, and API version awareness. Includes `lastVerified` date and `externalApiVersion` metadata for automated drift detection.
+
+### Workspace Usage Descriptor
+
+A companion module to SDS that produces behavioral context about how a workspace uses features and integrations. While SDS provides _what tables and fields exist_, the Workspace Usage Descriptor provides _how the workspace uses them_ — integration inventory, automation patterns, portal configurations, document template patterns. Cached like SDS output. Generates Tier 2 workspace context skills.
+
+### Token Budget Allocator
+
+Extends the SDS Token Budget Estimator into a shared budget across four consumers: (1) Platform + integration skills, (2) Workspace context skills, (3) SDS schema, (4) Conversation history / few-shot / behavioral. Skills get first priority because they are small (500–2,000 tokens) but extremely high value per token.
+
+### Skill Maintenance Agent
+
+A platform-level agent (see Platform Maintenance Agent) that monitors skill quality, detects declining performance from `ai_usage_log` data, drafts updated skill content, validates via eval suite, and packages proposals for human approval. Runs weekly on a scheduled cadence. Can investigate integration drift by running exploratory MCP tool calls against live integrations. Drafts but never deploys — human approval always required.
+
+**Full specification:** `ai-skills-architecture.md` §10, `platform-maintenance-agents.md` §6.
+
+### Platform Maintenance Agent
+
+An autonomous AI agent that operates at the platform level — across tenants — on behalf of the platform owner. Unlike user-facing agents (scoped to a single workspace), platform agents have cross-tenant read access via a dedicated RLS-exempt service role. They run on a dedicated BullMQ queue (`platform-agent-queue`) with lower priority than user-facing work.
+
+Seven platform agents are defined:
+
+| Agent | Purpose |
+|-------|---------|
+| Security & Compliance | Continuous security posture monitoring, compliance drift detection |
+| Ops Intelligence | Infrastructure health analysis, capacity planning, anomaly detection |
+| Sync Health | Cross-tenant sync failure pattern analysis, adapter quality monitoring |
+| Automation Health | Automation failure pattern detection, performance optimization |
+| Business Intelligence | Revenue analytics, growth metrics, churn risk identification |
+| Skill Maintenance | AI skill quality monitoring and improvement (see Skill Maintenance Agent) |
+| Data Quality | Schema consistency, orphan detection, data hygiene across tenants |
+
+All platform agents use the tiered approval model from `agent-architecture.md`. Results surface in the Platform Owner Console (Settings → AI → Platform Agents).
+
+**Full specification:** `platform-maintenance-agents.md`.
+
+### Platform Agent Runtime
+
+The execution infrastructure for platform maintenance agents. Extends the user-facing agent runtime from `agent-architecture.md` with: a dedicated BullMQ queue (`platform-agent-queue`), an RLS-exempt database service role for cross-tenant reads, platform-scoped Redis namespaces, and schedule-based triggers (cron via BullMQ repeatable jobs). Each agent runs in a sandboxed `AgentSession` with explicit scope boundaries defining which tables, operations, and tenant data it can access.
 
 ---
 
@@ -708,7 +800,7 @@ Corresponds to the `workspaces` table in the database. A workspace is a containe
 
 ### Section
 
-An optional visual grouping of tables within a workspace's sidebar. Sections allow users to organize tables into named groups (e.g., "Client Data," "Operations"). Sections are presentational only — they do not affect permissions or data access. Tables can be ungrouped.
+A universal UI primitive for organizing any long list. A section is a named, collapsible group header that items can be dragged into. Sections apply to: sidebar table lists, view switchers, automations lists, cross-links lists, document/template lists, and any future list surface. Two tiers: personal sections (any user, visible only to creator) and manager-created sections (Manager+, visible to all workspace members). Sections are presentational only — they do not affect permissions or data access. Items can be ungrouped. See `tables-and-views.md` > Sections — Universal List Organizer.
 
 ### Command Bar
 
@@ -819,6 +911,8 @@ When pricing is finalized, consolidate all quota numbers into this table and hav
 | Commerce embeds, live chat widget                               | Post-MVP                                                                                                                      |
 | Document App type (App Designer canvas → PDF)                   | Post-MVP                                                                                                                      |
 | Self-hosted AI, data residency                                  | Post-MVP                                                                                                                      |
+| Runtime AI Skills (Tier 2/3), Skill Maintenance Agent           | Post-MVP (Tier 1 skills + Context Builder integration are MVP — AI)                                                           |
+| Platform Maintenance Agents (7 platform-level autonomous agents)| Post-MVP (depends on agent runtime from `agent-architecture.md`)                                                              |
 
 ---
 

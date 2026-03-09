@@ -25,22 +25,22 @@
 
 > **For Claude Code:** Use line ranges to load only the sections relevant to your current task.
 
-| Section                            | Lines   | Covers                                                                                               |
-| ---------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| Foundations                        | 44–57   | Dimensions: sidebar, main content, Quick Panel, Record View overlay, mobile breakpoints              |
-| Color Model — Hybrid Layout        | 58–138  | Three-layer architecture: surface (fixed), workspace accent (admin-chosen), data palette (12 colors) |
-| Process State Color Language       | 139–152 | Semantic state colors: active, paused, completed, blocked, overdue, draft, pending                   |
-| Text Contrast for Colored Surfaces | 153–162 | WCAG AA contrast rules, dark/light text selection algorithm                                          |
-| Typography Scale                   | 163–180 | Font sizes, weights, line heights, font family (Inter)                                               |
-| Spacing                            | 181–188 | 4px base unit, spacing scale from 4px to 64px                                                        |
-| Component Specifications           | 189–204 | Button variants, form fields, status badges, toggles, tooltips                                       |
-| Application Shell (Responsive)     | 205–217 | Desktop/tablet/phone shell layout, sidebar collapse behavior                                         |
-| Responsive Architecture            | 218–246 | Grid view column priority, Record View stacking, breakpoint transitions                              |
-| Progressive Disclosure             | 247–260 | Complexity levels, feature gating by plan tier, smart defaults                                       |
-| Shared Responsive Patterns         | 261–273 | Collapsible sidebar, bottom sheets, swipe gestures                                                   |
-| Ergonomic Design Constraints       | 274–295 | Thumb zone mapping, one-handed use rules, touch targets                                              |
-| AI Credit Display Pattern          | 296–312 | Credit badge, usage meter, cost preview, upgrade prompts                                             |
-| Creation Flow Patterns             | 313–357 | 3 patterns: Inline Create, Wizard Create, Recipe Create; mapping discipline                          |
+| Section                            | Lines     | Covers                                                                                               |
+| ---------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| Foundations                        | 47–59     | Dimensions: sidebar, main content, Quick Panel, Record View overlay, mobile breakpoints              |
+| Color Model — Hybrid Layout        | 61–170    | Three-layer architecture: surface (fixed), workspace accent (admin-chosen), data palette (13 colors) |
+| Process State Color Language       | 173–184   | Semantic state colors: failed/red, processing/amber, succeeded/green                                 |
+| Text Contrast for Colored Surfaces | 187–195   | WCAG AA contrast rules, dark/light text selection algorithm                                          |
+| Typography Scale                   | 198–213   | Font sizes (9-step scale), weights, line heights, font family (DM Sans / JetBrains Mono)             |
+| Spacing                            | 216–221   | 4px base unit, card padding, section gaps, mobile bottom nav                                         |
+| Component Specifications           | 224–237   | Button variants, cards, badges, inputs, sidebar nav, Command Bar                                     |
+| Application Shell (Responsive)     | 240–265   | Desktop/tablet/phone shell layout, sidebar icon rail, sidebar collapse behavior                      |
+| Responsive Architecture            | 267–307   | Grid view column priority, Record View stacking, breakpoint transitions, progressive disclosure      |
+| Progressive Disclosure             | 296–307   | Complexity levels (3 tiers), smart defaults, mobile Level 1 completeness                             |
+| Shared Responsive Patterns         | 310–321   | Collapsible sidebar, bottom sheets, swipe gestures                                                   |
+| Ergonomic Design Constraints       | 323–343   | Thumb zone mapping, one-handed use rules, touch targets                                              |
+| AI Credit Display Pattern          | 345–360   | Credit badge, usage meter, cost preview, upgrade prompts                                             |
+| Creation Flow Patterns             | 362–408   | 3 patterns: Inline Create, Wizard Create, Recipe Create; mapping discipline                          |
 
 ---
 
