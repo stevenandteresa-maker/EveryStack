@@ -10,6 +10,8 @@
 import { create } from 'zustand';
 import type { CellPosition } from './grid-types';
 import type { RowDensity, SortLevel } from '@/lib/types/grid';
+import type { FilterConfig } from './filter-types';
+import { createEmptyFilterConfig } from './filter-types';
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -32,6 +34,8 @@ export interface GridState {
   selectionRange: CellPosition | null;
   sorts: SortLevel[];
   isSortActive: boolean;
+  filters: FilterConfig;
+  isFilterActive: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +59,8 @@ export interface GridActions {
   setSelectionRange: (cell: CellPosition | null) => void;
   setSorts: (sorts: SortLevel[]) => void;
   setIsSortActive: (active: boolean) => void;
+  setFilters: (filters: FilterConfig) => void;
+  setIsFilterActive: (active: boolean) => void;
 }
 
 export type GridStore = GridState & GridActions;
@@ -80,6 +86,8 @@ export function createGridStore(initialState?: Partial<GridState>) {
     selectionRange: null,
     sorts: [],
     isSortActive: false,
+    filters: createEmptyFilterConfig(),
+    isFilterActive: false,
     ...initialState,
 
     // Actions
@@ -145,5 +153,15 @@ export function createGridStore(initialState?: Partial<GridState>) {
     setSorts: (sorts) => set({ sorts, isSortActive: sorts.length > 0 }),
 
     setIsSortActive: (active) => set({ isSortActive: active }),
+
+    setFilters: (filters) =>
+      set({
+        filters,
+        isFilterActive:
+          filters.conditions.length > 0 ||
+          filters.groups.some((g) => g.conditions.length > 0),
+      }),
+
+    setIsFilterActive: (active) => set({ isFilterActive: active }),
   }));
 }

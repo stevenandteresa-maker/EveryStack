@@ -8,6 +8,7 @@ import {
   getDbForTenant,
   eq,
   and,
+  or,
   isNull,
   asc,
   count,
@@ -18,6 +19,12 @@ import type { DbRecord, SQL } from '@everystack/shared/db';
 import { NotFoundError } from '@/lib/errors';
 import { getQueue } from '@/lib/queue';
 import type { SortLevel } from '@/lib/types/grid';
+import type {
+  FilterConfig,
+  FilterCondition,
+  FilterGroup,
+} from '@/components/grid/filter-types';
+import { ME_TOKEN } from '@/components/grid/filter-types';
 
 // ---------------------------------------------------------------------------
 // Query option types
@@ -30,6 +37,10 @@ export interface GetRecordsByTableOptions {
   sorts?: SortLevel[];
   /** Field type map needed for sort type casting (fieldId → fieldType). */
   fieldTypes?: Record<string, string>;
+  /** Filter config for WHERE clause building. */
+  filters?: FilterConfig;
+  /** Current user ID for $me token resolution in People filters. */
+  currentUserId?: string;
 }
 
 export interface PaginatedRecords {
@@ -58,10 +69,18 @@ export async function getRecordsByTable(
   const limit = options?.limit ?? 100;
   const offset = options?.offset ?? 0;
 
+  // Build filter WHERE clauses
+  const filterClause = buildFilterClauses(
+    options?.filters,
+    options?.fieldTypes,
+    options?.currentUserId,
+  );
+
   const baseWhere = and(
     eq(records.tenantId, tenantId),
     eq(records.tableId, tableId),
     isNull(records.archivedAt),
+    ...(filterClause ? [filterClause] : []),
   );
 
   // Build sort clauses from sort config
@@ -154,6 +173,232 @@ function buildSortClauses(
   return sorts.map((sort) =>
     buildFieldSortExpression(sort.fieldId, fieldTypes?.[sort.fieldId], sort.direction),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Filter clause builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Field types that should be compared as numeric values.
+ */
+const NUMERIC_FILTER_TYPES = new Set([
+  'number',
+  'currency',
+  'percent',
+  'rating',
+  'duration',
+]);
+
+/**
+ * Builds a SQL expression to extract a field value from canonical_data.
+ * Returns the raw text value.
+ */
+function fieldValueExpr(fieldId: string): SQL {
+  return sql.raw(`(canonical_data->'${fieldId}'->>'value')`);
+}
+
+/**
+ * Builds a SQL WHERE clause for a single filter condition.
+ */
+function buildConditionClause(
+  condition: FilterCondition,
+  fieldTypes?: Record<string, string>,
+  currentUserId?: string,
+): SQL | null {
+  const fieldType = fieldTypes?.[condition.fieldId];
+  const valueExpr = fieldValueExpr(condition.fieldId);
+
+  // Resolve $me token for People filters
+  let resolvedValue = condition.value;
+  if (resolvedValue === ME_TOKEN && currentUserId) {
+    resolvedValue = currentUserId;
+  }
+
+  switch (condition.operator) {
+    case 'is':
+      if (fieldType === 'checkbox') {
+        return sql`${valueExpr}::boolean = ${resolvedValue as boolean}`;
+      }
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric = ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} = ${resolvedValue as string}`;
+
+    case 'is_not':
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric != ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} != ${resolvedValue as string}`;
+
+    case 'contains':
+      return sql`${valueExpr} ILIKE ${'%' + String(resolvedValue) + '%'}`;
+
+    case 'does_not_contain':
+      return sql`(${valueExpr} IS NULL OR ${valueExpr} NOT ILIKE ${'%' + String(resolvedValue) + '%'})`;
+
+    case 'starts_with':
+      return sql`${valueExpr} ILIKE ${String(resolvedValue) + '%'}`;
+
+    case 'ends_with':
+      return sql`${valueExpr} ILIKE ${'%' + String(resolvedValue)}`;
+
+    case 'gt':
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric > ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} > ${resolvedValue as string}`;
+
+    case 'gte':
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric >= ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} >= ${resolvedValue as string}`;
+
+    case 'lt':
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric < ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} < ${resolvedValue as string}`;
+
+    case 'lte':
+      if (fieldType && NUMERIC_FILTER_TYPES.has(fieldType)) {
+        return sql`${valueExpr}::numeric <= ${resolvedValue as number}`;
+      }
+      return sql`${valueExpr} <= ${resolvedValue as string}`;
+
+    case 'between': {
+      const between = resolvedValue as { min?: number; max?: number } | null;
+      if (!between) return null;
+      const clauses: SQL[] = [];
+      if (between.min !== undefined) {
+        clauses.push(sql`${valueExpr}::numeric >= ${between.min}`);
+      }
+      if (between.max !== undefined) {
+        clauses.push(sql`${valueExpr}::numeric <= ${between.max}`);
+      }
+      if (clauses.length === 0) return null;
+      return clauses.length === 1 ? clauses[0]! : and(...clauses)!;
+    }
+
+    case 'is_before':
+      return sql`${valueExpr}::timestamptz < ${resolvedValue as string}::timestamptz`;
+
+    case 'is_after':
+      return sql`${valueExpr}::timestamptz > ${resolvedValue as string}::timestamptz`;
+
+    case 'is_within': {
+      const preset = resolvedValue as string;
+      const now = sql`NOW()`;
+      switch (preset) {
+        case 'last_7_days':
+          return sql`${valueExpr}::timestamptz >= ${now} - INTERVAL '7 days'`;
+        case 'last_30_days':
+          return sql`${valueExpr}::timestamptz >= ${now} - INTERVAL '30 days'`;
+        case 'this_week':
+          return sql`${valueExpr}::timestamptz >= date_trunc('week', ${now})`;
+        case 'this_month':
+          return sql`${valueExpr}::timestamptz >= date_trunc('month', ${now})`;
+        case 'this_year':
+          return sql`${valueExpr}::timestamptz >= date_trunc('year', ${now})`;
+        default:
+          return null;
+      }
+    }
+
+    case 'is_any_of': {
+      const values = resolvedValue as string[];
+      if (!values || values.length === 0) return null;
+      const orClauses = values.map((v) => sql`${valueExpr} = ${v}`);
+      return or(...orClauses)!;
+    }
+
+    case 'is_none_of': {
+      const values = resolvedValue as string[];
+      if (!values || values.length === 0) return null;
+      const andClauses = values.map((v) => sql`${valueExpr} != ${v}`);
+      return and(...andClauses)!;
+    }
+
+    case 'contains_any_of': {
+      const values = resolvedValue as string[];
+      if (!values || values.length === 0) return null;
+      const jsonArrayExpr = sql.raw(
+        `(canonical_data->'${condition.fieldId}'->'value')`,
+      );
+      const orClauses = values.map(
+        (v) => sql`${jsonArrayExpr}::jsonb @> ${JSON.stringify([v])}::jsonb`,
+      );
+      return or(...orClauses)!;
+    }
+
+    case 'contains_all_of': {
+      const values = resolvedValue as string[];
+      if (!values || values.length === 0) return null;
+      const jsonArrayExpr = sql.raw(
+        `(canonical_data->'${condition.fieldId}'->'value')`,
+      );
+      return sql`${jsonArrayExpr}::jsonb @> ${JSON.stringify(values)}::jsonb`;
+    }
+
+    case 'is_empty':
+      return sql`(${valueExpr} IS NULL OR ${valueExpr} = '' OR NOT (canonical_data ? '${sql.raw(condition.fieldId)}'))`;
+
+    case 'is_not_empty':
+      return sql`(${valueExpr} IS NOT NULL AND ${valueExpr} != '' AND canonical_data ? '${sql.raw(condition.fieldId)}')`;
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Builds a SQL WHERE clause for a filter group (nested conditions with own logic).
+ */
+function buildGroupClause(
+  group: FilterGroup,
+  fieldTypes?: Record<string, string>,
+  currentUserId?: string,
+): SQL | null {
+  const clauses = group.conditions
+    .map((c) => buildConditionClause(c, fieldTypes, currentUserId))
+    .filter((c): c is SQL => c !== null);
+
+  if (clauses.length === 0) return null;
+  if (clauses.length === 1) return clauses[0]!;
+
+  return group.logic === 'or' ? or(...clauses)! : and(...clauses)!;
+}
+
+/**
+ * Builds a complete filter WHERE clause from a FilterConfig.
+ * Combines top-level conditions and nested groups using the top-level logic.
+ */
+export function buildFilterClauses(
+  filters?: FilterConfig,
+  fieldTypes?: Record<string, string>,
+  currentUserId?: string,
+): SQL | null {
+  if (!filters) return null;
+
+  const allClauses: SQL[] = [];
+
+  // Top-level conditions
+  for (const condition of filters.conditions) {
+    const clause = buildConditionClause(condition, fieldTypes, currentUserId);
+    if (clause) allClauses.push(clause);
+  }
+
+  // Nested groups
+  for (const group of filters.groups) {
+    const clause = buildGroupClause(group, fieldTypes, currentUserId);
+    if (clause) allClauses.push(clause);
+  }
+
+  if (allClauses.length === 0) return null;
+  if (allClauses.length === 1) return allClauses[0]!;
+
+  return filters.logic === 'or' ? or(...allClauses)! : and(...allClauses)!;
 }
 
 // ---------------------------------------------------------------------------

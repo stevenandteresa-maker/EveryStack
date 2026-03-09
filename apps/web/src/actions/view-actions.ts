@@ -32,6 +32,25 @@ const sortLevelSchema = z.object({
   direction: z.enum(['asc', 'desc']),
 });
 
+const filterConditionPatchSchema = z.object({
+  id: z.string(),
+  fieldId: z.string().uuid(),
+  operator: z.string(),
+  value: z.unknown(),
+});
+
+const filterGroupPatchSchema = z.object({
+  id: z.string(),
+  logic: z.enum(['and', 'or']),
+  conditions: z.array(filterConditionPatchSchema),
+});
+
+const filterConfigPatchSchema = z.object({
+  logic: z.enum(['and', 'or']),
+  conditions: z.array(filterConditionPatchSchema),
+  groups: z.array(filterGroupPatchSchema),
+});
+
 const viewConfigPatchSchema = z.object({
   columns: z
     .array(
@@ -48,6 +67,7 @@ const viewConfigPatchSchema = z.object({
   columnOrder: z.array(z.string().uuid()).optional(),
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
   sorts: z.array(sortLevelSchema).optional(),
+  filters: filterConfigPatchSchema.optional(),
 });
 
 const updateViewConfigSchema = z.object({

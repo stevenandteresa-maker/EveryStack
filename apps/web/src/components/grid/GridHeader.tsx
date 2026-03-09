@@ -16,8 +16,10 @@ import type { EffectiveRole } from '@everystack/shared/auth';
 import { roleAtLeast } from '@everystack/shared/auth';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ColumnResizer } from './ColumnResizer';
 import { ColumnHeaderMenu } from './ColumnHeaderMenu';
+import { QuickFilterPopover } from './QuickFilterPopover';
 import {
   GRID_TOKENS,
   CHECKBOX_COLUMN_WIDTH,
@@ -81,6 +83,7 @@ export interface GridHeaderProps {
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
   sorts: SortLevel[];
+  filteredFieldIds: Set<string>;
   allSelected?: boolean;
   someSelected?: boolean;
   onToggleSelectAll?: () => void;
@@ -88,6 +91,8 @@ export interface GridHeaderProps {
   onToggleSort: (fieldId: string) => void;
   onSortAscending: (fieldId: string) => void;
   onSortDescending: (fieldId: string) => void;
+  onApplyQuickFilter: (fieldId: string, operator: string, value: unknown) => void;
+  onClearQuickFilter: (fieldId: string) => void;
   onStartResize: (fieldId: string, width: number, e: React.MouseEvent) => void;
   onDragStart: (fieldId: string, e: React.DragEvent) => void;
   onDragOver: (fieldId: string, e: React.DragEvent) => void;
@@ -109,6 +114,7 @@ export const GridHeader = memo(function GridHeader({
   userRole,
   columnColors,
   sorts,
+  filteredFieldIds,
   allSelected,
   someSelected,
   onToggleSelectAll,
@@ -116,6 +122,8 @@ export const GridHeader = memo(function GridHeader({
   onToggleSort,
   onSortAscending,
   onSortDescending,
+  onApplyQuickFilter,
+  onClearQuickFilter,
   onStartResize,
   onDragStart,
   onDragOver,
@@ -179,6 +187,8 @@ export const GridHeader = memo(function GridHeader({
         const isFrozen = frozenFieldIds.includes(field.id);
         const sortLevel = sorts.find((s) => s.fieldId === field.id);
 
+        const hasActiveFilter = filteredFieldIds.has(field.id);
+
         return (
           <ColumnHeader
             key={header.id}
@@ -188,10 +198,13 @@ export const GridHeader = memo(function GridHeader({
             userRole={userRole}
             columnColors={columnColors}
             sortDirection={sortLevel?.direction}
+            hasActiveFilter={hasActiveFilter}
             onSelect={() => onSelectColumn(field.id)}
             onToggleSort={() => onToggleSort(field.id)}
             onSortAscending={() => onSortAscending(field.id)}
             onSortDescending={() => onSortDescending(field.id)}
+            onApplyQuickFilter={onApplyQuickFilter}
+            onClearQuickFilter={onClearQuickFilter}
             onStartResize={onStartResize}
             onDragStart={onDragStart}
             onDragOver={onDragOver}
@@ -240,10 +253,13 @@ interface ColumnHeaderProps {
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
   sortDirection?: 'asc' | 'desc';
+  hasActiveFilter: boolean;
   onSelect: () => void;
   onToggleSort: () => void;
   onSortAscending: () => void;
   onSortDescending: () => void;
+  onApplyQuickFilter: (fieldId: string, operator: string, value: unknown) => void;
+  onClearQuickFilter: (fieldId: string) => void;
   onStartResize: (fieldId: string, width: number, e: React.MouseEvent) => void;
   onDragStart: (fieldId: string, e: React.DragEvent) => void;
   onDragOver: (fieldId: string, e: React.DragEvent) => void;
@@ -263,10 +279,13 @@ const ColumnHeader = memo(function ColumnHeader({
   userRole,
   columnColors,
   sortDirection,
+  hasActiveFilter,
   onSelect,
   onToggleSort,
   onSortAscending,
   onSortDescending,
+  onApplyQuickFilter,
+  onClearQuickFilter,
   onStartResize,
   onDragStart,
   onDragOver,
@@ -377,6 +396,22 @@ const ColumnHeader = memo(function ColumnHeader({
           <span className="truncate">{field.name}</span>
         )}
 
+        {/* Filter dot indicator */}
+        {hasActiveFilter && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="shrink-0 h-2 w-2 rounded-full"
+                style={{ backgroundColor: 'var(--workspace-accent, #0D9488)' }}
+                aria-label={t('filter_placeholder')}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {t('filter_placeholder')}
+            </TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Sort indicator */}
         <button
           type="button"
@@ -396,6 +431,14 @@ const ColumnHeader = memo(function ColumnHeader({
             <ArrowUp className="h-3 w-3" />
           )}
         </button>
+
+        {/* Quick filter popover */}
+        <QuickFilterPopover
+          field={field}
+          hasActiveFilter={hasActiveFilter}
+          onApplyFilter={onApplyQuickFilter}
+          onClearFilter={onClearQuickFilter}
+        />
 
         {/* Resize handle */}
         <ColumnResizer

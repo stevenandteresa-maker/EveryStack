@@ -9,6 +9,7 @@
 
 import { z } from 'zod';
 import type { DbRecord, Field, View } from '@everystack/shared/db';
+import { filterConfigSchema } from '@/components/grid/filter-types';
 
 // ---------------------------------------------------------------------------
 // GridRecord — typed wrapper around records table row
@@ -59,6 +60,7 @@ export const viewConfigSchema = z.object({
   columnOrder: z.array(z.string().uuid()).optional(),
   columnColors: z.record(z.string().uuid(), z.string()).optional(),
   sorts: z.array(sortLevelSchema).optional(),
+  filters: filterConfigSchema.optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;

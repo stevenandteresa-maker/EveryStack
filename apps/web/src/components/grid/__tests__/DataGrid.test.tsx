@@ -112,6 +112,9 @@ const defaultProps = {
   onHideField: vi.fn(),
   onSetColumnColor: vi.fn(),
   onRenameField: vi.fn(),
+  filteredFieldIds: new Set<string>(),
+  onApplyQuickFilter: vi.fn(),
+  onClearQuickFilter: vi.fn(),
 };
 
 // ---------------------------------------------------------------------------
