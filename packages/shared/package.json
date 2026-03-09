@@ -36,7 +36,7 @@
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
     "@sentry/node": "^10.42.0",
-    "@types/node": "^22.15.3",
+    "@types/node": "^25.3.5",
     "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.31.9",
     "msw": "^2.12.10",
