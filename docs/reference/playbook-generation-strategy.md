@@ -213,10 +213,10 @@ The MANIFEST's "Reference Doc Scope Map" (bottom of MANIFEST.md) defines the can
 | **2** | MVP — Sync | 3 (2A–2C) | ~36 | Sync engine, FieldTypeRegistry, Airtable adapter, bidirectional sync with conflict resolution, Notion adapter, error recovery, sync dashboard. SmartSuite adapter deferred to Phase 3 Core UX. | `sync-engine.md`, `database-scaling.md` (JSONB indexes), `field-groups.md` (synced table tab badges) |
 | **3** | MVP — Core UX | 16 (3A-i–3H-ii) | ~168 | Grid/Card views, Record View, field-level permissions, cross-linking, SDS + Command Bar, communications, documents, portals, forms, field groups, bulk ops, record templates, settings, audit log UI, My Office, mobile | `permissions.md`, `cross-linking.md`, `tables-and-views.md`, `mobile.md`, `mobile-navigation-rewrite.md`, `my-office.md`, `command-bar.md`, `communications.md`, `email.md`, `audit-log.md`, `settings.md`, `forms.md`, `schema-descriptor-service.md`, `field-groups.md`, `bulk-operations.md`, `record-templates.md`, `smart-docs.md`, `portals.md` |
 | **4** | MVP — Automations | 2 (4A–4B) | ~22 | Trigger system + execution engine (6 triggers), 7 action implementations, webhooks (inbound + outbound), dry run testing, status field governance (modes 1+2) | `automations.md`, `approval-workflows.md` (modes 1+2 only) |
-| **5** | MVP — AI | 2 (5A–5B) | ~19 | AI data contract implementations (~25 field types), Context Builder, 5 user-facing AI features (Smart Fill, Record Summarization, Document AI Draft, Field & Link Suggestions, Automation Building AI), metering dashboards | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md` |
+| **5** | MVP — AI | 3 (5A–5C) | ~31 | AI data contract implementations (~25 field types), Context Builder, 5 user-facing AI features (Smart Fill, Record Summarization, Document AI Draft, Field & Link Suggestions, Automation Building AI), metering dashboards, Runtime Skills Architecture (skill loader, 7 platform skills, token budget allocator, skill-aware intent classification, eval integration) | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md`, `ai-skills-architecture.md` |
 | **6** | MVP — API | 2 (6A–6B) | ~15 | Platform API Data API (Record CRUD + filtering + batch), Schema API, File Upload API, SDS endpoint. Provisioning API deferred to post-MVP. | `platform-api.md` |
 
-**Totals: 35 sub-phases, ~346 estimated prompts.**
+**Totals: 36 sub-phases, ~358 estimated prompts.**
 
 ### Sub-Phase Requirement — Subdivide Until Quality Is Maximized
 
@@ -404,16 +404,19 @@ Phase 3 — Second Half:
 
 4A can start as early as step 6 (after 2A completes), but 4B is gated on 3D (document generation action) and 3C (email/notification actions).
 
-### Phase 5: MVP — AI (2 sub-phases, ~19 prompts)
+### Phase 5: MVP — AI (3 sub-phases, ~31 prompts)
 
 | Sub-Phase | Deliverable | Est. Prompts | Key Risk |
 |-----------|-------------|--------------|----------|
 | **5A** | AI Data Contract Implementations & Context Builder | 9 | Field type round-trip fidelity (~25 types) |
 | **5B** | User-Facing AI Features & Metering Dashboards | 10 | AI feature UX consistency across 5 features |
+| **5C** | Runtime Skills Architecture | 12 | Skill-context token budget management across 7 platform skills |
 
-**Key decisions:** 5A implements `canonicalToAIContext()` and `aiToCanonical()` for all MVP field types, builds the Context Builder with SDS-backed heuristic schema retrieval, and registers the full AI tool suite. 5B builds the 5 user-facing features (Smart Fill, Record Summarization, Document AI Draft, Field & Link Suggestions, Automation Building AI) plus the Admin AI Dashboard and User Usage View.
+**Key decisions:** 5A implements `canonicalToAIContext()` and `aiToCanonical()` for all MVP field types, builds the Context Builder with SDS-backed heuristic schema retrieval, and registers the full AI tool suite. 5B builds the 5 user-facing features (Smart Fill, Record Summarization, Document AI Draft, Field & Link Suggestions, Automation Building AI) plus the Admin AI Dashboard and User Usage View. 5C builds the runtime skills architecture from `ai-skills-architecture.md`: Context Builder skill integration, intent classifier enhancement, Prompt Registry `requiredSkills` field, 7 platform skill documents (automation-builder, portal-builder, document-templates, report-charts, record-management, communication, command-bar), `skill_context` JSONB column on `ai_usage_log`, eval framework extension, and token budget allocator.
 
-5A can start in parallel with 4A (no dependency between them). 5B depends on both 5A and 4A (Automation Building AI needs the automation builder).
+5A can start in parallel with 4A (no dependency between them). 5B depends on both 5A and 4A (Automation Building AI needs the automation builder). 5C depends on 5A (Context Builder) and 5B (AI features must exist before skills enhance them). Late Phase 5 / early post-MVP items from `ai-skills-architecture.md` (Workspace Usage Descriptor, first integration skill, Skill Performance dashboard) are deferred to post-MVP unless time permits.
+
+**Post-MVP AI guardrails:** The following docs define post-MVP AI scope and must NOT be built during Phase 5: `agent-architecture.md` (AI agent runtime — 650 lines), `platform-maintenance-agents.md` (platform-level autonomous agents — 1,106 lines), `ai-field-agents-ref.md` (LLM-powered computed fields — 1,618 lines). These depend on the agent runtime and DuckDB Context Layer. Only `ai-skills-architecture.md` MVP-scoped items (Tier 1 skills + Context Builder integration) are in Phase 5; the Skill Maintenance Agent from that doc is post-MVP.
 
 ### Phase 6: MVP — API (2 sub-phases, ~15 prompts)
 

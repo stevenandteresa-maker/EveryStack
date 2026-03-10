@@ -2,10 +2,10 @@
 
 ## Summary
 - Phase 4 sub-phases: 2 (estimated 22 prompts)
-- Phase 5 sub-phases: 2 (estimated 19 prompts)
+- Phase 5 sub-phases: 3 (estimated 31 prompts)
 - Phase 6 sub-phases: 2 (estimated 15 prompts)
-- Total sub-phases (Phases 4–6): 6
-- Total estimated prompts (Phases 4–6): 56
+- Total sub-phases (Phases 4–6): 7
+- Total estimated prompts (Phases 4–6): 68
 
 ### Key Scope Decisions
 
@@ -14,11 +14,14 @@
 **Automation Building AI deferred to Phase 5:** The "Describe what you want" NL-to-automation-config feature is listed in `ai-architecture.md` as MVP AI capability `generate_automation`. While it enhances the automation builder, it depends on the full AI data contract (5A) and Context Builder. Phase 4 builds the manual automation builder; Phase 5 adds the AI enhancement on top. This mirrors the AI independence guarantee — automations work fully without AI.
 
 **AI features scope-checked against GLOSSARY and docs:**
-- AI Agents: **excluded** (post-MVP per glossary)
+- AI Agents: **excluded** (post-MVP per glossary; see `agent-architecture.md` — 650 lines, depends on agent runtime)
 - Self-hosted AI: **excluded** (post-MVP per glossary)
 - Vector embeddings / semantic search: **excluded** (post-MVP per glossary)
 - DuckDB Context Layer: **excluded** (post-MVP per glossary)
-- AI Field Agents: **excluded** (post-MVP per glossary)
+- AI Field Agents: **excluded** (post-MVP per glossary; see `ai-field-agents-ref.md` — 1,618 lines, depends on DuckDB + agent runtime)
+- Platform Maintenance Agents: **excluded** (post-MVP; see `platform-maintenance-agents.md` — 1,106 lines, depends on `agent-architecture.md` runtime)
+- Skill Maintenance Agent: **excluded** (post-MVP per `ai-skills-architecture.md` — depends on agent runtime)
+- Workspace Usage Descriptor: **deferred** (late Phase 5 or early post-MVP per `ai-skills-architecture.md` — depends on automations, portals, integrations being built first)
 - MCP Server/Client: **excluded** (post-MVP per glossary)
 - Provider Evaluation Framework: **excluded** (post-MVP — shadow mode, regression detection)
 - Booking automation triggers: **excluded** (booking-scheduling.md ships "Post-MVP — Portals & Apps (Fast-Follow)")
@@ -161,6 +164,38 @@
 
 ---
 
+### 5C — Runtime Skills Architecture
+
+**One-sentence scope:** Builds the runtime AI skills system from `ai-skills-architecture.md` MVP-scoped items: Context Builder skill integration, skill-aware intent classification, Prompt Registry `requiredSkills` field, 7 internal platform skill documents, `skill_context` JSONB column on `ai_usage_log`, eval framework extension for skill-enriched prompts, and the token budget allocator.
+
+**Reference Doc Map:**
+| Doc | Sections | Line Range | Est. Lines |
+|-----|----------|------------|------------|
+| ai-skills-architecture.md | Tier 1 Platform Skills (7 skill definitions), Feature Skill Registry, Token Budget Allocator, Skill-Aware Intent Classification, What This Changes (Phase 5 work items), Implementation Sequence | 80–214, 250–320, 500–599, 640–653 | ~310 |
+| ai-architecture.md | Context Builder, Prompt Registry | 182–250 | ~70 |
+
+**Total reference lines:** ~380
+
+**Scope Boundaries:**
+- **Includes:** Context Builder skill integration (skill documents loaded alongside schema context based on intent classification), intent classifier enhancement (classifies user intent → selects relevant platform skills → loads skill context into prompt), Prompt Registry `requiredSkills` field (prompt templates declare which skills they need), 7 internal platform skill documents (automation-builder.md at 1,200/500/250 tokens across 3 condensation levels, portal-builder.md at 800/350/200, document-templates.md at 700/300/150, report-charts.md at 900/400/200, record-management.md at 1,000/450/200, communication.md at 600/250/120, command-bar.md at 500/200/100), `skill_context` JSONB column on `ai_usage_log` (tracks which skills were loaded per AI call for analytics), eval framework extension (test that skill-enriched prompts maintain ≥95% schema compliance), token budget allocator (manages combined schema + skill context within model token limits, 3-level condensation)
+- **Excludes:** Skill Maintenance Agent (post-MVP — depends on agent runtime from `agent-architecture.md`), Workspace Usage Descriptor / Tier 2 skills (late Phase 5 or post-MVP — depends on automations, portals, integrations being fully built), MCP integration skills (post-MVP), Skill Performance dashboard (late Phase 5 or post-MVP), first integration skill (post-MVP), Behavioral skills / Tier 3 (post-MVP)
+- **Creates schema for:** `skill_context` JSONB column addition to `ai_usage_log` (migration); `requiredSkills` field on prompt registry entries (code-level, no migration needed — prompt templates are code files)
+
+**Dependencies:**
+- **Depends on:** 5A (Context Builder — skills integrate into the context assembly pipeline), 5B (AI features must exist so skills can enhance them; prompt templates from 5B gain `requiredSkills` field), 1H (AIService skeleton, prompt registry infrastructure)
+- **Unlocks:** Post-MVP skills evolution (Workspace Usage Descriptor, Skill Maintenance Agent, MCP integration skills)
+- **Cross-phase deps:** 1H, 5A, 5B
+
+**Sizing:**
+- **Estimated prompts:** 12
+- **Complexity:** Medium
+- **Key risk:** Token budget management — 7 platform skills at varying sizes (500–1,200 tokens each at full level) must fit within model context alongside schema context and user data; the 3-level condensation system must degrade gracefully without losing critical operational knowledge
+
+**Existing Roadmaps:**
+- No existing roadmaps for this sub-phase's docs
+
+---
+
 ## Phase 6: MVP — API
 
 ### 6A — Data API: Record CRUD, Filtering & Batch Operations
@@ -255,7 +290,10 @@ Phase 5 — AI
  │    │    depends on: 1E, 1H, 2A, 3B-i, 3B-ii
  │    │
  │    └── 5B (User-Facing AI Features + Metering Dashboards)
- │         depends on: 5A, 4A, 3A-ii, 3B-ii, 3D, 1F, 1H
+ │    │    depends on: 5A, 4A, 3A-ii, 3B-ii, 3D, 1F, 1H
+ │    │
+ │    └── 5C (Runtime Skills Architecture)
+ │         depends on: 5A, 5B, 1H
  │
 Phase 6 — API
  │
@@ -269,11 +307,13 @@ Phase 6 — API
 **Parallel execution potential:**
 - Phases 4 and 5 can proceed in parallel after Phase 3 completes: 4A and 5A have no direct dependencies on each other.
 - 5B depends on both 5A and 4A (Automation Building AI needs the automation builder), so it cannot start until both complete.
+- 5C depends on 5A and 5B (skills enhance existing AI features), so it runs after 5B completes.
 - Phase 6 depends on Phase 4 (API mutations fire automation triggers), so 6A must wait for 4A+4B.
 - 6A and 6B can proceed in parallel (6B has no dependency on 6A).
+- 5C and 6A/6B can proceed in parallel (no dependencies between them).
 
 **Critical path:** 4A → 4B → 6A (for automation trigger integration on API mutations)
-**Parallel path:** 5A → 5B (can overlap with 4B and 6B)
+**Parallel path:** 5A → 5B → 5C (can overlap with 4B, 6A, and 6B)
 
 ---
 
