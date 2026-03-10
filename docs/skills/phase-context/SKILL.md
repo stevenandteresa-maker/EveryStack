@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-09
+**Last updated:** 2026-03-10
 **Branch:** `main`
 **Latest tag:** `v0.2.0-phase-2a`
-**Total commits:** 9 (squash merges)
+**Total commits:** 12 (squash merges)
 
 ---
 
@@ -782,19 +782,178 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 
 **Patterns established in 2C:** NotionAdapter follows same FieldTypeRegistry pattern as AirtableAdapter (`registerNotionTransforms()` at startup). `NotionApiClient` with rate limiting and cursor-based pagination. `classifyError()` maps platform errors to `SyncErrorCode` for driving recovery flows. `SyncScheduler` 30s tick with P0–P3 priority dispatch. Multi-tenant fairness cap (20% per tenant, P0 exempt). Exponential backoff via `BACKOFF_SCHEDULE` array. `ConnectionHealth` JSONB on `base_connections` for health tracking. Sync dashboard as tabbed settings page pattern. `PlatformBadge` + `SyncStatusIcon` as independent visual channels in sidebar. `SyncNotificationToast` for real-time sync event feedback. Schema change detection with diff-based comparison.
 
+### Phase 3A-ii — View Features, Record View, Card View & Data Import (Complete)
+
+Grid toolbar with sorts/filters/grouping/color coding, summary footer, bulk actions, view switcher, Record View overlay, Card View, Sections (universal list organizer), CSV Import wizard, field-level presence locking, and realtime collaboration indicators.
+
+**Grid Toolbar & View Features (`apps/web/src/components/grid/`):**
+- `GridToolbar.tsx` — Unified toolbar above grid: left group (ViewSwitcher, HideFieldsPanel, FilterBuilder, SortPanel, grouping, ColorRuleBuilder) + right group (density toggle, share, overflow menu)
+- `ViewSwitcher.tsx` — Dropdown showing Shared Views + My Views grouped by sections. View switch, create, rename, duplicate, delete, promote, lock
+- `SortPanel.tsx` — Multi-level sort (max 3) with drag-to-reorder, field/direction selectors. `MAX_SORT_LEVELS` constant
+- `FilterBuilder.tsx` — Full filter UI with AND/OR toggle, nested groups, field-type-appropriate operators
+- `GroupHeader.tsx` — Collapsible group header with field name, colored pill for Select/Status, record count badge, indent per nesting level
+- `GroupFooter.tsx` — Per-group aggregation row with summary label + aggregation values per field
+- `SummaryFooter.tsx` — Sticky bottom summary row, clickable cells to pick aggregation type per column. `SUMMARY_FOOTER_HEIGHT` constant
+- `ColorRuleBuilder.tsx` — Panel for row + cell conditional color rules using filter conditions + color swatch palette
+- `HideFieldsPanel.tsx` — Toggle field visibility, drag-to-reorder, show/hide all (primary field always visible)
+- `QuickFilterPopover.tsx` — Field-appropriate quick filter dropdown from column header for single condition. Supports `ME_TOKEN` for people fields
+- `BulkActionsToolbar.tsx` — Appears when 2+ rows selected: delete (with confirmation), bulk field edit, duplicate, copy, clear. `compact` prop for icon-strip mode
+- `RecordCount.tsx` — Displays "X of Y records" (filtered) or "Y records" (unfiltered) in footer area
+- `RowPresenceIndicator.tsx` — 3px colored left border when another user is editing a record
+- `FieldLockIndicator.tsx` — Avatar badge on cells locked by another user (top-right corner, tooltip)
+- `ViewCreateDialog.tsx` — Dialog for new view: name input, type selector (Grid/Card), copy current config toggle, make shared toggle (Manager+)
+- `GridRecordViewLayout.tsx` — Combined layout: Record View 60% (right overlay) + Grid 40% (dimmed, interactive) when open; full grid when closed
+
+**Grid Hooks & Utilities:**
+- `use-sort.ts` — Multi-level sort management (max 3), persists to `views.config.sorts`. Exports `useSort`, `MAX_SORT_LEVELS`
+- `use-filters.ts` — Filter conditions + groups, persists to `views.config.filters`. Exports `useFilters`
+- `use-grouping.ts` — Multi-level grouping (max 3), computes nested group structure, collapse/expand. Exports `useGrouping`, `computeGroups`, `GroupNode`, `MAX_GROUP_LEVELS`, `GROUP_HEADER_HEIGHT`, `GROUP_FOOTER_HEIGHT`, `GROUP_INDENT_PX`
+- `use-color-rules.ts` — Row + cell conditional color rules. Exports `useColorRules`, `ColorRulesConfig`, `RowColorRule`, `CellColorRule`
+- `use-summary-footer.ts` — Per-column aggregation type management. Exports `useSummaryFooter`, `SummaryFooterConfig`
+- `use-row-selection.ts` — Multi-row selection with Shift+Click range, Cmd/Ctrl+Click toggle. Exports `useRowSelection`
+- `aggregation-utils.ts` — Field-type-specific aggregation functions (count, sum, avg, min, max, earliest, latest, range, percent_checked). Exports `computeAggregation()`, `getAggregationOptions()`, `getDefaultAggregation()`, `AggregationType`
+- `filter-types.ts` — Filter condition types, operators per field type, Zod schemas, `ME_TOKEN`. Exports `FilterCondition`, `FilterConfig`, `FilterGroup`, `FilterOperator`, `FILTER_OPERATORS`, `DATE_PRESETS`, `getOperatorsForFieldType()`, `isUnaryOperator()`, `createFilterCondition()`, `createEmptyFilterConfig()`
+
+**Record View (`apps/web/src/components/record-view/`):**
+- `RecordView.tsx` — Overlay component showing record details, tabs, thread placeholder. Props: `isOpen`, `inline`, `onClose`
+- `RecordViewCanvas.tsx` — Grid layout of field renderers (1–4 columns configurable)
+- `FieldRenderer.tsx` — Individual field editor wrapping cell renderers for read-write context
+- `RecordViewTabs.tsx` — Tab bar (Details, Activity) with lazy-loaded thread placeholder
+- `RecordViewHeader.tsx` — Header with record name, navigation arrows, close button
+- `RecordViewConfigPicker.tsx` — Dropdown to pick/create record view layout configurations
+- `InlineSubTable.tsx` — Embedded mini-grid for linked records (parent-child patterns)
+- `InlineSubTableRow.tsx` — Row within inline sub-table with field cells
+- `LinkedRecordPills.tsx` — Pills showing linked record names with link button
+- `use-record-view.ts` — Hook managing record view state: `openRecordId`, `recordViewConfig`, navigation
+- `use-inline-sub-table.ts` — Hook for loading + sorting linked records in sub-table
+
+**Card View (`apps/web/src/components/card-view/`):**
+- `CardView.tsx` — Records as cards with three layouts: single column, 2–3 col grid, compact list. Reuses GroupHeader for grouped sections
+- `CardViewToolbar.tsx` — Layout selector, column count toggle
+- `RecordCard.tsx` — Single card: primary field, summary fields, action buttons
+- `index.ts` — Barrel exports
+- `apps/web/src/lib/hooks/use-card-view.ts` — Hook managing card view layout/column preferences
+
+**Sections — Universal List Organizer (`apps/web/src/components/sections/`):**
+- `SectionList.tsx` — Renders sections with collapsible headers, drag-to-reorder
+- `SectionHeader.tsx` — Collapse chevron, name, action menu (rename, delete)
+- `use-sections.ts` — Hook loading sections by context string
+
+**CSV Import (`apps/web/src/components/import/`):**
+- `CsvImportWizard.tsx` — 5-step wizard: upload → field mapping → validation → preview → execution
+- `ImportUpload.tsx` — CSV file picker + first-N-rows preview
+- `ImportFieldMapping.tsx` — Map CSV columns to table fields via dropdowns
+- `ImportValidation.tsx` — Validates rows, shows errors per field
+- `ImportPreview.tsx` — Preview of rows to be imported
+- `ImportExecution.tsx` — Progress bar, row count, error handling during batch import
+
+**Data Functions (`apps/web/src/data/`):**
+- `views.ts` — Enhanced: `getTableViews()`, `getViewById()`, `getSharedViews()`, `getMyViews()`
+- `records.ts` — Enhanced: `getTableRecords()` with composed query builder for filtering, sorting, grouping, aggregation
+- `sections.ts` — New: `getSections()` by context
+- `record-view-configs.ts` — New: `getRecordViewConfigs()` for record view layouts
+- `cross-links.ts` — Enhanced: `getCrossLinks()`, `getLinkedRecords()` for linked record lookup
+
+**Server Actions (`apps/web/src/actions/`):**
+- `record-actions.ts` — Enhanced: `bulkDeleteRecords()` added
+- `view-actions.ts` — Enhanced: `updateViewConfig()` (sorts, filters, groups, columns), `promoteViewToShared()`, `lockView()`
+- `record-view-actions.ts` — New: `createRecordViewConfig()`, `updateRecordViewConfig()`, `deleteRecordViewConfig()`
+- `section-actions.ts` — New: `createSection()`, `updateSection()`, `deleteSection()`, `moveItemToSection()`, `reorderSections()`
+- `import-actions.ts` — New: `importRecords()` (batch 100 rows, quota check, error report). Types: `ImportResult`, `ImportRowError`
+
+**Client Hooks (`apps/web/src/lib/hooks/`):**
+- `use-current-view.ts` — Manages active view from URL param, applies view config. Exports `useCurrentView()`, `extractViewConfig()`
+- `use-field-lock.ts` — Tracks which users are editing which fields (realtime). Exports `useFieldLock()`
+- `use-media-query.ts` — Responsive breakpoint query hook. Exports `useMediaQuery()`
+- `use-record-presence.ts` — Tracks which user is editing which record (row-level presence). Exports `useRecordPresence()`
+- `use-realtime-updates.ts` — Subscribes to grid updates via Socket.io. Exports `useRealtimeUpdates()`
+
+**Realtime (`apps/realtime/src/`):**
+- `handlers/lock-handler.ts` — New: `field:lock` / `field:unlock` event handlers for field-level presence locking
+- `server.ts` — Updated: registers lock handler
+
+**Realtime Events (`packages/shared/realtime/events.ts`):**
+- Added: `FIELD_LOCKED`, `FIELD_UNLOCKED`, `RECORD_PRESENCE_JOINED`, `RECORD_PRESENCE_LEFT` events
+
+**UI Primitives:**
+- `apps/web/src/components/ui/alert-dialog.tsx` — AlertDialog component (used by bulk delete confirmation)
+- `apps/web/src/components/ui/progress.tsx` — Progress bar component (used by CSV import)
+
+**i18n (`en.json` + `es.json`):**
+- New keys: `grid.sort_panel.*`, `grid.filter.*`, `grid.grouping.*`, `grid.color_rules.*`, `grid.summary_footer.*`, `grid.bulk_actions.*`, `grid.view_switcher.*`, `grid.hide_fields.*`, `grid.toolbar.*`, `grid.record_count.*`, `record_view.*`, `card_view.*`, `sections.*`, `import.*`, `cells.checklist_add_item`, `cells.linked_record_items`
+
+**Tests (Phase 3A-ii):**
+- `apps/web/src/components/grid/__tests__/sorting.test.tsx`
+- `apps/web/src/components/grid/__tests__/filtering.test.tsx`
+- `apps/web/src/components/grid/__tests__/grouping.test.tsx`
+- `apps/web/src/components/grid/__tests__/color-summary.test.tsx`
+- `apps/web/src/components/grid/__tests__/bulk-actions-toolbar.test.tsx`
+- `apps/web/src/components/grid/__tests__/toolbar.test.tsx`
+- `apps/web/src/components/grid/__tests__/views.test.tsx`
+- `apps/web/src/components/grid/__tests__/selection.test.tsx`
+- `apps/web/src/components/grid/__tests__/collaboration.test.tsx`
+- `apps/web/src/components/grid/__tests__/combined-layout.test.tsx`
+- `apps/web/src/components/grid/__tests__/record-deletion.test.tsx`
+- `apps/web/src/components/grid/__tests__/row-behavior.test.tsx`
+- `apps/web/src/components/record-view/__tests__/RecordView.test.tsx`
+- `apps/web/src/components/record-view/__tests__/RecordViewEditing.test.tsx`
+- `apps/web/src/components/record-view/__tests__/InlineSubTable.test.tsx`
+- `apps/web/src/components/card-view/__tests__/CardView.test.tsx`
+- `apps/web/src/components/sections/__tests__/Sections.test.tsx`
+- `apps/web/src/components/import/__tests__/CsvImport.test.tsx`
+- `apps/web/src/actions/__tests__/bulk-record-actions.test.ts`
+- `apps/web/src/actions/__tests__/bulk-record-actions.integration.test.ts`
+- `apps/web/src/actions/__tests__/import-actions.integration.test.ts`
+- `apps/web/src/data/__tests__/views.integration.test.ts`
+- `apps/web/src/data/__tests__/records.integration.test.ts`
+- `apps/web/src/data/__tests__/sections.integration.test.ts`
+- `apps/web/src/data/__tests__/record-view-configs.integration.test.ts`
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts`
+
+**Patterns established:**
+- FilterBuilder and ColorRuleBuilder share `FilterCondition` type and operator system from `filter-types.ts`
+- `aggregation-utils.ts` centralizes field-type-appropriate aggregations for both SummaryFooter and GroupFooter
+- All view state (sorts, filters, groups, columns, colors) persists to `views.config` JSONB via `updateViewConfig()`
+- Sections use generic `context` string (e.g., "table_view_switcher") + optional `contextParentId` for cross-feature reuse
+- Field-level presence locking via Socket.io `field:lock`/`field:unlock` events + Redis-backed lock state
+- Row-level presence via `useRecordPresence()` hook + `RowPresenceIndicator`
+- `GridRecordViewLayout` manages split-screen: 60% Record View overlay + 40% Grid
+- Card View reuses GroupHeader, filter/sort/group hooks, and color rules from Grid
+- CSV import batches at 100 rows with quota enforcement via `canCreateRecord()`
+- `useCurrentView()` manages view selection from URL params + view config application
+
+| Convention | Detail |
+| --- | --- |
+| **Grid toolbar** | `GridToolbar` orchestrates left-group (view controls) + right-group (display controls). Each feature (sort, filter, group, color, hide fields) is a self-contained panel component |
+| **View switching** | `ViewSwitcher` shows Shared + My views with sections. My Views are personal filter/sort overrides. `promoteViewToShared()` for Manager+ |
+| **Filter system** | `filter-types.ts` is the shared type foundation. `FilterBuilder` for full UI. `QuickFilterPopover` for single-condition column filter. `useFilters()` persists to view config |
+| **Sort system** | `SortPanel` with max 3 levels. `useSort()` persists to view config. Sort disables manual row reorder |
+| **Grouping** | `useGrouping()` computes nested `GroupNode` tree. Max 3 levels. `GroupHeader` + `GroupFooter` render per group. `GROUP_INDENT_PX` = indent per nesting level |
+| **Color coding** | `ColorRuleBuilder` for row + cell rules using filter conditions. `useColorRules()` persists to view config. Reuses `FilterCondition` type |
+| **Summary footer** | Sticky bottom row. `computeAggregation()` for field-type-specific functions. Per-group footers when grouping active |
+| **Bulk actions** | `BulkActionsToolbar` appears on 2+ selection. `useRowSelection()` with Shift+Click range + Cmd/Ctrl toggle. `bulkDeleteRecords()` server action |
+| **Record View** | 60% overlay from right. `RecordViewCanvas` renders `FieldRenderer` components in configurable grid (1–4 cols). Multiple saved configs per table via `record_view_configs` |
+| **Inline Sub-Table** | `InlineSubTable` renders linked records as embedded mini-grid in Record View. `display.style: "inline_table"` config on Linked Record fields |
+| **Card View** | Three layouts: single, grid (2–3 cols), compact list. `RecordCard` shows primary + summary fields. Shares filter/sort/group/color hooks with Grid |
+| **Sections** | Generic `SectionList`/`SectionHeader` components. Two tiers: personal (any user) + manager-created (visible to all). `section-actions.ts` for CRUD |
+| **CSV Import** | 5-step wizard via `CsvImportWizard`. Papaparse parsing → auto field mapping → validation preview → batch execution (100 rows) → error report |
+| **Field-level presence** | `useFieldLock()` → Socket.io `field:lock`/`field:unlock` → `FieldLockIndicator` avatar badge. Redis-backed lock state with TTL |
+| **Record presence** | `useRecordPresence()` → `RowPresenceIndicator` colored border. Tracks which users are viewing which records |
+| **Realtime grid updates** | `useRealtimeUpdates()` subscribes to record CRUD events for live grid refresh |
+
 ---
 
 ## What Does NOT Exist Yet
 
 **Sync Engine** — FieldTypeRegistry, canonical types, Airtable adapter (32 field types), and Notion adapter (18 property types) are operational. Initial sync, schema sync, orphan detection, outbound sync, conflict resolution, error recovery, priority scheduling, and smart polling are operational. SmartSuite adapter not yet implemented (adapter stub only). No webhook-based change detection (Airtable webhooks specced but not connected). No incremental/delta sync processor (uses full-table polling).
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 18 shadcn/ui primitives installed (added checkbox in 2A). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. TanStack Table + TanStack Virtual used by DataGrid. Zustand stores: sidebar-store (global) + use-grid-store (per-grid-instance).
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 20 shadcn/ui primitives installed (added alert-dialog + progress in 3A-ii). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. TanStack Table + TanStack Virtual used by DataGrid. Zustand stores: sidebar-store (global) + use-grid-store (per-grid-instance).
 
-**Views / Grid / Card** — Grid view is operational (DataGrid, 18 cell renderers, inline editing, keyboard navigation, clipboard, undo/redo, drag-to-fill, column resize/reorder/color, row reorder, row density, frozen columns, performance banner, empty state, skeleton loading). Card view not yet implemented. No view filters/sorts/grouping UI (server actions exist but no toolbar).
+**Views / Grid / Card** — Grid view fully operational: DataGrid, 18 cell renderers, inline editing, keyboard navigation, clipboard, undo/redo, drag-to-fill, column management, row management, GridToolbar (sort, filter, group, color, hide fields, view switcher), SummaryFooter, BulkActionsToolbar, RecordCount, field-level presence (FieldLockIndicator), row-level presence (RowPresenceIndicator), realtime updates, GridRecordViewLayout (split-screen with Record View). Card view operational: CardView (3 layouts), RecordCard, CardViewToolbar. CSV Import operational: CsvImportWizard (5-step). Sections operational: SectionList, SectionHeader.
 
-**Record View** — No overlay component. Schema for `record_view_configs` exists but no UI.
+**Record View** — Overlay operational: RecordView, RecordViewCanvas (1–4 column layout), FieldRenderer, RecordViewTabs, RecordViewHeader, RecordViewConfigPicker, InlineSubTable, LinkedRecordPills. Record Thread placeholder (UI shell only — no messaging implementation).
 
-**Cross-Linking** — Schema for `cross_links` + `cross_link_index` exists but no resolution logic.
+**Cross-Linking** — Schema for `cross_links` + `cross_link_index` exists. `getLinkedRecords()` data function for Record View display. No cross-link creation UI or resolution engine.
 
 **Portals & Forms** — Schema exists, no implementation. No portal auth (magic link/password), no form renderer.
 
@@ -804,7 +963,7 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 
 **Documents / PDF** — Schema for `document_templates` + `generated_documents` exists, no Gotenberg integration, no merge-tag engine.
 
-**AI Features** — AIService, providers, prompts, tools, metering, streaming, and data contract are operational. No AI feature UI yet (no Smart Fill panel, no NL Search bar, no Record Summarization widget). Prompt templates directory is empty (ready for feature-specific prompts). Vector embeddings and DuckDB Context Layer are Post-MVP.
+**AI Features** — AIService, providers, prompts, tools, metering, streaming, and data contract are operational. Feature Skill Registry skeleton operational (`packages/shared/ai/skills/`: `registry.ts`, `loader.ts`, `parser.ts`, `types.ts`, `index.ts` + 7 skill documents under `documents/platform/`). No AI feature UI yet (no Smart Fill panel, no NL Search bar, no Record Summarization widget). Vector embeddings and DuckDB Context Layer are Post-MVP.
 
 **Platform Owner Console** — Schemas and reference doc exist (`platform-owner-console.md`). No admin UI, no Stripe integration, no impersonation flow.
 
@@ -812,9 +971,9 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 
 **Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
-**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans + sync_dashboard/sync_failures/sync_notifications/reauth/schema_changes keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans + sync_dashboard/sync_failures/sync_notifications/reauth/schema_changes + grid (sort_panel, filter, grouping, color_rules, summary_footer, bulk_actions, view_switcher, hide_fields, toolbar, record_count) + record_view + card_view + sections + import + cells keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
-**Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, and event publishing are fully operational. No presence tracking yet (stubs exist, marked for MVP — Core UX).
+**Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, event publishing, and field-level lock handler are fully operational. Field-level presence locking and record-level presence tracking operational (via `field:lock`/`field:unlock` + `RECORD_PRESENCE_JOINED`/`RECORD_PRESENCE_LEFT` events).
 
 **Worker Jobs** — BullMQ worker with 6 queues, 3 file processors (thumbnail, scan, orphan cleanup), initial sync processor, inbound sync processor, sync scheduler (30s tick), escalation check processor, and sync error handler operational. Email, automation, and document-gen processors not yet implemented.
 
@@ -822,7 +981,7 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — Actions: `api-keys.ts`, `tenant-switch.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-filters.ts`, `sync-orphans.ts`, `sync-dashboard-actions.ts`, `sync-failure-actions.ts`, `sync-reauth.ts`, `sync-schema-actions.ts`. Data: `api-keys.ts`, `sidebar-navigation.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-dashboard.ts`, `sync-dashboard-conflicts.ts`, `sync-failures.ts`, `sync-schema-changes.ts`, `sync-status.ts`. No record CRUD actions, no workspace/table management actions yet.
+**Server Actions / Data Functions** — Actions: `api-keys.ts`, `tenant-switch.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-filters.ts`, `sync-orphans.ts`, `sync-dashboard-actions.ts`, `sync-failure-actions.ts`, `sync-reauth.ts`, `sync-schema-actions.ts`, `record-actions.ts` (create, update, delete, duplicate, reorder, bulkDelete), `view-actions.ts` (CRUD, updateViewConfig, promote, lock), `record-view-actions.ts` (CRUD record view configs), `section-actions.ts` (CRUD sections, move items, reorder), `import-actions.ts` (importRecords batch). Data: `api-keys.ts`, `sidebar-navigation.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-dashboard.ts`, `sync-dashboard-conflicts.ts`, `sync-failures.ts`, `sync-schema-changes.ts`, `sync-status.ts`, `tables.ts`, `fields.ts`, `records.ts` (with filter/sort/group/aggregate), `views.ts` (shared + my views), `sections.ts`, `record-view-configs.ts`, `cross-links.ts` (with getLinkedRecords). No workspace/table management actions yet.
 
 ---
 
@@ -853,7 +1012,7 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 | **Tags** | `v0.1.X-phase-YZ` |
 | **Security headers** | CSP + HSTS + X-Frame-Options. Platform (strict) vs Portal (embeddable) |
 | **Webhook verification** | Svix for Clerk, generic HMAC for others |
-| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. Sync notification events for toast-style UI feedback. 23+ event types in `REALTIME_EVENTS` |
+| **Realtime events** | `createEventPublisher(redis)` publishes to `realtime:t:{tenantId}:{channel}`. Sync notification events for toast-style UI feedback. 27+ event types in `REALTIME_EVENTS` (added `FIELD_LOCKED`, `FIELD_UNLOCKED`, `RECORD_PRESENCE_JOINED`, `RECORD_PRESENCE_LEFT` in 3A-ii) |
 | **Room authorization** | Tenant-scoped rooms (`t:{tenantId}:{resourceType}:{resourceId}`). 5 resource types with query-based authorization |
 | **Worker processors** | Extend `BaseProcessor<TData>`. Trace propagation + Pino child logger + Sentry. `processJob(job, logger)` abstract method |
 | **Graceful shutdown** | `setupGracefulShutdown()` with ordered handlers. Realtime: 10s, Worker: 30s forced exit |
@@ -864,7 +1023,7 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 | **Redis clients** | `createRedisClient(name)` with `maxRetriesPerRequest: null` for BullMQ. Separate clients for pub/sub (subscribe mode) |
 | **Design tokens** | CSS custom properties in globals.css. Three-layer color: accent, semantic, data palette |
 | **Typography** | DM Sans (UI), JetBrains Mono (code). 9-step scale in `design-system/typography.ts` |
-| **UI primitives** | 18 shadcn/ui components in `components/ui/` (added checkbox in 2A). Extend via composition, never recreate |
+| **UI primitives** | 20 shadcn/ui components in `components/ui/` (added alert-dialog + progress in 3A-ii). Extend via composition, never recreate |
 | **i18n** | next-intl, non-routing locale strategy. All user-facing text through `useTranslations()`. `check:i18n` CI gate |
 | **Shell layout** | Dark sidebar: Icon Rail (48px, always visible) + Content Zone (232px, expandable). Accent header (52px, `--shell-accent` CSS var with 150ms transition). White content. `block-size: 100dvh`. Responsive: sidebar hidden on mobile |
 | **Shell accent** | `ShellAccentProvider` React Context manages `--shell-accent` on `:root`. 8 curated org colors + fixed personal (#78716C) + fixed portal (#64748B). `getShellAccent()` computes correct accent. `useShellAccent()` hook: set, revert, applyTenantAccent. All ≥3:1 WCAG AA on dark sidebar |
@@ -908,6 +1067,18 @@ Notion platform adapter, sync error recovery flows, and the sync settings dashbo
 | **Sync dashboard** | Tabbed settings page at `/[workspaceId]/settings/sync/[baseConnectionId]`. 6 tabs: Overview, Tables & Filters, Conflicts, Failures, Schema Changes, History. Skeleton loading states |
 | **Sidebar sync badges** | `PlatformBadge` (14px logo overlay) + `SyncStatusIcon` (6 health states) as independent visual channels. `TableTabItem` integrates both into sidebar |
 | **Sync notifications** | `SyncNotificationToast` for real-time sync event feedback via Socket.io. Tenant-scoped delivery via standard event bus |
+| **Grid toolbar** | `GridToolbar` orchestrates sort/filter/group/color/hide-fields panels + ViewSwitcher. Left group (view controls) + right group (display controls) |
+| **Filter system** | `filter-types.ts` shared type foundation (`FilterCondition`, `FilterConfig`). `FilterBuilder` for full UI, `QuickFilterPopover` for column quick-filter. Reused by `ColorRuleBuilder` |
+| **Aggregation** | `aggregation-utils.ts` centralizes field-type-aware aggregation (sum, avg, min, max, count, earliest, latest, range, percent_checked). Used by SummaryFooter + GroupFooter |
+| **View config persistence** | All view state (sorts, filters, groups, columns, colors) persists to `views.config` JSONB via `updateViewConfig()` |
+| **Sections** | Generic `SectionList`/`SectionHeader`. Context-keyed (e.g., "table_view_switcher"). Two tiers: personal + manager-created. `section-actions.ts` for CRUD |
+| **Record View** | 60% right overlay via `GridRecordViewLayout`. `RecordViewCanvas` with 1–4 col grid of `FieldRenderer` components. Multiple saved configs via `record_view_configs` table |
+| **Inline Sub-Table** | `InlineSubTable` for linked record mini-grids in Record View. Config: `display.style: "inline_table"` on Linked Record field |
+| **Card View** | Three layouts: single, grid (2–3 cols), compact list. Shares filter/sort/group/color hooks with Grid |
+| **CSV Import** | 5-step `CsvImportWizard`. Batch execution at 100 rows with quota enforcement. Error report CSV on completion |
+| **Field-level presence** | `useFieldLock()` → Socket.io `field:lock`/`field:unlock` → `FieldLockIndicator` avatar badge. Redis-backed with TTL |
+| **Record presence** | `useRecordPresence()` → `RowPresenceIndicator` colored left border. Tracks which users are viewing which records |
+| **Realtime grid** | `useRealtimeUpdates()` subscribes to record CRUD events for live grid refresh without polling |
 
 ### Phase 3A-i — Grid View Core (Complete)
 
