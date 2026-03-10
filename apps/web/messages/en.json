@@ -727,6 +727,26 @@
     "config_new_name_placeholder": "Config name",
     "config_new_name": "New config name"
   },
+  "sections": {
+    "create_section": "Create section",
+    "rename": "Rename",
+    "delete_section": "Delete section",
+    "empty_section": "No items",
+    "expand_section": "Expand section",
+    "collapse_section": "Collapse section",
+    "personal_label": "Personal",
+    "shared_label": "Shared",
+    "delete_confirm_title": "Delete section",
+    "delete_confirm_description": "Are you sure? Items in this section will move to the top level.",
+    "delete_confirm": "Delete",
+    "create_success": "Section created.",
+    "rename_success": "Section renamed.",
+    "delete_success": "Section deleted.",
+    "error_create": "Failed to create section.",
+    "error_rename": "Failed to rename section.",
+    "error_delete": "Failed to delete section.",
+    "section_name_placeholder": "Section name"
+  },
   "card_view": {
     "error": "Failed to load card view",
     "untitled": "Untitled record",

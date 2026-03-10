@@ -23,6 +23,7 @@ export {
   createTestWorkspaceMembership,
   createTestSyncConflict,
   createTestSyncedFieldMapping,
+  createTestSection,
 } from './factories';
 
 export type { TestApiKeyResult } from './factories';

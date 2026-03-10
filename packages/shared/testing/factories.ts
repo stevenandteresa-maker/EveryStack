@@ -35,6 +35,7 @@ import {
   boards,
   workspaceMemberships,
   syncConflicts,
+  sections,
 } from '../db/schema';
 import type {
   NewTenant,
@@ -83,6 +84,8 @@ import type {
   WorkspaceMembership,
   NewSyncConflict,
   SyncConflict,
+  NewSection,
+  Section,
 } from '../db/schema';
 
 let testDbConn: DrizzleClient | undefined;
@@ -941,4 +944,38 @@ export async function createTestSyncConflict(
   };
 
   return firstRow(await db.insert(syncConflicts).values(values).returning());
+}
+
+// ---------------------------------------------------------------------------
+// Tier 15 — Sections (Phase 3A-ii Prompt 12)
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates a section with sensible defaults.
+ * Auto-creates a tenant and user when not provided.
+ * Default: context 'view_switcher', shared scope (userId = null).
+ */
+export async function createTestSection(
+  overrides?: Partial<NewSection>,
+): Promise<Section> {
+  const db = getTestDb();
+  const suffix = randomSuffix();
+
+  const tenantId = overrides?.tenantId ?? (await createTestTenant()).id;
+  const createdBy = overrides?.createdBy ?? (await createTestUser()).id;
+
+  const values: NewSection = {
+    id: generateUUIDv7(),
+    tenantId,
+    userId: overrides?.userId ?? null,
+    context: 'view_switcher',
+    contextParentId: overrides?.contextParentId ?? null,
+    name: `Test Section ${suffix}`,
+    sortOrder: 0,
+    collapsed: false,
+    createdBy,
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(sections).values(values).returning());
 }

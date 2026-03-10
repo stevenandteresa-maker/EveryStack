@@ -117,6 +117,8 @@ export {
   recordViewConfigsRelations,
   forms,
   formsRelations,
+  sections,
+  sectionsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -149,4 +151,5 @@ export type {
   FieldExpressionIndex, NewFieldExpressionIndex,
   RecordViewConfig, NewRecordViewConfig,
   Form, NewForm,
+  Section, NewSection,
 } from './schema';

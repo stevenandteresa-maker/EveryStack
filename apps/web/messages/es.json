@@ -727,6 +727,26 @@
     "config_new_name_placeholder": "Nombre de configuración",
     "config_new_name": "Nuevo nombre de configuración"
   },
+  "sections": {
+    "create_section": "Crear sección",
+    "rename": "Renombrar",
+    "delete_section": "Eliminar sección",
+    "empty_section": "Sin elementos",
+    "expand_section": "Expandir sección",
+    "collapse_section": "Contraer sección",
+    "personal_label": "Personal",
+    "shared_label": "Compartido",
+    "delete_confirm_title": "Eliminar sección",
+    "delete_confirm_description": "¿Estás seguro? Los elementos de esta sección se moverán al nivel superior.",
+    "delete_confirm": "Eliminar",
+    "create_success": "Sección creada.",
+    "rename_success": "Sección renombrada.",
+    "delete_success": "Sección eliminada.",
+    "error_create": "Error al crear la sección.",
+    "error_rename": "Error al renombrar la sección.",
+    "error_delete": "Error al eliminar la sección.",
+    "section_name_placeholder": "Nombre de la sección"
+  },
   "card_view": {
     "error": "Error al cargar la vista de tarjetas",
     "untitled": "Registro sin título",
