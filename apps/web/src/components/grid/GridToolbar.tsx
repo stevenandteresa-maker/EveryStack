@@ -23,6 +23,7 @@ import {
   Grid3X3,
   Printer,
   Link2,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +86,10 @@ export interface GridToolbarProps {
   colorRuleBuilderProps: Omit<ColorRuleBuilderProps, never>;
   hideFieldsPanelProps: Omit<HideFieldsPanelProps, never>;
 
+  // Import button
+  onImportClick?: () => void;
+  showImportButton?: boolean;
+
   // Grouping panel props (reuse sort panel pattern)
   groupPanelProps: {
     groups: { fieldId: string; direction: 'asc' | 'desc' }[];
@@ -134,8 +139,11 @@ export const GridToolbar = memo(function GridToolbar({
   colorRuleBuilderProps,
   hideFieldsPanelProps,
   groupPanelProps,
+  onImportClick,
+  showImportButton,
 }: GridToolbarProps) {
   const t = useTranslations('grid.toolbar');
+  const tImport = useTranslations('import');
 
   const cycleDensity = useCallback(() => {
     const currentIdx = DENSITY_OPTIONS.indexOf(density);
@@ -295,6 +303,14 @@ export const GridToolbar = memo(function GridToolbar({
           </TooltipTrigger>
           <TooltipContent>{t('density_toggle')}</TooltipContent>
         </Tooltip>
+
+        {/* Import */}
+        {showImportButton && (
+          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onImportClick}>
+            <Upload className="h-3.5 w-3.5" />
+            {tImport('toolbar_button')}
+          </Button>
+        )}
 
         {/* Share / Export placeholder */}
         <Button variant="ghost" size="sm" className="gap-1.5 text-xs" disabled>
