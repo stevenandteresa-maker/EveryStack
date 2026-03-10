@@ -44,6 +44,8 @@ import type { GridField } from '@/lib/types/grid';
 export interface BulkActionsToolbarProps {
   selectedCount: number;
   fields: GridField[];
+  /** When true, compress to icon-only strip (used when Record View is open) */
+  compact?: boolean;
   onDelete: () => void;
   onBulkUpdateField: (fieldId: string, value: unknown) => void;
   onDuplicate: () => void;
@@ -58,6 +60,7 @@ export interface BulkActionsToolbarProps {
 export function BulkActionsToolbar({
   selectedCount,
   fields,
+  compact = false,
   onDelete,
   onBulkUpdateField,
   onDuplicate,
@@ -102,6 +105,92 @@ export function BulkActionsToolbar({
   }, [onCopy, t]);
 
   if (selectedCount < 2) return null;
+
+  // Compact mode: icon-only strip with selection count badge
+  if (compact) {
+    return (
+      <>
+        <div
+          className="flex items-center gap-1 px-2 py-1 border-b"
+          style={{ backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }}
+          role="toolbar"
+          aria-label={t('toolbar_label')}
+        >
+          {/* Selection count badge */}
+          <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-blue-600 text-white text-xs font-medium">
+            {selectedCount}
+          </span>
+
+          {/* Delete */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={handleDeleteClick}
+            aria-label={t('delete')}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+
+          {/* Duplicate */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleDuplicate}
+            aria-label={t('duplicate')}
+          >
+            <CopyPlus className="h-3.5 w-3.5" />
+          </Button>
+
+          {/* Copy */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={handleCopy}
+            aria-label={t('copy')}
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+
+          <div className="flex-1" />
+
+          {/* Clear selection */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={onClearSelection}
+            aria-label={t('clear_selection')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Bulk delete confirmation dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('delete_title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('delete_description', { count: selectedCount })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('delete_cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleDeleteConfirm}
+              >
+                {t('delete_confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
 
   return (
     <>

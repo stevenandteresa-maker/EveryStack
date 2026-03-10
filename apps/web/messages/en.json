@@ -587,6 +587,13 @@
       "user_editing": "{userName} is editing",
       "field_locked": "This field is being edited by another user",
       "updating": "Updating..."
+    },
+    "combined_layout": {
+      "grid_area": "Grid area",
+      "thread_panel": "Record thread",
+      "thread_title": "Thread",
+      "close_thread": "Close thread panel",
+      "thread_placeholder": "Record thread will be available soon."
     }
   },
   "table_tab": {

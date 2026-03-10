@@ -61,6 +61,11 @@ export interface RecordViewProps {
   configs?: ConfigOption[];
   /** Currently active config ID */
   activeConfigId?: string | null;
+  /**
+   * When true, renders content directly without fixed overlay wrapper.
+   * Used inside GridRecordViewLayout for combined grid + record view.
+   */
+  inline?: boolean;
   /** Navigate prev/next */
   onNavigate: (direction: 'prev' | 'next') => void;
   /** Go back in linked record stack */
@@ -96,6 +101,7 @@ export function RecordView({
   canGoBack = false,
   configs,
   activeConfigId,
+  inline = false,
   onNavigate,
   onGoBack,
   onNavigateToLinkedRecord,
@@ -216,6 +222,66 @@ export function RecordView({
     : null;
 
   if (!isOpen) return null;
+
+  // Inline mode: render content directly without overlay wrapper
+  // Used inside GridRecordViewLayout for combined layout
+  if (inline) {
+    const inlineContent = isLoading ? (
+      <RecordViewSkeleton />
+    ) : record && responsiveLayout ? (
+      <>
+        <RecordViewHeader
+          record={record}
+          fields={fields}
+          tableName={tableName}
+          viewName={viewName}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          canGoBack={canGoBack}
+          configs={configs}
+          activeConfigId={activeConfigId}
+          onNavigate={onNavigate}
+          onGoBack={onGoBack}
+          onSelectConfig={onSelectConfig}
+          onSaveConfigAsNew={onSaveConfigAsNew}
+          onClose={onClose}
+        />
+        {hasTabs && (
+          <RecordViewTabs
+            tabs={layout!.tabs}
+            activeTabId={activeTabId}
+            onTabChange={setActiveTabId}
+            onAddTab={handleAddTab}
+            onRenameTab={handleRenameTab}
+            onDeleteTab={handleDeleteTab}
+          />
+        )}
+        <RecordViewCanvas
+          record={record}
+          fields={fields}
+          layout={responsiveLayout}
+          activeTabId={hasTabs ? activeTabId : undefined}
+          onFieldSave={handleFieldSave}
+          onLayoutChange={onLayoutChange}
+          onNavigateToLinkedRecord={onNavigateToLinkedRecord}
+        />
+      </>
+    ) : (
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+        {t('record_not_found')}
+      </div>
+    );
+
+    return (
+      <div
+        className="flex flex-col flex-1 min-h-0 overflow-auto"
+        role="region"
+        aria-label={t('overlay_label')}
+      >
+        {inlineContent}
+      </div>
+    );
+  }
 
   const content = isLoading ? (
     <RecordViewSkeleton />

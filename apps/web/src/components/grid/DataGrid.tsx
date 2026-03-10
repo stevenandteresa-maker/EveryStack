@@ -155,6 +155,11 @@ export interface DataGridProps {
   // Summary footer
   summaryFooterConfig?: SummaryFooterConfig;
   onSetColumnAggregation?: (fieldId: string, aggregationType: AggregationType) => void;
+  // Record View integration
+  /** Whether Record View is currently open (compresses bulk toolbar) */
+  isRecordViewOpen?: boolean;
+  /** Called when user clicks expand icon on a row */
+  onExpandRecord?: (recordId: string) => void;
   // Toolbar
   viewName?: string;
   viewType?: 'grid' | 'card';
@@ -248,6 +253,8 @@ export function DataGrid({
   colorRules = createEmptyColorRulesConfig(),
   summaryFooterConfig = createDefaultSummaryFooterConfig(),
   onSetColumnAggregation,
+  isRecordViewOpen = false,
+  onExpandRecord,
   viewName = 'Grid',
   viewType = 'grid',
   sortPanelProps,
@@ -863,6 +870,7 @@ export function DataGrid({
       <BulkActionsToolbar
         selectedCount={selectedRows.size}
         fields={orderedFields}
+        compact={isRecordViewOpen}
         onDelete={handleBulkDelete}
         onBulkUpdateField={handleBulkUpdateField}
         onDuplicate={handleBulkDuplicate}
@@ -871,7 +879,8 @@ export function DataGrid({
       />
     <div
       ref={scrollContainerRef}
-      className="relative overflow-auto flex-1 outline-none"
+      className="relative overflow-auto flex-1 outline-none touch-pan-x touch-pan-y"
+      style={{ WebkitOverflowScrolling: 'touch' }}
       role="grid"
       aria-rowcount={totalCount}
       aria-colcount={orderedFields.length}
@@ -1016,7 +1025,7 @@ export function DataGrid({
                     rowReorder.handleDragEnd();
                   }}
                   onRowDrop={rowReorder.handleDrop}
-                  onExpandRecord={() => {}}
+                  onExpandRecord={onExpandRecord}
                   onCopyRecord={handleCopyRecord}
                   onDuplicateRecord={onDuplicateRecord}
                   onDeleteRecord={handleDeleteWithUndo}
@@ -1067,7 +1076,7 @@ export function DataGrid({
                   onRowDragOver={rowReorder.handleDragOver}
                   onRowDragEnd={rowReorder.handleDragEnd}
                   onRowDrop={rowReorder.handleDrop}
-                  onExpandRecord={() => {}}
+                  onExpandRecord={onExpandRecord}
                   onCopyRecord={handleCopyRecord}
                   onDuplicateRecord={onDuplicateRecord}
                   onDeleteRecord={handleDeleteWithUndo}
