@@ -535,7 +535,9 @@
       "group_limit": "Maximum group levels reached.",
       "clear_all": "Clear all",
       "remove": "Remove",
-      "unknown_field": "Unknown field"
+      "unknown_field": "Unknown field",
+      "group_direction_asc": "A→Z",
+      "group_direction_desc": "Z→A"
     },
     "views": {
       "shared_views": "Shared Views",
@@ -581,7 +583,8 @@
       "error_lock": "Failed to update view lock.",
       "error_rename": "Failed to rename view.",
       "error_duplicate": "Failed to duplicate view.",
-      "cannot_delete_default": "Cannot delete the default view."
+      "cannot_delete_default": "Cannot delete the default view.",
+      "section_toggle": "Toggle section {name}"
     },
     "collaboration": {
       "user_editing": "{userName} is editing",
@@ -771,6 +774,7 @@
     "untitled": "Untitled record",
     "expand": "Expand",
     "expand_record": "Expand record",
+    "grouping_empty_value": "(empty)",
     "toolbar": {
       "layout_picker": "Card layout",
       "layout_single_column": "Single column",

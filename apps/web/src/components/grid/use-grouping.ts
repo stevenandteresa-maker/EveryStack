@@ -206,15 +206,22 @@ export type VirtualGroupItem =
  * Records are grouped level by level. Within each leaf group, records
  * are sorted by the active sort config.
  */
+export interface ComputeGroupsOptions {
+  /** Translated label for empty/null group values. */
+  emptyLabel?: string;
+}
+
 export function computeGroups(
   records: GridRecord[],
   groups: GroupLevel[],
   fields: GridField[],
   sorts: SortLevel[],
+  options?: ComputeGroupsOptions,
 ): GroupNode[] {
   if (groups.length === 0) return [];
 
-  return buildGroupLevel(records, groups, fields, sorts, 0, '');
+  const emptyLabel = options?.emptyLabel ?? '(empty)';
+  return buildGroupLevel(records, groups, fields, sorts, 0, '', emptyLabel);
 }
 
 function buildGroupLevel(
@@ -224,6 +231,7 @@ function buildGroupLevel(
   sorts: SortLevel[],
   levelIndex: number,
   parentKey: string,
+  emptyLabel: string,
 ): GroupNode[] {
   const groupLevel = groups[levelIndex];
   if (!groupLevel) return [];
@@ -260,7 +268,7 @@ function buildGroupLevel(
     const rawValue = valueMap.get(bucketKey);
     const groupKey = parentKey ? `${parentKey}|${bucketKey}` : bucketKey;
 
-    const label = formatGroupLabel(rawValue, field);
+    const label = formatGroupLabel(rawValue, field, emptyLabel);
 
     const isDeepest = levelIndex === groups.length - 1;
     let children: GroupNode[] = [];
@@ -276,6 +284,7 @@ function buildGroupLevel(
         sorts,
         levelIndex + 1,
         groupKey,
+        emptyLabel,
       );
     }
 
@@ -304,8 +313,8 @@ function normalizeGroupValue(value: unknown): string {
   return String(value);
 }
 
-function formatGroupLabel(value: unknown, _field: GridField | undefined): string {
-  if (value == null || value === '') return '(empty)';
+function formatGroupLabel(value: unknown, _field: GridField | undefined, emptyLabel: string): string {
+  if (value == null || value === '') return emptyLabel;
   if (Array.isArray(value)) return value.map(String).join(', ');
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   return String(value);

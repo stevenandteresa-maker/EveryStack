@@ -535,7 +535,9 @@
       "group_limit": "Máximo de niveles de grupo alcanzado.",
       "clear_all": "Borrar todo",
       "remove": "Eliminar",
-      "unknown_field": "Campo desconocido"
+      "unknown_field": "Campo desconocido",
+      "group_direction_asc": "A→Z",
+      "group_direction_desc": "Z→A"
     },
     "views": {
       "shared_views": "Vistas compartidas",
@@ -581,7 +583,8 @@
       "error_lock": "Error al actualizar bloqueo de vista.",
       "error_rename": "Error al renombrar vista.",
       "error_duplicate": "Error al duplicar vista.",
-      "cannot_delete_default": "No se puede eliminar la vista predeterminada."
+      "cannot_delete_default": "No se puede eliminar la vista predeterminada.",
+      "section_toggle": "Alternar sección {name}"
     },
     "collaboration": {
       "user_editing": "{userName} está editando",
@@ -771,6 +774,7 @@
     "untitled": "Registro sin título",
     "expand": "Expandir",
     "expand_record": "Expandir registro",
+    "grouping_empty_value": "(vacío)",
     "toolbar": {
       "layout_picker": "Diseño de tarjetas",
       "layout_single_column": "Columna única",

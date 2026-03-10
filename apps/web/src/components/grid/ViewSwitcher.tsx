@@ -8,13 +8,14 @@
  * @see docs/reference/tables-and-views.md § My Views & Shared Views
  */
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Grid3X3,
   LayoutGrid,
   Lock,
   ChevronDown,
+  ChevronRight,
   Plus,
   Pencil,
   Copy,
@@ -31,7 +32,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import type { View } from '@everystack/shared/db';
+import type { View, Section } from '@everystack/shared/db';
 import type { EffectiveRole } from '@everystack/shared/auth';
 import { roleAtLeast } from '@everystack/shared/auth';
 
@@ -43,6 +44,8 @@ export interface ViewSwitcherProps {
   currentView: View | null;
   sharedViews: View[];
   myViews: View[];
+  /** Sections for the view_switcher context (optional — renders flat list when absent). */
+  sections?: Section[];
   userRole: EffectiveRole;
   userId: string;
   onSwitchView: (viewId: string) => void;
@@ -52,6 +55,8 @@ export interface ViewSwitcherProps {
   onDeleteView: (viewId: string) => void;
   onPromoteView: (viewId: string) => void;
   onLockView: (viewId: string, locked: boolean) => void;
+  /** Callback when a view is dragged into a section (or null for unsectioned). */
+  onMoveViewToSection?: (viewId: string, sectionId: string | null) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +78,56 @@ function isDefaultView(view: View): boolean {
   return (view.config as Record<string, unknown>)?.isDefault === true;
 }
 
+function getViewSectionId(view: View): string | null {
+  const sectionId = (view.config as Record<string, unknown>)?.sectionId;
+  return typeof sectionId === 'string' ? sectionId : null;
+}
+
+interface ViewGroup {
+  section: Section | null;
+  views: View[];
+}
+
+/** Group views by their sectionId, preserving section sort order. */
+function groupViewsBySections(views: View[], sections: Section[]): ViewGroup[] {
+  if (sections.length === 0) {
+    return [{ section: null, views }];
+  }
+
+  const sectionMap = new Map<string, Section>();
+  for (const s of sections) sectionMap.set(s.id, s);
+
+  const unsectioned: View[] = [];
+  const buckets = new Map<string, View[]>();
+
+  for (const view of views) {
+    const sid = getViewSectionId(view);
+    if (sid && sectionMap.has(sid)) {
+      const bucket = buckets.get(sid);
+      if (bucket) {
+        bucket.push(view);
+      } else {
+        buckets.set(sid, [view]);
+      }
+    } else {
+      unsectioned.push(view);
+    }
+  }
+
+  const groups: ViewGroup[] = [];
+  if (unsectioned.length > 0) {
+    groups.push({ section: null, views: unsectioned });
+  }
+  for (const s of sections) {
+    const sectionViews = buckets.get(s.id);
+    if (sectionViews && sectionViews.length > 0) {
+      groups.push({ section: s, views: sectionViews });
+    }
+  }
+
+  return groups;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -81,6 +136,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   currentView,
   sharedViews,
   myViews,
+  sections: sectionsProp,
   userRole,
   userId,
   onSwitchView,
@@ -90,6 +146,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   onDeleteView,
   onPromoteView,
   onLockView,
+  onMoveViewToSection: _onMoveViewToSection,
 }: ViewSwitcherProps) {
   const t = useTranslations('grid.views');
   const [contextViewId, setContextViewId] = useState<string | null>(null);
@@ -100,6 +157,18 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   const contextView = contextViewId
     ? [...sharedViews, ...myViews].find((v) => v.id === contextViewId) ?? null
     : null;
+
+  // Group views by sections when sections are provided
+  const sharedSections = sectionsProp?.filter((s) => s.userId === null) ?? [];
+  const personalSections = sectionsProp?.filter((s) => s.userId !== null) ?? [];
+  const sharedViewGroups = useMemo(
+    () => groupViewsBySections(sharedViews, sharedSections),
+    [sharedViews, sharedSections],
+  );
+  const myViewGroups = useMemo(
+    () => groupViewsBySections(myViews, personalSections),
+    [myViews, personalSections],
+  );
 
   const handleContextAction = useCallback(
     (action: string) => {
@@ -147,15 +216,15 @@ export const ViewSwitcher = memo(function ViewSwitcher({
               <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                 {t('shared_views')}
               </DropdownMenuLabel>
-              {sharedViews.map((view) => (
-                <ViewMenuItem
-                  key={view.id}
-                  view={view}
-                  isActive={currentView?.id === view.id}
-                  onSelect={() => onSwitchView(view.id)}
-                  onContextMenu={(e) => {
+              {sharedViewGroups.map((group) => (
+                <ViewSectionGroup
+                  key={group.section?.id ?? 'unsectioned-shared'}
+                  group={group}
+                  currentViewId={currentView?.id ?? null}
+                  onSwitchView={onSwitchView}
+                  onContextMenu={(viewId, e) => {
                     e.preventDefault();
-                    setContextViewId(view.id);
+                    setContextViewId(viewId);
                     setContextMenuOpen(true);
                   }}
                 />
@@ -174,15 +243,15 @@ export const ViewSwitcher = memo(function ViewSwitcher({
               <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                 {t('my_views')}
               </DropdownMenuLabel>
-              {myViews.map((view) => (
-                <ViewMenuItem
-                  key={view.id}
-                  view={view}
-                  isActive={currentView?.id === view.id}
-                  onSelect={() => onSwitchView(view.id)}
-                  onContextMenu={(e) => {
+              {myViewGroups.map((group) => (
+                <ViewSectionGroup
+                  key={group.section?.id ?? 'unsectioned-my'}
+                  group={group}
+                  currentViewId={currentView?.id ?? null}
+                  onSwitchView={onSwitchView}
+                  onContextMenu={(viewId, e) => {
                     e.preventDefault();
-                    setContextViewId(view.id);
+                    setContextViewId(viewId);
                     setContextMenuOpen(true);
                   }}
                 />
@@ -294,5 +363,72 @@ const ViewMenuItem = memo(function ViewMenuItem({
         <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
       )}
     </DropdownMenuItem>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// ViewSectionGroup — renders views within a section (collapsible header)
+// ---------------------------------------------------------------------------
+
+interface ViewSectionGroupProps {
+  group: ViewGroup;
+  currentViewId: string | null;
+  onSwitchView: (viewId: string) => void;
+  onContextMenu: (viewId: string, e: React.MouseEvent) => void;
+}
+
+const ViewSectionGroup = memo(function ViewSectionGroup({
+  group,
+  currentViewId,
+  onSwitchView,
+  onContextMenu,
+}: ViewSectionGroupProps) {
+  const t = useTranslations('grid.views');
+  const [collapsed, setCollapsed] = useState(false);
+
+  // No section header for unsectioned views
+  if (!group.section) {
+    return (
+      <>
+        {group.views.map((view) => (
+          <ViewMenuItem
+            key={view.id}
+            view={view}
+            isActive={currentViewId === view.id}
+            onSelect={() => onSwitchView(view.id)}
+            onContextMenu={(e) => onContextMenu(view.id, e)}
+          />
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        className="flex w-full items-center gap-1 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground"
+        onClick={() => setCollapsed(!collapsed)}
+        aria-expanded={!collapsed}
+        aria-label={t('section_toggle', { name: group.section.name })}
+      >
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3 shrink-0" />
+        ) : (
+          <ChevronDown className="h-3 w-3 shrink-0" />
+        )}
+        <span className="truncate">{group.section.name}</span>
+      </button>
+      {!collapsed &&
+        group.views.map((view) => (
+          <ViewMenuItem
+            key={view.id}
+            view={view}
+            isActive={currentViewId === view.id}
+            onSelect={() => onSwitchView(view.id)}
+            onContextMenu={(e) => onContextMenu(view.id, e)}
+          />
+        ))}
+    </div>
   );
 });

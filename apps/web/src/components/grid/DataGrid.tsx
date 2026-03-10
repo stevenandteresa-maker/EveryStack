@@ -411,8 +411,10 @@ export function DataGrid({
 
   const groupTree = useMemo(() => {
     if (!isGrouped) return [];
-    return computeGroups(records, groupLevels, fields, sorts);
-  }, [isGrouped, records, groupLevels, fields, sorts]);
+    return computeGroups(records, groupLevels, fields, sorts, {
+      emptyLabel: t('grouping.empty_value'),
+    });
+  }, [isGrouped, records, groupLevels, fields, sorts, t]);
 
   const groupedItems = useMemo<VirtualGroupItem[]>(() => {
     if (!isGrouped) return [];

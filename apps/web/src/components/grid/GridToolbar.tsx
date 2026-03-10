@@ -412,7 +412,7 @@ const GroupPanelContent = memo(function GroupPanelContent({
                 )
               }
             >
-              {group.direction === 'asc' ? 'A→Z' : 'Z→A'}
+              {group.direction === 'asc' ? t('group_direction_asc') : t('group_direction_desc')}
             </Button>
             <Button
               variant="ghost"

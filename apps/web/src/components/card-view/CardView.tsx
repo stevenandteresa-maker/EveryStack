@@ -190,8 +190,10 @@ export const CardView = memo(function CardView({
   // Compute groups from records if grouping is active
   const groupTree = useMemo(() => {
     if (groups.length === 0) return null;
-    return computeGroups(records, groups, fields, sorts);
-  }, [records, groups, fields, sorts]);
+    return computeGroups(records, groups, fields, sorts, {
+      emptyLabel: t('grouping_empty_value'),
+    });
+  }, [records, groups, fields, sorts, t]);
 
   if (isLoading) {
     return <GridSkeleton />;
