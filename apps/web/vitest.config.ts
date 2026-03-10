@@ -38,6 +38,7 @@ export default defineConfig({
         'src/actions/': { lines: 90, branches: 85 },
       },
     },
+    globalSetup: ['../../scripts/test-env-setup.ts'],
     testTimeout: 10_000,
     hookTimeout: 30_000,
     pool: 'forks',

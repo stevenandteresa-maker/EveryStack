@@ -26,6 +26,7 @@ export default defineConfig({
         'sync/': { lines: 90, branches: 85 },
       },
     },
+    globalSetup: ['../../scripts/test-env-setup.ts'],
     testTimeout: 10_000,
     pool: 'forks',
   },
