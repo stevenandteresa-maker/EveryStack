@@ -7,8 +7,8 @@
  * for the Record View context: larger display, no truncation, full value.
  * Inline editable via useCellEdit + useOptimisticRecord pattern.
  *
- * For linked_record fields, renders LinkedRecordPills instead of the
- * standard cell renderer.
+ * For linked_record fields, renders LinkedRecordPills (pills display) or
+ * InlineSubTable (inline_table display) depending on the field's display config.
  *
  * @see docs/reference/tables-and-views.md § Record View
  */
@@ -23,7 +23,10 @@ import {
   LinkedRecordPills,
   type LinkedRecordPill,
 } from './LinkedRecordPills';
+import { InlineSubTable } from './InlineSubTable';
+import type { InlineSubTableConfig } from './use-inline-sub-table';
 import type { GridField, GridRecord } from '@/lib/types/grid';
+import type { DbRecord, Field } from '@everystack/shared/db';
 import { Lock } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -65,6 +68,20 @@ export interface FieldRendererProps {
   readOnly?: boolean;
   onNavigateToLinkedRecord?: (recordId: string) => void;
   onTab?: () => void;
+  /** Inline sub-table data for linked_record fields with inline_table display */
+  inlineSubTableData?: {
+    linkedRecords: DbRecord[];
+    targetFields: Field[];
+    canCreate: boolean;
+    canDelete: boolean;
+    onUpdateLinkedRecord?: (
+      targetRecordId: string,
+      fieldId: string,
+      value: unknown,
+    ) => void;
+    onCreateRecord?: (canonicalData: Record<string, unknown>) => void;
+    onDeleteLink?: (targetRecordId: string) => void;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +134,7 @@ export function FieldRenderer({
   readOnly = false,
   onNavigateToLinkedRecord,
   onTab,
+  inlineSubTableData,
 }: FieldRendererProps) {
   const t = useTranslations('record_view');
   const canonicalData = record.canonicalData as Record<string, unknown> | null;
@@ -141,8 +159,11 @@ export function FieldRenderer({
     onMoveRight: onTab,
   });
 
-  // Linked record fields render pills instead of standard cell renderer
+  // Linked record fields render pills or inline sub-table
   const isLinkedRecord = field.fieldType === 'linked_record';
+  const displayConfig = field.display as Record<string, unknown> | null;
+  const isInlineTable =
+    isLinkedRecord && displayConfig?.style === 'inline_table';
 
   const entry = getCellRenderer(field.fieldType);
   const DisplayComponent = entry?.DisplayComponent;
@@ -191,7 +212,22 @@ export function FieldRenderer({
       </div>
 
       {/* Field value */}
-      {isLinkedRecord && onNavigateToLinkedRecord ? (
+      {isInlineTable && inlineSubTableData ? (
+        <InlineSubTable
+          fieldName={field.name}
+          recordId={record.id}
+          fieldId={field.id}
+          config={displayConfig as unknown as InlineSubTableConfig}
+          linkedRecords={inlineSubTableData.linkedRecords}
+          targetFields={inlineSubTableData.targetFields}
+          canCreate={inlineSubTableData.canCreate}
+          canDelete={inlineSubTableData.canDelete}
+          readOnly={readOnly}
+          onUpdateLinkedRecord={inlineSubTableData.onUpdateLinkedRecord}
+          onCreateRecord={inlineSubTableData.onCreateRecord}
+          onDeleteLink={inlineSubTableData.onDeleteLink}
+        />
+      ) : isLinkedRecord && onNavigateToLinkedRecord ? (
         <LinkedRecordPills
           pills={extractLinkedRecordPills(value)}
           onNavigateToRecord={onNavigateToLinkedRecord}

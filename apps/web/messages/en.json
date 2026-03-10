@@ -292,7 +292,8 @@
       "smart_doc_close": "Close",
       "barcode_label": "Barcode: {value}",
       "checklist_progress": "{done}/{total} done",
-      "checklist_add_item": "Add item"
+      "checklist_add_item": "Add item",
+      "linked_record_items": "{count, plural, one {1 item} other {# items}}"
     },
     "errors": {
       "broken_reference": "This record was deleted in {source}",
@@ -725,7 +726,18 @@
     "config_picker_label": "Switch record view config",
     "config_save_as_new": "Save as new config",
     "config_new_name_placeholder": "Config name",
-    "config_new_name": "New config name"
+    "config_new_name": "New config name",
+    "inline_sub_table": {
+      "item_count": "{count, plural, one {1 item} other {# items}}",
+      "search_placeholder": "Search linked records…",
+      "add_row": "Add row",
+      "delete_row": "Remove linked record",
+      "no_items": "No items yet",
+      "show_more": "{count, plural, one {Show 1 more} other {Show # more}}",
+      "show_less": "Show less",
+      "view_all": "View All",
+      "add": "Add"
+    }
   },
   "sections": {
     "create_section": "Create section",

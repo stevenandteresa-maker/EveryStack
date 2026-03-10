@@ -292,7 +292,8 @@
       "smart_doc_close": "Cerrar",
       "barcode_label": "Código de barras: {value}",
       "checklist_progress": "{done}/{total} completados",
-      "checklist_add_item": "Agregar elemento"
+      "checklist_add_item": "Agregar elemento",
+      "linked_record_items": "{count, plural, one {1 elemento} other {# elementos}}"
     },
     "errors": {
       "broken_reference": "Este registro fue eliminado en {source}",
@@ -725,7 +726,18 @@
     "config_picker_label": "Cambiar configuración de vista de registro",
     "config_save_as_new": "Guardar como nueva configuración",
     "config_new_name_placeholder": "Nombre de configuración",
-    "config_new_name": "Nuevo nombre de configuración"
+    "config_new_name": "Nuevo nombre de configuración",
+    "inline_sub_table": {
+      "item_count": "{count, plural, one {1 elemento} other {# elementos}}",
+      "search_placeholder": "Buscar registros vinculados…",
+      "add_row": "Agregar fila",
+      "delete_row": "Eliminar registro vinculado",
+      "no_items": "Sin elementos",
+      "show_more": "{count, plural, one {Mostrar 1 más} other {Mostrar # más}}",
+      "show_less": "Mostrar menos",
+      "view_all": "Ver todo",
+      "add": "Agregar"
+    }
   },
   "sections": {
     "create_section": "Crear sección",
