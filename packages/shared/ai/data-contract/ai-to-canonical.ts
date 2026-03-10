@@ -25,27 +25,27 @@ import type {
  * @param fieldConfig - The field-type-specific configuration
  * @returns Success with value + warnings, or error string. Never throws.
  */
+type AIToCanonicalHandler = (raw: string, config: AIFieldConfig) => AIToCanonicalResult;
+
+const AI_TO_CANONICAL_HANDLERS: Record<string, AIToCanonicalHandler> = {
+  text: (raw, config) => textFromAI(raw, config as TextFieldConfig),
+  number: (raw, config) => numberFromAI(raw, config as NumberFieldConfig),
+  single_select: (raw, config) =>
+    singleSelectFromAI(raw, config as SingleSelectFieldConfig),
+  checkbox: (raw) => checkboxFromAI(raw),
+};
+
 export function aiToCanonical(
   rawLLMOutput: string,
   fieldType: AIDataContractFieldType,
   fieldConfig: AIFieldConfig,
 ): AIToCanonicalResult {
   try {
-    switch (fieldType) {
-      case 'text':
-        return textFromAI(rawLLMOutput, fieldConfig as TextFieldConfig);
-      case 'number':
-        return numberFromAI(rawLLMOutput, fieldConfig as NumberFieldConfig);
-      case 'single_select':
-        return singleSelectFromAI(
-          rawLLMOutput,
-          fieldConfig as SingleSelectFieldConfig,
-        );
-      case 'checkbox':
-        return checkboxFromAI(rawLLMOutput);
-      default:
-        return { error: `Unsupported field type: ${String(fieldType)}` };
+    const handler = AI_TO_CANONICAL_HANDLERS[fieldType];
+    if (!handler) {
+      return { error: `Unsupported field type: ${String(fieldType)}` };
     }
+    return handler(rawLLMOutput, fieldConfig);
   } catch {
     return { error: `Unexpected error processing ${fieldType} value` };
   }

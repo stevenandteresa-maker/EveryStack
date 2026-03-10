@@ -40,61 +40,46 @@ interface ColumnValidation {
 }
 
 // ---------------------------------------------------------------------------
-// Basic type validation
+// Basic type validation — map-based dispatch (no switch on field types)
 // ---------------------------------------------------------------------------
+
+type FieldValidator = (value: string) => string | null;
+
+const validateNumeric: FieldValidator = (value) => {
+  const cleaned = value.replace(/[$,%\s]/g, '');
+  return isNaN(Number(cleaned)) ? 'type_mismatch_number' : null;
+};
+
+const IMPORT_VALIDATORS: Record<string, FieldValidator> = {
+  number: validateNumeric,
+  currency: validateNumeric,
+  percent: validateNumeric,
+  checkbox: (value) => {
+    const lower = value.toLowerCase();
+    return !['true', 'false', '1', '0', 'yes', 'no'].includes(lower)
+      ? 'type_mismatch_checkbox'
+      : null;
+  },
+  email: (value) =>
+    !value.includes('@') || !value.includes('.') ? 'invalid_email' : null,
+  url: (value) =>
+    !value.startsWith('http://') && !value.startsWith('https://') ? 'invalid_url' : null,
+  date: (value) => (isNaN(new Date(value).getTime()) ? 'invalid_date' : null),
+  datetime: (value) => (isNaN(new Date(value).getTime()) ? 'invalid_date' : null),
+  rating: (value) => {
+    const num = Number(value);
+    return isNaN(num) || num < 0 || num > 10 || !Number.isInteger(num)
+      ? 'invalid_rating'
+      : null;
+  },
+};
 
 function validateValue(value: string, fieldType: string): string | null {
   if (value === '' || value === null || value === undefined) {
-    return null; // Empty is allowed — skip
+    return null;
   }
-
-  switch (fieldType) {
-    case 'number':
-    case 'currency':
-    case 'percent': {
-      const cleaned = value.replace(/[$,%\s]/g, '');
-      if (isNaN(Number(cleaned))) {
-        return 'type_mismatch_number';
-      }
-      return null;
-    }
-    case 'checkbox': {
-      const lower = value.toLowerCase();
-      if (!['true', 'false', '1', '0', 'yes', 'no'].includes(lower)) {
-        return 'type_mismatch_checkbox';
-      }
-      return null;
-    }
-    case 'email': {
-      if (!value.includes('@') || !value.includes('.')) {
-        return 'invalid_email';
-      }
-      return null;
-    }
-    case 'url': {
-      if (!value.startsWith('http://') && !value.startsWith('https://')) {
-        return 'invalid_url';
-      }
-      return null;
-    }
-    case 'date':
-    case 'datetime': {
-      const d = new Date(value);
-      if (isNaN(d.getTime())) {
-        return 'invalid_date';
-      }
-      return null;
-    }
-    case 'rating': {
-      const num = Number(value);
-      if (isNaN(num) || num < 0 || num > 10 || !Number.isInteger(num)) {
-        return 'invalid_rating';
-      }
-      return null;
-    }
-    default:
-      return null; // Text-like types accept anything
-  }
+  const validator = IMPORT_VALIDATORS[fieldType];
+  return validator ? validator(value) : null;
 }
 
 // ---------------------------------------------------------------------------

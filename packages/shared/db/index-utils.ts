@@ -79,6 +79,18 @@ export function generateIndexName(
 // ---------------------------------------------------------------------------
 
 /**
+ * Type cast suffixes for each indexable field type.
+ * Text-like types need no cast; others get a PostgreSQL type cast.
+ */
+const FIELD_TYPE_CASTS: Record<IndexableFieldType, string> = {
+  text: '',
+  single_select: '',
+  number: '::numeric',
+  date: '::timestamptz',
+  checkbox: '::boolean',
+};
+
+/**
  * Returns the PostgreSQL expression for extracting a typed value from
  * canonical_data for a given field.
  *
@@ -89,18 +101,8 @@ export function generateIndexName(
  */
 function jsonbValueExpression(fieldId: string, fieldType: IndexableFieldType): string {
   const basePath = `(canonical_data->'${fieldId}'->>'value')`;
-
-  switch (fieldType) {
-    case 'text':
-    case 'single_select':
-      return basePath;
-    case 'number':
-      return `${basePath}::numeric`;
-    case 'date':
-      return `${basePath}::timestamptz`;
-    case 'checkbox':
-      return `${basePath}::boolean`;
-  }
+  const cast = FIELD_TYPE_CASTS[fieldType];
+  return `${basePath}${cast}`;
 }
 
 // ---------------------------------------------------------------------------

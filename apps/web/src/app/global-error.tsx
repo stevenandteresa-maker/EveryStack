@@ -1,7 +1,19 @@
 'use client';
 
+// i18n exception: global-error.tsx replaces the root <html> layout, so
+// IntlProvider (and useTranslations) is unavailable. Strings are kept in
+// the GLOBAL_ERROR_TEXT map below for easy auditing and future extraction.
+
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';
+
+const GLOBAL_ERROR_TEXT = {
+  title: 'Something went wrong',
+  description:
+    'An unexpected error occurred. Please try again, or contact support if the problem persists.',
+  tryAgain: 'Try Again',
+  reportIssue: 'Report Issue',
+} as const;
 
 export default function GlobalError({
   error,
@@ -40,11 +52,10 @@ export default function GlobalError({
           }}
         >
           <h1 style={{ fontSize: '24px', marginBottom: '8px' }}>
-            Something went wrong
+            {GLOBAL_ERROR_TEXT.title}
           </h1>
           <p style={{ color: '#666', marginBottom: '24px', maxWidth: '400px' }}>
-            An unexpected error occurred. Please try again, or contact support if
-            the problem persists.
+            {GLOBAL_ERROR_TEXT.description}
           </p>
           {errorRef && (
             <p style={{ color: '#999', fontSize: '12px', marginBottom: '16px' }}>
@@ -64,7 +75,7 @@ export default function GlobalError({
                 fontSize: '14px',
               }}
             >
-              Try Again
+              {GLOBAL_ERROR_TEXT.tryAgain}
             </button>
             {reportUrl && (
               <a
@@ -78,7 +89,7 @@ export default function GlobalError({
                   fontSize: '14px',
                 }}
               >
-                Report Issue
+                {GLOBAL_ERROR_TEXT.reportIssue}
               </a>
             )}
           </div>

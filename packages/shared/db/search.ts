@@ -38,6 +38,132 @@ const NON_SEARCHABLE_TYPES = new Set([
  *
  * @returns Plain text string, or null if the value is not searchable.
  */
+// ---------------------------------------------------------------------------
+// Per-type text extractors — map-based dispatch (no switch on field types)
+// ---------------------------------------------------------------------------
+
+type TextExtractor = (value: unknown) => string | null;
+
+const extractStringDirect: TextExtractor = (value) =>
+  typeof value === 'string' ? value : String(value);
+
+const extractStringOnly: TextExtractor = (value) =>
+  typeof value === 'string' ? value : null;
+
+const extractNumberAsString: TextExtractor = (value) =>
+  typeof value === 'number' ? String(value) : null;
+
+const extractSelectLabel: TextExtractor = (value) => {
+  const selectVal = value as Record<string, unknown>;
+  return typeof selectVal?.label === 'string' ? selectVal.label : null;
+};
+
+const extractMultiLabels: TextExtractor = (value) => {
+  if (!Array.isArray(value)) return null;
+  return (value as Array<Record<string, unknown>>)
+    .map((v) => v?.label)
+    .filter((l): l is string => typeof l === 'string')
+    .join(' ');
+};
+
+const extractPeople: TextExtractor = (value) => {
+  if (Array.isArray(value)) {
+    return (value as Array<Record<string, unknown>>)
+      .map((u) => u?.name ?? u?.displayName)
+      .filter((n): n is string => typeof n === 'string')
+      .join(' ');
+  }
+  const person = value as Record<string, unknown>;
+  return typeof person?.name === 'string' ? person.name : null;
+};
+
+const SEARCH_TEXT_EXTRACTORS: Record<string, TextExtractor> = {
+  // Text types → use directly
+  text: extractStringDirect,
+  text_area: extractStringDirect,
+  email: extractStringDirect,
+  url: extractStringDirect,
+  phone: extractStringDirect,
+  barcode: extractStringDirect,
+
+  // Smart doc → extract text content
+  smart_doc: (value) => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null) {
+      return extractTipTapText(value as Record<string, unknown>);
+    }
+    return null;
+  },
+
+  // Selection → extract label(s)
+  single_select: extractSelectLabel,
+  status: extractSelectLabel,
+  multiple_select: extractMultiLabels,
+  tag: extractMultiLabels,
+
+  // Number types → string representation
+  number: extractNumberAsString,
+  currency: extractNumberAsString,
+  percent: extractNumberAsString,
+  rating: extractNumberAsString,
+  duration: extractNumberAsString,
+  progress: extractNumberAsString,
+  auto_number: extractNumberAsString,
+
+  // Date types → ISO string
+  date: extractStringOnly,
+  date_range: extractStringOnly,
+  due_date: extractStringOnly,
+  time: extractStringOnly,
+  created_at: extractStringOnly,
+  updated_at: extractStringOnly,
+
+  // People → display names
+  people: extractPeople,
+  created_by: extractPeople,
+  updated_by: extractPeople,
+
+  // Address → concatenated parts
+  address: (value) => {
+    const addr = value as Record<string, unknown>;
+    return [addr?.street, addr?.city, addr?.state, addr?.zip, addr?.country]
+      .filter((p): p is string => typeof p === 'string')
+      .join(' ');
+  },
+
+  // Full name → concatenated
+  full_name: (value) => {
+    const name = value as Record<string, unknown>;
+    return [name?.first, name?.middle, name?.last]
+      .filter((p): p is string => typeof p === 'string')
+      .join(' ');
+  },
+
+  // Checkbox → yes/no
+  checkbox: (value) => (value ? 'yes' : 'no'),
+
+  // Linked records → display values
+  linked_record: (value) => {
+    if (!Array.isArray(value)) return null;
+    return (value as Array<Record<string, unknown>>)
+      .map((r) => r?.displayValue)
+      .filter((d): d is string => typeof d === 'string')
+      .join(' ');
+  },
+
+  // Checklist → item labels
+  checklist: (value) => {
+    if (!Array.isArray(value)) return null;
+    return (value as Array<Record<string, unknown>>)
+      .map((item) => item?.label)
+      .filter((l): l is string => typeof l === 'string')
+      .join(' ');
+  },
+
+  // Social → URL or handle
+  social: extractStringOnly,
+};
+
 export function extractSearchableText(
   rawValue: unknown,
   fieldType: string,
@@ -51,118 +177,8 @@ export function extractSearchableText(
 
   if (value == null) return null;
 
-  switch (fieldType) {
-    // Text types → use directly
-    case 'text':
-    case 'text_area':
-    case 'email':
-    case 'url':
-    case 'phone':
-    case 'barcode':
-      return typeof value === 'string' ? value : String(value);
-
-    // Smart doc → extract text content
-    case 'smart_doc':
-      if (typeof value === 'string') return value;
-      if (typeof value === 'object' && value !== null) {
-        return extractTipTapText(value as Record<string, unknown>);
-      }
-      return null;
-
-    // Selection → extract label(s)
-    case 'single_select':
-    case 'status': {
-      const selectVal = value as Record<string, unknown>;
-      return typeof selectVal?.label === 'string' ? selectVal.label : null;
-    }
-
-    case 'multiple_select':
-    case 'tag': {
-      if (!Array.isArray(value)) return null;
-      return (value as Array<Record<string, unknown>>)
-        .map((v) => v?.label)
-        .filter((l): l is string => typeof l === 'string')
-        .join(' ');
-    }
-
-    // Number types → string representation
-    case 'number':
-    case 'currency':
-    case 'percent':
-    case 'rating':
-    case 'duration':
-    case 'progress':
-    case 'auto_number':
-      return typeof value === 'number' ? String(value) : null;
-
-    // Date types → ISO string
-    case 'date':
-    case 'date_range':
-    case 'due_date':
-    case 'time':
-    case 'created_at':
-    case 'updated_at':
-      return typeof value === 'string' ? value : null;
-
-    // People → display names
-    case 'people':
-    case 'created_by':
-    case 'updated_by': {
-      if (Array.isArray(value)) {
-        return (value as Array<Record<string, unknown>>)
-          .map((u) => u?.name ?? u?.displayName)
-          .filter((n): n is string => typeof n === 'string')
-          .join(' ');
-      }
-      const person = value as Record<string, unknown>;
-      return typeof person?.name === 'string' ? person.name : null;
-    }
-
-    // Address → concatenated parts
-    case 'address': {
-      const addr = value as Record<string, unknown>;
-      return [addr?.street, addr?.city, addr?.state, addr?.zip, addr?.country]
-        .filter((p): p is string => typeof p === 'string')
-        .join(' ');
-    }
-
-    // Full name → concatenated
-    case 'full_name': {
-      const name = value as Record<string, unknown>;
-      return [name?.first, name?.middle, name?.last]
-        .filter((p): p is string => typeof p === 'string')
-        .join(' ');
-    }
-
-    // Checkbox → yes/no
-    case 'checkbox':
-      return value ? 'yes' : 'no';
-
-    // Linked records → display values
-    case 'linked_record': {
-      if (!Array.isArray(value)) return null;
-      return (value as Array<Record<string, unknown>>)
-        .map((r) => r?.displayValue)
-        .filter((d): d is string => typeof d === 'string')
-        .join(' ');
-    }
-
-    // Checklist → item labels
-    case 'checklist': {
-      if (!Array.isArray(value)) return null;
-      return (value as Array<Record<string, unknown>>)
-        .map((item) => item?.label)
-        .filter((l): l is string => typeof l === 'string')
-        .join(' ');
-    }
-
-    // Social → URL or handle
-    case 'social':
-      return typeof value === 'string' ? value : null;
-
-    default:
-      return typeof value === 'string' ? value : null;
-  }
+  const extractor = SEARCH_TEXT_EXTRACTORS[fieldType];
+  return extractor ? extractor(value) : (typeof value === 'string' ? value : null);
 }
 
 /**

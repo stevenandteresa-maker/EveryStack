@@ -48,23 +48,24 @@ export type SortDirection = 'asc' | 'desc';
  * db.select().from(records).where(sql`${expr} > 100`)
  * ```
  */
+/**
+ * Type cast suffixes for each queryable field type.
+ * Text-like types need no cast; others get a PostgreSQL type cast.
+ */
+const FIELD_TYPE_SQL_CASTS: Record<QueryableFieldType, string> = {
+  text: '',
+  single_select: '',
+  number: '::numeric',
+  date: '::timestamptz',
+  checkbox: '::boolean',
+};
+
 export function canonicalFieldExpression(
   fieldId: string,
   fieldType: QueryableFieldType,
 ): SQL {
-  const basePath = sql.raw(`(canonical_data->'${fieldId}'->>'value')`);
-
-  switch (fieldType) {
-    case 'text':
-    case 'single_select':
-      return basePath;
-    case 'number':
-      return sql`${basePath}::numeric`;
-    case 'date':
-      return sql`${basePath}::timestamptz`;
-    case 'checkbox':
-      return sql`${basePath}::boolean`;
-  }
+  const cast = FIELD_TYPE_SQL_CASTS[fieldType];
+  return sql.raw(`(canonical_data->'${fieldId}'->>'value')${cast}`);
 }
 
 /**

@@ -23,6 +23,17 @@ import type {
  * @param fieldConfig - The field-type-specific configuration from fields.config
  * @returns A human-readable string representation for LLM consumption
  */
+type CanonicalToAIHandler = (value: unknown, config: AIFieldConfig) => string;
+
+const CANONICAL_TO_AI_HANDLERS: Record<string, CanonicalToAIHandler> = {
+  text: (value) => textToAIContext(value),
+  number: (value, config) =>
+    numberToAIContext(value, config as NumberFieldConfig),
+  single_select: (value, config) =>
+    singleSelectToAIContext(value, config as SingleSelectFieldConfig),
+  checkbox: (value) => checkboxToAIContext(value),
+};
+
 export function canonicalToAIContext(
   value: unknown,
   fieldType: AIDataContractFieldType,
@@ -32,21 +43,8 @@ export function canonicalToAIContext(
     return '';
   }
 
-  switch (fieldType) {
-    case 'text':
-      return textToAIContext(value);
-    case 'number':
-      return numberToAIContext(value, fieldConfig as NumberFieldConfig);
-    case 'single_select':
-      return singleSelectToAIContext(
-        value,
-        fieldConfig as SingleSelectFieldConfig,
-      );
-    case 'checkbox':
-      return checkboxToAIContext(value);
-    default:
-      return String(value);
-  }
+  const handler = CANONICAL_TO_AI_HANDLERS[fieldType];
+  return handler ? handler(value, fieldConfig) : String(value);
 }
 
 // ---------------------------------------------------------------------------

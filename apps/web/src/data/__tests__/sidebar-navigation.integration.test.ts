@@ -8,6 +8,7 @@ import {
   createTestWorkspaceMembership,
   createTestPortal,
   createTestPortalAccess,
+  testTenantIsolation,
 } from '@everystack/shared/testing';
 import { getSidebarNavigation } from '../../data/sidebar-navigation';
 
@@ -17,8 +18,30 @@ describe('Sidebar Navigation Data Fetcher', () => {
   // -------------------------------------------------------------------------
 
   describe('tenant isolation', () => {
+    it('enforces tenant isolation via testTenantIsolation()', async () => {
+      let setupUserId: string;
+
+      await testTenantIsolation({
+        setup: async (tenantId) => {
+          const user = await createTestUser();
+          await createTestTenantMembership({
+            tenantId,
+            userId: user.id,
+            role: 'owner',
+            status: 'active',
+          });
+          await createTestWorkspace({ tenantId, createdBy: user.id });
+          setupUserId = user.id;
+        },
+        query: async (tenantId) => {
+          const result = await getSidebarNavigation(setupUserId!, tenantId);
+          const section = result.tenants.find((t) => t.tenantId === tenantId);
+          return section ? section.workspaces : [];
+        },
+      });
+    }, 30_000);
+
     it('user only sees tenants they have membership in', async () => {
-      // User A is a member of Tenant X
       const userA = await createTestUser();
       const tenantX = await createTestTenant({ name: 'Tenant X' });
       await createTestTenantMembership({
@@ -29,7 +52,6 @@ describe('Sidebar Navigation Data Fetcher', () => {
       });
       await createTestWorkspace({ tenantId: tenantX.id, createdBy: userA.id });
 
-      // User B is a member of Tenant Y (User A has no access)
       const userB = await createTestUser();
       const tenantY = await createTestTenant({ name: 'Tenant Y' });
       await createTestTenantMembership({
@@ -42,7 +64,6 @@ describe('Sidebar Navigation Data Fetcher', () => {
 
       const result = await getSidebarNavigation(userA.id, tenantX.id);
 
-      // User A should only see Tenant X
       expect(result.tenants).toHaveLength(1);
       expect(result.tenants[0]!.tenantId).toBe(tenantX.id);
       expect(result.tenants.find((t) => t.tenantId === tenantY.id)).toBeUndefined();

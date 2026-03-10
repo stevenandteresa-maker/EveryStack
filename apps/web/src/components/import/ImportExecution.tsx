@@ -65,26 +65,28 @@ function buildCanonicalRows(
   });
 }
 
+type Coercer = (value: string) => unknown;
+
+const coerceNumeric: Coercer = (value) => {
+  const cleaned = value.replace(/[$,%\s]/g, '');
+  const num = Number(cleaned);
+  return isNaN(num) ? value : num;
+};
+
+const IMPORT_COERCERS: Record<string, Coercer> = {
+  number: coerceNumeric,
+  currency: coerceNumeric,
+  percent: coerceNumeric,
+  checkbox: (value) => ['true', '1', 'yes'].includes(value.toLowerCase()),
+  rating: (value) => {
+    const num = parseInt(value, 10);
+    return isNaN(num) ? 0 : num;
+  },
+};
+
 function coerceValue(value: string, fieldType: string): unknown {
-  switch (fieldType) {
-    case 'number':
-    case 'currency':
-    case 'percent': {
-      const cleaned = value.replace(/[$,%\s]/g, '');
-      const num = Number(cleaned);
-      return isNaN(num) ? value : num;
-    }
-    case 'checkbox': {
-      const lower = value.toLowerCase();
-      return ['true', '1', 'yes'].includes(lower);
-    }
-    case 'rating': {
-      const num = parseInt(value, 10);
-      return isNaN(num) ? 0 : num;
-    }
-    default:
-      return value;
-  }
+  const coercer = IMPORT_COERCERS[fieldType];
+  return coercer ? coercer(value) : value;
 }
 
 function generateErrorCsv(errors: ImportRowError[]): string {
