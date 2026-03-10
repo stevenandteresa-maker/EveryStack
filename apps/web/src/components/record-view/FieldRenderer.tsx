@@ -7,6 +7,9 @@
  * for the Record View context: larger display, no truncation, full value.
  * Inline editable via useCellEdit + useOptimisticRecord pattern.
  *
+ * For linked_record fields, renders LinkedRecordPills instead of the
+ * standard cell renderer.
+ *
  * @see docs/reference/tables-and-views.md § Record View
  */
 
@@ -16,6 +19,10 @@ import { cn } from '@/lib/utils';
 import { getCellRenderer } from '@/components/grid/GridCell';
 import type { CellRendererProps } from '@/components/grid/GridCell';
 import { useCellEdit } from '@/lib/hooks/use-cell-edit';
+import {
+  LinkedRecordPills,
+  type LinkedRecordPill,
+} from './LinkedRecordPills';
 import type { GridField, GridRecord } from '@/lib/types/grid';
 import { Lock } from 'lucide-react';
 
@@ -56,6 +63,46 @@ export interface FieldRendererProps {
   onSave: (fieldId: string, value: unknown) => void;
   columnSpan?: number;
   readOnly?: boolean;
+  onNavigateToLinkedRecord?: (recordId: string) => void;
+  onTab?: () => void;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Extracts linked record pills from a linked_record field value.
+ * The canonical value can be an array of { id, displayValue } objects
+ * or an array of record IDs (strings).
+ */
+function extractLinkedRecordPills(value: unknown): LinkedRecordPill[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item): LinkedRecordPill | null => {
+      if (typeof item === 'string') {
+        return { recordId: item, displayValue: item };
+      }
+      if (
+        item &&
+        typeof item === 'object' &&
+        'id' in item &&
+        typeof (item as Record<string, unknown>).id === 'string'
+      ) {
+        const obj = item as Record<string, unknown>;
+        return {
+          recordId: obj.id as string,
+          displayValue:
+            typeof obj.displayValue === 'string'
+              ? obj.displayValue
+              : typeof obj.name === 'string'
+                ? obj.name
+                : (obj.id as string),
+        };
+      }
+      return null;
+    })
+    .filter((p): p is LinkedRecordPill => p !== null);
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +115,8 @@ export function FieldRenderer({
   onSave,
   columnSpan = 1,
   readOnly = false,
+  onNavigateToLinkedRecord,
+  onTab,
 }: FieldRendererProps) {
   const t = useTranslations('record_view');
   const canonicalData = record.canonicalData as Record<string, unknown> | null;
@@ -89,12 +138,16 @@ export function FieldRenderer({
     readOnly: readOnly || field.readOnly,
     onSave: handleSave,
     onCancel: handleCancel,
+    onMoveRight: onTab,
   });
+
+  // Linked record fields render pills instead of standard cell renderer
+  const isLinkedRecord = field.fieldType === 'linked_record';
 
   const entry = getCellRenderer(field.fieldType);
   const DisplayComponent = entry?.DisplayComponent;
   const EditComponent = entry?.EditComponent;
-  const isEditable = !readOnly && !field.readOnly && EditComponent;
+  const isEditable = !readOnly && !field.readOnly && EditComponent && !isLinkedRecord;
 
   const rendererProps: CellRendererProps = {
     value: cellEdit.isEditing ? cellEdit.localValue : value,
@@ -138,25 +191,32 @@ export function FieldRenderer({
       </div>
 
       {/* Field value */}
-      <div
-        className={cn(
-          'min-h-[28px] text-sm',
-          isEditable && 'cursor-text',
-        )}
-        onClick={isEditable ? cellEdit.startEdit : undefined}
-        onKeyDown={cellEdit.isEditing ? cellEdit.handleKeyDown : undefined}
-        onBlur={cellEdit.isEditing ? cellEdit.handleBlur : undefined}
-        role={isEditable ? 'button' : undefined}
-        tabIndex={isEditable ? 0 : undefined}
-      >
-        {ActiveComponent ? (
-          <ActiveComponent {...rendererProps} />
-        ) : (
-          <span className="text-muted-foreground">
-            {value != null ? String(value) : ''}
-          </span>
-        )}
-      </div>
+      {isLinkedRecord && onNavigateToLinkedRecord ? (
+        <LinkedRecordPills
+          pills={extractLinkedRecordPills(value)}
+          onNavigateToRecord={onNavigateToLinkedRecord}
+        />
+      ) : (
+        <div
+          className={cn(
+            'min-h-[28px] text-sm',
+            isEditable && 'cursor-text',
+          )}
+          onClick={isEditable ? cellEdit.startEdit : undefined}
+          onKeyDown={cellEdit.isEditing ? cellEdit.handleKeyDown : undefined}
+          onBlur={cellEdit.isEditing ? cellEdit.handleBlur : undefined}
+          role={isEditable ? 'button' : undefined}
+          tabIndex={isEditable ? 0 : undefined}
+        >
+          {ActiveComponent ? (
+            <ActiveComponent {...rendererProps} />
+          ) : (
+            <span className="text-muted-foreground">
+              {value != null ? String(value) : ''}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

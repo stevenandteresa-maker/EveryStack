@@ -709,6 +709,22 @@
     "no_fields": "No hay campos configurados para esta vista.",
     "record_not_found": "Registro no encontrado.",
     "config_name_default": "Predeterminado",
-    "save_error": "Error al guardar la configuración de vista de registro."
+    "save_error": "Error al guardar la configuración de vista de registro.",
+    "navigate_back": "Volver al registro anterior",
+    "tab_default": "Detalles",
+    "tab_add": "Agregar pestaña",
+    "tab_rename": "Renombrar",
+    "tab_delete": "Eliminar",
+    "tab_options": "Opciones para {name}",
+    "tab_rename_input": "Nombre de pestaña",
+    "tab_name_placeholder": "Nombre de pestaña",
+    "tab_new_name": "Nuevo nombre de pestaña",
+    "no_linked_records": "Sin registros vinculados",
+    "linked_records_label": "Registros vinculados",
+    "linked_record_navigate": "Navegar a {name}",
+    "config_picker_label": "Cambiar configuración de vista de registro",
+    "config_save_as_new": "Guardar como nueva configuración",
+    "config_new_name_placeholder": "Nombre de configuración",
+    "config_new_name": "Nuevo nombre de configuración"
   }
 }

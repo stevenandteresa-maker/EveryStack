@@ -34,6 +34,14 @@ vi.mock('@/actions/record-actions', () => ({
   updateRecordField: vi.fn(),
 }));
 
+vi.mock('@/lib/hooks/use-media-query', () => ({
+  useMediaQuery: () => false,
+}));
+
+vi.mock('@everystack/shared/db', () => ({
+  generateUUIDv7: () => `uuid-${Date.now()}`,
+}));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------

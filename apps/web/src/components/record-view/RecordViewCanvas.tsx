@@ -3,17 +3,18 @@
 /**
  * RecordViewCanvas — the field canvas for the Record View overlay.
  *
- * Renders fields in a configurable column grid (up to 4 desktop, 2 mobile).
- * Fields are drag-and-drop rearrangeable and adjustable in column span.
- * Uses FieldRenderer for each field.
+ * Renders fields in a configurable column grid (up to 4 desktop, 1 mobile).
+ * Fields are drag-and-drop rearrangeable. Supports tab filtering:
+ * when a tab is active, only fields assigned to that tab are shown.
  *
  * @see docs/reference/tables-and-views.md § Record View — Layout
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { FieldRenderer } from './FieldRenderer';
+import { DEFAULT_TAB_ID } from './RecordViewTabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { GridField, GridRecord } from '@/lib/types/grid';
 import type { RecordViewLayout } from '@/data/record-view-configs';
@@ -26,8 +27,10 @@ export interface RecordViewCanvasProps {
   record: GridRecord;
   fields: GridField[];
   layout: RecordViewLayout;
+  activeTabId?: string;
   onFieldSave: (fieldId: string, value: unknown) => void;
   onLayoutChange?: (layout: RecordViewLayout) => void;
+  onNavigateToLinkedRecord?: (recordId: string) => void;
   readOnly?: boolean;
 }
 
@@ -39,22 +42,64 @@ export function RecordViewCanvas({
   record,
   fields,
   layout,
+  activeTabId,
   onFieldSave,
   onLayoutChange,
+  onNavigateToLinkedRecord,
   readOnly = false,
 }: RecordViewCanvasProps) {
   const t = useTranslations('record_view');
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [dragSourceIndex, setDragSourceIndex] = useState<number | null>(null);
+  const fieldRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Build a field map for quick lookup
-  const fieldMap = new Map(fields.map((f) => [f.id, f]));
+  const fieldMap = useMemo(() => new Map(fields.map((f) => [f.id, f])), [fields]);
 
-  // Filter layout fields to only those that exist in the fields list
-  const layoutFields = layout.fields.filter((lf) => fieldMap.has(lf.fieldId));
+  // Filter layout fields: only those in the fields list, and matching the active tab
+  const layoutFields = layout.fields.filter((lf) => {
+    if (!fieldMap.has(lf.fieldId)) return false;
+    // Tab filtering: null tab means "default tab", specific tab IDs for custom tabs
+    if (activeTabId && activeTabId !== DEFAULT_TAB_ID) {
+      return lf.tab === activeTabId;
+    }
+    // Default tab: show fields with tab === null
+    return !lf.tab;
+  });
 
-  // Determine columns based on screen (CSS handles responsive, but cap at layout.columns)
+  // Determine columns based on layout config
   const columns = layout.columns;
+
+  // ---------------------------------------------------------------------------
+  // Tab key navigation between fields
+  // ---------------------------------------------------------------------------
+
+  const handleFieldTab = useCallback(
+    (fieldId: string) => {
+      const currentIdx = layoutFields.findIndex(
+        (lf) => lf.fieldId === fieldId,
+      );
+      if (currentIdx === -1) return;
+
+      // Find next editable field
+      for (let i = currentIdx + 1; i < layoutFields.length; i++) {
+        const nextField = layoutFields[i];
+        if (!nextField) continue;
+        const field = fieldMap.get(nextField.fieldId);
+        if (field && !field.readOnly) {
+          const el = fieldRefs.current.get(nextField.fieldId);
+          if (el) {
+            const focusable = el.querySelector<HTMLElement>(
+              '[tabindex="0"], [role="button"]',
+            );
+            focusable?.click();
+          }
+          return;
+        }
+      }
+    },
+    [layoutFields, fieldMap],
+  );
 
   // ---------------------------------------------------------------------------
   // Drag-and-drop handlers
@@ -138,6 +183,13 @@ export function RecordViewCanvas({
           return (
             <div
               key={layoutField.fieldId}
+              ref={(el) => {
+                if (el) {
+                  fieldRefs.current.set(layoutField.fieldId, el);
+                } else {
+                  fieldRefs.current.delete(layoutField.fieldId);
+                }
+              }}
               className={cn(
                 'relative',
                 isDragOver && 'ring-2 ring-accent/50 rounded-md',
@@ -159,6 +211,8 @@ export function RecordViewCanvas({
                 onSave={onFieldSave}
                 columnSpan={1}
                 readOnly={readOnly}
+                onNavigateToLinkedRecord={onNavigateToLinkedRecord}
+                onTab={() => handleFieldTab(layoutField.fieldId)}
               />
             </div>
           );

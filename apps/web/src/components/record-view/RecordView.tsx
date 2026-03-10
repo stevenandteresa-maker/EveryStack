@@ -3,21 +3,30 @@
 /**
  * RecordView — the overlay for viewing/editing a single record.
  *
- * Slides in from the right at 60% width. Grid stays visible behind
- * a dimmed overlay (bg-black/20). Closes on ✕, Escape, or click-outside.
+ * Slides in from the right at 60% width on desktop/tablet.
+ * At <768px, renders as a full-screen sheet (single column).
+ * Grid stays visible behind a dimmed overlay on larger screens.
+ * Closes on ✕, Escape, or click-outside.
+ *
+ * Supports multi-tab layouts, linked record navigation stack,
+ * config picker, and responsive behavior.
  *
  * @see docs/reference/tables-and-views.md § Record View
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { RecordViewHeader } from './RecordViewHeader';
 import { RecordViewCanvas } from './RecordViewCanvas';
+import { RecordViewTabs, DEFAULT_TAB_ID } from './RecordViewTabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOptimisticRecord } from '@/lib/hooks/use-optimistic-record';
+import { useMediaQuery } from '@/lib/hooks/use-media-query';
+import { generateUUIDv7 } from '@everystack/shared/db';
+import type { ConfigOption } from './RecordViewConfigPicker';
 import type { GridField, GridRecord } from '@/lib/types/grid';
-import type { RecordViewLayout } from '@/data/record-view-configs';
+import type { RecordViewLayout, RecordViewTab } from '@/data/record-view-configs';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -46,11 +55,25 @@ export interface RecordViewProps {
   currentRecordId: string | null;
   /** Whether data is loading */
   isLoading?: boolean;
+  /** Whether user can go back in linked record stack */
+  canGoBack?: boolean;
+  /** All saved configs for config picker */
+  configs?: ConfigOption[];
+  /** Currently active config ID */
+  activeConfigId?: string | null;
   /** Navigate prev/next */
   onNavigate: (direction: 'prev' | 'next') => void;
+  /** Go back in linked record stack */
+  onGoBack?: () => void;
+  /** Navigate to a linked record (push stack) */
+  onNavigateToLinkedRecord?: (recordId: string) => void;
+  /** Switch to a different config */
+  onSelectConfig?: (configId: string) => void;
+  /** Save current config as new */
+  onSaveConfigAsNew?: (name: string) => void;
   /** Close the overlay */
   onClose: () => void;
-  /** Layout changed (drag reorder) */
+  /** Layout changed (drag reorder, tab changes) */
   onLayoutChange?: (layout: RecordViewLayout) => void;
 }
 
@@ -70,15 +93,35 @@ export function RecordView({
   recordIds,
   currentRecordId,
   isLoading = false,
+  canGoBack = false,
+  configs,
+  activeConfigId,
   onNavigate,
+  onGoBack,
+  onNavigateToLinkedRecord,
+  onSelectConfig,
+  onSaveConfigAsNew,
   onClose,
   onLayoutChange,
 }: RecordViewProps) {
   const t = useTranslations('record_view');
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const { updateCell } = useOptimisticRecord(tableId, viewId);
+
+  // Tab state — reset to default when record/layout changes using state-based sync
+  const hasTabs = layout && layout.tabs.length > 0;
+  const [activeTabId, setActiveTabId] = useState(DEFAULT_TAB_ID);
+  const [trackedRecordId, setTrackedRecordId] = useState(currentRecordId);
+  const [trackedLayout, setTrackedLayout] = useState(layout);
+
+  if (trackedRecordId !== currentRecordId || trackedLayout !== layout) {
+    setTrackedRecordId(currentRecordId);
+    setTrackedLayout(layout);
+    setActiveTabId(DEFAULT_TAB_ID);
+  }
 
   // Close on Escape
   useEffect(() => {
@@ -98,7 +141,6 @@ export function RecordView({
   // Click outside (on the dimmed overlay)
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
-      // Only close if clicking the overlay itself, not the panel
       if (e.target === overlayRef.current) {
         onClose();
       }
@@ -114,6 +156,51 @@ export function RecordView({
     [currentRecordId, updateCell],
   );
 
+  // Tab management
+  const handleAddTab = useCallback(
+    (name: string) => {
+      if (!layout) return;
+      const newTab: RecordViewTab = { id: generateUUIDv7(), name };
+      onLayoutChange?.({
+        ...layout,
+        tabs: [...layout.tabs, newTab],
+      });
+    },
+    [layout, onLayoutChange],
+  );
+
+  const handleRenameTab = useCallback(
+    (tabId: string, name: string) => {
+      if (!layout) return;
+      onLayoutChange?.({
+        ...layout,
+        tabs: layout.tabs.map((tab) =>
+          tab.id === tabId ? { ...tab, name } : tab,
+        ),
+      });
+    },
+    [layout, onLayoutChange],
+  );
+
+  const handleDeleteTab = useCallback(
+    (tabId: string) => {
+      if (!layout) return;
+      // Move fields from deleted tab back to default
+      const updatedFields = layout.fields.map((f) =>
+        f.tab === tabId ? { ...f, tab: null } : f,
+      );
+      onLayoutChange?.({
+        ...layout,
+        tabs: layout.tabs.filter((tab) => tab.id !== tabId),
+        fields: updatedFields,
+      });
+      if (activeTabId === tabId) {
+        setActiveTabId(DEFAULT_TAB_ID);
+      }
+    },
+    [layout, onLayoutChange, activeTabId],
+  );
+
   // Calculate navigation state
   const currentIndex = currentRecordId
     ? recordIds.indexOf(currentRecordId)
@@ -121,8 +208,93 @@ export function RecordView({
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < recordIds.length - 1;
 
+  // Responsive layout: apply 1-column at mobile
+  const responsiveLayout = layout
+    ? isMobile
+      ? { ...layout, columns: 1 }
+      : layout
+    : null;
+
   if (!isOpen) return null;
 
+  const content = isLoading ? (
+    <RecordViewSkeleton />
+  ) : record && responsiveLayout ? (
+    <>
+      <RecordViewHeader
+        record={record}
+        fields={fields}
+        tableName={tableName}
+        viewName={viewName}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        canGoBack={canGoBack}
+        configs={configs}
+        activeConfigId={activeConfigId}
+        onNavigate={onNavigate}
+        onGoBack={onGoBack}
+        onSelectConfig={onSelectConfig}
+        onSaveConfigAsNew={onSaveConfigAsNew}
+        onClose={onClose}
+      />
+      {hasTabs && (
+        <RecordViewTabs
+          tabs={layout!.tabs}
+          activeTabId={activeTabId}
+          onTabChange={setActiveTabId}
+          onAddTab={handleAddTab}
+          onRenameTab={handleRenameTab}
+          onDeleteTab={handleDeleteTab}
+        />
+      )}
+      <RecordViewCanvas
+        record={record}
+        fields={fields}
+        layout={responsiveLayout}
+        activeTabId={hasTabs ? activeTabId : undefined}
+        onFieldSave={handleFieldSave}
+        onLayoutChange={onLayoutChange}
+        onNavigateToLinkedRecord={onNavigateToLinkedRecord}
+      />
+    </>
+  ) : (
+    <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+      {t('record_not_found')}
+    </div>
+  );
+
+  // Mobile: full-screen sheet
+  if (isMobile) {
+    return (
+      <div
+        ref={overlayRef}
+        className={cn(
+          'fixed inset-0 z-40',
+          'bg-black/20',
+          'transition-opacity duration-200 ease-out',
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
+        )}
+        onClick={handleOverlayClick}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('overlay_label')}
+      >
+        <div
+          ref={panelRef}
+          className={cn(
+            'absolute inset-0 bg-background',
+            'flex flex-col',
+            'transition-transform duration-200 ease-out',
+            isOpen ? 'translate-y-0' : 'translate-y-full',
+          )}
+        >
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  // Tablet/Desktop: 60% overlay from right
   return (
     <div
       ref={overlayRef}
@@ -148,33 +320,7 @@ export function RecordView({
         )}
         style={{ width: '60%', minWidth: '400px', maxWidth: '1200px' }}
       >
-        {isLoading ? (
-          <RecordViewSkeleton />
-        ) : record && layout ? (
-          <>
-            <RecordViewHeader
-              record={record}
-              fields={fields}
-              tableName={tableName}
-              viewName={viewName}
-              hasPrev={hasPrev}
-              hasNext={hasNext}
-              onNavigate={onNavigate}
-              onClose={onClose}
-            />
-            <RecordViewCanvas
-              record={record}
-              fields={fields}
-              layout={layout}
-              onFieldSave={handleFieldSave}
-              onLayoutChange={onLayoutChange}
-            />
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-            {t('record_not_found')}
-          </div>
-        )}
+        {content}
       </div>
     </div>
   );

@@ -4,7 +4,8 @@
  * useRecordView — manages Record View overlay state.
  *
  * Tracks open/closed state, current record ID, config ID,
- * and navigation between records in the current view.
+ * navigation between records in the current view, and a
+ * navigation stack for linked record drill-down.
  *
  * @see docs/reference/tables-and-views.md § Record View
  */
@@ -22,6 +23,8 @@ export interface RecordViewState {
   currentRecordId: string | null;
   /** The ID of the Record View config being used */
   currentConfigId: string | null;
+  /** Navigation stack for linked record drill-down */
+  navigationStack: string[];
 }
 
 export interface UseRecordViewResult extends RecordViewState {
@@ -35,6 +38,12 @@ export interface UseRecordViewResult extends RecordViewState {
   setCurrentRecordId: (recordId: string) => void;
   /** Update the config being used */
   setCurrentConfigId: (configId: string) => void;
+  /** Push a linked record onto the navigation stack */
+  pushLinkedRecord: (recordId: string) => void;
+  /** Pop back to the previous record in the stack */
+  popLinkedRecord: () => void;
+  /** Whether there is a previous record in the stack to go back to */
+  canGoBack: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -49,6 +58,7 @@ export function useRecordView(recordIds: string[]): UseRecordViewResult {
   const [isOpen, setIsOpen] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
+  const [navigationStack, setNavigationStack] = useState<string[]>([]);
 
   const openRecordView = useCallback(
     (recordId: string, configId?: string) => {
@@ -56,6 +66,7 @@ export function useRecordView(recordIds: string[]): UseRecordViewResult {
       if (configId) {
         setCurrentConfigId(configId);
       }
+      setNavigationStack([]);
       setIsOpen(true);
     },
     [],
@@ -64,35 +75,73 @@ export function useRecordView(recordIds: string[]): UseRecordViewResult {
   const closeRecordView = useCallback(() => {
     setIsOpen(false);
     setCurrentRecordId(null);
+    setNavigationStack([]);
   }, []);
 
   const navigateRecord = useCallback(
     (direction: 'prev' | 'next') => {
-      if (!currentRecordId || recordIds.length === 0) return;
+      if (recordIds.length === 0) return;
 
-      const currentIndex = recordIds.indexOf(currentRecordId);
-      if (currentIndex === -1) return;
+      // Find reference index: current record, or the original record from stack
+      let referenceIndex = currentRecordId
+        ? recordIds.indexOf(currentRecordId)
+        : -1;
+
+      // If current record isn't in the list (e.g. we're in a linked record),
+      // use the bottom of the navigation stack as reference
+      if (referenceIndex === -1 && navigationStack.length > 0) {
+        referenceIndex = recordIds.indexOf(navigationStack[0]!);
+      }
+
+      if (referenceIndex === -1) return;
 
       const nextIndex =
         direction === 'next'
-          ? Math.min(currentIndex + 1, recordIds.length - 1)
-          : Math.max(currentIndex - 1, 0);
+          ? Math.min(referenceIndex + 1, recordIds.length - 1)
+          : Math.max(referenceIndex - 1, 0);
 
-      if (nextIndex !== currentIndex) {
+      if (nextIndex !== referenceIndex) {
         setCurrentRecordId(recordIds[nextIndex]!);
+        setNavigationStack([]);
       }
     },
-    [currentRecordId, recordIds],
+    [currentRecordId, recordIds, navigationStack],
   );
+
+  const pushLinkedRecord = useCallback(
+    (recordId: string) => {
+      if (currentRecordId) {
+        setNavigationStack((prev) => [...prev, currentRecordId]);
+      }
+      setCurrentRecordId(recordId);
+    },
+    [currentRecordId],
+  );
+
+  const popLinkedRecord = useCallback(() => {
+    setNavigationStack((prev) => {
+      if (prev.length === 0) return prev;
+      const newStack = [...prev];
+      const previousRecordId = newStack.pop()!;
+      setCurrentRecordId(previousRecordId);
+      return newStack;
+    });
+  }, []);
+
+  const canGoBack = navigationStack.length > 0;
 
   return {
     isOpen,
     currentRecordId,
     currentConfigId,
+    navigationStack,
     openRecordView,
     closeRecordView,
     navigateRecord,
     setCurrentRecordId,
     setCurrentConfigId,
+    pushLinkedRecord,
+    popLinkedRecord,
+    canGoBack,
   };
 }

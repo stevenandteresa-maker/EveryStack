@@ -709,6 +709,22 @@
     "no_fields": "No fields configured for this view.",
     "record_not_found": "Record not found.",
     "config_name_default": "Default",
-    "save_error": "Failed to save record view config."
+    "save_error": "Failed to save record view config.",
+    "navigate_back": "Back to previous record",
+    "tab_default": "Details",
+    "tab_add": "Add tab",
+    "tab_rename": "Rename",
+    "tab_delete": "Delete",
+    "tab_options": "Options for {name}",
+    "tab_rename_input": "Tab name",
+    "tab_name_placeholder": "Tab name",
+    "tab_new_name": "New tab name",
+    "no_linked_records": "No linked records",
+    "linked_records_label": "Linked records",
+    "linked_record_navigate": "Navigate to {name}",
+    "config_picker_label": "Switch record view config",
+    "config_save_as_new": "Save as new config",
+    "config_new_name_placeholder": "Config name",
+    "config_new_name": "New config name"
   }
 }
