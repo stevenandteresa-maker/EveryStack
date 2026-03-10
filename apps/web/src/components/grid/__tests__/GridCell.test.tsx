@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { GridCell, registerCellRenderer, getCellRenderer } from '../GridCell';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Test data

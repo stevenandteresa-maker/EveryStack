@@ -26,6 +26,8 @@ import {
 import type { GridRecord, GridField, RowDensity } from '@/lib/types/grid';
 import type { CellPosition } from './grid-types';
 import { DATA_COLORS } from '@/lib/design-system/colors';
+import { RowPresenceIndicator } from './RowPresenceIndicator';
+import type { FieldLockInfo } from '@/lib/hooks/use-field-lock';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -40,6 +42,8 @@ export interface GridRowProps {
   activeCell: CellPosition | null;
   editingCell: CellPosition | null;
   columnColors: Record<string, string>;
+  isSelected?: boolean;
+  onRowSelect?: (recordId: string, event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => void;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -64,6 +68,14 @@ export interface GridRowProps {
   onPaste?: () => void;
   onClearCellValue?: () => void;
   onCopyRecordLink?: (recordId: string) => void;
+  // Color coding
+  rowTintColor?: string | null;
+  cellTintColors?: Record<string, string>;
+  // Collaboration — field locks & row presence
+  /** Get lock info for a field in this record. Returns null if free. */
+  getFieldLock?: (recordId: string, fieldId: string) => FieldLockInfo | null;
+  /** Color for the row presence indicator (left border). Empty string = no presence. */
+  presenceColor?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +91,8 @@ export const GridRow = memo(function GridRow({
   activeCell,
   editingCell,
   columnColors,
+  isSelected,
+  onRowSelect,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -101,6 +115,10 @@ export const GridRow = memo(function GridRow({
   onPaste,
   onClearCellValue,
   onCopyRecordLink,
+  rowTintColor,
+  cellTintColors,
+  getFieldLock,
+  presenceColor,
 }: GridRowProps) {
   const t = useTranslations('grid');
   const [isHovered, setIsHovered] = useState(false);
@@ -112,14 +130,18 @@ export const GridRow = memo(function GridRow({
   const rowContent = (
     <div
       role="row"
-      className={cn('flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
+      className={cn('relative flex', isDropTarget && 'ring-2 ring-inset ring-blue-400')}
       style={{
         height: rowHeight,
-        backgroundColor: isHovered
-          ? GRID_TOKENS.rowHover
-          : isOdd
-            ? GRID_TOKENS.rowStripeOdd
-            : GRID_TOKENS.rowStripeEven,
+        backgroundColor: isSelected
+          ? '#EFF6FF'
+          : isHovered
+            ? GRID_TOKENS.rowHover
+            : rowTintColor
+              ? rowTintColor
+              : isOdd
+                ? GRID_TOKENS.rowStripeOdd
+                : GRID_TOKENS.rowStripeEven,
         ...style,
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -135,6 +157,11 @@ export const GridRow = memo(function GridRow({
           : undefined
       }
     >
+      {/* Row presence indicator */}
+      {presenceColor && (
+        <RowPresenceIndicator color={presenceColor} height={rowHeight} />
+      )}
+
       {/* Drag handle */}
       <div
         className={cn(
@@ -169,8 +196,20 @@ export const GridRow = memo(function GridRow({
           width: CHECKBOX_COLUMN_WIDTH,
           borderColor: GRID_TOKENS.borderDefault,
         }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRowSelect?.(record.id, {
+            shiftKey: e.shiftKey,
+            metaKey: e.metaKey,
+            ctrlKey: e.ctrlKey,
+          });
+        }}
       >
-        <Checkbox aria-label={t('checkbox_select')} />
+        <Checkbox
+          aria-label={t('checkbox_select')}
+          checked={isSelected ?? false}
+          tabIndex={-1}
+        />
       </div>
 
       {/* Row number */}
@@ -199,12 +238,17 @@ export const GridRow = memo(function GridRow({
         const isPrimary = field.id === primaryField?.id;
 
         const colorName = columnColors[field.id];
-        const colorBg = colorName
+        const columnColorBg = colorName
           ? DATA_COLORS.find((c) => c.name === colorName)?.light
           : undefined;
+        // Cell-level color rule overrides column color (higher specificity)
+        const cellTint = cellTintColors?.[field.id];
+        const cellBg = cellTint ?? columnColorBg;
+
+        const fieldLock = getFieldLock?.(record.id, field.id) ?? null;
 
         return (
-          <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: colorBg }}>
+          <div key={cell.id} className="relative" style={{ width: cell.column.getSize(), backgroundColor: cellBg }}>
             <GridCell
               record={record}
               field={field}
@@ -216,6 +260,7 @@ export const GridRow = memo(function GridRow({
               onDoubleClick={() => onCellDoubleClick(record.id, field.id)}
               onStartReplace={() => onCellStartReplace(record.id, field.id)}
               style={{ height: rowHeight }}
+              lockInfo={fieldLock}
             />
             {/* Expand icon on primary field hover */}
             {isPrimary && isHovered && (
@@ -230,6 +275,10 @@ export const GridRow = memo(function GridRow({
                 )}
                 style={{ color: GRID_TOKENS.textSecondary }}
                 aria-label={t('expand_record')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExpandRecord?.(record.id);
+                }}
               >
                 ⤢
               </button>

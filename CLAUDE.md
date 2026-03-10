@@ -384,7 +384,7 @@ When working on a feature:
 | Permissions                    | `permissions.md`                                                                              |
 | UI/design                      | `design-system.md`                                                                            |
 | Navigation/sidebar             | `navigation.md`                                                                               |
-| AI features                    | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md` |
+| AI features                    | `ai-architecture.md`, `ai-data-contract.md`, `ai-metering.md`, `schema-descriptor-service.md`, `ai-skills-architecture.md`, `platform-maintenance-agents.md` |
 | Testing                        | `testing.md`                                                                                  |
 | Cross-linking                  | `cross-linking.md`                                                                            |
 | Portals                        | `portals.md`                                                                                  |

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { DataGrid } from '../DataGrid';
-import type { GridRecord, GridField, ViewConfig } from '@/lib/types/grid';
+import type { GridRecord, GridField, ViewConfig } from '../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Test data factories
@@ -83,6 +83,10 @@ const defaultProps = {
   columnColors: {},
   hiddenFieldIds: new Set<string>(),
   isSortActive: false,
+  sorts: [],
+  onToggleSort: vi.fn(),
+  onSortAscending: vi.fn(),
+  onSortDescending: vi.fn(),
   onCellClick: vi.fn(),
   onCellDoubleClick: vi.fn(),
   onCellStartReplace: vi.fn(),
@@ -108,6 +112,9 @@ const defaultProps = {
   onHideField: vi.fn(),
   onSetColumnColor: vi.fn(),
   onRenameField: vi.fn(),
+  filteredFieldIds: new Set<string>(),
+  onApplyQuickFilter: vi.fn(),
+  onClearQuickFilter: vi.fn(),
 };
 
 // ---------------------------------------------------------------------------

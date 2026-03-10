@@ -3,14 +3,17 @@ import { beforeAll, afterEach } from 'vitest';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { sql } from 'drizzle-orm';
 import { getTestDb } from '@everystack/shared/testing';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __setupDir = path.dirname(fileURLToPath(import.meta.url));
 const hasTestDb = Boolean(process.env.DATABASE_URL);
 
 beforeAll(async () => {
   if (!hasTestDb) return;
   const db = getTestDb();
   await migrate(db, {
-    migrationsFolder: '../../packages/shared/db/migrations',
+    migrationsFolder: path.resolve(__setupDir, '../../packages/shared/db/migrations'),
   });
 });
 

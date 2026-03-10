@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { FilteredOutLinkChip } from '../FilteredOutLinkChip';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 
 // ---------------------------------------------------------------------------
 // Helpers

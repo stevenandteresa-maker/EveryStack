@@ -35,6 +35,8 @@ interface ColumnHeaderMenuProps {
   isFrozen: boolean;
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
+  onSortAscending: () => void;
+  onSortDescending: () => void;
   onFreezeUpTo: (fieldId: string) => void;
   onUnfreeze: () => void;
   onHideField: (fieldId: string) => void;
@@ -63,6 +65,8 @@ export const ColumnHeaderMenu = memo(function ColumnHeaderMenu({
   isFrozen,
   userRole,
   columnColors,
+  onSortAscending,
+  onSortDescending,
   onFreezeUpTo,
   onUnfreeze,
   onHideField,
@@ -81,12 +85,12 @@ export const ColumnHeaderMenu = memo(function ColumnHeaderMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         {/* 1. Sort ascending */}
-        <ContextMenuItem disabled>
+        <ContextMenuItem onSelect={onSortAscending}>
           {t('sort_ascending')}
         </ContextMenuItem>
 
         {/* 2. Sort descending */}
-        <ContextMenuItem disabled>
+        <ContextMenuItem onSelect={onSortDescending}>
           {t('sort_descending')}
         </ContextMenuItem>
 

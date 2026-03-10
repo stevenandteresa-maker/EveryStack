@@ -116,7 +116,7 @@ vi.mock('@everystack/shared/logging', () => ({
 // Import modules under test
 // ---------------------------------------------------------------------------
 
-import { getAuthContext } from '@/lib/auth-context';
+import { getAuthContext } from '../lib/auth-context';
 import { requireRole, PermissionDeniedError } from '@everystack/shared/auth';
 
 // ---------------------------------------------------------------------------

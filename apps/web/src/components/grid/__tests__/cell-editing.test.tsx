@@ -2,8 +2,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act, renderHook } from '@testing-library/react';
 import { GridCell, registerCellRenderer } from '../GridCell';
-import { useCellEdit } from '@/lib/hooks/use-cell-edit';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import { useCellEdit } from '../../../lib/hooks/use-cell-edit';
+import type { GridRecord, GridField } from '../../../lib/types/grid';
 import type { CellRendererProps } from '../GridCell';
 
 // ---------------------------------------------------------------------------

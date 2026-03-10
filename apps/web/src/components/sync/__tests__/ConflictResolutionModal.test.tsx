@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConflictResolutionModal } from '../ConflictResolutionModal';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import type { ConflictItem, ConflictResolution } from '../conflict-types';
 
 // Mock server action and undo toast (these are async server calls)

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { SyncStatusBadge } from '../SyncStatusBadge';
 import type { SyncStatusBadgeProps } from '../SyncStatusBadge';
 import type { SyncHealthState } from '@everystack/shared/sync';

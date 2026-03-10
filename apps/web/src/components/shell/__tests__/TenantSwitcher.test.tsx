@@ -4,9 +4,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TenantSwitcher } from '../TenantSwitcher';
 import { ShellAccentProvider } from '../ShellAccentProvider';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
-import type { TenantNavSection } from '@/data/sidebar-navigation';
-import type { TenantSwitchResult } from '@/lib/auth/tenant-switch';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
+import type { TenantNavSection } from '../../../data/sidebar-navigation';
+import type { TenantSwitchResult } from '../../../lib/auth/tenant-switch';
 
 // ---------------------------------------------------------------------------
 // Mocks

@@ -46,7 +46,28 @@ export function LinkedRecordCellDisplay({ value, field }: CellRendererProps) {
   const t = useTranslations('grid.cells');
   const records = toLinkedRecords(value);
 
+  // Check if this field uses inline_table display style
+  const displayConfig = field.display as Record<string, unknown> | null;
+  const isInlineTable = displayConfig?.style === 'inline_table';
+
   if (records.length === 0) return null;
+
+  // Inline table style: show compact "N items" summary
+  if (isInlineTable) {
+    return (
+      <div className="flex w-full items-center gap-1 overflow-hidden">
+        <span className="text-sm text-muted-foreground">
+          {t('linked_record_items', { count: records.length })}
+        </span>
+        {field.readOnly && (
+          <Lock
+            className="h-3 w-3 shrink-0 text-slate-400"
+            aria-label={t('read_only')}
+          />
+        )}
+      </div>
+    );
+  }
 
   const visible = records.slice(0, MAX_VISIBLE);
   const overflowCount = records.length - MAX_VISIBLE;

@@ -3,10 +3,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Sidebar } from './sidebar';
-import { useSidebarStore } from '@/stores/sidebar-store';
-import { ShellAccentProvider } from '@/components/shell/ShellAccentProvider';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
-import type { SidebarNavigation } from '@/data/sidebar-navigation';
+import { useSidebarStore } from '../../stores/sidebar-store';
+import { ShellAccentProvider } from '../../components/shell/ShellAccentProvider';
+import { IntlWrapper } from '../../test-utils/intl-wrapper';
+import type { SidebarNavigation } from '../../data/sidebar-navigation';
 
 // Mock Clerk and Next.js router (required by TenantSwitcher + SidebarHeader)
 vi.mock('@clerk/nextjs', () => ({

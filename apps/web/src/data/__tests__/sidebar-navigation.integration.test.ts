@@ -9,7 +9,7 @@ import {
   createTestPortal,
   createTestPortalAccess,
 } from '@everystack/shared/testing';
-import { getSidebarNavigation } from '@/data/sidebar-navigation';
+import { getSidebarNavigation } from '../../data/sidebar-navigation';
 
 describe('Sidebar Navigation Data Fetcher', () => {
   // -------------------------------------------------------------------------

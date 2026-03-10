@@ -11,8 +11,8 @@ import {
   listApiKeys,
   revokeApiKey,
   getApiKeyByHash,
-} from '@/data/api-keys';
-import { NotFoundError } from '@/lib/errors';
+} from '../../data/api-keys';
+import { NotFoundError } from '../../lib/errors';
 
 describe('API Key Data Functions', () => {
   // -------------------------------------------------------------------------

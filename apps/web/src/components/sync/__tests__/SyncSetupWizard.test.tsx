@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SyncSetupWizard } from '../SyncSetupWizard';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 
 // ---------------------------------------------------------------------------
 // Mocks

@@ -5,8 +5,8 @@ import {
   createTestWorkspace,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getTableById, getTablesByWorkspace } from '@/data/tables';
-import { NotFoundError } from '@/lib/errors';
+import { getTableById, getTablesByWorkspace } from '../../data/tables';
+import { NotFoundError } from '../../lib/errors';
 
 describe('Table Data Functions', () => {
   // -------------------------------------------------------------------------

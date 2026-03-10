@@ -8,7 +8,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { TableTypeIcon } from '../TableTypeIcon';
 import { PerformanceBanner } from '../PerformanceBanner';
 import { GridSkeleton } from '../GridSkeleton';
@@ -18,7 +18,7 @@ import {
   TAB_COLOR_PALETTE,
   resolveTabColor,
   isValidTableType,
-} from '@/lib/constants/table-types';
+} from '../../../lib/constants/table-types';
 
 // ---------------------------------------------------------------------------
 // Table type constants

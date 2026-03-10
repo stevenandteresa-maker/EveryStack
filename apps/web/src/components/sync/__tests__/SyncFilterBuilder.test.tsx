@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SyncFilterBuilder } from '../SyncFilterBuilder';
 import type { FilterField } from '../SyncFilterBuilder';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import type { FilterRule } from '@everystack/shared/sync';
 
 // ---------------------------------------------------------------------------

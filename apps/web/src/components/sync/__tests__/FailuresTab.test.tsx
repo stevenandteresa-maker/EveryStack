@@ -15,9 +15,9 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
 import { FailuresTab } from '../FailuresTab';
-import type { SyncFailureWithRecord } from '@/data/sync-failures';
+import type { SyncFailureWithRecord } from '../../../data/sync-failures';
 
 // RadixUI ScrollArea requires ResizeObserver in jsdom
 beforeAll(() => {

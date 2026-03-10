@@ -10,20 +10,23 @@
 
 import { memo, useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import type { Header } from '@tanstack/react-table';
 import type { EffectiveRole } from '@everystack/shared/auth';
 import { roleAtLeast } from '@everystack/shared/auth';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ColumnResizer } from './ColumnResizer';
 import { ColumnHeaderMenu } from './ColumnHeaderMenu';
+import { QuickFilterPopover } from './QuickFilterPopover';
 import {
   GRID_TOKENS,
   CHECKBOX_COLUMN_WIDTH,
   ROW_NUMBER_WIDTH,
   DRAG_HANDLE_WIDTH,
 } from './grid-types';
-import type { GridRecord, GridField } from '@/lib/types/grid';
+import type { GridRecord, GridField, SortLevel } from '@/lib/types/grid';
 import { DATA_COLORS } from '@/lib/design-system/colors';
 
 // ---------------------------------------------------------------------------
@@ -79,7 +82,17 @@ export interface GridHeaderProps {
   addColumnWidth: number;
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
+  sorts: SortLevel[];
+  filteredFieldIds: Set<string>;
+  allSelected?: boolean;
+  someSelected?: boolean;
+  onToggleSelectAll?: () => void;
   onSelectColumn: (fieldId: string) => void;
+  onToggleSort: (fieldId: string) => void;
+  onSortAscending: (fieldId: string) => void;
+  onSortDescending: (fieldId: string) => void;
+  onApplyQuickFilter: (fieldId: string, operator: string, value: unknown) => void;
+  onClearQuickFilter: (fieldId: string) => void;
   onStartResize: (fieldId: string, width: number, e: React.MouseEvent) => void;
   onDragStart: (fieldId: string, e: React.DragEvent) => void;
   onDragOver: (fieldId: string, e: React.DragEvent) => void;
@@ -100,7 +113,17 @@ export const GridHeader = memo(function GridHeader({
   addColumnWidth,
   userRole,
   columnColors,
+  sorts,
+  filteredFieldIds,
+  allSelected,
+  someSelected,
+  onToggleSelectAll,
   onSelectColumn,
+  onToggleSort,
+  onSortAscending,
+  onSortDescending,
+  onApplyQuickFilter,
+  onClearQuickFilter,
   onStartResize,
   onDragStart,
   onDragOver,
@@ -137,7 +160,11 @@ export const GridHeader = memo(function GridHeader({
           borderColor: GRID_TOKENS.borderDefault,
         }}
       >
-        <Checkbox aria-label={t('checkbox_select_all')} />
+        <Checkbox
+          aria-label={t('checkbox_select_all')}
+          checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+          onCheckedChange={onToggleSelectAll}
+        />
       </div>
 
       {/* Row number header */}
@@ -158,6 +185,9 @@ export const GridHeader = memo(function GridHeader({
         if (!field) return null;
 
         const isFrozen = frozenFieldIds.includes(field.id);
+        const sortLevel = sorts.find((s) => s.fieldId === field.id);
+
+        const hasActiveFilter = filteredFieldIds.has(field.id);
 
         return (
           <ColumnHeader
@@ -167,7 +197,14 @@ export const GridHeader = memo(function GridHeader({
             isFrozen={isFrozen}
             userRole={userRole}
             columnColors={columnColors}
+            sortDirection={sortLevel?.direction}
+            hasActiveFilter={hasActiveFilter}
             onSelect={() => onSelectColumn(field.id)}
+            onToggleSort={() => onToggleSort(field.id)}
+            onSortAscending={() => onSortAscending(field.id)}
+            onSortDescending={() => onSortDescending(field.id)}
+            onApplyQuickFilter={onApplyQuickFilter}
+            onClearQuickFilter={onClearQuickFilter}
             onStartResize={onStartResize}
             onDragStart={onDragStart}
             onDragOver={onDragOver}
@@ -215,7 +252,14 @@ interface ColumnHeaderProps {
   isFrozen: boolean;
   userRole: EffectiveRole;
   columnColors: Record<string, string>;
+  sortDirection?: 'asc' | 'desc';
+  hasActiveFilter: boolean;
   onSelect: () => void;
+  onToggleSort: () => void;
+  onSortAscending: () => void;
+  onSortDescending: () => void;
+  onApplyQuickFilter: (fieldId: string, operator: string, value: unknown) => void;
+  onClearQuickFilter: (fieldId: string) => void;
   onStartResize: (fieldId: string, width: number, e: React.MouseEvent) => void;
   onDragStart: (fieldId: string, e: React.DragEvent) => void;
   onDragOver: (fieldId: string, e: React.DragEvent) => void;
@@ -234,7 +278,14 @@ const ColumnHeader = memo(function ColumnHeader({
   isFrozen,
   userRole,
   columnColors,
+  sortDirection,
+  hasActiveFilter,
   onSelect,
+  onToggleSort,
+  onSortAscending,
+  onSortDescending,
+  onApplyQuickFilter,
+  onClearQuickFilter,
   onStartResize,
   onDragStart,
   onDragOver,
@@ -295,6 +346,8 @@ const ColumnHeader = memo(function ColumnHeader({
       isFrozen={isFrozen}
       userRole={userRole}
       columnColors={columnColors}
+      onSortAscending={onSortAscending}
+      onSortDescending={onSortDescending}
       onFreezeUpTo={onFreezeUpTo}
       onUnfreeze={onUnfreeze}
       onHideField={onHideField}
@@ -305,7 +358,7 @@ const ColumnHeader = memo(function ColumnHeader({
         role="columnheader"
         className={cn(
           'shrink-0 flex items-center gap-1.5 px-3 py-2 border-r border-b',
-          'text-xs font-medium select-none cursor-pointer relative',
+          'text-xs font-medium select-none cursor-pointer relative group/header',
           'hover:bg-slate-200 transition-colors',
           isFrozen && 'sticky z-10',
         )}
@@ -342,6 +395,50 @@ const ColumnHeader = memo(function ColumnHeader({
         ) : (
           <span className="truncate">{field.name}</span>
         )}
+
+        {/* Filter dot indicator */}
+        {hasActiveFilter && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="shrink-0 h-2 w-2 rounded-full"
+                style={{ backgroundColor: 'var(--workspace-accent, #0D9488)' }}
+                aria-label={t('filter_placeholder')}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {t('filter_placeholder')}
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Sort indicator */}
+        <button
+          type="button"
+          className={cn(
+            'shrink-0 flex items-center justify-center w-4 h-4 rounded-sm transition-opacity',
+            sortDirection ? 'opacity-100' : 'opacity-0 group-hover/header:opacity-40',
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSort();
+          }}
+          aria-label={t('sort_placeholder')}
+        >
+          {sortDirection === 'desc' ? (
+            <ArrowDown className="h-3 w-3" />
+          ) : (
+            <ArrowUp className="h-3 w-3" />
+          )}
+        </button>
+
+        {/* Quick filter popover */}
+        <QuickFilterPopover
+          field={field}
+          hasActiveFilter={hasActiveFilter}
+          onApplyFilter={onApplyQuickFilter}
+          onClearFilter={onClearQuickFilter}
+        />
 
         {/* Resize handle */}
         <ColumnResizer

@@ -3,6 +3,7 @@
  *
  * @see docs/reference/data-model.md § Views
  * @see docs/reference/tables-and-views.md § Default View
+ * @see docs/reference/tables-and-views.md § My Views & Shared Views
  */
 
 import {
@@ -11,29 +12,50 @@ import {
   and,
   asc,
   views,
+  userViewPreferences,
   generateUUIDv7,
 } from '@everystack/shared/db';
-import type { View } from '@everystack/shared/db';
+import type { View, UserViewPreference } from '@everystack/shared/db';
 import { NotFoundError } from '@/lib/errors';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface ViewsByTable {
+  sharedViews: View[];
+  myViews: View[];
+}
 
 // ---------------------------------------------------------------------------
 // getViewsByTable
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch all views for a table, ordered by position.
+ * Fetch all views for a table, split into shared and personal (my) views.
+ *
+ * - Shared: is_shared = true
+ * - My: is_shared = false AND created_by = userId
  */
 export async function getViewsByTable(
   tenantId: string,
   tableId: string,
-): Promise<View[]> {
+  userId?: string,
+): Promise<ViewsByTable> {
   const db = getDbForTenant(tenantId, 'read');
 
-  return db
+  const allViews = await db
     .select()
     .from(views)
     .where(and(eq(views.tenantId, tenantId), eq(views.tableId, tableId)))
     .orderBy(asc(views.position));
+
+  const sharedViews = allViews.filter((v) => v.isShared);
+  const myViews = userId
+    ? allViews.filter((v) => !v.isShared && v.createdBy === userId)
+    : [];
+
+  return { sharedViews, myViews };
 }
 
 // ---------------------------------------------------------------------------
@@ -82,8 +104,7 @@ export async function getDefaultView(
   tenantId: string,
   tableId: string,
 ): Promise<View> {
-  const allViews = await getViewsByTable(tenantId, tableId);
-  const sharedViews = allViews.filter((v) => v.isShared);
+  const { sharedViews } = await getViewsByTable(tenantId, tableId);
 
   // Step 1: Manager-assigned default
   const managerDefault = sharedViews.find(
@@ -116,4 +137,34 @@ export async function getDefaultView(
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+}
+
+// ---------------------------------------------------------------------------
+// getUserViewPreferences
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch a user's personal overrides for a shared view.
+ * Returns null if no overrides exist.
+ */
+export async function getUserViewPreferences(
+  tenantId: string,
+  userId: string,
+  viewId: string,
+): Promise<UserViewPreference | null> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  const rows = await db
+    .select()
+    .from(userViewPreferences)
+    .where(
+      and(
+        eq(userViewPreferences.tenantId, tenantId),
+        eq(userViewPreferences.userId, userId),
+        eq(userViewPreferences.viewId, viewId),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
 }

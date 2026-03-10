@@ -24,11 +24,11 @@ const isPublicRoute = createRouteMatcher([
 
 const PLATFORM_CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://js.clerk.dev https://js.stripe.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.clerk.dev https://*.clerk.accounts.dev https://js.stripe.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://img.clerk.com https://files.everystack.com",
-  "connect-src 'self' https://api.clerk.dev https://api.stripe.com wss://*.everystack.com",
-  "frame-src https://js.stripe.com",
+  "img-src 'self' data: blob: https://img.clerk.com https://*.clerk.com https://files.everystack.com",
+  "connect-src 'self' https://api.clerk.dev https://*.clerk.accounts.dev https://api.stripe.com wss://*.everystack.com",
+  "frame-src https://js.stripe.com https://*.clerk.accounts.dev",
   "font-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",

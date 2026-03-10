@@ -9,7 +9,7 @@ import {
   createTestSyncConflict,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getSyncStatusForTable } from '@/data/sync-status';
+import { getSyncStatusForTable } from '../../data/sync-status';
 
 describe('getSyncStatusForTable', () => {
   // -------------------------------------------------------------------------

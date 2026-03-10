@@ -9,8 +9,8 @@ import { getDbForTenant, eq, and, records } from '@everystack/shared/db';
 import {
   getRecordsByTable,
   getRecordById,
-} from '@/data/records';
-import { NotFoundError } from '@/lib/errors';
+} from '../../data/records';
+import { NotFoundError } from '../../lib/errors';
 
 describe('Record Data Functions', () => {
   // -------------------------------------------------------------------------

@@ -4,9 +4,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PortalSection } from '../PortalSection';
 import { ShellAccentProvider } from '../ShellAccentProvider';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
-import type { PortalNavEntry } from '@/data/sidebar-navigation';
-import { PORTAL_ACCENT } from '@/lib/design-system/shell-accent';
+import { IntlWrapper } from '../../../test-utils/intl-wrapper';
+import type { PortalNavEntry } from '../../../data/sidebar-navigation';
+import { PORTAL_ACCENT } from '../../../lib/design-system/shell-accent';
 
 // ---------------------------------------------------------------------------
 // Factories

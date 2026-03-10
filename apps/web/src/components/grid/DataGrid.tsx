@@ -27,7 +27,9 @@ import { NewRowInput } from './NewRowInput';
 import { GridSkeleton } from './GridSkeleton';
 import { GridEmptyState } from './GridEmptyState';
 import { PerformanceBanner } from './PerformanceBanner';
+import { BulkActionsToolbar } from './BulkActionsToolbar';
 import { useKeyboardNavigation } from './use-keyboard-navigation';
+import { useRowSelection } from './use-row-selection';
 import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import { useColumnResize } from './use-column-resize';
 import { useColumnReorder } from './use-column-reorder';
@@ -51,8 +53,28 @@ import type {
   GridField,
   ViewConfig,
   RowDensity,
+  GroupLevel,
 } from '@/lib/types/grid';
 import { ROW_DENSITY_HEIGHTS } from '@/lib/types/grid';
+import { GroupHeader } from './GroupHeader';
+import { GroupFooter } from './GroupFooter';
+import { SummaryFooter } from './SummaryFooter';
+import {
+  computeGroups,
+  flattenGroupTree,
+  isDragRegroupSupported,
+  type VirtualGroupItem,
+} from './use-grouping';
+import { evaluateColorRules, type ColorRulesConfig, createEmptyColorRulesConfig } from './use-color-rules';
+import type { SummaryFooterConfig } from './use-summary-footer';
+import { createDefaultSummaryFooterConfig } from './use-summary-footer';
+import type { AggregationType } from './aggregation-utils';
+import { GridToolbar } from './GridToolbar';
+import { RecordCount } from './RecordCount';
+import type { SortPanelProps } from './SortPanel';
+import type { FilterBuilderProps } from './FilterBuilder';
+import type { ColorRuleBuilderProps } from './ColorRuleBuilder';
+import type { HideFieldsPanelProps } from './HideFieldsPanel';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -75,6 +97,13 @@ export interface DataGridProps {
   columnColors: Record<string, string>;
   hiddenFieldIds: Set<string>;
   isSortActive: boolean;
+  sorts: { fieldId: string; direction: 'asc' | 'desc' }[];
+  filteredFieldIds: Set<string>;
+  onToggleSort: (fieldId: string) => void;
+  onSortAscending: (fieldId: string) => void;
+  onSortDescending: (fieldId: string) => void;
+  onApplyQuickFilter: (fieldId: string, operator: string, value: unknown) => void;
+  onClearQuickFilter: (fieldId: string) => void;
   onCellClick: (rowId: string, fieldId: string) => void;
   onCellDoubleClick: (rowId: string, fieldId: string) => void;
   onCellStartReplace: (rowId: string, fieldId: string) => void;
@@ -112,6 +141,44 @@ export interface DataGridProps {
   onInsertBelow?: (recordId: string) => void;
   onCopyRecordLink?: (recordId: string) => void;
   onShowToast?: (message: string) => void;
+  // Bulk action callbacks
+  onBulkDelete?: (recordIds: string[]) => void;
+  onBulkUpdateField?: (recordIds: string[], fieldId: string, value: unknown) => void;
+  onBulkDuplicate?: (recordIds: string[]) => void;
+  // Grouping
+  groups?: GroupLevel[];
+  collapsedGroups?: Set<string>;
+  onToggleGroupCollapsed?: (groupKey: string) => void;
+  onRecordRegroup?: (recordId: string, fieldId: string, newValue: unknown) => void;
+  // Color coding
+  colorRules?: ColorRulesConfig;
+  // Summary footer
+  summaryFooterConfig?: SummaryFooterConfig;
+  onSetColumnAggregation?: (fieldId: string, aggregationType: AggregationType) => void;
+  // Record View integration
+  /** Whether Record View is currently open (compresses bulk toolbar) */
+  isRecordViewOpen?: boolean;
+  /** Called when user clicks expand icon on a row */
+  onExpandRecord?: (recordId: string) => void;
+  // Toolbar
+  viewName?: string;
+  viewType?: 'grid' | 'card';
+  sortPanelProps?: Omit<SortPanelProps, never>;
+  filterBuilderProps?: Omit<FilterBuilderProps, never>;
+  colorRuleBuilderProps?: Omit<ColorRuleBuilderProps, never>;
+  hideFieldsPanelProps?: Omit<HideFieldsPanelProps, never>;
+  groupPanelProps?: {
+    groups: { fieldId: string; direction: 'asc' | 'desc' }[];
+    fields: SortPanelProps['fields'];
+    onAddGroup: (fieldId: string, direction: 'asc' | 'desc') => void;
+    onRemoveGroup: (fieldId: string) => void;
+    onUpdateDirection: (fieldId: string, direction: 'asc' | 'desc') => void;
+    onReorderGroups: (fromIndex: number, toIndex: number) => void;
+    onClearGroups: () => void;
+    isAtLimit: boolean;
+  };
+  onSetDensity?: (density: RowDensity) => void;
+  activeFilterCount?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +202,13 @@ export function DataGrid({
   columnColors,
   hiddenFieldIds,
   isSortActive,
+  sorts,
+  filteredFieldIds,
+  onToggleSort,
+  onSortAscending,
+  onSortDescending,
+  onApplyQuickFilter,
+  onClearQuickFilter,
   onCellClick,
   onCellDoubleClick,
   onCellStartReplace,
@@ -169,10 +243,38 @@ export function DataGrid({
   onInsertBelow,
   onCopyRecordLink,
   onShowToast,
+  onBulkDelete,
+  onBulkUpdateField,
+  onBulkDuplicate,
+  groups: groupLevels = [],
+  collapsedGroups = new Set<string>(),
+  onToggleGroupCollapsed,
+  onRecordRegroup,
+  colorRules = createEmptyColorRulesConfig(),
+  summaryFooterConfig = createDefaultSummaryFooterConfig(),
+  onSetColumnAggregation,
+  isRecordViewOpen = false,
+  onExpandRecord,
+  viewName = 'Grid',
+  viewType = 'grid',
+  sortPanelProps,
+  filterBuilderProps,
+  colorRuleBuilderProps,
+  hideFieldsPanelProps,
+  groupPanelProps,
+  onSetDensity,
+  activeFilterCount = 0,
 }: DataGridProps) {
   const t = useTranslations('grid');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Toolbar panel open states
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [colorOpen, setColorOpen] = useState(false);
+  const [hideFieldsOpen, setHideFieldsOpen] = useState(false);
 
   const rowHeight = ROW_DENSITY_HEIGHTS[density];
   const showAddColumn = roleAtLeast(userRole, 'manager');
@@ -294,6 +396,99 @@ export function DataGrid({
   });
 
   // -----------------------------------------------------------------------
+  // Row selection hook
+  // -----------------------------------------------------------------------
+  const rowSelection = useRowSelection({
+    records,
+    selectedRows,
+    setSelectedRows,
+  });
+
+  // -----------------------------------------------------------------------
+  // Grouping computation
+  // -----------------------------------------------------------------------
+  const isGrouped = groupLevels.length > 0;
+
+  const groupTree = useMemo(() => {
+    if (!isGrouped) return [];
+    return computeGroups(records, groupLevels, fields, sorts);
+  }, [isGrouped, records, groupLevels, fields, sorts]);
+
+  const groupedItems = useMemo<VirtualGroupItem[]>(() => {
+    if (!isGrouped) return [];
+    return flattenGroupTree(groupTree, collapsedGroups, rowHeight);
+  }, [isGrouped, groupTree, collapsedGroups, rowHeight]);
+
+  // -----------------------------------------------------------------------
+  // Color coding — evaluate rules for all records
+  // -----------------------------------------------------------------------
+  const hasColorRules =
+    colorRules.row_rules.length > 0 || colorRules.cell_rules.length > 0;
+
+  const colorEvaluations = useMemo(() => {
+    if (!hasColorRules) return new Map<string, { rowColor: string | null; cellColors: Record<string, string> }>();
+    const map = new Map<string, { rowColor: string | null; cellColors: Record<string, string> }>();
+    for (const record of records) {
+      map.set(record.id, evaluateColorRules(record, colorRules));
+    }
+    return map;
+  }, [hasColorRules, records, colorRules]);
+
+  // Summary footer enabled
+  const showSummaryFooter = summaryFooterConfig.enabled;
+
+  // Drag-to-regroup state
+  const [draggingRecordId, setDraggingRecordId] = useState<string | null>(null);
+
+  const handleGroupDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleGroupDrop = useCallback(
+    (e: React.DragEvent, fieldId: string, newValue: unknown) => {
+      e.preventDefault();
+      if (draggingRecordId && onRecordRegroup) {
+        onRecordRegroup(draggingRecordId, fieldId, newValue);
+      }
+      setDraggingRecordId(null);
+    },
+    [draggingRecordId, onRecordRegroup],
+  );
+
+  const handleRecordDragStartForRegroup = useCallback(
+    (e: React.DragEvent, recordId: string) => {
+      if (!isGrouped) return;
+      setDraggingRecordId(recordId);
+      e.dataTransfer.setData('text/plain', recordId);
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    [isGrouped],
+  );
+
+  // -----------------------------------------------------------------------
+  // Bulk action handlers
+  // -----------------------------------------------------------------------
+  const handleBulkDelete = useCallback(() => {
+    const ids = Array.from(selectedRows);
+    onBulkDelete?.(ids);
+    setSelectedRows(new Set());
+  }, [selectedRows, onBulkDelete, setSelectedRows]);
+
+  const handleBulkUpdateField = useCallback(
+    (fieldId: string, value: unknown) => {
+      const ids = Array.from(selectedRows);
+      onBulkUpdateField?.(ids, fieldId, value);
+    },
+    [selectedRows, onBulkUpdateField],
+  );
+
+  const handleBulkDuplicate = useCallback(() => {
+    const ids = Array.from(selectedRows);
+    onBulkDuplicate?.(ids);
+  }, [selectedRows, onBulkDuplicate]);
+
+  // -----------------------------------------------------------------------
   // Cell save wrapper — pushes edits to undo stack
   // -----------------------------------------------------------------------
   const handleCellSaveWithUndo = useCallback(
@@ -320,6 +515,10 @@ export function DataGrid({
     onUpdateCell: handleCellSaveWithUndo,
     onShowToast: onShowToast ?? (() => {}),
   });
+
+  const handleBulkCopy = useCallback(() => {
+    clipboard.handleCopy();
+  }, [clipboard]);
 
   // -----------------------------------------------------------------------
   // Context menu callbacks
@@ -393,7 +592,6 @@ export function DataGrid({
   // -----------------------------------------------------------------------
   // TanStack Table instance
   // -----------------------------------------------------------------------
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: records,
     columns,
@@ -404,12 +602,22 @@ export function DataGrid({
   const { rows } = table.getRowModel();
 
   // -----------------------------------------------------------------------
-  // Row virtualizer
+  // Row virtualizer — adapts to grouped or flat mode
   // -----------------------------------------------------------------------
+  const virtualItemCount = isGrouped ? groupedItems.length : rows.length;
+  const getItemSize = useCallback(
+    (index: number) => {
+      if (!isGrouped) return rowHeight;
+      const item = groupedItems[index];
+      return item?.height ?? rowHeight;
+    },
+    [isGrouped, groupedItems, rowHeight],
+  );
+
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
+    count: virtualItemCount,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => rowHeight,
+    estimateSize: getItemSize,
     overscan: ROW_OVERSCAN,
   });
 
@@ -507,6 +715,8 @@ export function DataGrid({
     setSelectionRange,
     onAddRecord,
     onOpenShortcutsHelp: () => setShortcutsOpen(true),
+    onToggleFilterPanel: () => setFilterOpen((prev) => !prev),
+    onToggleSortPanel: () => setSortOpen((prev) => !prev),
     scrollToCell,
   });
 
@@ -629,9 +839,48 @@ export function DataGrid({
         totalRowCount={totalCount}
         visibleColumnCount={orderedFields.length}
       />
+      {sortPanelProps && filterBuilderProps && colorRuleBuilderProps && hideFieldsPanelProps && groupPanelProps && onSetDensity && (
+        <GridToolbar
+          viewName={viewName}
+          viewType={viewType}
+          density={density}
+          onSetDensity={onSetDensity}
+          filterOpen={filterOpen}
+          onFilterOpenChange={setFilterOpen}
+          sortOpen={sortOpen}
+          onSortOpenChange={setSortOpen}
+          groupOpen={groupOpen}
+          onGroupOpenChange={setGroupOpen}
+          colorOpen={colorOpen}
+          onColorOpenChange={setColorOpen}
+          hideFieldsOpen={hideFieldsOpen}
+          onHideFieldsOpenChange={setHideFieldsOpen}
+          activeFilterCount={activeFilterCount}
+          activeSortCount={sorts.length}
+          activeGroupCount={groupLevels.length}
+          hasColorRules={hasColorRules}
+          hiddenFieldCount={hiddenFieldIds.size}
+          sortPanelProps={sortPanelProps}
+          filterBuilderProps={filterBuilderProps}
+          colorRuleBuilderProps={colorRuleBuilderProps}
+          hideFieldsPanelProps={hideFieldsPanelProps}
+          groupPanelProps={groupPanelProps}
+        />
+      )}
+      <BulkActionsToolbar
+        selectedCount={selectedRows.size}
+        fields={orderedFields}
+        compact={isRecordViewOpen}
+        onDelete={handleBulkDelete}
+        onBulkUpdateField={handleBulkUpdateField}
+        onDuplicate={handleBulkDuplicate}
+        onCopy={handleBulkCopy}
+        onClearSelection={rowSelection.clearSelection}
+      />
     <div
       ref={scrollContainerRef}
-      className="relative overflow-auto flex-1 outline-none"
+      className="relative overflow-auto flex-1 outline-none touch-pan-x touch-pan-y"
+      style={{ WebkitOverflowScrolling: 'touch' }}
       role="grid"
       aria-rowcount={totalCount}
       aria-colcount={orderedFields.length}
@@ -654,7 +903,17 @@ export function DataGrid({
           addColumnWidth={ADD_FIELD_COLUMN_WIDTH}
           userRole={userRole}
           columnColors={columnColors}
+          sorts={sorts}
+          filteredFieldIds={filteredFieldIds}
+          allSelected={rowSelection.allSelected}
+          someSelected={rowSelection.someSelected}
+          onToggleSelectAll={rowSelection.toggleSelectAll}
           onSelectColumn={onSelectColumn}
+          onToggleSort={onToggleSort}
+          onSortAscending={onSortAscending}
+          onSortDescending={onSortDescending}
+          onApplyQuickFilter={onApplyQuickFilter}
+          onClearQuickFilter={onClearQuickFilter}
           onStartResize={startResize}
           onDragStart={colDragStart}
           onDragOver={colDragOver}
@@ -667,54 +926,171 @@ export function DataGrid({
           onRenameField={onRenameField}
         />
 
-        {/* Virtual rows */}
-        {virtualRows.map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          if (!row) return null;
+        {/* Virtual rows — grouped or flat */}
+        {isGrouped
+          ? virtualRows.map((virtualRow) => {
+              const item = groupedItems[virtualRow.index];
+              if (!item) return null;
 
-          return (
-            <GridRow
-              key={row.id}
-              row={row}
-              rowIndex={virtualRow.index}
-              fields={visibleFields}
-              density={density}
-              rowHeight={rowHeight}
-              activeCell={activeCell}
-              editingCell={editingCell}
-              columnColors={columnColors}
-              onCellClick={onCellClick}
-              onCellDoubleClick={onCellDoubleClick}
-              onCellStartReplace={onCellStartReplace}
-              onCellSave={handleCellSaveWithUndo}
-              onCellCancel={onCellCancel}
-              style={{
-                position: 'absolute',
-                top: virtualRow.start + rowHeight, // offset by header
-                left: 0,
-                width: totalWidth,
-              }}
-              // Row reorder
-              isDragDisabled={rowReorder.isDisabled}
-              isDropTarget={rowReorder.dropTargetIndex === virtualRow.index}
-              onRowDragStart={rowReorder.handleDragStart}
-              onRowDragOver={rowReorder.handleDragOver}
-              onRowDragEnd={rowReorder.handleDragEnd}
-              onRowDrop={rowReorder.handleDrop}
-              // Context menu
-              onExpandRecord={() => {}} // Placeholder — Record View ships in 3A-ii
-              onCopyRecord={handleCopyRecord}
-              onDuplicateRecord={onDuplicateRecord}
-              onDeleteRecord={handleDeleteWithUndo}
-              onInsertAbove={onInsertAbove}
-              onInsertBelow={onInsertBelow}
-              onCopyCellValue={handleCopyCellValue}
-              onPaste={handlePaste}
-              onClearCellValue={handleClearCellValue}
-              onCopyRecordLink={onCopyRecordLink}
-            />
-          );
-        })}
+              if (item.type === 'group-header') {
+                const groupField = fields.find((f) => f.id === item.group.fieldId);
+                const canDragRegroup = groupField
+                  ? isDragRegroupSupported(groupField.fieldType)
+                  : false;
+
+                return (
+                  <GroupHeader
+                    key={`gh-${item.group.key}`}
+                    group={item.group}
+                    field={groupField}
+                    isCollapsed={collapsedGroups.has(item.group.key)}
+                    totalWidth={totalWidth}
+                    onToggleCollapse={onToggleGroupCollapsed ?? (() => {})}
+                    isDragTarget={canDragRegroup && draggingRecordId !== null}
+                    onDragOver={handleGroupDragOver}
+                    onDrop={(e) => handleGroupDrop(e, item.group.fieldId, item.group.value)}
+                    style={{
+                      position: 'absolute',
+                      top: virtualRow.start + rowHeight,
+                      left: 0,
+                    }}
+                  />
+                );
+              }
+
+              if (item.type === 'group-footer') {
+                return (
+                  <GroupFooter
+                    key={`gf-${item.group.key}`}
+                    group={item.group}
+                    fields={visibleFields}
+                    columnWidths={columnWidths}
+                    totalWidth={totalWidth}
+                    style={{
+                      position: 'absolute',
+                      top: virtualRow.start + rowHeight,
+                      left: 0,
+                    }}
+                  />
+                );
+              }
+
+              // Record row within a group
+              const row = rows.find((r) => r.original.id === item.record.id);
+              if (!row) return null;
+
+              const groupField = groupLevels[0]
+                ? fields.find((f) => f.id === groupLevels[0]?.fieldId)
+                : undefined;
+              const canDragRegroup = groupField
+                ? isDragRegroupSupported(groupField.fieldType)
+                : false;
+
+              const colorEval = colorEvaluations.get(item.record.id);
+
+              return (
+                <GridRow
+                  key={row.id}
+                  row={row}
+                  rowIndex={virtualRow.index}
+                  fields={visibleFields}
+                  density={density}
+                  rowHeight={rowHeight}
+                  activeCell={activeCell}
+                  editingCell={editingCell}
+                  columnColors={columnColors}
+                  isSelected={selectedRows.has(row.original.id)}
+                  onRowSelect={rowSelection.handleRowSelect}
+                  onCellClick={onCellClick}
+                  onCellDoubleClick={onCellDoubleClick}
+                  onCellStartReplace={onCellStartReplace}
+                  onCellSave={handleCellSaveWithUndo}
+                  onCellCancel={onCellCancel}
+                  style={{
+                    position: 'absolute',
+                    top: virtualRow.start + rowHeight,
+                    left: 0,
+                    width: totalWidth,
+                  }}
+                  isDragDisabled={!canDragRegroup}
+                  isDropTarget={false}
+                  onRowDragStart={
+                    canDragRegroup
+                      ? (e, recordId) => handleRecordDragStartForRegroup(e, recordId)
+                      : rowReorder.handleDragStart
+                  }
+                  onRowDragOver={rowReorder.handleDragOver}
+                  onRowDragEnd={() => {
+                    setDraggingRecordId(null);
+                    rowReorder.handleDragEnd();
+                  }}
+                  onRowDrop={rowReorder.handleDrop}
+                  onExpandRecord={onExpandRecord}
+                  onCopyRecord={handleCopyRecord}
+                  onDuplicateRecord={onDuplicateRecord}
+                  onDeleteRecord={handleDeleteWithUndo}
+                  onInsertAbove={onInsertAbove}
+                  onInsertBelow={onInsertBelow}
+                  onCopyCellValue={handleCopyCellValue}
+                  onPaste={handlePaste}
+                  onClearCellValue={handleClearCellValue}
+                  onCopyRecordLink={onCopyRecordLink}
+                  rowTintColor={colorEval?.rowColor}
+                  cellTintColors={colorEval?.cellColors}
+                />
+              );
+            })
+          : virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) return null;
+
+              const colorEval = colorEvaluations.get(row.original.id);
+
+              return (
+                <GridRow
+                  key={row.id}
+                  row={row}
+                  rowIndex={virtualRow.index}
+                  fields={visibleFields}
+                  density={density}
+                  rowHeight={rowHeight}
+                  activeCell={activeCell}
+                  editingCell={editingCell}
+                  columnColors={columnColors}
+                  isSelected={selectedRows.has(row.original.id)}
+                  onRowSelect={rowSelection.handleRowSelect}
+                  onCellClick={onCellClick}
+                  onCellDoubleClick={onCellDoubleClick}
+                  onCellStartReplace={onCellStartReplace}
+                  onCellSave={handleCellSaveWithUndo}
+                  onCellCancel={onCellCancel}
+                  style={{
+                    position: 'absolute',
+                    top: virtualRow.start + rowHeight,
+                    left: 0,
+                    width: totalWidth,
+                  }}
+                  isDragDisabled={rowReorder.isDisabled}
+                  isDropTarget={rowReorder.dropTargetIndex === virtualRow.index}
+                  onRowDragStart={rowReorder.handleDragStart}
+                  onRowDragOver={rowReorder.handleDragOver}
+                  onRowDragEnd={rowReorder.handleDragEnd}
+                  onRowDrop={rowReorder.handleDrop}
+                  onExpandRecord={onExpandRecord}
+                  onCopyRecord={handleCopyRecord}
+                  onDuplicateRecord={onDuplicateRecord}
+                  onDeleteRecord={handleDeleteWithUndo}
+                  onInsertAbove={onInsertAbove}
+                  onInsertBelow={onInsertBelow}
+                  onCopyCellValue={handleCopyCellValue}
+                  onPaste={handlePaste}
+                  onClearCellValue={handleClearCellValue}
+                  onCopyRecordLink={onCopyRecordLink}
+                  rowTintColor={colorEval?.rowColor}
+                  cellTintColors={colorEval?.cellColors}
+                />
+              );
+            })}
 
         {/* New row input — always at bottom */}
         {onCreateRecord && (
@@ -741,6 +1117,25 @@ export function DataGrid({
         onOpenChange={setShortcutsOpen}
       />
     </div>
+
+      {/* Summary footer — sticky bottom */}
+      {showSummaryFooter && onSetColumnAggregation && (
+        <SummaryFooter
+          records={records}
+          fields={visibleFields}
+          columnWidths={columnWidths}
+          totalWidth={totalWidth}
+          config={summaryFooterConfig}
+          onSetColumnAggregation={onSetColumnAggregation}
+        />
+      )}
+
+      {/* Record count — always visible in footer area */}
+      <RecordCount
+        filteredCount={records.length}
+        totalCount={totalCount}
+        isFiltered={activeFilterCount > 0}
+      />
     </div>
   );
 }

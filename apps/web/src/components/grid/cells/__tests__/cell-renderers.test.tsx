@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IntlWrapper } from '@/test-utils/intl-wrapper';
+import { IntlWrapper } from '../../../../test-utils/intl-wrapper';
 import type { CellRendererProps } from '../../GridCell';
 import { getCellRenderer } from '../../GridCell';
 import { registerPrompt3Cells, registerPrompt4Cells, registerPrompt5Cells } from '../cell-registry';
@@ -23,7 +23,7 @@ import { PhoneCellDisplay, PhoneCellEdit } from '../PhoneCell';
 import { SmartDocCellDisplay, SmartDocCellEdit } from '../SmartDocCell';
 import { BarcodeCellDisplay, BarcodeCellEdit } from '../BarcodeCell';
 import { ChecklistCellDisplay, ChecklistCellEdit } from '../ChecklistCell';
-import type { GridField } from '@/lib/types/grid';
+import type { GridField } from '../../../../lib/types/grid';
 
 // ---------------------------------------------------------------------------
 // Shared helpers

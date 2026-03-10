@@ -9,7 +9,13 @@
 
 import { create } from 'zustand';
 import type { CellPosition } from './grid-types';
-import type { RowDensity } from '@/lib/types/grid';
+import type { RowDensity, SortLevel, GroupLevel } from '@/lib/types/grid';
+import type { FilterConfig } from './filter-types';
+import { createEmptyFilterConfig } from './filter-types';
+import type { ColorRulesConfig } from './use-color-rules';
+import { createEmptyColorRulesConfig } from './use-color-rules';
+import type { SummaryFooterConfig } from './use-summary-footer';
+import { createDefaultSummaryFooterConfig } from './use-summary-footer';
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -30,7 +36,15 @@ export interface GridState {
   selectedRows: Set<string>;
   selectionAnchor: CellPosition | null;
   selectionRange: CellPosition | null;
+  sorts: SortLevel[];
   isSortActive: boolean;
+  filters: FilterConfig;
+  isFilterActive: boolean;
+  groups: GroupLevel[];
+  isGroupActive: boolean;
+  collapsedGroups: Set<string>;
+  colorRules: ColorRulesConfig;
+  summaryFooter: SummaryFooterConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,7 +66,16 @@ export interface GridActions {
   setSelectedRows: (rows: Set<string>) => void;
   setSelectionAnchor: (cell: CellPosition | null) => void;
   setSelectionRange: (cell: CellPosition | null) => void;
+  setSorts: (sorts: SortLevel[]) => void;
   setIsSortActive: (active: boolean) => void;
+  setFilters: (filters: FilterConfig) => void;
+  setIsFilterActive: (active: boolean) => void;
+  setGroups: (groups: GroupLevel[]) => void;
+  setIsGroupActive: (active: boolean) => void;
+  setCollapsedGroups: (collapsed: Set<string>) => void;
+  toggleGroupCollapsed: (groupKey: string) => void;
+  setColorRules: (rules: ColorRulesConfig) => void;
+  setSummaryFooter: (config: SummaryFooterConfig) => void;
 }
 
 export type GridStore = GridState & GridActions;
@@ -76,7 +99,15 @@ export function createGridStore(initialState?: Partial<GridState>) {
     selectedRows: new Set<string>(),
     selectionAnchor: null,
     selectionRange: null,
+    sorts: [],
     isSortActive: false,
+    filters: createEmptyFilterConfig(),
+    isFilterActive: false,
+    groups: [],
+    isGroupActive: false,
+    collapsedGroups: new Set<string>(),
+    colorRules: createEmptyColorRulesConfig(),
+    summaryFooter: createDefaultSummaryFooterConfig(),
     ...initialState,
 
     // Actions
@@ -139,6 +170,39 @@ export function createGridStore(initialState?: Partial<GridState>) {
 
     setSelectionRange: (cell) => set({ selectionRange: cell }),
 
+    setSorts: (sorts) => set({ sorts, isSortActive: sorts.length > 0 }),
+
     setIsSortActive: (active) => set({ isSortActive: active }),
+
+    setFilters: (filters) =>
+      set({
+        filters,
+        isFilterActive:
+          filters.conditions.length > 0 ||
+          filters.groups.some((g) => g.conditions.length > 0),
+      }),
+
+    setIsFilterActive: (active) => set({ isFilterActive: active }),
+
+    setGroups: (groups) => set({ groups, isGroupActive: groups.length > 0 }),
+
+    setIsGroupActive: (active) => set({ isGroupActive: active }),
+
+    setCollapsedGroups: (collapsed) => set({ collapsedGroups: collapsed }),
+
+    toggleGroupCollapsed: (groupKey) =>
+      set((state) => {
+        const updated = new Set(state.collapsedGroups);
+        if (updated.has(groupKey)) {
+          updated.delete(groupKey);
+        } else {
+          updated.add(groupKey);
+        }
+        return { collapsedGroups: updated };
+      }),
+
+    setColorRules: (rules) => set({ colorRules: rules }),
+
+    setSummaryFooter: (config) => set({ summaryFooter: config }),
   }));
 }
