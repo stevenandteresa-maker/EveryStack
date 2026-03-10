@@ -726,5 +726,19 @@
     "config_save_as_new": "Guardar como nueva configuración",
     "config_new_name_placeholder": "Nombre de configuración",
     "config_new_name": "Nuevo nombre de configuración"
+  },
+  "card_view": {
+    "error": "Error al cargar la vista de tarjetas",
+    "untitled": "Registro sin título",
+    "expand": "Expandir",
+    "expand_record": "Expandir registro",
+    "toolbar": {
+      "layout_picker": "Diseño de tarjetas",
+      "layout_single_column": "Columna única",
+      "layout_grid": "Cuadrícula",
+      "layout_compact_list": "Lista compacta",
+      "columns_2": "2 columnas",
+      "columns_3": "3 columnas"
+    }
   }
 }

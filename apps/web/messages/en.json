@@ -726,5 +726,19 @@
     "config_save_as_new": "Save as new config",
     "config_new_name_placeholder": "Config name",
     "config_new_name": "New config name"
+  },
+  "card_view": {
+    "error": "Failed to load card view",
+    "untitled": "Untitled record",
+    "expand": "Expand",
+    "expand_record": "Expand record",
+    "toolbar": {
+      "layout_picker": "Card layout",
+      "layout_single_column": "Single column",
+      "layout_grid": "Grid",
+      "layout_compact_list": "Compact list",
+      "columns_2": "2 columns",
+      "columns_3": "3 columns"
+    }
   }
 }

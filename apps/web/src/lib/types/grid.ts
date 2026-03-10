@@ -91,6 +91,12 @@ const summaryFooterConfigSchema = z.object({
   columns: z.record(z.string(), z.string()),
 });
 
+/**
+ * Card layout type — single column, grid, or compact list.
+ */
+export const cardLayoutSchema = z.enum(['single_column', 'grid', 'compact_list']);
+export type CardLayout = z.infer<typeof cardLayoutSchema>;
+
 export const viewConfigSchema = z.object({
   columns: z.array(columnConfigSchema).optional(),
   frozenColumns: z.number().int().min(0).max(5).optional(),
@@ -104,6 +110,10 @@ export const viewConfigSchema = z.object({
   groups: z.array(groupLevelSchema).optional(),
   color_rules: colorRulesConfigSchema.optional(),
   summary_footer: summaryFooterConfigSchema.optional(),
+  // Card view specific config
+  card_layout: cardLayoutSchema.optional(),
+  card_columns: z.union([z.literal(2), z.literal(3)]).optional(),
+  field_config: z.array(z.string().uuid()).optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
