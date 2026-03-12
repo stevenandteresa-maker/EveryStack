@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks/(.*)',
   '/portal/(.*)',
   '/design-test',
+  '/dev/preview',
 ]);
 
 // ---------------------------------------------------------------------------

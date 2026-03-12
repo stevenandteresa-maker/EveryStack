@@ -10,8 +10,15 @@ export interface TraceContext {
   tenantId?: string;
 }
 
-/** Singleton AsyncLocalStorage instance for trace propagation. */
-const traceStore = new AsyncLocalStorage<TraceContext>();
+/**
+ * Singleton AsyncLocalStorage instance for trace propagation.
+ * On the client (where async_hooks is stubbed out), falls back to a no-op
+ * implementation so modules that transitively import trace-context don't crash.
+ */
+const traceStore: AsyncLocalStorage<TraceContext> =
+  typeof AsyncLocalStorage === 'function'
+    ? new AsyncLocalStorage<TraceContext>()
+    : ({ getStore: () => undefined, run: (_ctx: TraceContext, fn: () => unknown) => fn() } as AsyncLocalStorage<TraceContext>);
 
 /** Sentinel value returned when no trace context is active. */
 const NO_TRACE = 'no-trace';
@@ -46,8 +53,11 @@ export function runWithTraceContext<T>(
 
 /**
  * Generates a new trace ID using crypto.randomUUID().
+ * Falls back to globalThis.crypto (browser) when node:crypto is stubbed out.
  * UUIDv4 format — sufficient for log correlation.
  */
 export function generateTraceId(): string {
-  return randomUUID();
+  return typeof randomUUID === 'function'
+    ? randomUUID()
+    : globalThis.crypto.randomUUID();
 }
