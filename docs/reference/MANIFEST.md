@@ -216,10 +216,16 @@ These docs define the agent workflow, planning process, and build state tracking
 | `CONTRIBUTING.md` (repo root)        | 64    | **Process** | Branch prefix ownership, branch naming conventions, commit message format with agent prefixes                       | `CLAUDE.md`                                            | 2026-03-12 |
 | `DECISIONS.md` (repo root)           | 45    | **Process** | Running tactical decisions log (newest first), approach selections, deferrals, ambiguity resolutions                | `MODIFICATIONS.md`, `TASK-STATUS.md`                   | 2026-03-12 |
 | `MODIFICATIONS.md` (repo root)       | 68    | **Process** | Per-session build changelog — files created/modified/deleted, schema changes, new domain terms                      | `DECISIONS.md`, `TASK-STATUS.md`                       | 2026-03-12 |
-| `TASK-STATUS.md` (repo root)         | 85    | **Process** | Unit checklist and status tracking per sub-phase (pending → in-progress → passed-review → docs-synced)             | `DECISIONS.md`, `MODIFICATIONS.md`                     | 2026-03-12 |
+| `TASK-STATUS.md` (repo root)         | 125   | **Process** | Unit checklist and status tracking per sub-phase (pending → in-progress → passed-review → docs-synced)             | `DECISIONS.md`, `MODIFICATIONS.md`                     | 2026-03-12 |
 | `SUBDIVISION-STRATEGY.md`            | 492   | **Process** | Decomposition principles, seam heuristics, contract notation, context budget, subdivision doc template              | `CLAUDE.md`, `TASK-STATUS.md`                          | 2026-03-12 |
 | `CONVENTION-UPDATES.md`             | 108   | **Process** | Convention change instructions for Planner Agent support — branch prefixes, commit format, CLAUDE.md additions      | `CLAUDE.md`, `CONTRIBUTING.md`, `MANIFEST.md`          | 2026-03-12 |
 | `playbook-generation-strategy.md`    | 777   | **Process** | Meta-instruction set for playbook generation — six-step lifecycle, skill-based operator model, BUILD/VERIFY terminology, context loading rules | `CLAUDE.md`, `SUBDIVISION-STRATEGY.md`, `CONTRIBUTING.md` | 2026-03-12 |
+
+### 📐 Subdivision Docs (`docs/subdivisions/`)
+
+| Document                     | Lines | Scope            | Key Content                                                                                                                     | Cross-References                             | Created    |
+| ---------------------------- | ----- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------- |
+| `3a-iii-subdivision.md`      | 468   | **MVP — Core UX** | Subdivision: 6 units — Permission Types & Resolution Engine, Data Layer + Redis Cache, Action Enforcement, Real-Time Invalidation, Grid/View Rendering, Config UI. Critical path 4 deep. Units 3+4 parallel. | `permissions.md`, `realtime.md`, `design-system.md`, `TASK-STATUS.md` | 2026-03-12 |
 
 ---
 

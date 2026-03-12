@@ -74,8 +74,48 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
-<!-- Planner creates new sub-phase blocks here when subdivision
-     docs are produced. -->
+### 3A-iii — Field-Level Permissions: Model, Resolution & Config UI
+
+**Started:** 2026-03-12
+**Completed:** In progress
+
+#### Subdivision Units
+
+- [ ] **Unit 1: Permission Types & Resolution Engine** — `pending`
+  - Produces: `FieldPermissionState`, `ViewPermissions`, `ViewFieldPermissions`, `RoleRestriction`, `IndividualOverride`, `FieldPermissionMap`, `ResolvedPermissionContext` types; `viewPermissionsSchema`, `fieldPermissionsSchema` Zod schemas; `resolveFieldPermission()`, `resolveAllFieldPermissions()` pure functions — all from `packages/shared/auth/permissions/`
+  - Consumes: None — first unit. Uses existing `EffectiveRole`, `roleAtLeast()` from `packages/shared/auth/`
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `pending`
+  - Produces: `getFieldPermissions()`, `invalidatePermissionCache()`, `PERMISSION_CACHE_KEY_PATTERN`, `PERMISSION_CACHE_TTL` from `apps/web/src/data/permissions.ts`; `createTestViewWithPermissions()` factory
+  - Consumes: Unit 1 types + resolution functions
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `pending`
+  - Produces: `checkFieldPermission()`, `checkFieldPermissions()`, `filterHiddenFields()`, `logPermissionDenial()` from `apps/web/src/lib/auth/field-permissions.ts`; updated `updateRecord`, `bulkUpdateRecords` server actions
+  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 4: Real-Time Invalidation** — `pending`
+  - Produces: `REALTIME_EVENTS.PERMISSION_UPDATED`, `PermissionUpdatedPayload`, `publishPermissionUpdate()`, `handlePermissionUpdated` client handler
+  - Consumes: Unit 2 `invalidatePermissionCache()`
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 5: Grid/View Permission-Aware Rendering** — `pending`
+  - Produces: `useFieldPermissions()` hook, `PermissionProvider` context, `usePermission()` hook; updated `DataGrid`, `GridCell`, `RecordView`, `CardView`, `BulkActionsToolbar` with permission filtering
+  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`, Unit 4 `handlePermissionUpdated`
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 6: Permission Configuration UI** — `pending`
+  - Produces: `RoleLevelPermissionGrid`, `IndividualOverrideView`, `PermissionConfigPanel`, `PermissionStateBadge` components; `updateViewPermissions()`, `updateFieldGlobalPermissions()` server actions
+  - Consumes: Unit 1 types + schemas, Unit 2 data access + cache, Unit 4 `publishPermissionUpdate()`, Unit 5 `PermissionProvider`
+  - Branch:
+  - Notes:
 
 ---
 
