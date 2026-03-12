@@ -52,6 +52,7 @@ Every paste-ready block is fenced in a markdown code block and prefixed with one
 | `[GIT COMMAND]` | Git command to run in the terminal |
 | `[CHECKPOINT]` | Stop and verify before proceeding |
 | `[DECISION POINT]` | Binary choice with explicit instructions for each path |
+| `[STATE UPDATE]` | Update a state file (TASK-STATUS.md or MODIFICATIONS.md) |
 
 ---
 
@@ -65,6 +66,8 @@ The Prompting Roadmap follows the six-step lifecycle. Every step has paste-ready
 ## Overview
 - Sub-phase: [ID and name]
 - Playbook: [filename]
+- Subdivision doc: [filename — if applicable]
+- Units: [count and names from subdivision doc]
 - Estimated duration: [rough total for all 6 steps]
 - Prior sub-phase: [what was just completed]
 
@@ -127,15 +130,43 @@ playbook/reference context. VERIFY contexts are focused on running tests
 and fixing failures with full testing knowledge. This keeps each context
 lean and within budget.
 
+This sub-phase is organized into [N] units. Each unit represents a
+coherent slice of the build with defined inputs and outputs. You'll see
+unit headers marking where each unit starts and what it produces.
+
 ### Setup
 
 [GIT COMMAND]
 git checkout main && git pull origin main
 git checkout -b build/<sub-phase>
 
+[STATE UPDATE]
+Open TASK-STATUS.md. Find the [sub-phase] section.
+All units should show `pending`. No changes needed yet.
+
 ---
 
-### BUILD SESSION A — Prompts 1–N
+### ═══ UNIT 1: [Unit Name] ═══
+
+**What This Unit Builds:**
+[2–3 sentence plain-English explanation of what this unit produces and
+why it matters. Written for a non-technical founder.]
+
+**What Comes Out of It:**
+[Plain-English version of the interface contract — "When this unit is
+done, the following things exist and work: ..."]
+
+**What It Needs from Prior Work:**
+[Plain-English version of Consumes — "This unit uses [things] that
+were built in [prior phase/unit]" or "Nothing — this is the first unit."]
+
+---
+
+### BUILD SESSION A — Unit 1, Prompts 1–N
+
+[STATE UPDATE]
+Open TASK-STATUS.md. Update Unit 1 to `in-progress`.
+Add branch name: `build/<sub-phase>`.
 
 Open Claude Code. Paste:
 
@@ -174,7 +205,11 @@ git commit -m "feat(scope): description [Phase X, Prompt 1]"
 
 ---
 
-### VERIFY SESSION A — Prompts 1–N
+### VERIFY SESSION A — Unit 1, Prompts 1–N — Completes Unit 1
+
+**What This Step Does:**
+"This runs the full test suite against everything Unit 1 built. It also
+checks that Unit 1 produced everything it promised (its interface contract)."
 
 Close the BUILD session. Open a fresh Claude Code session. Paste:
 
@@ -183,7 +218,7 @@ Read these skill files:
 - docs/skills/verify/SKILL.md
 - docs/skills/test-runner/SKILL.md
 
-Run the full verification suite for Prompts 1–N:
+Run the full verification suite for Prompts 1–N (Unit 1):
 1. pnpm turbo typecheck — zero errors
 2. pnpm turbo lint — zero errors
 3. pnpm turbo check:i18n — no hardcoded English strings [if UI changes]
@@ -192,24 +227,69 @@ Run the full verification suite for Prompts 1–N:
 6. Coverage: pnpm turbo test -- --coverage — thresholds met
 7. [Manual verification items for these prompts]
 
+Interface contract verification (Unit 1):
+- [ ] [CONTRACT] [export 1 exists at expected path]
+- [ ] [CONTRACT] [export 2 exists at expected path]
+
 Fix any failures. Commit fixes.
 
 [CHECKPOINT]
 All checks must pass with zero errors.
+All [CONTRACT] items must be verified.
 If failing: Claude Code will attempt to fix using verify skill knowledge.
 If still failing: paste "The [check] is failing with [error]. Fix it."
 
 [GIT COMMAND]
 git add -A
-git commit -m "chore(verify): verify prompts 1–N [Phase X, VP-1]"
+git commit -m "chore(verify): verify prompts 1–N, unit 1 complete [Phase X, VP-1]"
 git push origin build/<sub-phase>
+
+[STATE UPDATE]
+Open TASK-STATUS.md. Update Unit 1 to `passed-review`.
+Open MODIFICATIONS.md. Add a session block for this BUILD/VERIFY cycle:
+
+```
+## Session A — [Sub-Phase] — build/<sub-phase>
+
+**Date:** [today]
+**Status:** passed-review
+**Prompt(s):** Prompts 1–N (Unit 1)
+
+### Files Created
+- [list from what Claude Code created]
+
+### Files Modified
+- [list from what Claude Code modified]
+
+### Schema Changes
+- [any new tables/columns, or "None"]
+
+### New Domain Terms Introduced
+- [any new terms, or "None"]
+```
 
 ---
 
-### BUILD SESSION B — Prompts N+1–M
+### ═══ UNIT 2: [Unit Name] ═══
+
+**What This Unit Builds:**
+[Plain-English explanation]
+
+**What Comes Out of It:**
+[Plain-English interface contract]
+
+**What It Needs from Prior Work:**
+"This unit uses [exports] from Unit 1, which you just built."
+
+---
+
+### BUILD SESSION B — Unit 2, Prompts N+1–M
 ... (same format as BUILD SESSION A, fresh Claude Code context)
 
-### VERIFY SESSION B — Prompts N+1–M
+[STATE UPDATE]
+Open TASK-STATUS.md. Update Unit 2 to `in-progress`.
+
+### VERIFY SESSION B — Unit 2, Prompts N+1–M — Completes Unit 2
 ... (same format as VERIFY SESSION A, fresh Claude Code context)
 
 ---
@@ -220,7 +300,10 @@ git push origin build/<sub-phase>
 git push origin build/<sub-phase>
 
 Open PR titled "[Step 3] Phase X — <Name>".
-List all prompts completed and their deliverables.
+List all units completed and their deliverables:
+- Unit 1: [name] — [key outputs]
+- Unit 2: [name] — [key outputs]
+- ...
 
 [DECISION POINT]
 If PR looks good: → Merge (squash). Delete branch. Proceed to Step 4.
@@ -231,7 +314,8 @@ If something wrong: → Do NOT merge. Paste fix instructions into Claude Code.
 ## STEP 4 — REVIEW (Reviewer Agent)
 
 ### What This Step Does
-"An independent Claude session reviews the build against acceptance criteria."
+"An independent Claude session reviews the build against acceptance criteria
+and verifies that every unit's interface contract was fulfilled."
 
 ### 4.1 — Generate the build diff
 
@@ -241,7 +325,8 @@ git diff main~1..main > /tmp/phase-X-diff.txt
 
 ### 4.2 — Run the Reviewer Agent
 
-Open NEW Claude.ai session. Upload: playbook, diff, CLAUDE.md, GLOSSARY.md.
+Open NEW Claude.ai session. Upload: playbook, subdivision doc, diff,
+CLAUDE.md, GLOSSARY.md.
 
 [PASTE INTO CLAUDE]
 You are the Reviewer Agent for EveryStack Phase [X].
@@ -256,7 +341,8 @@ If FAIL: → Paste fix instructions into Claude Code. Re-run review.
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
 
 ### What This Step Does
-"Bring docs back into alignment after the build."
+"Bring docs back into alignment after the build. The Docs Agent reads
+MODIFICATIONS.md to know exactly what changed."
 
 ### 5.1 — Create the fix branch
 
@@ -270,6 +356,9 @@ git checkout -b fix/post-<sub-phase>-docs-sync
 You are the Docs Agent for EveryStack, running after Phase [X].
 <full docs agent prompt with tasks and constraints>
 
+MODIFICATIONS.md has session blocks for this sub-phase's builds.
+Use those as your primary input for what changed.
+
 ### 5.3 — Review and merge
 
 [CHECKPOINT]
@@ -277,6 +366,8 @@ Review diff. Look for:
 - MANIFEST line counts match actual file sizes
 - No stale cross-references
 - No new terms missing from GLOSSARY
+- MODIFICATIONS.md sessions archived
+- TASK-STATUS.md units show `docs-synced`
 
 [GIT COMMAND]
 git add -A
@@ -311,6 +402,9 @@ to determine how many prompts go in each BUILD session:
   context budget — enough prompts to make progress, not so many that the
   context gets bloated with accumulated code changes.
 - **Never exceed 6 prompts** in a single BUILD session.
+- **Prefer unit-aligned sessions.** When a unit has 2–5 prompts, put the
+  entire unit in a single BUILD session. When a unit has 6+ prompts, split
+  it into two BUILD sessions but keep both within the same unit.
 - **Group by dependency.** Prompts that depend on each other should be in
   the same BUILD session so the builder can reference prior output.
 - **Group by domain.** Prompts touching the same files/domain area work
@@ -322,13 +416,17 @@ to determine how many prompts go in each BUILD session:
   by exactly one VERIFY session covering the same prompt range.
 - **VERIFY sessions are lighter** — they only run checks and fix failures.
   They typically finish faster than BUILD sessions.
+- **Unit-completing VERIFY sessions include contract checks.** When a
+  VERIFY session completes the final prompt of a unit, it includes the
+  interface contract verification items from the playbook.
 
 ### Session naming convention
 
-Use lettered pairs in the roadmap:
-- BUILD SESSION A → VERIFY SESSION A
-- BUILD SESSION B → VERIFY SESSION B
-- BUILD SESSION C → VERIFY SESSION C
+Use lettered pairs aligned with units in the roadmap:
+- BUILD SESSION A (Unit 1) → VERIFY SESSION A (Completes Unit 1)
+- BUILD SESSION B (Unit 2) → VERIFY SESSION B (Completes Unit 2)
+- BUILD SESSION C (Unit 3, first half) → VERIFY SESSION C (Mid-Unit 3)
+- BUILD SESSION D (Unit 3, second half) → VERIFY SESSION D (Completes Unit 3)
 
 ### Integration Checkpoints → VERIFY Sessions
 
@@ -340,6 +438,70 @@ commits fixes and pushes — this is the push point.
 
 For sub-phases with 5 or fewer prompts, use a single BUILD/VERIFY pair.
 No need for multiple sessions.
+
+---
+
+## Unit Headers
+
+Before each unit's first BUILD session, include a unit header block. This
+gives Steven orientation — he can see the unit structure of the sub-phase
+and understand what each chunk of work accomplishes.
+
+**Unit header format:**
+```markdown
+### ═══ UNIT N: [Unit Name] ═══
+
+**What This Unit Builds:**
+[2–3 sentence plain-English explanation]
+
+**What Comes Out of It:**
+[Plain-English interface contract — no code jargon]
+
+**What It Needs from Prior Work:**
+[Dependencies in plain English]
+```
+
+**Rules for unit headers:**
+- Use the ═══ border to make unit transitions visually unmissable
+- Write at a non-technical level — Steven should understand what's
+  being built without knowing TypeScript
+- Include the interface contract in plain English, not code signatures.
+  Example: "When done, the system can look up any record by its ID and
+  knows which workspace it belongs to" — not "Produces getRecordById():
+  Promise<Record | null>"
+- If units can run in parallel, note it: "Units 3 and 4 can be built
+  in either order — they don't depend on each other."
+
+---
+
+## State File Updates
+
+The roadmap includes `[STATE UPDATE]` labels at specific points to keep
+the three state files (TASK-STATUS.md, MODIFICATIONS.md, DECISIONS.md)
+current. Steven executes these as part of the workflow.
+
+### When to Include State Updates
+
+| Moment | State File | Update |
+|--------|-----------|--------|
+| Start of a unit's first BUILD session | TASK-STATUS.md | Unit → `in-progress`, add branch name |
+| End of each VERIFY session | MODIFICATIONS.md | Append session block with files changed |
+| End of unit-completing VERIFY session | TASK-STATUS.md | Unit → `passed-review` |
+| When a tactical decision is made | DECISIONS.md | Append decision entry |
+| During Step 5 (Docs Sync) | MODIFICATIONS.md | Archive completed sessions |
+| During Step 5 (Docs Sync) | TASK-STATUS.md | Units → `docs-synced` |
+
+### State Update Format in Roadmap
+
+```markdown
+[STATE UPDATE]
+Open TASK-STATUS.md. Update Unit N to `in-progress`.
+Add branch name: `build/<sub-phase>`.
+```
+
+Keep state updates brief and specific. Steven should be able to make the
+edit in under 30 seconds. For MODIFICATIONS.md session blocks, provide a
+template he can fill in based on what Claude Code reported.
 
 ---
 
@@ -368,4 +530,8 @@ Before every `[PASTE INTO CLAUDE CODE]` block in Step 3, include:
 
 ## Quality Standard
 
-The test for a good Prompting Roadmap: Steven should be able to execute the entire sub-phase lifecycle — from doc prep through post-build docs sync — by reading only the roadmap, top to bottom. He should never need to open the playbook, read a reference doc, or make a judgment call. Every decision has been made in advance. Every word he needs to paste is in a labeled block. Every decision point has binary instructions.
+The test for a good Prompting Roadmap: Steven should be able to execute the entire sub-phase lifecycle — from doc prep through post-build docs sync — by reading only the roadmap, top to bottom. He should never need to open the playbook, read a reference doc, or make a judgment call. Every decision has been made in advance. Every word he needs to paste is in a labeled block. Every decision point has binary instructions. Every state file update tells him exactly what to change and where.
+
+The unit structure should be visible and comprehensible — Steven should be
+able to glance at the roadmap and say "this sub-phase has 4 units, I'm
+currently on Unit 2, and Units 3 and 4 can run in parallel after this."

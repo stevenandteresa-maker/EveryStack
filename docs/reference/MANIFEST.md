@@ -1,6 +1,6 @@
 # docs/reference — Document Manifest
 
-> **Last full reconciliation: 2026-02-28** | **Last line count sync: 2026-03-10 (post-Phase 3A-ii)** | **Last CP update: 2026-03-05 (CP-001 + CP-002)** | **Last doc addition: 2026-03-09** — Added `ai-skills-architecture.md` (679 lines) and `platform-maintenance-agents.md` (1106 lines). All 65 documents (61 main + 4 gap) audited against `GLOSSARY.md` (source of truth). Full architectural audit (Issues #1–16) resolved — hierarchy rewrite, permission model, schema fixes, terminology standardization, sidebar architecture, MVP scope corrections. Every doc has a reconciliation note. Added `platform-api.md` (1145 lines) and `vertical-architecture.md` (535 lines) — Platform API & Vertical Architecture section. Post-reconciliation fixes (2026-02-28): fixed 102 broken `docs/reference/` cross-reference prefixes across 21 files; updated audit-log.md to seven-source attribution model (added `api_key` actor_type + `actor_label` column); resolved `environment` semantic collision (introduced `publish_state` for draft/live authoring workflow across 7 files); added missing standard columns to `tables`, `portal_access`, `synced_field_mappings`, `base_connections`; defined `conflict_resolution` type on `base_connections`; clarified phase playbook file location.
+> **Last full reconciliation: 2026-02-28** | **Last line count sync: 2026-03-12 (planning-process-upgrade)** | **Last CP update: 2026-03-05 (CP-001 + CP-002)** | **Last doc addition: 2026-03-12** — Added `SUBDIVISION-STRATEGY.md` (492 lines), `CONVENTION-UPDATES.md` (108 lines), `DECISIONS.md` (45 lines), `MODIFICATIONS.md` (68 lines), `TASK-STATUS.md` (85 lines), `CONTRIBUTING.md` (64 lines). Updated `CLAUDE.md` with State Files, Agent Roster, Planning Gates sections, and Section Index. All 70 documents (66 main + 4 gap) audited against `GLOSSARY.md` (source of truth). Full architectural audit (Issues #1–16) resolved — hierarchy rewrite, permission model, schema fixes, terminology standardization, sidebar architecture, MVP scope corrections. Every doc has a reconciliation note. Added `platform-api.md` (1145 lines) and `vertical-architecture.md` (535 lines) — Platform API & Vertical Architecture section. Post-reconciliation fixes (2026-02-28): fixed 102 broken `docs/reference/` cross-reference prefixes across 21 files; updated audit-log.md to seven-source attribution model (added `api_key` actor_type + `actor_label` column); resolved `environment` semantic collision (introduced `publish_state` for draft/live authoring workflow across 7 files); added missing standard columns to `tables`, `portal_access`, `synced_field_mappings`, `base_connections`; defined `conflict_resolution` type on `base_connections`; clarified phase playbook file location.
 >
 > Status of all reference documents. These are Tier 3 — loaded on demand, never auto-loaded.
 > Each doc is a deep-dive spec for a specific domain. Phase build docs reference these.
@@ -17,7 +17,7 @@ When working on a feature, load the relevant reference doc(s) from `docs/referen
 
 | Metric                            | Count                                      |
 | --------------------------------- | ------------------------------------------ |
-| Total docs                        | 68 (64 main + 4 gap)                       |
+| Total docs                        | 74 (70 main + 4 gap)                       |
 | MVP-relevant                      | 27                                         |
 | Post-MVP                          | 34                                         |
 | Historical                        | 1                                          |
@@ -206,12 +206,29 @@ These docs define the user-facing workspace experience: views, records, cross-li
 
 ---
 
+### 🔀 Process & Workflow
+
+These docs define the agent workflow, planning process, and build state tracking. They live at the repo root or in `docs/reference/`.
+
+| Document                              | Lines | Scope       | Key Content                                                                                                         | Cross-References                                       | Reconciled |
+| ------------------------------------- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------- |
+| `CLAUDE.md` (repo root)              | 646   | **Process** | Project-level system prompt, tech stack, conventions, agent roster, build lifecycle with planning gates, state files, section index | `GLOSSARY.md`, `MANIFEST.md`, `CONTRIBUTING.md`        | 2026-03-12 |
+| `CONTRIBUTING.md` (repo root)        | 64    | **Process** | Branch prefix ownership, branch naming conventions, commit message format with agent prefixes                       | `CLAUDE.md`                                            | 2026-03-12 |
+| `DECISIONS.md` (repo root)           | 45    | **Process** | Running tactical decisions log (newest first), approach selections, deferrals, ambiguity resolutions                | `MODIFICATIONS.md`, `TASK-STATUS.md`                   | 2026-03-12 |
+| `MODIFICATIONS.md` (repo root)       | 68    | **Process** | Per-session build changelog — files created/modified/deleted, schema changes, new domain terms                      | `DECISIONS.md`, `TASK-STATUS.md`                       | 2026-03-12 |
+| `TASK-STATUS.md` (repo root)         | 85    | **Process** | Unit checklist and status tracking per sub-phase (pending → in-progress → passed-review → docs-synced)             | `DECISIONS.md`, `MODIFICATIONS.md`                     | 2026-03-12 |
+| `SUBDIVISION-STRATEGY.md`            | 492   | **Process** | Decomposition principles, seam heuristics, contract notation, context budget, subdivision doc template              | `CLAUDE.md`, `TASK-STATUS.md`                          | 2026-03-12 |
+| `CONVENTION-UPDATES.md`             | 108   | **Process** | Convention change instructions for Planner Agent support — branch prefixes, commit format, CLAUDE.md additions      | `CLAUDE.md`, `CONTRIBUTING.md`, `MANIFEST.md`          | 2026-03-12 |
+| `playbook-generation-strategy.md`    | 777   | **Process** | Meta-instruction set for playbook generation — six-step lifecycle, skill-based operator model, BUILD/VERIFY terminology, context loading rules | `CLAUDE.md`, `SUBDIVISION-STRATEGY.md`, `CONTRIBUTING.md` | 2026-03-12 |
+
+---
+
 ### 📋 Meta
 
 | Document      | Lines | Purpose                                                                                                                                    | Reconciled |
 | ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| `GLOSSARY.md` | 1100  | **Source of truth** for all naming, MVP scope, concept definitions, and DB entity mapping. If any doc contradicts this, the glossary wins. | 2026-03-09 |
-| `MANIFEST.md` | —     | This file. Index of all reference docs with status, scope, cross-references, and reading order.                                            | 2026-02-28 |
+| `GLOSSARY.md` | 1150  | **Source of truth** for all naming, MVP scope, concept definitions, and DB entity mapping. If any doc contradicts this, the glossary wins. | 2026-03-12 |
+| `MANIFEST.md` | —     | This file. Index of all reference docs with status, scope, cross-references, and reading order.                                            | 2026-03-12 |
 
 **Note:** `claude.md` (referenced extensively in `session-log.md` and other docs) is the root CLAUDE.md config file at the repo root — not a reference doc. It lives at `CLAUDE.md` (repo root), not in `docs/reference/`.
 
@@ -248,6 +265,7 @@ When building a feature, load the reference docs that cover your target scope:
 | **Post-MVP — Custom Apps**          | `custom-apps.md`, `app-designer.md`, `mobile.md` (Capacitor), `embeddable-extensions.md` (Live Chat Widget), `communications.md` (omnichannel), `gaps/knowledge-base-live-chat-ai.md` (Live Chat AI)                                                                                                                                                                                                                                                                   |
 | **Post-MVP — Platform Operations**  | `platform-owner-console.md`, `support-system.md`, `operations.md`, `observability.md`                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Post-MVP — Self-Hosted AI**       | `self-hosted-ai.md`, `ai-architecture.md`, `ai-metering.md`, `compliance.md`                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Process & Workflow**              | `CLAUDE.md` (repo root), `CONTRIBUTING.md`, `DECISIONS.md`, `MODIFICATIONS.md`, `TASK-STATUS.md`, `SUBDIVISION-STRATEGY.md`                                                                                                                                                                                                                                                                                                                                            |
 
 ---
 

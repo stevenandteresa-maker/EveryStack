@@ -5,38 +5,42 @@ description: >
   Use this skill for ANY session whose purpose is to evaluate build output
   against a playbook's acceptance criteria. Triggers on: reviewing a build
   diff, verifying acceptance criteria, checking naming compliance against
-  GLOSSARY.md, checking convention compliance against CLAUDE.md, producing
-  a pass/fail verdict, or any task labeled "Reviewer Agent" or "Step 4".
-  Also use when the prompt references "review the build", "audit the diff",
-  or "verify acceptance criteria". If a prompt reads a diff and produces a
-  structured verdict without modifying any files, this skill applies.
-  Never use this skill for doc prep (Step 0), build execution (Step 3),
-  or post-build docs sync (Step 5).
+  GLOSSARY.md, checking convention compliance against CLAUDE.md, verifying
+  interface contracts against the subdivision doc, producing a pass/fail
+  verdict, or any task labeled "Reviewer Agent" or "Step 4". Also use when
+  the prompt references "review the build", "audit the diff", or "verify
+  acceptance criteria". If a prompt reads a diff and produces a structured
+  verdict without modifying any files, this skill applies. Never use this
+  skill for doc prep (Step 0), build execution (Step 3), or post-build
+  docs sync (Step 5).
 ---
 
 # EveryStack Reviewer Agent Skill
 
 This skill encodes the conventions and procedures for the Reviewer Agent —
 the Step 4 operator in EveryStack's six-step build lifecycle. The Reviewer
-Agent evaluates build output against the playbook's acceptance criteria and
-produces a structured pass/fail verdict. It never modifies anything — it
-only reads and reports.
+Agent evaluates build output against the playbook's acceptance criteria,
+verifies interface contracts from the subdivision doc, and produces a
+structured pass/fail verdict. It never modifies anything — it only reads
+and reports.
 
 ## When to Use This Skill
 
 - **Always** for Step 4 of any sub-phase lifecycle
 - **Always** when producing a pass/fail verdict on a build diff
 - **Always** when checking acceptance criteria from a playbook
+- **Always** when verifying interface contracts from a subdivision doc
 - **Never** for doc prep, build execution, or docs sync
 
 ---
 
 ## Mandate
 
-Evaluate the build diff against the playbook's acceptance criteria. Produce
-a structured pass/fail verdict with specific findings, file references, and
-actionable fix instructions. The Reviewer Agent is the quality gate between
-implementation and docs sync — no build merges without a passing review.
+Evaluate the build diff against the playbook's acceptance criteria and the
+subdivision doc's interface contracts. Produce a structured pass/fail verdict
+with specific findings, file references, and actionable fix instructions.
+The Reviewer Agent is the quality gate between implementation and docs sync
+— no build merges without a passing review.
 
 **Session type:** Claude.ai (not Claude Code — the Reviewer Agent has no
 access to the filesystem or terminal)
@@ -54,16 +58,23 @@ or merge any branches.
    criteria, schema snapshots, file path targets, and scope guards.
    This is the primary evaluation reference.
 
-2. **The build diff** — Output of `git diff main~1..main` (or
+2. **The subdivision doc for this sub-phase** (if it exists) — Contains
+   interface contracts (Produces/Consumes/Side Effects) for each unit.
+   This is the contract verification reference.
+
+3. **The build diff** — Output of `git diff main~1..main` (or
    `git diff main...build/<sub-phase>` if the branch hasn't merged yet).
    This is what's being evaluated.
 
-3. **`CLAUDE.md`** — For convention compliance: monorepo structure, file
+4. **`CLAUDE.md`** — For convention compliance: monorepo structure, file
    naming, error handling patterns, CockroachDB safeguards, CI gates,
    testing rules.
 
-4. **`GLOSSARY.md`** — For naming compliance: every domain term, function
+5. **`GLOSSARY.md`** — For naming compliance: every domain term, function
    name, component name, and UI label must match the glossary exactly.
+
+6. **`MODIFICATIONS.md`** (active sessions section) — For cross-checking
+   the builder's self-reported changes against the actual diff.
 
 ### Do NOT Load
 
@@ -72,8 +83,9 @@ or merge any branches.
   evaluation value)
 - MANIFEST.md (manifest updates are the Docs Agent's responsibility)
 - CONTRIBUTING.md (branching conventions are not relevant to code review)
-- Skill files (the Reviewer doesn't need build conventions — it needs
-  the acceptance criteria from the playbook)
+- Skill files other than this one (the Reviewer doesn't need build
+  conventions — it needs the acceptance criteria from the playbook)
+- TASK-STATUS.md (status tracking is the Planner's concern)
 
 ---
 
@@ -185,6 +197,84 @@ apps/realtime/                 → Socket.io server
 
 Flag any file created outside the expected path for its type.
 
+### Phase 5: Interface Contract Verification
+
+**Skip this phase if no subdivision doc was provided.**
+
+When a subdivision doc exists, verify that every unit's interface contract
+was fulfilled by the diff. This is the contract-level quality gate — it
+confirms that the build produced what downstream units (and the rest of
+the platform) expect to consume.
+
+**For each unit in the subdivision doc:**
+
+1. Locate the unit's **Produces** section.
+2. For each Produces entry:
+   - **Exports:** Search the diff for the exact export name at the
+     specified file path. Verify it exists and is exported (not just
+     defined internally).
+   - **Function signatures:** If the contract specifies a signature
+     (e.g., `getWorkspaceById(tenantId: string, workspaceId: string):
+     Promise<WorkspaceRecord | null>`), verify the function exists with
+     matching parameter names and types. Minor type refinements are
+     acceptable (e.g., `string` → branded string type); signature
+     shape changes are not.
+   - **Type exports:** Verify the type is exported and its shape is
+     consistent with what the contract describes.
+   - Mark as **FULFILLED** or **NOT FULFILLED** with specific findings.
+
+3. For each **Side Effects** entry:
+   - **Migrations:** Verify the migration file exists in the diff.
+   - **Queue registrations:** Verify the BullMQ queue is registered.
+   - **Route additions:** Verify the route exists in the app directory.
+   - Mark as **FULFILLED** or **NOT FULFILLED**.
+
+4. For each **Consumes** entry:
+   - Verify the unit actually imports from the upstream unit's outputs.
+   - If a unit claims to consume `WorkspaceRecord` from Unit 1, verify
+     there's an import statement pulling from the path Unit 1 created.
+   - Mark as **VERIFIED** or **UNVERIFIED** (unverified is non-blocking
+     if the unit works correctly without the expected import).
+
+**Contract verification is strict:** A Produces entry that is NOT
+FULFILLED is a **blocking failure**. The interface contract is a
+commitment to downstream units — if it's not met, downstream units will
+fail when they try to consume the expected exports.
+
+A Consumes entry that is UNVERIFIED is a **non-blocking note** — the
+unit may have found a different (valid) way to access the data.
+
+### Phase 6: MODIFICATIONS.md Cross-Check
+
+**Skip this phase if MODIFICATIONS.md was not provided.**
+
+Cross-check the builder's self-reported session blocks in MODIFICATIONS.md
+against the actual diff. This catches discrepancies that could cause the
+Docs Agent to miss files or terms during Step 5.
+
+**Check for:**
+
+1. **Files listed in MODIFICATIONS.md but not in the diff** — The builder
+   reported creating/modifying a file that doesn't appear in the diff.
+   This could mean the file was created then deleted, or the builder
+   made an error in logging.
+
+2. **Files in the diff but not listed in MODIFICATIONS.md** — The builder
+   forgot to log a file. This is the more common error and the more
+   important one — the Docs Agent will miss this file during Step 5.
+
+3. **Schema changes listed but not in migrations** — The builder reported
+   a schema change but no migration file appears in the diff.
+
+4. **New domain terms not listed** — The diff introduces new table names,
+   function names, or component names not mentioned in the MODIFICATIONS.md
+   "New Domain Terms" section.
+
+**All MODIFICATIONS.md discrepancies are non-blocking notes.** The diff
+is authoritative — MODIFICATIONS.md is a convenience for the Docs Agent.
+But flagging discrepancies helps the builder maintain logging discipline
+and helps the Docs Agent know to look beyond MODIFICATIONS.md when needed.
+
 ---
 
 ## Severity Classification
@@ -198,6 +288,7 @@ A finding is blocking if any of the following are true:
 
 - An acceptance criterion from the playbook is not met
 - A scope guard violation occurred (something in "Do NOT Build" was built)
+- An interface contract Produces entry is NOT FULFILLED
 - Tenant isolation is missing on a tenant-scoped data access function
 - CockroachDB safeguards were violated (serial IDs, PG-specific syntax,
   advisory locks)
@@ -216,6 +307,7 @@ A finding is non-blocking if all of the following are true:
 
 - It does not violate any acceptance criterion
 - It does not violate CLAUDE.md or GLOSSARY.md conventions
+- It does not violate an interface contract Produces entry
 - It is a style preference, minor optimization, or enhancement suggestion
 - It could be addressed in a future `fix/` branch without risk
 
@@ -225,6 +317,8 @@ A finding is non-blocking if all of the following are true:
 - "This test covers the happy path but could benefit from an edge case"
   (test coverage suggestion, if coverage thresholds are still met)
 - "This function works but could be simplified" (code quality suggestion)
+- MODIFICATIONS.md discrepancies (logging accuracy, not code quality)
+- A Consumes entry that is UNVERIFIED (unit works differently than expected)
 
 **The verdict is FAIL if ANY blocking failure exists.** It is PASS if
 zero blocking failures exist, regardless of how many non-blocking notes
@@ -241,6 +335,8 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 ## Verdict: [PASS / FAIL]
 
 ### Prompt 1: [Prompt Name from Playbook]
+
+**Unit:** [Unit number from playbook]
 
 **Acceptance Criteria:**
 - [x] Criterion 1 — Met. [1-line evidence reference]
@@ -286,6 +382,39 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 
 ---
 
+### Interface Contract Verification
+
+**Unit 1: [Name]**
+Produces:
+- [x] FULFILLED: `WorkspaceRecord` exported from `packages/shared/db/schema/workspaces.ts`
+- [x] FULFILLED: `getWorkspaceById()` at `apps/web/src/data/workspaces.ts`
+- [ ] NOT FULFILLED: `listWorkspacesByTenant()` — function exists but not exported
+  - **File:** `apps/web/src/data/workspaces.ts`, line 42
+  - **Fix:** Add `export` keyword to function declaration
+
+Side Effects:
+- [x] FULFILLED: Migration `0042_create_workspaces.ts` exists
+
+Consumes:
+- [x] VERIFIED: Imports `getDbForTenant` from tenant utilities
+
+**Unit 2: [Name]**
+...
+
+(or: "No subdivision doc provided — interface contract verification skipped.")
+
+---
+
+### MODIFICATIONS.md Cross-Check
+
+- [x] All files in diff are listed in MODIFICATIONS.md
+- [ ] NOTE: `apps/web/src/lib/utils.ts` modified in diff but not listed in session block
+- [ ] NOTE: New component name `RecordThread` not listed in "New Domain Terms"
+
+(or: "MODIFICATIONS.md not provided — cross-check skipped.")
+
+---
+
 ### Overall
 
 **Blocking failures:** [count]
@@ -293,14 +422,15 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 
 [If FAIL: Prioritized list of fixes needed, ordered by dependency —
 fix the schema issue first, then the data access function that depends
-on it, then the component that renders it.]
+on it, then the component that renders it. Note which failures are
+contract violations vs. acceptance criteria vs. convention violations.]
 
-[If PASS: "All acceptance criteria met. Convention compliance verified.
-Proceed to Step 5."]
+[If PASS: "All acceptance criteria met. Interface contracts fulfilled.
+Convention compliance verified. Proceed to Step 5."]
 
-[If PASS with notes: "All acceptance criteria met. [N] non-blocking
-suggestions noted above — these can be addressed in a future fix/ branch.
-Proceed to Step 5."]
+[If PASS with notes: "All acceptance criteria met. Interface contracts
+fulfilled. [N] non-blocking suggestions noted above — these can be
+addressed in a future fix/ branch. Proceed to Step 5."]
 ```
 
 ---
@@ -315,15 +445,23 @@ any of these fundamentally breaks the lifecycle's separation of concerns.
 - **Never modify docs.** No changes to GLOSSARY.md, MANIFEST.md, or any
   reference doc. Documentation updates are handled by the Architect Agent
   (Step 0) and Docs Agent (Step 5).
+- **Never modify state files.** No changes to TASK-STATUS.md,
+  MODIFICATIONS.md, or DECISIONS.md. State file updates are handled by
+  the Build Agent, Planner, and Docs Agent.
 - **Never execute commands.** The Reviewer Agent runs in Claude.ai, not
   Claude Code. It has no terminal access. It evaluates the diff as provided.
 - **Never create branches.** The Reviewer Agent owns no branches.
 - **Never suggest architectural changes.** The Reviewer Agent evaluates
-  whether the build matches the playbook's spec — it does not redesign
-  the spec. If the spec itself seems wrong, note it as a non-blocking
-  advisory: "Consider revisiting this in a future doc prep cycle."
+  whether the build matches the playbook's spec and the subdivision doc's
+  contracts — it does not redesign the spec. If the spec itself seems
+  wrong, note it as a non-blocking advisory: "Consider revisiting this
+  in a future doc prep cycle."
 - **Never provide a "partial pass" verdict.** The verdict is PASS or FAIL.
   Binary. No middle ground.
+- **Never second-guess interface contracts.** If a contract says the unit
+  should produce `getWorkspaceById()` and it does, that's FULFILLED — even
+  if the Reviewer thinks a different function name would be better. Contract
+  naming is the Planner's responsibility.
 
 ---
 
@@ -382,6 +520,16 @@ listed in the playbook's "Do NOT Build" section or in `GLOSSARY.md`
 **How to spot:** Cross-reference new table names and component names
 against the playbook scope guards and the glossary exclusion list.
 
+### 7. Unfulfilled Interface Contracts
+
+A unit's Produces entry doesn't exist in the diff — the export is missing,
+the function doesn't exist at the specified path, or the type shape doesn't
+match the contract.
+
+**How to spot:** For each Produces entry in the subdivision doc, search
+the diff for the exact export name at the specified file path. Verify
+it's exported (not just internally defined).
+
 ---
 
 ## Checklist — Run Before Issuing Verdict
@@ -395,6 +543,10 @@ against the playbook scope guards and the glossary exclusion list.
 - [ ] No hardcoded English strings in UI components
 - [ ] All files in correct monorepo directories
 - [ ] Migration constraints respected (if migrations present)
+- [ ] Interface contract Produces entries verified (if subdivision doc provided)
+- [ ] Interface contract Side Effects verified (if subdivision doc provided)
+- [ ] MODIFICATIONS.md cross-checked against diff (if provided)
 - [ ] Verdict is binary: PASS or FAIL (no partial pass)
 - [ ] Every failure has: file path, specific issue, actionable fix instruction
 - [ ] Failures prioritized by dependency order in the Overall section
+- [ ] Contract violations clearly distinguished from criteria violations
