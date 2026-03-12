@@ -21,5 +21,11 @@ export {
   fieldPermissionsSchema,
 } from './schemas';
 
+export {
+  resolveFieldPermission,
+  resolveAllFieldPermissions,
+  comparePermissionStates,
+} from './resolve';
+
 export { PermissionDeniedError } from '../errors';
 export type { PermissionDeniedDetails } from '../errors';
