@@ -784,6 +784,12 @@
       "columns_3": "3 columnas"
     }
   },
+  "dev_preview": {
+    "title": "Dev Preview",
+    "subtitle": "Verificación visual — {recordCount} registros, {fieldCount} campos",
+    "recordViewHint": "Haz clic en el icono de expandir de cualquier fila en la Vista de Cuadrícula, o haz clic en una tarjeta en la Vista de Tarjetas, para abrir la superposición de Vista de Registro. O:",
+    "openRecordViewFirstRecord": "Abrir Vista de Registro (primer registro)"
+  },
   "import": {
     "title": "Importar CSV",
     "step_indicator": "Paso {current} de {total}",
