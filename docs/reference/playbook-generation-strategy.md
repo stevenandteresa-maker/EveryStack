@@ -135,6 +135,13 @@ The three-session model (playbook → operator guide → build) left gaps: docs 
 - **Step 4** catches regressions and unmet acceptance criteria before merging.
 - **Step 5** prevents the slow drift that causes consistency audit marathons.
 
+> **Planning Gates:** The Planner Agent now operates at four gates between
+> these steps — most notably **Gate 1** (between Step 0 and Step 1), where
+> it produces subdivision docs that decompose a sub-phase into tightly
+> scoped build units before playbook generation begins. See
+> `SUBDIVISION-STRATEGY.md` for decomposition principles, and
+> `CLAUDE.md` § Build Lifecycle for the full gate definitions.
+
 ---
 
 ## Agent Definitions

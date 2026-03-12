@@ -6,6 +6,33 @@
 
 ---
 
+## Section Index
+
+| Section                                     | Lines     |
+|---------------------------------------------|-----------|
+| What Is EveryStack                          | 36–44     |
+| Tech Stack                                  | 46–71     |
+| Monorepo Structure                          | 73–118    |
+| Key Commands                                | 120–139   |
+| Architecture Fundamentals                   | 141–187   |
+| Platform Authentication & Onboarding        | 189–226   |
+| Code Conventions                            | 228–265   |
+| Testing Rules                               | 267–298   |
+| Error Handling — Default Patterns           | 300–340   |
+| Critical Rules — Do's and Don'ts            | 342–370   |
+| Design Philosophy                           | 372–388   |
+| Documentation Hierarchy (3-Tier)            | 390–433   |
+| State Files                                 | 435–491   |
+| MVP Scope Guard                             | 493–503   |
+| Reference Doc vs. Phase Build Doc Hierarchy | 505–513   |
+| Agent Roster                                | 515–525   |
+| Build Lifecycle — Steps & Planning Gates    | 527–607   |
+| Scope Label Discipline                      | 609–620   |
+| CockroachDB Readiness — Active Safeguards   | 622–632   |
+| Pre-Merge Gates (CI)                        | 634–646   |
+
+---
+
 ## What Is EveryStack
 
 EveryStack is a multi-tenant SaaS that unifies no-code databases (Airtable, SmartSuite, Notion). It connects to external platforms via APIs, caches data in PostgreSQL using a canonical JSONB format, and provides cross-platform linking, client portals, document generation, automations, and AI — all from a single interface.
@@ -77,6 +104,10 @@ everystack/
 │   │   ├── GLOSSARY.md       # Source of truth — definitions, naming, MVP scope
 │   │   ├── MANIFEST.md       # Document index with status and reading order
 │   │   └── *.md              # Domain-specific reference docs
+│   ├── decisions/            # ADRs (Architecture Decision Records)
+│   ├── phases/               # Phase division docs
+│   ├── capture/              # Future ideas, not yet scoped
+│   └── subdivisions/         # Subdivision docs produced by Planner Agent (Gate 1)
 
 ├── CLAUDE.md                 # This file (Tier 1 — always loaded)
 ├── turbo.json
@@ -401,6 +432,64 @@ When working on a feature:
 
 ---
 
+## State Files
+
+Three persistent state files live at the repo root alongside CLAUDE.md,
+GLOSSARY.md, and MANIFEST.md. They track build state that would otherwise
+be lost between agent sessions.
+
+### DECISIONS.md — Tactical Decisions Log
+
+Running log of within-session decisions (newest first). Captures choices
+that don't warrant a full ADR but that downstream agents need visibility
+into — approach selections, deferrals, ambiguity resolutions.
+
+- **Written by:** Build Agent (Step 3), Architect Agent (Step 0)
+- **Read by:** All agents
+- **Not a replacement for ADRs.** If you chose between 2+ viable
+  architectural approaches, write an ADR in `docs/decisions/`. Use
+  DECISIONS.md for tactical calls within a single session.
+
+### MODIFICATIONS.md — Per-Session Changelog
+
+Structured record of every file created, modified, or deleted during each
+build session. Includes schema changes and new domain terms. Bridges the
+Build Agent and Docs Agent — the Docs Agent reads this instead of
+reconstructing changes from `git diff`.
+
+- **Written by:** Build Agent (Step 3), appended after each session
+- **Read by:** Reviewer Agent (Step 4) for diff cross-checking, Docs
+  Agent (Step 5) for MANIFEST/GLOSSARY updates, Planner for progress
+  assessment
+- **Archived by:** Docs Agent moves completed sessions to the archive
+  section after Step 5 merges
+
+### TASK-STATUS.md — Unit Checklist
+
+Checklist of subdivision units per sub-phase with status tracking. Every
+agent session starts by reading this file for orientation.
+
+- **Written by:** Planner (initial checklist), all agents (status updates)
+- **Read by:** All agents at session start
+- **Statuses:** `pending` → `in-progress` → `passed-review` → `docs-synced`
+  (or `failed-review` → retry, or `blocked`)
+- **Sub-phase complete when:** All units show `docs-synced`
+
+### Rules for All State Files
+
+1. **Always append, never rewrite.** New entries go at the top (DECISIONS)
+   or bottom (MODIFICATIONS, TASK-STATUS) of the active section. Never
+   edit previous entries except to update status fields.
+2. **Write as part of execution, not as an afterthought.** The Build Agent
+   writes its MODIFICATIONS block before ending the session, not after.
+3. **State files are not authoritative for architecture.** GLOSSARY.md,
+   CLAUDE.md, MANIFEST.md, and ADRs remain the long-term persistent layer.
+   State files track workflow state, not design decisions.
+4. **State files are committed to the repo** on the same branch as the
+   work they describe. They are part of the git history.
+
+---
+
 ## MVP Scope Guard
 
 The GLOSSARY.md defines what is and isn't MVP. Before building anything, verify its scope:
@@ -422,6 +511,100 @@ Phase build docs (created per sprint) define **what to build and in what order**
 **Hierarchy rule:** If a phase build doc and a reference doc give conflicting guidance on _build order or sequencing_, the phase build doc wins. Reference docs are authoritative on _architecture, schema, and behavior_.
 
 Reference docs use **scope labels** (e.g., "MVP — Core UX", "Post-MVP — Automations"), never phase numbers. Phase build docs may use their own internal numbering for sprints.
+
+## Agent Roster
+
+| Agent     | Lifecycle Position        | Branch Prefix | Primary Output                |
+|-----------|---------------------------|---------------|-------------------------------|
+| Architect | Step 0 — Doc Prep         | `docs/`       | Reference doc updates, ADRs   |
+| Planner   | Gate 1 — Subdivision      | `plan/`       | Subdivision docs, TASK-STATUS |
+| Builder   | Step 3 — Build            | `build/`      | Application code              |
+| Reviewer  | Step 4 — Review           | (none)        | Pass/fail verdicts            |
+| Docs      | Step 5 — Docs Sync        | `fix/`        | MANIFEST, GLOSSARY updates    |
+
+---
+
+## Build Lifecycle — Steps & Planning Gates
+
+The full lifecycle with planning gates:
+
+```
+Step 0: Doc Prep (Architect Agent)
+  ↓
+Gate 1: Subdivision Planning (Planner Agent)
+  ↓
+Step 1: Playbook Generation
+  ↓
+Step 2: Prompting Roadmap Generation
+  ↓
+Gate 2: Pre-Build Context Curation (Planner Agent)
+  ↓
+Step 3: Build Execution (Build Agent)
+  ↓
+Step 4: Review (Reviewer Agent)
+  ↓ (if FAIL → Gate 3: Replanning by Planner Agent)
+  ↓ (if PASS)
+Step 5: Docs Sync (Docs Agent)
+  ↓
+Gate 4: Phase Boundary Summary (Planner Agent)
+```
+
+### Gate 1: Pre-Subdivision Planning (between Step 0 and Step 1)
+
+Before generating a playbook, the Planner (or Architect) produces a
+**subdivision doc** that breaks the sub-phase into tightly scoped units.
+Each unit carries:
+
+- **Big-picture anchor** — one paragraph on where this unit fits in the
+  platform
+- **Interface contract** — the exact exports, types, schema additions,
+  or API surfaces this unit produces that downstream units consume
+- **Context manifest** — the specific doc sections (by line range) and
+  source files the Build Agent needs for this unit and nothing more
+- **Acceptance criteria** — scoped from the playbook to this unit only
+
+The subdivision doc populates TASK-STATUS.md with the initial unit
+checklist. Playbooks are then generated at the subdivision level.
+
+**Context budget test:** If a unit's context manifest would exceed ~40%
+of a Claude Code context window (including CLAUDE.md, GLOSSARY.md, and
+the relevant source files), the unit must be subdivided further.
+
+### Gate 2: Pre-Build Context Curation (between Step 2 and Step 3)
+
+For each prompt in the Prompting Roadmap, the Planner annotates a
+**context manifest** — the exact doc sections and source files that
+prompt needs. This is recorded in the Prompting Roadmap itself.
+
+The Build Agent loads only what the context manifest specifies. No
+speculative loading of "might be relevant" docs.
+
+### Gate 3: Post-Failure Replanning (within Step 3/4 loop)
+
+When a review verdict is FAIL, the Planner assesses whether the failure
+affects sibling or downstream units before the Build Agent retries:
+
+- **Isolated failure:** Only the failed unit retries. No changes to
+  other units.
+- **Contract-breaking failure:** The failed unit's interface contract
+  couldn't be met as specified. Downstream units that consume this
+  contract move to `blocked` in TASK-STATUS.md. The Planner may revise
+  the subdivision doc.
+- **Cascading failure:** The failure reveals a spec gap. Escalate to
+  Steven — this may require returning to Step 0.
+
+### Gate 4: Phase Boundary Summary (after Step 5)
+
+After the Docs Agent completes Step 5 for the final unit in a sub-phase,
+the Planner produces a **completion summary** that:
+
+1. Confirms all units in TASK-STATUS.md show `docs-synced`
+2. Lists any DECISIONS.md entries that should be promoted to ADRs
+3. Proposes CLAUDE.md updates if conventions evolved during the build
+4. Identifies any spec gaps discovered during build that need Step 0
+   attention in the next sub-phase
+
+---
 
 ## Scope Label Discipline
 

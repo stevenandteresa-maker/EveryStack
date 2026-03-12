@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-09 — Phase 3A-ii prep: added 6 terms (Card View, Summary Footer, Color Coding, Inline Sub-Table, CSV Import, Field-Level Presence Locking); broadened Section definition from sidebar-only to universal list organizer. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
+> Last updated: 2026-03-12 — Added Process & Workflow section (7 terms: Build Unit, Subdivision Doc, Interface Contract, Context Manifest, Context Budget Test, Planning Gate, Seam). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms (Card View, Summary Footer, Color Coding, Inline Sub-Table, CSV Import, Field-Level Presence Locking); broadened Section definition from sidebar-only to universal list organizer. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
 
 ---
 
@@ -833,6 +833,56 @@ A keyboard-triggered (⌘K / Ctrl+K) universal search and command interface. Sup
 | **AI Provider**          | Anthropic (Claude)                                 | All AI features via AIService abstraction                                     |
 | **Testing**              | Vitest (unit), Playwright (E2E)                    | Test framework                                                                |
 | **Analytics (post-MVP)** | DuckDB                                             | Analytical queries, cross-base analysis                                       |
+
+---
+
+## Definitions — Process & Workflow
+
+These terms describe the agent build lifecycle — how work is decomposed, planned, and tracked. They are not platform features or user-facing concepts. They govern how agents interact with each other and with documentation.
+
+### Build Unit
+
+The smallest piece of work that can be built, reviewed, and verified independently within a sub-phase. Each unit carries an interface contract (what it produces and consumes), a context manifest (what docs and files the Build Agent needs), and acceptance criteria. Units are defined in subdivision docs and tracked in TASK-STATUS.md.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md`, `CLAUDE.md` § Build Lifecycle, `TASK-STATUS.md`, `planner/SKILL.md`
+
+### Subdivision Doc
+
+A decomposition plan that breaks a sub-phase into build units with explicit seams and contracts. Sits between the sub-phase scope and the playbook in the document hierarchy: Phase Division → Sub-phase → Subdivision Doc → Playbook → Build Prompts. Produced by the Planner Agent at Gate 1. Stored in `docs/subdivisions/`.
+
+**What it is NOT:** A playbook (no prompts), a spec (no feature definitions), or a task list (no status tracking).
+
+**Appears in:** `SUBDIVISION-STRATEGY.md`, `CLAUDE.md` § Build Lifecycle, `planner/SKILL.md`
+
+### Interface Contract
+
+The definition of what a build unit produces that downstream units consume. Contains: exported names and file paths, function/type signatures (enough for downstream units to write imports against), and side effects (migrations, routes, queues). The single most important element of a subdivision doc — it converts review from "does the diff look right?" to "does the diff fulfill the contract?"
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Writing Interface Contracts, `planner/SKILL.md`
+
+### Context Manifest
+
+The exact doc sections (by line range) and source files that a Build Agent needs for a specific unit or prompt. The mechanism that enforces context discipline — the Build Agent loads only what the manifest specifies, no speculative "might be relevant" docs. Each unit in a subdivision doc carries one. Validated against the context budget test.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Curating Context Manifests, `CLAUDE.md` § Gate 1 / Gate 2, `planner/SKILL.md`
+
+### Context Budget Test
+
+A unit passes the context budget test if its full context load (doc sections + source files + prior unit outputs + CLAUDE.md + GLOSSARY.md) fits within ~40% of a Claude Code context window. The remaining ~60% is reserved for the code being written and iteration headroom. If a unit fails, it must be subdivided further — never solved by trimming context.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § The Context Budget Test, `CLAUDE.md` § Gate 1
+
+### Planning Gate
+
+A checkpoint in the build lifecycle where the Planner Agent intervenes. Four gates exist: **Gate 1** (pre-subdivision, between Step 0 and Step 1), **Gate 2** (pre-build context curation, between Step 2 and Step 3), **Gate 3** (post-failure replanning, within the Step 3/4 loop), **Gate 4** (phase boundary summary, after Step 5). Gates ensure decomposition quality before build and assess failure impact after review.
+
+**Appears in:** `CLAUDE.md` § Build Lifecycle — Steps & Planning Gates, `playbook-generation-strategy.md`, `planner/SKILL.md`
+
+### Seam
+
+A boundary where one build unit ends and another begins. Good seams produce units that are internally cohesive and externally decoupled. Four seam heuristics in priority order: (1) Data → Service → UI layers, (2) CRUD boundaries, (3) Tenant isolation boundaries, (4) Cross-cutting concern boundaries. Anti-patterns: splitting by file count, estimated effort, or separating tests from implementation.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Finding Natural Seams, `planner/SKILL.md`
 
 ---
 

@@ -41,7 +41,7 @@ When conventions conflict, resolve in this order:
 
 ## Mandatory Context for Playbook Sessions
 
-Load these three docs in full for every playbook generation session:
+Load these docs in full for every playbook generation session:
 
 1. `GLOSSARY.md` (~876 lines) — source of truth for naming, scope, definitions
 2. `CLAUDE.md` (~461 lines) — project rules, conventions, CI gates
@@ -50,12 +50,69 @@ Load these three docs in full for every playbook generation session:
 Total: ~1,600 lines (~7,000 tokens). Budget remaining context for reference doc sections.
 
 Also load:
+- **The subdivision doc for this sub-phase** (`docs/subdivisions/<sub-phase-id>-subdivision.md`) — this is the primary decomposition guide. It defines the units, their interface contracts, context manifests, and dependency ordering. The playbook decomposes *within* these units, not from scratch.
 - The phase division file for the target phase (`docs/phases/phase-division-*.md`)
 - `playbook-generation-strategy.md` § Phase Definitions and Build Order (for phase tables and dependency graphs)
 - `playbook-generation-strategy.md` § Phase-Specific Guidance (for the target phase only)
 - This skill file
 
 **Do NOT load** the full strategy doc. The process knowledge is in this skill.
+
+---
+
+## Subdivision-Aware Decomposition
+
+When a subdivision doc exists for the sub-phase (which it should — the
+Planner Agent produces it at Gate 1 before playbook generation begins),
+the playbook generation process changes in three ways:
+
+### 1. Units Are the Decomposition Boundary
+
+Do NOT decompose the full sub-phase into prompts from scratch. Instead,
+decompose each **unit** from the subdivision doc into prompts independently.
+This means:
+
+- Read Unit 1's interface contract, context manifest, and acceptance criteria
+- Decompose Unit 1 into prompts (typically 2–5 prompts per unit)
+- Then read Unit 2 and decompose it
+- And so on through all units
+
+The subdivision doc's dependency graph determines the order of units in the
+playbook. Prompts within a unit are sequenced by the playbook author. Prompts
+across units follow the unit dependency chain.
+
+### 2. Context Loading Comes from the Context Manifest
+
+Each unit in the subdivision doc carries a context manifest — the exact doc
+sections (with line ranges) and source files the Build Agent needs. Use these
+manifests as the basis for each prompt's `Load context:` field.
+
+- If the manifest says `data-model.md § Workspaces (lines 142–198)`, that's
+  what goes in the prompt's Load context
+- If a prompt within a unit needs a subset of the manifest, narrow it further
+- Never load context not in the manifest unless you discover a genuine gap
+  (in which case, flag it — the Planner should have caught this)
+
+### 3. Interface Contracts Drive Acceptance Criteria
+
+Each unit's acceptance criteria in the subdivision doc become the foundation
+for prompt-level acceptance criteria in the playbook. The contract's
+**Produces** entries must appear as verifiable acceptance criteria across the
+unit's prompts:
+
+- If the contract says `Produces: getWorkspaceById(tenantId, workspaceId): Promise<WorkspaceRecord | null>`, at least one prompt's acceptance criteria must verify that function exists with that signature
+- If the contract says `Side Effects: Registers BullMQ queue: workspace-sync`, a prompt must verify that queue registration
+
+Every contract item must be covered by at least one prompt's acceptance
+criteria. The Reviewer Agent will verify this.
+
+### When No Subdivision Doc Exists
+
+If no subdivision doc exists (e.g., the sub-phase predates the Planner
+process, or is small enough to skip subdivision), fall back to the original
+process: decompose the full sub-phase into prompts using the reference doc
+map and seam analysis. This is the legacy path and still works — the
+subdivision doc just makes it more systematic.
 
 ---
 
@@ -92,6 +149,11 @@ Each prompt declares which prior prompts it depends on, forming a DAG.
 - Remove false sequential dependencies — only add when output is actually consumed
 - Cross-phase: `Depends on: Phase 1 complete` or `Depends on: Phase 2, Prompt 8 (FieldTypeRegistry)`
 
+**Unit-level dependencies:** When a prompt depends on a prior unit's output,
+reference the unit's interface contract rather than a specific prompt number
+from that unit. Example: `Depends on: Unit 1 complete (produces WorkspaceRecord type)`
+This makes cross-unit dependencies explicit and contract-verifiable.
+
 ### 3. Reference Loading Instructions Per Prompt
 
 Each prompt specifies exactly which reference doc sections to load, using line ranges.
@@ -101,6 +163,11 @@ Each prompt specifies exactly which reference doc sections to load, using line r
 - Never write "see sync-engine.md" without line ranges for docs with indexes
 - For docs under ~200 lines without indexes, load whole: `Load context: forms.md (full, 182 lines)`
 - Include `GLOSSARY.md (full)` and `CLAUDE.md (full)` in the phase preamble — don't repeat per prompt
+
+**When a subdivision doc exists:** The unit's context manifest is the starting
+point. Each prompt's `Load context` should be a subset of (or equal to) the
+manifest. If you find yourself adding context not in the manifest, verify it's
+genuinely needed — the Planner curated the manifest to be minimal-but-sufficient.
 
 ### 4. Schema Snapshots
 
@@ -131,26 +198,33 @@ Every prompt ends with specific, testable conditions that define "done."
   - `ESLint and TypeScript compile with zero errors`
 - Reference testing rules from `CLAUDE.md` (coverage targets, file naming, factory usage)
 
-**Example:**
+**Interface contract criteria:** When a prompt completes a unit's final
+deliverable, include acceptance criteria that verify the interface contract's
+Produces entries. These are the criteria the Reviewer Agent uses to confirm
+the unit fulfilled its contract. Mark them with `[CONTRACT]`:
+
 ```
 Acceptance Criteria:
+- [ ] [CONTRACT] getRecordsByTable() exported from apps/web/src/data/records.ts
+- [ ] [CONTRACT] getRecordById() exported with signature (tenantId: string, recordId: string): Promise<Record | null>
 - [ ] testTenantIsolation() passes for getRecordsByTable() and getRecordById()
 - [ ] createRecord() with valid canonical_data returns the new record with UUIDv7 id
-- [ ] createRecord() with invalid field types returns validation error (Zod)
-- [ ] canonical_data JSONB is keyed by fields.id, not field name
 - [ ] ESLint and TypeScript compile with zero errors
 - [ ] Coverage ≥80% on new files
 ```
 
 ### 6. Phase-Level Preamble
 
-Each playbook opens with a context block. Include these five sections:
+Each playbook opens with a context block. Include these six sections:
 
 1. **What Has Been Built** — prior phases and their key outputs (specific files/modules)
 2. **What This Phase Delivers** — user-visible outcome when complete
 3. **What This Phase Does NOT Build** — explicit scope exclusions
 4. **Architecture Patterns for This Phase** — phase-specific conventions
 5. **Mandatory Context for All Prompts** — CLAUDE.md auto-loads, GLOSSARY.md on demand, skills to load
+6. **Subdivision Summary** — list all units from the subdivision doc with
+   their names, interface contracts (Produces summary), and dependency
+   ordering. This gives the Build Agent the full unit map at a glance.
 
 ### 7. File Path Conventions Per Prompt
 
@@ -182,11 +256,30 @@ packages/shared/testing/   — Shared test utilities and factories
 After every 3–5 prompts, mark a VERIFY session boundary. This tells the
 roadmap generator where to insert a BUILD/VERIFY session split.
 
+**Unit boundary alignment rule:** VERIFY session boundaries should align
+with unit boundaries whenever possible. If a unit contains 3 prompts, the
+VERIFY happens after that unit's final prompt — don't split a unit across
+two BUILD/VERIFY cycles unless the unit has more than 5 prompts. When a
+unit has 6+ prompts, split within the unit but note which VERIFY is
+mid-unit vs. unit-completing:
+
+```markdown
+## VERIFY SESSION BOUNDARY (after Prompts X–Y) — Completes Unit N
+
+or
+
+## VERIFY SESSION BOUNDARY (after Prompts X–Y) — Mid-Unit N
+```
+
+This alignment means the Reviewer can verify interface contracts at unit
+boundaries and the Build Agent starts each unit in a fresh context.
+
 **Template:**
 ```markdown
-## VERIFY SESSION BOUNDARY (after Prompts X–Y)
+## VERIFY SESSION BOUNDARY (after Prompts X–Y) — [Completes Unit N / Mid-Unit N]
 
 **Scope:** Verify all work from Prompts X–Y integrates correctly.
+**Unit status:** [Unit N complete — verify contract / Unit N in progress — verify static checks only]
 
 Checks to run in VERIFY context:
 1. `pnpm turbo typecheck` — zero errors
@@ -197,15 +290,19 @@ Checks to run in VERIFY context:
 6. If migrations were added: `pnpm turbo db:migrate:check` — no lock violations
 7. Manual verification: [specific thing to check visually or functionally]
 
+**Interface contract check (unit-completing only):**
+Verify these exports exist and match the subdivision doc's contract:
+- [ ] [CONTRACT] export 1
+- [ ] [CONTRACT] export 2
+
+**State file updates:**
+- Update TASK-STATUS.md: Unit N → `passed-review` (if unit-completing)
+- Update MODIFICATIONS.md: append session block
+
 **Git:** Commit with message "chore(verify): verify prompts X–Y [Phase X, VP-N]", then push branch to origin.
 
 Fix any failures before proceeding to Prompt Z.
 ```
-
-**Note:** These are NOT additional prompts. They mark where the Prompting
-Roadmap should insert a VERIFY session (fresh Claude Code context with
-verify + test-runner skills). The BUILD context runs typecheck + lint
-only; the VERIFY context runs the full suite above.
 
 ### 9. Post-MVP Guardrails Per Prompt (Do NOT Build)
 
@@ -253,6 +350,16 @@ Every playbook follows this structure:
 `GLOSSARY.md` is available at `docs/reference/GLOSSARY.md` — consult when naming new things.
 `MANIFEST.md` is not needed during build execution.
 
+### Subdivision Summary
+This sub-phase is decomposed into [N] units per the subdivision doc
+(`docs/subdivisions/<sub-phase-id>-subdivision.md`):
+
+| Unit | Name | Produces | Depends On |
+|------|------|----------|------------|
+| 1 | [name] | [key exports] | None |
+| 2 | [name] | [key exports] | Unit 1 |
+| ... | ... | ... | ... |
+
 ### Skills for This Phase
 Load these skill files before executing any prompt:
 - `docs/skills/backend/SKILL.md` — [if backend]
@@ -264,17 +371,31 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | [name] | None | ~NNN |
-| VP-1 | VERIFY Session Boundary | 1–4 | — |
+| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
+|--------|------|-------------|------------|--------------|
+| 1 | 1 | [name] | None | ~NNN |
+| 2 | 1 | [name] | 1 | ~NNN |
+| VP-1 | — | VERIFY — Completes Unit 1 | 1–2 | — |
+| 3 | 2 | [name] | Unit 1 complete | ~NNN |
+
+---
+
+## — Unit 1: [Unit Name] —
+
+### Unit Context
+[Big-picture anchor from subdivision doc — 1–2 sentences]
+
+**Interface Contract:**
+Produces: [from subdivision doc]
+Consumes: [from subdivision doc]
 
 ---
 
 ## Prompt 1: [Clear Deliverable Name]
 
+**Unit:** 1
 **Depends on:** None (or Prompt X, Y)
-**Load context:** [reference doc] lines N–M (Section Name)
+**Load context:** [from unit's context manifest — reference doc lines]
 **Target files:** packages/shared/db/schema/records.ts, etc.
 **Migration required:** Yes / No
 **Git:** Commit with message "feat(scope): description [Phase X, Prompt 1]"
@@ -287,6 +408,7 @@ Load these skill files before executing any prompt:
 
 ### Acceptance Criteria
 - [ ] Specific testable condition
+- [ ] [CONTRACT] Export matches interface contract (on unit-final prompts)
 - [ ] ESLint and TypeScript compile with zero errors
 
 ### Do NOT Build
@@ -294,7 +416,24 @@ Load these skill files before executing any prompt:
 
 ---
 
-## VERIFY Session Boundary (after Prompts 1–N)
+## Prompt 2: [Clear Deliverable Name]
+...
+
+---
+
+## VERIFY Session Boundary (after Prompts 1–2) — Completes Unit 1
+...
+
+---
+
+## — Unit 2: [Unit Name] —
+
+### Unit Context
+...
+
+## Prompt 3: [Clear Deliverable Name]
+**Unit:** 2
+**Depends on:** Unit 1 complete (produces [key export])
 ...
 ```
 
@@ -309,6 +448,11 @@ No single prompt's reference doc loading should exceed ~800 lines. Total context
 If a prompt needs >800 lines of reference context:
 1. The prompt is too large — split it
 2. You're loading unnecessary sections — trim
+
+**With subdivision docs:** This should rarely be an issue. The Planner's
+context budget test already ensures each unit's full manifest fits within
+~40% of context. If a prompt within a unit needs more than ~800 lines, the
+unit itself is probably too large — flag this back to the Planner.
 
 ### Section Index Usage
 
@@ -339,6 +483,12 @@ When producing playbooks, the singular priority is quality. Not speed, not conci
 
 **Think about the founder experience.** Every prompt's deliverable must be explainable in plain English.
 
+**Respect the subdivision doc.** When one exists, it represents planning
+work that already identified the right seams, contracts, and context budgets.
+The playbook's job is to decompose within units, not to second-guess the
+unit boundaries. If a unit boundary seems wrong, flag it — don't silently
+reorganize.
+
 ### Quality Indicators
 
 A well-crafted prompt has:
@@ -347,6 +497,8 @@ A well-crafted prompt has:
 - Acceptance criteria where every checkbox is verifiable
 - A "Do NOT Build" section proving you thought about scope creep
 - Precise reference doc line ranges
+- A Unit assignment matching the subdivision doc
+- [CONTRACT] criteria on unit-final prompts verifying the interface contract
 
 A poorly-crafted prompt:
 - Tries to do too many things
@@ -354,6 +506,8 @@ A poorly-crafted prompt:
 - Has vague criteria ("communications work correctly")
 - Loads entire reference docs
 - Lacks schema snapshots when touching the database
+- Ignores the subdivision doc's unit boundaries
+- Loads context not in the unit's manifest without justification
 
 **When in doubt, make it smaller and more precise.**
 
@@ -362,11 +516,16 @@ A poorly-crafted prompt:
 ## Quality Checklist
 
 Before delivering a playbook, verify:
-- [ ] Phase preamble includes all 5 sections
-- [ ] Every prompt has: Depends on, Load context (line ranges), Target files, Schema snapshot (or N/A), Task, Acceptance criteria, Do NOT build, Git instruction
+- [ ] Phase preamble includes all 6 sections (including Subdivision Summary)
+- [ ] Every prompt has: Unit, Depends on, Load context (line ranges), Target files, Schema snapshot (or N/A), Task, Acceptance criteria, Do NOT build, Git instruction
+- [ ] Every prompt's Load context is a subset of its unit's context manifest
 - [ ] No prompt's Load context exceeds ~800 lines
 - [ ] VERIFY session boundaries after every 3–5 prompts
+- [ ] VERIFY boundaries align with unit boundaries where possible
+- [ ] Every unit's interface contract Produces entries are covered by [CONTRACT] acceptance criteria
+- [ ] Unit-completing VERIFY boundaries include interface contract checks
 - [ ] Dependency graph is a DAG (no circular dependencies)
+- [ ] Cross-unit dependencies reference unit contracts, not arbitrary prompt numbers
 - [ ] Migration requirements noted on every schema-touching prompt
 - [ ] All naming matches `GLOSSARY.md` exactly
 - [ ] MVP scope matches `GLOSSARY.md` includes/excludes
@@ -374,3 +533,4 @@ Before delivering a playbook, verify:
 - [ ] Test file naming follows `CLAUDE.md` conventions
 - [ ] Existing prompt roadmaps in reference docs consulted and adapted
 - [ ] Post-MVP features in "Do NOT Build" sections, not accidentally included
+- [ ] State file update instructions included in VERIFY boundaries

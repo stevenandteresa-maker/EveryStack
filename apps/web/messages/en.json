@@ -784,6 +784,12 @@
       "columns_3": "3 columns"
     }
   },
+  "dev_preview": {
+    "title": "Dev Preview",
+    "subtitle": "Visual verification — {recordCount} records, {fieldCount} fields",
+    "recordViewHint": "Click any row's expand icon in Grid View, or click a card in Card View, to open the Record View overlay. Or:",
+    "openRecordViewFirstRecord": "Open Record View (first record)"
+  },
   "import": {
     "title": "Import CSV",
     "step_indicator": "Step {current} of {total}",

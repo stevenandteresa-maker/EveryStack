@@ -1,6 +1,5 @@
 import type { NextConfig } from 'next';
 import { builtinModules } from 'node:module';
-import webpack from 'webpack';
 import { withSentryConfig } from '@sentry/nextjs';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -17,7 +16,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   transpilePackages: ['@everystack/shared'],
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack: wp }) => {
     if (!isServer) {
       // Stub bare-name imports (e.g. require('async_hooks'))
       const fallbacks: Record<string, false> = {};
@@ -31,7 +30,7 @@ const nextConfig: NextConfig = {
       // node: scheme before the alias resolver runs. This plugin rewrites
       // `node:async_hooks` → `async_hooks` which then hits the fallback.
       config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+        new wp.NormalModuleReplacementPlugin(/^node:/, (resource: { request: string }) => {
           resource.request = resource.request.replace(/^node:/, '');
         }),
       );

@@ -159,15 +159,13 @@ export const ViewSwitcher = memo(function ViewSwitcher({
     : null;
 
   // Group views by sections when sections are provided
-  const sharedSections = sectionsProp?.filter((s) => s.userId === null) ?? [];
-  const personalSections = sectionsProp?.filter((s) => s.userId !== null) ?? [];
   const sharedViewGroups = useMemo(
-    () => groupViewsBySections(sharedViews, sharedSections),
-    [sharedViews, sharedSections],
+    () => groupViewsBySections(sharedViews, sectionsProp?.filter((s) => s.userId === null) ?? []),
+    [sharedViews, sectionsProp],
   );
   const myViewGroups = useMemo(
-    () => groupViewsBySections(myViews, personalSections),
-    [myViews, personalSections],
+    () => groupViewsBySections(myViews, sectionsProp?.filter((s) => s.userId !== null) ?? []),
+    [myViews, sectionsProp],
   );
 
   const handleContextAction = useCallback(

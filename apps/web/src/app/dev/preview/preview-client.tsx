@@ -8,6 +8,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryProvider } from '@/lib/query-provider';
 
@@ -130,6 +131,7 @@ function makeToolbarProps(
 // ---------------------------------------------------------------------------
 
 export function DevPreviewClient() {
+  const t = useTranslations('dev_preview');
   const [tab, setTab] = useState<PreviewTab>('grid');
   const [density, setDensity] = useState<RowDensity>('medium');
   const [activeCell, setActiveCell] = useState<CellPosition | null>(null);
@@ -217,25 +219,25 @@ export function DevPreviewClient() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-h2 text-[var(--text-primary)]">
-                Dev Preview
+                {t('title')}
               </h1>
               <p className="text-body-sm text-[var(--text-secondary)] mt-1">
-                Visual verification — {MOCK_RECORDS.length} records, {MOCK_FIELDS.length} fields
+                {t('subtitle', { recordCount: MOCK_RECORDS.length, fieldCount: MOCK_FIELDS.length })}
               </p>
             </div>
             <div className="flex gap-1 rounded-lg bg-[var(--surface-secondary)] p-1">
-              {tabs.map((t) => (
+              {tabs.map((tabItem) => (
                 <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
+                  key={tabItem.key}
+                  onClick={() => setTab(tabItem.key)}
                   className={cn(
                     'px-4 py-1.5 rounded-md text-body-sm font-medium transition-colors',
-                    tab === t.key
+                    tab === tabItem.key
                       ? 'bg-white text-[var(--text-primary)] shadow-sm'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
                   )}
                 >
-                  {t.label}
+                  {tabItem.label}
                 </button>
               ))}
             </div>
@@ -344,13 +346,13 @@ export function DevPreviewClient() {
           {tab === 'record' && (
             <div className="p-6">
               <p className="text-body text-[var(--text-secondary)] mb-4">
-                Click any row&apos;s expand icon in Grid View, or click a card in Card View, to open the Record View overlay. Or:
+                {t('recordViewHint')}
               </p>
               <button
                 onClick={() => handleExpandRecord(MOCK_RECORDS[0]!.id)}
                 className="px-4 py-2 rounded-md bg-[var(--accent-primary)] text-white text-body-sm font-medium hover:opacity-90 transition-opacity"
               >
-                Open Record View (first record)
+                {t('openRecordViewFirstRecord')}
               </button>
             </div>
           )}

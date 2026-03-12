@@ -1,0 +1,85 @@
+# Task Status
+
+Checklist of subdivision units per sub-phase. Provides orientation for
+every agent session — each session starts by reading this file to know
+what's done, what's in progress, and what's blocked.
+
+## How to Use This File
+
+**Who writes:** Planner (creates initial checklist when subdivision docs
+are produced), Build Agent (updates status during Step 3), Reviewer Agent
+(updates status after Step 4 verdict), Docs Agent (marks docs-synced
+after Step 5).
+**Who reads:** All agents at session start.
+**When to update:** At every status transition — when a unit moves from
+pending to in-progress, from in-progress to review, from review to
+passed/failed, and from passed to docs-synced.
+
+### Status Values
+
+| Status | Meaning | Set By |
+|---|---|---|
+| `pending` | Not yet started | Planner |
+| `in-progress` | Build session active | Build Agent |
+| `passed-review` | Review verdict: PASS | Reviewer Agent |
+| `failed-review` | Review verdict: FAIL (needs retry) | Reviewer Agent |
+| `blocked` | Waiting on a dependency or decision | Any agent |
+| `docs-synced` | Step 5 complete, fully done | Docs Agent |
+
+### Sub-Phase Block Format
+
+```
+## [Sub-Phase ID] — [Sub-Phase Name]
+
+**Started:** YYYY-MM-DD
+**Completed:** YYYY-MM-DD (or "In progress")
+
+### Subdivision Units
+
+- [ ] **Unit 1: [Name]** — `pending`
+  - Produces: [interface contract — what this unit outputs]
+  - Consumes: [what it needs from prior units, or "None — first unit"]
+  - Branch: (filled when build starts)
+  - Notes: (optional)
+
+- [x] **Unit 2: [Name]** — `docs-synced`
+  - Produces: [interface contract]
+  - Consumes: Unit 1 outputs
+  - Branch: `build/3a-unit-2-name`
+  - Notes: Completed 2025-01-15
+
+- [ ] **Unit 3: [Name]** — `blocked`
+  - Produces: [interface contract]
+  - Consumes: Unit 2 outputs
+  - Branch:
+  - Notes: Blocked on DECISIONS.md entry re: [topic]
+```
+
+### Completion Criteria
+
+A sub-phase is complete when ALL units show `docs-synced` status.
+
+### Handling Failed Reviews
+
+When a unit moves to `failed-review`:
+
+1. The Reviewer Agent adds the failure reason in Notes.
+2. The Planner assesses whether sibling or downstream units need
+   context adjustments (replanning).
+3. The unit returns to `in-progress` when the Build Agent retries.
+4. If a failure affects downstream units, those move to `blocked`
+   with a note referencing the failed unit.
+
+---
+
+## Active Sub-Phases
+
+<!-- Planner creates new sub-phase blocks here when subdivision
+     docs are produced. -->
+
+---
+
+## Completed Sub-Phases
+
+<!-- Move sub-phase blocks here once all units are docs-synced.
+     Keeps the active section focused on current work. -->

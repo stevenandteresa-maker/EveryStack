@@ -7,10 +7,11 @@ description: >
   running static checks (typecheck/lint), committing build work, or any task
   labeled "Step 3" or "Builder Agent". Contains how to load prompt context,
   the static check sequence (typecheck→lint), failure handling patterns,
-  commit cadence, and push rules. Load this skill at the start of every BUILD
-  session. Tests and coverage are handled by the verify skill in a separate
-  VERIFY context. Never use this skill for playbook generation (Step 1),
-  roadmap generation (Step 2), review (Step 4), or docs sync (Step 5).
+  commit cadence, push rules, and MODIFICATIONS.md session logging. Load this
+  skill at the start of every BUILD session. Tests and coverage are handled
+  by the verify skill in a separate VERIFY context. Never use this skill for
+  playbook generation (Step 1), roadmap generation (Step 2), review (Step 4),
+  or docs sync (Step 5).
 ---
 
 # EveryStack Builder Skill
@@ -31,13 +32,15 @@ specified in the playbook preamble.
 
 Execute playbook prompts to produce working code. Follow the prompt's
 instructions precisely. After each prompt, run typecheck + lint only.
-Commit with conventional messages. Tests run in a separate VERIFY context.
+Commit with conventional messages. After all prompts in the BUILD session
+are complete, log the session to MODIFICATIONS.md. Tests run in a separate
+VERIFY context.
 
 **Session type:** Claude Code (BUILD context)
 **Branch ownership:** `build/` branches only
-**Scope boundary:** This skill covers building and static checks only.
-Testing, coverage, and Docker-dependent verification belong to the
-verify skill, run in a separate VERIFY context.
+**Scope boundary:** This skill covers building, static checks, and session
+logging only. Testing, coverage, and Docker-dependent verification belong
+to the verify skill, run in a separate VERIFY context.
 
 ---
 
@@ -57,6 +60,7 @@ When a build session begins:
 - MANIFEST.md (consumed during playbook generation, not needed during build)
 - GLOSSARY.md (available on demand at `docs/reference/GLOSSARY.md` — consult when naming new things)
 - The full playbook document (each prompt is pasted individually)
+- Subdivision docs (the playbook already encodes unit boundaries and context manifests — the builder doesn't need to read the subdivision doc directly)
 
 **Context budget:** ~15K (system) + ~2K (CLAUDE.md) + ~1K–4K (prompt + reference sections) ≈ 18K–21K of 200K tokens (~10%). This leaves ~180K tokens for reading source, writing code, and fixing static check failures.
 
@@ -69,6 +73,7 @@ For each playbook prompt pasted into Claude Code:
 ### 1. Read the Prompt
 
 Parse the prompt for:
+- **Unit:** Which unit this prompt belongs to (from the playbook)
 - **Load context:** Read the specified reference doc sections (line ranges)
 - **Target files:** Note where files will be created/modified
 - **Schema snapshot:** Understand the database state
@@ -116,6 +121,8 @@ Walk through the prompt's acceptance criteria that can be verified statically:
 - TypeScript compiles with zero errors
 - ESLint passes with zero errors
 - No hardcoded English strings (visual check)
+- [CONTRACT] criteria: if this is the unit's final prompt, verify contract
+  exports exist at the specified paths
 
 Test-related criteria (test existence, coverage targets, tenant isolation)
 are verified in the VERIFY context.
@@ -123,6 +130,74 @@ are verified in the VERIFY context.
 ### 6. Commit
 
 After static checks pass, commit with the message specified in the prompt's `Git` field.
+
+### 7. Track Changes (running log during session)
+
+As you complete each prompt, keep a running mental note of:
+- Files created (with one-line descriptions)
+- Files modified (with one-line descriptions of what changed)
+- Files deleted (with reason)
+- Schema changes (new tables, columns, migrations)
+- New domain terms introduced (new table names, function names, component
+  names, UI labels that aren't yet in GLOSSARY.md)
+
+These feed into the MODIFICATIONS.md session block at the end of the
+BUILD session.
+
+---
+
+## Session Logging — MODIFICATIONS.md
+
+**At the end of every BUILD session** (after all prompts for this session
+are committed), append a session block to MODIFICATIONS.md. This is the
+bridge to the Reviewer (Step 4) and Docs Agent (Step 5).
+
+**When to write:** After the last prompt's commit, before ending the session.
+The Prompting Roadmap will include a `[STATE UPDATE]` label reminding
+Steven to verify this was done, but the builder should do it proactively.
+
+**Session block format:**
+
+```markdown
+## [Session ID] — [Sub-phase ID] — build/[branch-name]
+
+**Date:** YYYY-MM-DD
+**Status:** built
+**Unit(s):** [Unit number(s) this session covered]
+**Prompt(s):** [Prompt numbers executed]
+
+### Files Created
+- `path/to/new-file.ts` — [1-line description]
+
+### Files Modified
+- `path/to/existing-file.ts` — [1-line description of what changed]
+
+### Files Deleted
+- `path/to/removed-file.ts` — [1-line reason]
+
+### Schema Changes
+- Added table: `table_name` — [1-line description]
+- Added column: `table_name.column_name` — [type, purpose]
+- Migration: `XXXX_descriptive_name.ts`
+
+### New Domain Terms Introduced
+- `TermName` — [brief definition, for Docs Agent to check against GLOSSARY.md]
+
+### Notes
+[Anything the VERIFY session, Reviewer, or Docs Agent needs to know.
+Tactical decisions made during implementation that should be logged to
+DECISIONS.md. Optional.]
+```
+
+**Rules:**
+- One session block per BUILD session (not per prompt)
+- List every file, even if it seems obvious — the Docs Agent uses this
+  to avoid grepping the diff
+- For schema changes, list both the Drizzle schema file and the migration file
+- For new domain terms, provide enough definition that the Docs Agent can
+  write a GLOSSARY.md entry without re-reading the code
+- Set Status to `built` — it changes to `passed-review` after the VERIFY
+  session and `docs-synced` after Step 5
 
 ---
 
@@ -150,6 +225,7 @@ If the same static check fails 3+ times:
 2. Re-read the reference doc sections for the correct pattern
 3. Check if a prior prompt's output is in an unexpected state
 4. If blocked, describe the issue clearly — do not brute-force
+5. Log the issue in the session's MODIFICATIONS.md Notes section
 
 ### Test Failures (VERIFY context only)
 
@@ -186,9 +262,9 @@ feat(sync): implement AirtableAdapter.toCanonical() for core field types [Phase 
 **Push at the end of every VERIFY session.** Not after every BUILD commit.
 
 Rhythm:
-1. BUILD session: Prompt 1 → commit, Prompt 2 → commit, Prompt 3 → commit
+1. BUILD session: Prompt 1 → commit, Prompt 2 → commit, Prompt 3 → commit → log to MODIFICATIONS.md
 2. VERIFY session: run tests, fix failures, commit fixes, **push**
-3. BUILD session: Prompt 4 → commit, Prompt 5 → commit
+3. BUILD session: Prompt 4 → commit, Prompt 5 → commit → log to MODIFICATIONS.md
 4. VERIFY session: run tests, fix failures, commit fixes, **push**
 5. ...repeat
 
@@ -201,8 +277,10 @@ After a group of BUILD prompts, Steven opens a fresh VERIFY context that:
 
 1. Loads verify + test-runner skills (not builder/playbook)
 2. Runs the full verification suite (typecheck, lint, i18n, tests, coverage)
-3. Fixes any failures
-4. Commits fixes and pushes
+3. If unit-completing: verifies interface contract items
+4. Fixes any failures
+5. Commits fixes and pushes
+6. Updates TASK-STATUS.md and MODIFICATIONS.md
 
 This replaces the old "Integration Checkpoint" pattern. The verification
 work is identical, but it happens in a dedicated context with full testing
@@ -214,13 +292,14 @@ knowledge instead of competing with playbook content for context budget.
 
 - **Create:** `build/<sub-phase>` from `main` at session start
 - **Commit:** After each prompt (in BUILD context)
+- **Log:** MODIFICATIONS.md session block at end of BUILD session
 - **Push:** At the end of each VERIFY session
 - **PR:** At sub-phase end — title format: `[Step 3] Phase X — <Name>`
 - **Merge:** Squash merge to main. Delete the branch.
 
 **Forbidden:**
 - Never modify reference docs under `docs/` (except skill files if explicitly instructed)
-- Never create `docs/` or `fix/` branches
+- Never create `docs/`, `plan/`, or `fix/` branches
 - Never push to main directly
 
 ---
@@ -230,3 +309,17 @@ knowledge instead of competing with playbook content for context budget.
 When a prompt references something from a prior phase, do NOT re-load prior phase reference docs. The playbook prompt already states what exists. Trust the prompt's "What Has Been Built" and schema snapshots.
 
 If you need to verify something exists in the codebase, read the actual source file — don't consult reference docs.
+
+---
+
+## Handling Unit Boundaries
+
+When the playbook marks a prompt as the first in a new unit, note the unit
+transition. The prompt will include the unit's interface contract summary
+from the playbook's Unit Context section. This tells you what the unit
+must produce by its final prompt.
+
+When the playbook marks a prompt as the last in a unit, pay special
+attention to [CONTRACT] acceptance criteria — these are the exports and
+side effects that downstream units depend on. Verify they exist before
+committing.
