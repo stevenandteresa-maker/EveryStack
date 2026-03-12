@@ -2,13 +2,14 @@
 name: everystack-builder
 description: >
   Build execution process for EveryStack's six-step build lifecycle (Step 3).
-  Use this skill when executing playbook prompts in Claude Code. Triggers on:
-  building features from a playbook, executing build prompts, running verification
-  checks (typecheck/lint/test), committing build work, or any task labeled
-  "Step 3" or "Builder Agent". Contains how to load prompt context, the
-  verification check sequence (typecheck→lint→test), failure handling patterns,
-  commit cadence, and push rules. Load this skill at the start of every build
-  session in Claude Code. Never use this skill for playbook generation (Step 1),
+  Use this skill when executing playbook prompts in Claude Code BUILD contexts.
+  Triggers on: building features from a playbook, executing build prompts,
+  running static checks (typecheck/lint), committing build work, or any task
+  labeled "Step 3" or "Builder Agent". Contains how to load prompt context,
+  the static check sequence (typecheck→lint), failure handling patterns,
+  commit cadence, and push rules. Load this skill at the start of every BUILD
+  session. Tests and coverage are handled by the verify skill in a separate
+  VERIFY context. Never use this skill for playbook generation (Step 1),
   roadmap generation (Step 2), review (Step 4), or docs sync (Step 5).
 ---
 
@@ -28,12 +29,15 @@ specified in the playbook preamble.
 
 ## Mandate
 
-Execute playbook prompts to produce working, tested code. Follow the prompt's
-instructions precisely. Verify after each prompt. Commit with conventional
-messages. Push at integration checkpoints.
+Execute playbook prompts to produce working code. Follow the prompt's
+instructions precisely. After each prompt, run typecheck + lint only.
+Commit with conventional messages. Tests run in a separate VERIFY context.
 
-**Session type:** Claude Code
+**Session type:** Claude Code (BUILD context)
 **Branch ownership:** `build/` branches only
+**Scope boundary:** This skill covers building and static checks only.
+Testing, coverage, and Docker-dependent verification belong to the
+verify skill, run in a separate VERIFY context.
 
 ---
 
@@ -54,7 +58,7 @@ When a build session begins:
 - GLOSSARY.md (available on demand at `docs/reference/GLOSSARY.md` — consult when naming new things)
 - The full playbook document (each prompt is pasted individually)
 
-**Context budget:** ~15K (system) + ~2K (CLAUDE.md) + ~1K–4K (prompt + reference sections) ≈ 18K–21K of 200K tokens (~10%). This leaves ~180K tokens for reading source, writing code, running tests, and debugging.
+**Context budget:** ~15K (system) + ~2K (CLAUDE.md) + ~1K–4K (prompt + reference sections) ≈ 18K–21K of 200K tokens (~10%). This leaves ~180K tokens for reading source, writing code, and fixing static check failures.
 
 ---
 
@@ -86,9 +90,9 @@ Implement the prompt's Task section. Follow these rules:
 - If the prompt says "No migration required," do not create a migration
 - If the prompt says "Migration required," create a new migration file — never modify existing ones
 
-### 4. Verify
+### 4. Static Checks (BUILD context only)
 
-After implementation, run the verification sequence:
+After implementation, run static checks:
 
 ```bash
 # Step 1: TypeScript compilation (catches type errors)
@@ -96,23 +100,29 @@ pnpm turbo typecheck
 
 # Step 2: Linting (catches style violations)
 pnpm turbo lint
-
-# Step 3: Tests (catches functional regressions)
-pnpm turbo test
 ```
 
-**All three must pass before considering the prompt complete.**
+**Both must pass before considering the prompt complete.**
 
-### 5. Check Acceptance Criteria
+Do NOT run tests in the BUILD context. Tests, coverage, and integration
+verification happen in a separate VERIFY context (see verify skill).
+This keeps the BUILD context focused on code generation with maximum
+context budget available for playbook content and reference docs.
 
-Walk through every acceptance criterion in the prompt. For each:
-- If it's a test: verify the test exists and passes
-- If it's a coverage target: run `pnpm turbo test -- --coverage` and check
-- If it's a build check: verify compilation succeeds
+### 5. Check Static Acceptance Criteria
+
+Walk through the prompt's acceptance criteria that can be verified statically:
+- Files created at the specified paths
+- TypeScript compiles with zero errors
+- ESLint passes with zero errors
+- No hardcoded English strings (visual check)
+
+Test-related criteria (test existence, coverage targets, tenant isolation)
+are verified in the VERIFY context.
 
 ### 6. Commit
 
-After all checks pass, commit with the message specified in the prompt's `Git` field.
+After static checks pass, commit with the message specified in the prompt's `Git` field.
 
 ---
 
@@ -133,21 +143,20 @@ After all checks pass, commit with the message specified in the prompt's `Git` f
 3. Re-run `pnpm turbo lint`
 4. Do NOT use `eslint-disable` comments unless the rule is genuinely inapplicable
 
-### Test Failures
-
-1. Read the test output carefully — identify the failing assertion
-2. Determine if the failure is in the test or the implementation
-3. Fix the root cause (prefer fixing implementation over fixing tests)
-4. Re-run the specific failing test first, then the full suite
-5. Do NOT delete or skip failing tests
-
 ### Repeated Failures
 
-If the same check fails 3+ times:
+If the same static check fails 3+ times:
 1. Step back and reconsider the approach
 2. Re-read the reference doc sections for the correct pattern
 3. Check if a prior prompt's output is in an unexpected state
 4. If blocked, describe the issue clearly — do not brute-force
+
+### Test Failures (VERIFY context only)
+
+Test failures are handled in the VERIFY context using the verify skill.
+If a VERIFY session reports back that tests fail due to implementation
+issues, those fixes happen in a new BUILD context or inline in the
+VERIFY context — whichever is more practical.
 
 ---
 
@@ -174,45 +183,38 @@ feat(sync): implement AirtableAdapter.toCanonical() for core field types [Phase 
 
 ## Push Cadence
 
-**Push at every Integration Checkpoint.** Not after every commit.
+**Push at the end of every VERIFY session.** Not after every BUILD commit.
 
 Rhythm:
-1. Prompt 1 → commit locally
-2. Prompt 2 → commit locally
-3. Prompt 3 → commit locally
-4. Integration Checkpoint 1 → commit, then **push**
-5. Prompt 4 → commit locally
-6. ...repeat
+1. BUILD session: Prompt 1 → commit, Prompt 2 → commit, Prompt 3 → commit
+2. VERIFY session: run tests, fix failures, commit fixes, **push**
+3. BUILD session: Prompt 4 → commit, Prompt 5 → commit
+4. VERIFY session: run tests, fix failures, commit fixes, **push**
+5. ...repeat
 
 ---
 
-## Integration Checkpoint Process
+## BUILD/VERIFY Session Boundary
 
-At each integration checkpoint:
+The BUILD context does NOT run tests. It builds code and runs static checks.
+After a group of BUILD prompts, Steven opens a fresh VERIFY context that:
 
-```bash
-# Full verification suite
-pnpm turbo typecheck        # zero errors
-pnpm turbo lint              # zero errors
-pnpm turbo test              # all pass
-pnpm turbo test -- --coverage  # thresholds met
+1. Loads verify + test-runner skills (not builder/playbook)
+2. Runs the full verification suite (typecheck, lint, i18n, tests, coverage)
+3. Fixes any failures
+4. Commits fixes and pushes
 
-# If migrations were added:
-pnpm turbo db:migrate:check  # no lock violations
-```
-
-Commit: `chore(verify): integration checkpoint N [Phase X, CP-N]`
-Then push: `git push origin build/<sub-phase>`
-
-**Fix any failures before proceeding to the next prompt.**
+This replaces the old "Integration Checkpoint" pattern. The verification
+work is identical, but it happens in a dedicated context with full testing
+knowledge instead of competing with playbook content for context budget.
 
 ---
 
 ## Branch Rules
 
 - **Create:** `build/<sub-phase>` from `main` at session start
-- **Commit:** After each prompt
-- **Push:** At integration checkpoints
+- **Commit:** After each prompt (in BUILD context)
+- **Push:** At the end of each VERIFY session
 - **PR:** At sub-phase end — title format: `[Step 3] Phase X — <Name>`
 - **Merge:** Squash merge to main. Delete the branch.
 

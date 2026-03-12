@@ -3,7 +3,7 @@ name: everystack-verify
 description: >
   Test verification process for EveryStack builds. Use this skill when running
   tests, verifying builds, fixing test failures, or checking coverage thresholds.
-  Triggers on: running the test suite, verifying integration checkpoints,
+  Triggers on: running the test suite, verifying builds in VERIFY sessions,
   debugging test failures, checking coverage, or any task labeled "VERIFY" or
   "verification". Contains the full testing process: Docker health checks, port
   mapping, migration verification, coverage thresholds per directory, common
@@ -24,30 +24,69 @@ Claude Code sessions dedicated to running and fixing tests after a BUILD).
 - **Always** when running the test suite after a build
 - **Always** when debugging test failures
 - **Always** in dedicated VERIFY contexts
-- **Also** during BUILD contexts when running integration checkpoints
 - **Never** for playbook generation, roadmap generation, or review
+- **Never** in BUILD contexts — BUILD contexts only run typecheck + lint
 
 ---
 
 ## The BUILD/VERIFY Split
 
-The recommended workflow separates building from testing into separate contexts:
+The standard workflow separates building from testing into separate Claude
+Code contexts. This is the default — not optional.
 
 **BUILD context (Context A):**
-- Load playbook section + reference docs + builder skill
-- Build the feature
-- Run typecheck + lint only (no Docker needed)
-- Commit
+- Loads builder + phase-context + domain skills
+- Builds features from playbook prompts (typically 3–5 prompts per session)
+- Runs typecheck + lint only (no Docker, no tests)
+- Commits after each prompt
 
 **VERIFY context (Context B — fresh):**
-- Load this verify skill + test-runner skill
-- Run tests
-- Fix failures
-- Commit fixes
+- Loads this verify skill + test-runner skill (no playbook, no reference docs)
+- Runs the full verification sequence (typecheck → lint → i18n → tests → coverage)
+- Fixes any failures found
+- Commits fixes, then pushes
 
-**Why separate:** The BUILD context needs playbook content and reference docs (~64KB). The VERIFY context needs testing knowledge and Docker awareness. Separating them keeps each context focused and within budget.
+**Session grouping:** Each BUILD session handles 3–5 prompts (enough to be
+productive without exhausting context). Each VERIFY session covers the same
+prompt group. The Prompting Roadmap specifies the exact grouping.
 
-**When combined is OK:** For small prompts or quick fixes, BUILD and VERIFY can happen in the same context. Use your judgment.
+**Why separate:** The BUILD context needs playbook content and reference docs
+(~30–60KB). The VERIFY context needs testing knowledge, common failure mode
+fixes, and Docker awareness. Separating them gives each context ~180K tokens
+for actual work instead of ~140K.
+
+**When combined is OK:** Quick one-off fixes (e.g., fixing a lint error or
+a single test) can happen in either context. Use judgment for prompts that
+are trivially small.
+
+---
+
+## VERIFY Session Prompt Format
+
+When Steven opens a fresh VERIFY context, he pastes a prompt like this:
+
+```
+Read these skill files:
+- docs/skills/verify/SKILL.md
+- docs/skills/test-runner/SKILL.md
+
+Run the full verification suite for Prompts [N–M]:
+1. pnpm turbo typecheck — zero errors
+2. pnpm turbo lint — zero errors
+3. pnpm turbo check:i18n — no hardcoded English strings
+4. Unit tests: pnpm turbo test
+5. Integration tests: pnpm turbo test
+6. Coverage: pnpm turbo test -- --coverage — thresholds met
+7. [Any manual verification items specific to these prompts]
+
+Fix any failures. Commit fixes with:
+  git commit -m "chore(verify): verify prompts N–M [Phase X, VP-N]"
+Then push.
+```
+
+The VERIFY context does NOT need playbook content, reference docs, or
+domain skills. It only needs testing knowledge (this skill) and Docker
+setup knowledge (test-runner skill).
 
 ---
 

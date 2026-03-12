@@ -119,7 +119,13 @@ If doc changes merged: → Proceed to Step 3.
 
 ---
 
-## STEP 3 — BUILD EXECUTION (Builder Agent)
+## STEP 3 — BUILD + VERIFY EXECUTION
+
+Step 3 alternates between BUILD sessions and VERIFY sessions in separate
+Claude Code contexts. BUILD contexts are focused on writing code with full
+playbook/reference context. VERIFY contexts are focused on running tests
+and fixing failures with full testing knowledge. This keeps each context
+lean and within budget.
 
 ### Setup
 
@@ -127,21 +133,28 @@ If doc changes merged: → Proceed to Step 3.
 git checkout main && git pull origin main
 git checkout -b build/<sub-phase>
 
-Open Claude Code. Load skills:
+---
+
+### BUILD SESSION A — Prompts 1–N
+
+Open Claude Code. Paste:
 
 [PASTE INTO CLAUDE CODE]
-Read these skill files:
+Read these skill files and keep their conventions in mind for all work
+in this session:
 - docs/skills/builder/SKILL.md
 - docs/skills/phase-context/SKILL.md
-- [additional relevant skills]
+- [additional domain skills as needed: ux-ui, backend, ai-features]
 
-### PROMPT 1: [Plain-English Name]
+#### PROMPT 1: [Plain-English Name]
 
 **What This Builds:**
 [2–3 sentence explanation a non-coder can understand]
 
 **What You'll See When It's Done:**
-[Observable outcome — files created, tests passing, UI visible]
+[Observable outcome — files created, typecheck + lint passing]
+
+**How Long This Typically Takes:** [rough estimate]
 
 [PASTE INTO CLAUDE CODE]
 <full prompt text from the playbook>
@@ -149,31 +162,57 @@ Read these skill files:
 [CHECKPOINT]
 Look for:
 - [specific observable outcomes]
-- All tests passing
-- No TypeScript or ESLint errors
+- TypeScript compiles with zero errors
+- ESLint passes with zero errors
 
 [GIT COMMAND]
 git add <specific paths>
 git commit -m "feat(scope): description [Phase X, Prompt 1]"
 
-### INTEGRATION CHECKPOINT 1 (after Prompts 1–N)
+#### PROMPT 2: [Plain-English Name]
+... (same format as Prompt 1)
+
+---
+
+### VERIFY SESSION A — Prompts 1–N
+
+Close the BUILD session. Open a fresh Claude Code session. Paste:
 
 [PASTE INTO CLAUDE CODE]
-Run the full verification suite:
-1. pnpm turbo typecheck
-2. pnpm turbo lint
-3. pnpm turbo test
-4. pnpm turbo test -- --coverage
+Read these skill files:
+- docs/skills/verify/SKILL.md
+- docs/skills/test-runner/SKILL.md
+
+Run the full verification suite for Prompts 1–N:
+1. pnpm turbo typecheck — zero errors
+2. pnpm turbo lint — zero errors
+3. pnpm turbo check:i18n — no hardcoded English strings [if UI changes]
+4. Unit tests: pnpm turbo test
+5. Integration tests (Docker required): pnpm turbo test
+6. Coverage: pnpm turbo test -- --coverage — thresholds met
+7. [Manual verification items for these prompts]
+
+Fix any failures. Commit fixes.
 
 [CHECKPOINT]
-All commands must pass with zero errors.
-If failing: Claude Code will attempt to fix.
+All checks must pass with zero errors.
+If failing: Claude Code will attempt to fix using verify skill knowledge.
 If still failing: paste "The [check] is failing with [error]. Fix it."
 
 [GIT COMMAND]
 git add -A
-git commit -m "chore(verify): integration checkpoint 1 [Phase X, CP-1]"
+git commit -m "chore(verify): verify prompts 1–N [Phase X, VP-1]"
 git push origin build/<sub-phase>
+
+---
+
+### BUILD SESSION B — Prompts N+1–M
+... (same format as BUILD SESSION A, fresh Claude Code context)
+
+### VERIFY SESSION B — Prompts N+1–M
+... (same format as VERIFY SESSION A, fresh Claude Code context)
+
+---
 
 ### FINAL — Open Pull Request
 
@@ -258,6 +297,49 @@ If not: → Skip. Proceed to next sub-phase.
 Phase [X] is complete. Next: [Y].
 Return to Step 0 for Phase [Y].
 ```
+
+---
+
+## BUILD/VERIFY Session Grouping Rules
+
+Step 3 alternates between BUILD and VERIFY sessions. Use these rules
+to determine how many prompts go in each BUILD session:
+
+### Sizing a BUILD session
+
+- **Target: 3–5 prompts per BUILD session.** This is the sweet spot for
+  context budget — enough prompts to make progress, not so many that the
+  context gets bloated with accumulated code changes.
+- **Never exceed 6 prompts** in a single BUILD session.
+- **Group by dependency.** Prompts that depend on each other should be in
+  the same BUILD session so the builder can reference prior output.
+- **Group by domain.** Prompts touching the same files/domain area work
+  better together (shared context, fewer re-reads).
+
+### Sizing a VERIFY session
+
+- **One VERIFY session per BUILD session.** Every BUILD session is followed
+  by exactly one VERIFY session covering the same prompt range.
+- **VERIFY sessions are lighter** — they only run checks and fix failures.
+  They typically finish faster than BUILD sessions.
+
+### Session naming convention
+
+Use lettered pairs in the roadmap:
+- BUILD SESSION A → VERIFY SESSION A
+- BUILD SESSION B → VERIFY SESSION B
+- BUILD SESSION C → VERIFY SESSION C
+
+### Integration Checkpoints → VERIFY Sessions
+
+The old "Integration Checkpoint" pattern is replaced by VERIFY sessions.
+Every VERIFY session IS an integration checkpoint. The VERIFY session
+commits fixes and pushes — this is the push point.
+
+### Small sub-phases (≤5 prompts)
+
+For sub-phases with 5 or fewer prompts, use a single BUILD/VERIFY pair.
+No need for multiple sessions.
 
 ---
 

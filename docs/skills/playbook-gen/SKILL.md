@@ -7,7 +7,7 @@ description: >
   prompt units, building dependency graphs, or any task labeled "Step 1" or
   "Playbook Generation". Contains the 10 quality characteristics, prompt sizing
   rules, schema snapshot format, acceptance criteria format, dependency graph rules,
-  integration checkpoint template, file path conventions, and git commit format.
+  VERIFY session boundary template, file path conventions, and git commit format.
   Never use this skill for build execution (Step 3), review (Step 4), or docs
   sync (Step 5). This skill replaces the process sections of
   playbook-generation-strategy.md — the strategy doc retains phase definitions
@@ -177,28 +177,35 @@ packages/shared/ai/        — AI providers, prompts, tools, eval
 packages/shared/testing/   — Shared test utilities and factories
 ```
 
-### 8. Integration Checkpoints
+### 8. VERIFY Session Boundaries
 
-After every 3–5 prompts, include a verification-only prompt.
+After every 3–5 prompts, mark a VERIFY session boundary. This tells the
+roadmap generator where to insert a BUILD/VERIFY session split.
 
 **Template:**
 ```markdown
-## Integration Checkpoint N (after Prompts X–Y)
+## VERIFY SESSION BOUNDARY (after Prompts X–Y)
 
-**Task:** Verify all work from Prompts X–Y integrates correctly.
+**Scope:** Verify all work from Prompts X–Y integrates correctly.
 
-Run:
+Checks to run in VERIFY context:
 1. `pnpm turbo typecheck` — zero errors
 2. `pnpm turbo lint` — zero errors
-3. `pnpm turbo test` — all pass
-4. `pnpm turbo test -- --coverage` — thresholds met
-5. If migrations were added: `pnpm turbo db:migrate:check` — no lock violations
-6. Manual verification: [specific thing to check visually or functionally]
+3. `pnpm turbo check:i18n` — no hardcoded English strings (if UI changes)
+4. `pnpm turbo test` — all pass
+5. `pnpm turbo test -- --coverage` — thresholds met
+6. If migrations were added: `pnpm turbo db:migrate:check` — no lock violations
+7. Manual verification: [specific thing to check visually or functionally]
 
-**Git:** Commit with message "chore(verify): integration checkpoint N [Phase X, CP-N]", then push branch to origin.
+**Git:** Commit with message "chore(verify): verify prompts X–Y [Phase X, VP-N]", then push branch to origin.
 
 Fix any failures before proceeding to Prompt Z.
 ```
+
+**Note:** These are NOT additional prompts. They mark where the Prompting
+Roadmap should insert a VERIFY session (fresh Claude Code context with
+verify + test-runner skills). The BUILD context runs typecheck + lint
+only; the VERIFY context runs the full suite above.
 
 ### 9. Post-MVP Guardrails Per Prompt (Do NOT Build)
 
@@ -260,7 +267,7 @@ Load these skill files before executing any prompt:
 | Prompt | Deliverable | Depends On | Lines (est.) |
 |--------|-------------|------------|--------------|
 | 1 | [name] | None | ~NNN |
-| CP-1 | Integration Checkpoint 1 | 1–4 | — |
+| VP-1 | VERIFY Session Boundary | 1–4 | — |
 
 ---
 
@@ -287,7 +294,7 @@ Load these skill files before executing any prompt:
 
 ---
 
-## Integration Checkpoint 1 (after Prompts 1–N)
+## VERIFY Session Boundary (after Prompts 1–N)
 ...
 ```
 
@@ -358,7 +365,7 @@ Before delivering a playbook, verify:
 - [ ] Phase preamble includes all 5 sections
 - [ ] Every prompt has: Depends on, Load context (line ranges), Target files, Schema snapshot (or N/A), Task, Acceptance criteria, Do NOT build, Git instruction
 - [ ] No prompt's Load context exceeds ~800 lines
-- [ ] Integration checkpoints after every 3–5 prompts
+- [ ] VERIFY session boundaries after every 3–5 prompts
 - [ ] Dependency graph is a DAG (no circular dependencies)
 - [ ] Migration requirements noted on every schema-touching prompt
 - [ ] All naming matches `GLOSSARY.md` exactly

@@ -236,7 +236,7 @@ import { createTestWorkspace, createTestRecord, createTestUser }
 
 From `CLAUDE.md`:
 - **≥80% coverage** on all new files
-- Integration checkpoint runs: `pnpm turbo test -- --coverage`
+- VERIFY session runs: `pnpm turbo test -- --coverage`
 - Coverage gate is enforced in CI pre-merge
 
 ---

@@ -55,25 +55,23 @@ Every sub-phase moves through six steps. Each step has a dedicated agent, a spec
 
 **Who:** Steven working with Claude in a Claude.ai session.
 
-**Input:** The reference docs + this strategy document + the Phase Division files (`docs/phases/phase-division-*.md` + `dependency-graph-and-appendices.md`).
+**Input:** The `playbook-gen` skill (`docs/skills/playbook-gen/SKILL.md`) + GLOSSARY.md + CLAUDE.md + MANIFEST.md + the Phase Division file for the target phase + this strategy doc § Phase Definitions and Phase-Specific Guidance only + relevant reference doc sections.
 
 **Output:** A playbook document (markdown) — the technical prompting roadmap with all 10 quality characteristics.
 
-**Context strategy:** Load GLOSSARY.md, CLAUDE.md, and MANIFEST.md in full (~1,600 lines). Then load relevant reference doc sections via line-range indexes. Heavy reading, light writing.
+**Context strategy:** The `playbook-gen` skill contains the full process (10 quality characteristics, templates, context rules). Load it instead of the full strategy doc. From this strategy doc, load only the Phase Definitions table (lines 208–259) and the Phase-Specific Guidance section for the target phase. Load GLOSSARY.md, CLAUDE.md, and MANIFEST.md in full (~1,600 lines). Then load relevant reference doc sections via line-range indexes.
 
 This session produces the playbook. It consumes reference docs and transforms them into structured prompts. The full glossary load is justified here because you're authoring prompts that must use exact naming from the glossary.
-
-**This step is identical to the current Session A-1.** No changes to how playbook generation works.
 
 ### Step 2 — Prompting Roadmap Generation (Steven + Claude in Claude.ai)
 
 **Who:** Steven working with Claude in a SEPARATE session from playbook generation.
 
-**Input:** This strategy document (for the Prompting Roadmap Specification section) + the completed playbook for that sub-phase.
+**Input:** The `roadmap-gen` skill (`docs/skills/roadmap-gen/SKILL.md`) + the completed playbook for that sub-phase. No strategy doc needed.
 
 **Output:** A Prompting Roadmap (markdown) — a lifecycle-spanning runbook covering all six steps with paste-ready content at every step.
 
-**Context strategy:** No reference docs, no glossary, no manifest. The only inputs are the strategy doc and the playbook. All architectural decisions have already been resolved. Claude's full context budget goes toward producing clear prompts, decision points, and checkpoint instructions across all six lifecycle steps.
+**Context strategy:** No reference docs, no glossary, no manifest, no strategy doc. The `roadmap-gen` skill contains the full process (label system, document structure template, BUILD/VERIFY session grouping rules, quality standard). The only inputs are the skill and the playbook. All architectural decisions have already been resolved. Claude's full context budget goes toward formatting quality.
 
 This session translates the playbook into a non-technical operator's runbook covering the entire lifecycle — not just the build phase. It does not make architectural decisions — it wraps existing decisions in a human-friendly format with paste-ready prompts for every agent.
 
@@ -287,7 +285,7 @@ The 10 characteristics (summary):
 5. **Test-First Acceptance Criteria** — checkbox format, always includes tenant isolation + compilation check
 6. **Phase-Level Preamble** — 5 sections: built, delivers, excludes, patterns, mandatory context
 7. **File Path Conventions** — monorepo paths per prompt
-8. **Integration Checkpoints** — verification-only prompt every 3–5 prompts
+8. **VERIFY Session Boundaries** — prompt grouping markers every 3–5 prompts for BUILD/VERIFY split
 9. **Post-MVP Guardrails** — "Do NOT Build" section per prompt
 10. **Migration Awareness** — explicit migration requirements per prompt
 
@@ -297,7 +295,7 @@ The 10 characteristics (summary):
 
 > **Full template extracted to:** `docs/skills/playbook-gen/SKILL.md` § "Playbook Document Template"
 >
-> The template includes: phase preamble (5 sections), section index table, per-prompt structure (depends on, load context, target files, schema snapshot, task, acceptance criteria, do NOT build, git), and integration checkpoint format.
+> The template includes: phase preamble (5 sections), section index table, per-prompt structure (depends on, load context, target files, schema snapshot, task, acceptance criteria, do NOT build, git), and VERIFY session boundary markers.
 
 ---
 
@@ -494,7 +492,7 @@ Step 0:
 Step 3:
   6. Create  build/<sub-phase>  branch from the NOW-UPDATED main
   7. Execute build prompts against stable docs
-  8. Final integration checkpoint passes
+  8. Final VERIFY session passes
   9. Open PR, review, merge build branch to main
 
 Step 5:
@@ -552,9 +550,9 @@ feat(sync): implement AirtableAdapter.toCanonical() for core field types [Phase 
 - 95% branch coverage on adapter transforms
 ```
 
-**Integration Checkpoint commits** use a distinct prefix:
+**VERIFY session commits** use a distinct prefix:
 ```
-chore(verify): integration checkpoint 1 — all tests pass [Phase 1B, CP-1]
+chore(verify): verify prompts 1–4 [Phase 1B, VP-1]
 ```
 
 **Doc prep commits (Step 0):**
@@ -571,15 +569,14 @@ docs: add 3 new GLOSSARY terms from Phase 2B (sync_metadata, last_synced_value, 
 
 ### Push Cadence
 
-**Push at every Integration Checkpoint.** Not after every commit — that would be noisy. The rhythm is:
-1. Prompt 1 → commit locally
-2. Prompt 2 → commit locally
-3. Prompt 3 → commit locally
-4. Integration Checkpoint 1 → commit, then **push** the branch
-5. Prompt 4 → commit locally
-6. ...and so on
+**Push at the end of every VERIFY session.** Not after every BUILD commit — that would be noisy. The rhythm is:
+1. BUILD session: Prompt 1 → commit, Prompt 2 → commit, Prompt 3 → commit
+2. VERIFY session: run tests, fix failures, commit fixes, then **push** the branch
+3. BUILD session: Prompt 4 → commit, Prompt 5 → commit
+4. VERIFY session: run tests, fix failures, commit fixes, then **push** the branch
+5. ...and so on
 
-This means you (Steven) can review the remote branch state after every checkpoint — roughly every 3–5 prompts.
+This means you (Steven) can review the remote branch state after every VERIFY session — roughly every 3–5 prompts.
 
 ### Pull Request and Merge
 
@@ -611,7 +608,7 @@ Every playbook prompt must include a `Git:` field. Examples:
 
 - **First prompt in a build phase:** `Git: Create and checkout branch build/phase-1b-database from main`
 - **Normal prompt:** `Git: Commit with message "feat(db): create records and fields schema with RLS policies [Phase 1B, Prompt 3]"`
-- **Integration Checkpoint:** `Git: Commit with message "chore(verify): integration checkpoint 1 [Phase 1B, CP-1]", then push branch to origin`
+- **VERIFY session:** `Git: Commit with message "chore(verify): verify prompts 1–4 [Phase 1B, VP-1]", then push branch to origin`
 - **Final checkpoint:** `Git: Commit, push, then open PR to main with title "[Step 3] Phase 1B — Database Schema & Core Tables"`
 
 ---
@@ -620,7 +617,7 @@ Every playbook prompt must include a `Git:` field. Examples:
 
 > **Full specification extracted to:** `docs/skills/roadmap-gen/SKILL.md`
 >
-> The skill contains: label system (`[PASTE INTO CLAUDE CODE]`, `[GIT COMMAND]`, `[CHECKPOINT]`, `[DECISION POINT]`), complete 6-step document structure template, plain-English explanation format ("What This Builds" / "What You'll See"), quality standard, and session input rules.
+> The skill contains: label system (`[PASTE INTO CLAUDE CODE]`, `[GIT COMMAND]`, `[CHECKPOINT]`, `[DECISION POINT]`), complete 6-step document structure template with BUILD/VERIFY split pattern, session grouping rules, plain-English explanation format ("What This Builds" / "What You'll See"), quality standard, and session input rules.
 
 **Key rules (summary):**
 - Every playbook must have a companion Prompting Roadmap (markdown)
@@ -651,7 +648,7 @@ Every playbook prompt must include a `Git:` field. Examples:
 #### Step 1 — Produce the Playbook
 
 4. **Start a Claude.ai session.**
-5. **Upload the reference docs + this strategy doc + the Phase Division files.**
+5. **Upload the `playbook-gen` skill + GLOSSARY.md + CLAUDE.md + MANIFEST.md + the Phase Division file + this strategy doc § Phase Definitions and Phase-Specific Guidance + relevant reference docs.**
 6. **Request one sub-phase at a time:** "Produce the playbook for Phase 2B: Synced Data Performance, Outbound Sync, Conflict Resolution."
 7. **Claude produces the playbook** (markdown) — the technical prompting roadmap with all 10 quality characteristics.
 8. **Review the playbook.** Check that prompts are right-sized, dependencies make sense, acceptance criteria are testable, and scope guards are present.
@@ -660,24 +657,26 @@ Every playbook prompt must include a `Git:` field. Examples:
 #### Step 2 — Produce the Prompting Roadmap
 
 10. **Start a NEW Claude.ai session** (separate from the playbook generation session).
-11. **Upload this strategy doc + the completed playbook for that sub-phase.**
-12. **Request the Prompting Roadmap:** "Produce the Prompting Roadmap (markdown) for Phase 2B using this playbook and the Prompting Roadmap Specification in the strategy doc."
+11. **Upload the `roadmap-gen` skill + the completed playbook for that sub-phase.** No strategy doc needed.
+12. **Request the Prompting Roadmap:** "Produce the Prompting Roadmap (markdown) for Phase 2B using this playbook and the roadmap-gen skill."
 13. **Claude produces the Prompting Roadmap** — the lifecycle-spanning runbook with paste-ready content for all six steps.
 14. **Review the roadmap.** Check that every step has paste-ready content, all labels are present, decision points have binary instructions, and the roadmap is executable top-to-bottom without technical judgment calls.
 
-#### Step 3 — Execute the Build
+#### Step 3 — Execute the Build (BUILD/VERIFY Split)
 
 15. **Open your terminal.** Navigate to the EveryStack monorepo.
-16. **Open Claude Code** (in VS Code or terminal).
-17. **Open the Prompting Roadmap** side by side — this is your script.
+16. **Open the Prompting Roadmap** side by side — this is your script.
+17. **Step 3 alternates between BUILD and VERIFY sessions in separate Claude Code contexts:**
+    - **BUILD session:** Open Claude Code. Paste the skill-loading prompt. Then paste each BUILD prompt sequentially. Claude Code builds and runs typecheck + lint only. Commit after each prompt.
+    - **VERIFY session:** Close the BUILD context. Open a fresh Claude Code. Paste the VERIFY prompt. Claude Code runs the full test suite, fixes failures, commits fixes, and pushes.
 18. **Follow the roadmap's Step 3 section top to bottom:**
     - Read the explanation block to understand what's coming.
-    - Copy the `[PASTE INTO CLAUDE CODE]` block and paste it into Claude Code.
+    - Copy the `[PASTE INTO CLAUDE CODE]` block and paste it.
     - Wait for Claude Code to complete the work.
     - Verify using the `[CHECKPOINT]` instructions.
     - Copy the `[GIT COMMAND]` block and run it to commit.
-    - Move to the next prompt.
-19. **At Integration Checkpoints:** Push the branch, review the diff on GitHub, and confirm everything looks right before proceeding.
+    - Move to the next prompt or VERIFY session.
+19. **After each VERIFY session:** Review the diff on GitHub and confirm everything looks right before opening the next BUILD session.
 20. **At sub-phase end:** Open the PR, review, merge to main.
 
 #### Step 4 — Review the Build
@@ -758,7 +757,7 @@ Under the six-step lifecycle, this content is handled as follows:
 | **Step 3** | Build execution — Steven pastes prompts from the roadmap into Claude Code, which writes code (identical to former Session B) |
 | **Prompt** | A single, self-contained implementation unit within a playbook |
 | **Sub-phase** | A division of a large phase into smaller playbook-sized units (e.g., 3A, 3A-i) |
-| **Integration checkpoint** | A verification-only prompt that runs the test suite and pushes to the remote branch |
+| **VERIFY session** | A dedicated context that runs the full test suite, fixes failures, and pushes to the remote branch |
 | **Scope guard** | A "Do NOT Build" section preventing over-engineering |
 | **Schema snapshot** | An inline listing of relevant table/column definitions |
 | **Section index** | A line-range table at the top of a reference doc enabling selective loading |
