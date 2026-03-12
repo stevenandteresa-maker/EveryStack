@@ -1,20 +1,3 @@
-export {
-  TENANT_ROLES,
-  WORKSPACE_ROLES,
-  ROLE_HIERARCHY,
-  roleAtLeast,
-} from './roles';
-export type { TenantRole, WorkspaceRole, EffectiveRole } from './roles';
-
-export { PermissionDeniedError } from './errors';
-export type { PermissionDeniedDetails } from './errors';
-
-export {
-  resolveEffectiveRole,
-  checkRole,
-  requireRole,
-} from './check-role';
-
 export type {
   FieldPermissionState,
   RestrictableRole,
@@ -25,7 +8,7 @@ export type {
   ViewPermissions,
   FieldPermissionMap,
   ResolvedPermissionContext,
-} from './permissions';
+} from './types';
 
 export {
   fieldPermissionStateSchema,
@@ -36,4 +19,7 @@ export {
   viewFieldPermissionsSchema,
   viewPermissionsSchema,
   fieldPermissionsSchema,
-} from './permissions';
+} from './schemas';
+
+export { PermissionDeniedError } from '../errors';
+export type { PermissionDeniedDetails } from '../errors';
