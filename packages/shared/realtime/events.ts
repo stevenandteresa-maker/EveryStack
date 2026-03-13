@@ -39,6 +39,9 @@ export const REALTIME_EVENTS = {
   FIELD_UNLOCKED: 'field.unlocked',
   FIELD_LOCK_RENEWED: 'field.lock_renewed',
 
+  // Permission events
+  PERMISSION_UPDATED: 'permission.updated',
+
   // Notification events
   NOTIFICATION_CREATED: 'notification.created',
 } as const;
