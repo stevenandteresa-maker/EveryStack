@@ -77,7 +77,7 @@ When a unit moves to `failed-review`:
 ### 3A-iii — Field-Level Permissions: Model, Resolution & Config UI
 
 **Started:** 2026-03-12
-**Completed:** In progress
+**Completed:** 2026-03-13
 
 #### Subdivision Units
 
@@ -111,11 +111,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 6: Permission Configuration UI** — `in-progress`
+- [x] **Unit 6: Permission Configuration UI** — `passed-review`
   - Produces: `RoleLevelPermissionGrid`, `IndividualOverrideView`, `PermissionConfigPanel`, `PermissionStateBadge` components; `updateViewPermissions()`, `updateFieldGlobalPermissions()` server actions
   - Consumes: Unit 1 types + schemas, Unit 2 data access + cache, Unit 4 `publishPermissionUpdate()`, Unit 5 `PermissionProvider`
   - Branch: `build/3a-iii-field-permissions`
-  - Notes: Prompt 10 complete — server actions, PermissionStateBadge, RoleLevelPermissionGrid, PermissionConfigPanel created. IndividualOverrideView placeholder for Prompt 11.
+  - Notes: Verified 2026-03-13. All contracts exported, all CI gates green, cross-unit integration verified.
 
 ---
 

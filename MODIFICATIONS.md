@@ -160,26 +160,27 @@ built → failed-review → built (retry after fixes)
 ## Session E — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** built
-**Prompt(s):** Prompt 10 (Unit 6 — Part 1)
+**Status:** passed-review
+**Prompt(s):** Prompts 10–11 (Unit 6 — phase complete)
 
 ### Files Created
-- `apps/web/src/actions/permission-actions.ts` — Server actions: updateViewPermissions, updateFieldGlobalPermissions
-- `apps/web/src/actions/__tests__/permission-actions.test.ts` — 13 tests for permission server actions
-- `apps/web/src/components/permissions/PermissionStateBadge.tsx` — Visual badge for read_write/read_only/hidden states
-- `apps/web/src/components/permissions/RoleLevelPermissionGrid.tsx` — Role-level permission grid with click-to-cycle and bulk set
-- `apps/web/src/components/permissions/PermissionConfigPanel.tsx` — Tab container (By Role / By Person)
+- apps/web/src/actions/permission-actions.ts
+- apps/web/src/actions/permission-actions.test.ts
+- apps/web/src/components/permissions/PermissionStateBadge.tsx
+- apps/web/src/components/permissions/RoleLevelPermissionGrid.tsx
+- apps/web/src/components/permissions/PermissionConfigPanel.tsx
+- apps/web/src/components/permissions/IndividualOverrideView.tsx
+- apps/web/src/components/permissions/IndividualOverrideView.test.tsx
 
 ### Files Modified
-- `apps/web/messages/en.json` — Added `permissions` namespace (18 keys)
-- `apps/web/messages/es.json` — Added `permissions` namespace (18 keys)
-- `TASK-STATUS.md` — Updated Unit 6 notes
+- apps/web/messages/en.json (permission config i18n keys)
+- apps/web/messages/es.json (permission config i18n keys)
 
 ### Schema Changes
 - None
 
 ### New Domain Terms Introduced
-- None
+- Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge
 
 ---
 
