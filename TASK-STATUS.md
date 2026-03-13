@@ -81,16 +81,16 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Permission Types & Resolution Engine** — `in-progress`
+- [x] **Unit 1: Permission Types & Resolution Engine** — `passed-review`
   - Produces: `FieldPermissionState`, `ViewPermissions`, `ViewFieldPermissions`, `RoleRestriction`, `IndividualOverride`, `FieldPermissionMap`, `ResolvedPermissionContext` types; `viewPermissionsSchema`, `fieldPermissionsSchema` Zod schemas; `resolveFieldPermission()`, `resolveAllFieldPermissions()` pure functions — all from `packages/shared/auth/permissions/`
   - Consumes: None — first unit. Uses existing `EffectiveRole`, `roleAtLeast()` from `packages/shared/auth/`
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `pending`
+- [ ] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `in-progress`
   - Produces: `getFieldPermissions()`, `invalidatePermissionCache()`, `PERMISSION_CACHE_KEY_PATTERN`, `PERMISSION_CACHE_TTL` from `apps/web/src/data/permissions.ts`; `createTestViewWithPermissions()` factory
   - Consumes: Unit 1 types + resolution functions
-  - Branch:
+  - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
 - [ ] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `pending`

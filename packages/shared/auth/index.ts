@@ -37,3 +37,9 @@ export {
   viewPermissionsSchema,
   fieldPermissionsSchema,
 } from './permissions';
+
+export {
+  resolveFieldPermission,
+  resolveAllFieldPermissions,
+  comparePermissionStates,
+} from './permissions';

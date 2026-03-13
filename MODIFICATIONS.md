@@ -57,7 +57,59 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-<!-- Build Agent appends new session blocks here. -->
+## Session A — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 1–2 (Unit 1)
+
+### Files Created
+- `packages/shared/auth/permissions/types.ts`
+- `packages/shared/auth/permissions/schemas.ts`
+- `packages/shared/auth/permissions/resolve.ts`
+- `packages/shared/auth/permissions/resolve.test.ts`
+- `packages/shared/auth/permissions/index.ts`
+
+### Files Modified
+- `packages/shared/auth/index.ts` (added permission re-exports)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `FieldPermissionState` — Union type for field access levels: `read_write | read_only | hidden`
+- `ViewPermissions` — Interface defining role/user access and field permissions for a Table View
+- `ViewFieldPermissions` — Interface grouping role restrictions and individual overrides for a view
+- `RoleRestriction` — Interface for Layer 2a per-role field access narrowing
+- `IndividualOverride` — Interface for Layer 2b per-user field access override
+- `FieldPermissionMap` — Map<fieldId, FieldPermissionState> returned by batch resolution
+- `ResolvedPermissionContext` — Interface containing all inputs needed for the 7-step permission cascade
+
+## Session B — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** built
+**Prompt(s):** Prompt 3 (Unit 2)
+
+### Files Created
+- `apps/web/src/data/permissions.ts` — Data access layer for field permissions with Redis cache
+- `apps/web/src/data/__tests__/permissions.test.ts` — Unit tests (17 tests) for permission data layer
+
+### Files Modified
+- `packages/shared/auth/index.ts` — Added `resolveFieldPermission`, `resolveAllFieldPermissions`, `comparePermissionStates` to barrel exports
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `PERMISSION_CACHE_KEY_PATTERN` — Redis key format: `cache:t:{tenantId}:perm:{viewId}:{userId}`
+- `PERMISSION_CACHE_TTL` — 300 second cache TTL for resolved permission maps
+
+### Notes
+- `getFieldPermissions()` bridges the pure resolution engine (Unit 1) with DB queries and Redis caching
+- `invalidatePermissionCache()` supports both targeted (single user) and bulk (SCAN-based) invalidation
+- Fail-open on Redis errors — permission resolution falls back to DB queries
+- No role → all fields hidden (no-access path)
 
 ---
 
