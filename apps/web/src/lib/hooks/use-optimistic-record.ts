@@ -51,6 +51,7 @@ export function useOptimisticRecord(tableId: string, viewId: string | null) {
     mutationFn: async (params: UpdateCellParams) => {
       return updateRecordField({
         recordId: params.recordId,
+        viewId: params.viewId ?? '',
         fieldId: params.fieldId,
         value: params.value,
       });

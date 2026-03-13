@@ -15,6 +15,7 @@ import {
   createTestTable,
   createTestField,
   createTestRecord,
+  createTestView,
   testTenantIsolation,
 } from '@everystack/shared/testing';
 import {
@@ -43,6 +44,11 @@ vi.mock('@/lib/auth-context', () => ({
 
 vi.mock('@everystack/shared/logging', () => ({
   getTraceId: vi.fn().mockReturnValue('test-trace-id'),
+}));
+
+vi.mock('@/lib/auth/field-permissions', () => ({
+  checkFieldPermission: vi.fn().mockResolvedValue(undefined),
+  checkFieldPermissions: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ---------------------------------------------------------------------------
@@ -78,6 +84,11 @@ async function createTestSetup() {
     fieldType: 'text',
     isPrimary: true,
   });
+  const view = await createTestView({
+    tableId: table.id,
+    tenantId: tenant.id,
+    name: 'Default View',
+  });
 
   mockGetAuthContext.mockResolvedValue({
     userId: user.id,
@@ -86,7 +97,7 @@ async function createTestSetup() {
     agencyTenantId: null,
   });
 
-  return { tenant, user, workspace, table, field };
+  return { tenant, user, workspace, table, field, view };
 }
 
 async function createRecordsForTenant(
@@ -206,7 +217,7 @@ describe('bulkUpdateRecordField — integration', () => {
   });
 
   it('updates a field on multiple records', async () => {
-    const { tenant, table, field } = await createTestSetup();
+    const { tenant, table, field, view } = await createTestSetup();
     const recordIds = await createRecordsForTenant(
       tenant.id,
       table.id,
@@ -216,6 +227,7 @@ describe('bulkUpdateRecordField — integration', () => {
 
     const result = await bulkUpdateRecordField({
       recordIds,
+      viewId: view.id,
       fieldId: field.id,
       value: 'Updated',
     });
@@ -261,6 +273,11 @@ describe('bulkUpdateRecordField — integration', () => {
           fieldType: 'text',
           isPrimary: true,
         });
+        const view = await createTestView({
+          tableId: table.id,
+          tenantId,
+          name: 'Isolation View',
+        });
 
         const recordIds = await createRecordsForTenant(
           tenantId,
@@ -278,6 +295,7 @@ describe('bulkUpdateRecordField — integration', () => {
 
         await bulkUpdateRecordField({
           recordIds,
+          viewId: view.id,
           fieldId: field.id,
           value: 'Isolated',
         });
