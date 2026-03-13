@@ -57,7 +57,130 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-<!-- Build Agent appends new session blocks here. -->
+## Session A — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 1–2 (Unit 1)
+
+### Files Created
+- `packages/shared/auth/permissions/types.ts`
+- `packages/shared/auth/permissions/schemas.ts`
+- `packages/shared/auth/permissions/resolve.ts`
+- `packages/shared/auth/permissions/resolve.test.ts`
+- `packages/shared/auth/permissions/index.ts`
+
+### Files Modified
+- `packages/shared/auth/index.ts` (added permission re-exports)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `FieldPermissionState` — Union type for field access levels: `read_write | read_only | hidden`
+- `ViewPermissions` — Interface defining role/user access and field permissions for a Table View
+- `ViewFieldPermissions` — Interface grouping role restrictions and individual overrides for a view
+- `RoleRestriction` — Interface for Layer 2a per-role field access narrowing
+- `IndividualOverride` — Interface for Layer 2b per-user field access override
+- `FieldPermissionMap` — Map<fieldId, FieldPermissionState> returned by batch resolution
+- `ResolvedPermissionContext` — Interface containing all inputs needed for the 7-step permission cascade
+
+## Session B — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 3–4 (Unit 2)
+
+### Files Created
+- `apps/web/src/data/permissions.ts`
+- `apps/web/src/data/permissions.test.ts`
+- `apps/web/src/data/permissions.integration.test.ts`
+
+### Files Modified
+- `packages/shared/testing/factories.ts` (added createTestViewWithPermissions)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+## Session C — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 5–7 (Units 3 + 4)
+
+### Files Created
+- apps/web/src/lib/auth/field-permissions.ts
+- apps/web/src/lib/auth/field-permissions.test.ts
+- apps/web/src/lib/realtime/permission-events.ts
+- apps/web/src/lib/realtime/permission-handlers.ts
+- apps/web/src/lib/realtime/permission-events.test.ts
+
+### Files Modified
+- packages/shared/realtime/events.ts (added PERMISSION_UPDATED)
+- packages/shared/realtime/types.ts (added PermissionUpdatedPayload)
+- apps/web/src/actions/record-actions.ts (added permission checks)
+- apps/web/src/data/records.ts (added filterHiddenFields)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+## Session D — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 8–9 (Unit 5)
+
+### Files Created
+- apps/web/src/hooks/use-field-permissions.ts
+- apps/web/src/hooks/use-field-permissions.test.ts
+- apps/web/src/components/permissions/PermissionProvider.tsx
+
+### Files Modified
+- apps/web/src/components/grid/DataGrid.tsx (permission-aware column filtering)
+- apps/web/src/components/grid/GridCell.tsx (read-only prop)
+- apps/web/src/components/grid/GridHeader.tsx (lock icon for read-only)
+- apps/web/src/components/grid/BulkActionsToolbar.tsx (permission gating)
+- apps/web/src/components/record-view/ (hidden/read-only fields)
+- apps/web/src/components/card-view/ (hidden fields)
+- apps/web/messages/en.json (permission i18n keys)
+- apps/web/messages/es.json (permission i18n keys)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+## Session E — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 10–11 (Unit 6 — phase complete)
+
+### Files Created
+- apps/web/src/actions/permission-actions.ts
+- apps/web/src/actions/permission-actions.test.ts
+- apps/web/src/components/permissions/PermissionStateBadge.tsx
+- apps/web/src/components/permissions/RoleLevelPermissionGrid.tsx
+- apps/web/src/components/permissions/PermissionConfigPanel.tsx
+- apps/web/src/components/permissions/IndividualOverrideView.tsx
+- apps/web/src/components/permissions/IndividualOverrideView.test.tsx
+
+### Files Modified
+- apps/web/messages/en.json (permission config i18n keys)
+- apps/web/messages/es.json (permission config i18n keys)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge
 
 ---
 

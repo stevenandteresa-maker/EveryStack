@@ -26,6 +26,9 @@ import {
 import type { DrizzleTransaction, DbRecord } from '@everystack/shared/db';
 import { getAuthContext } from '@/lib/auth-context';
 import { wrapUnknownError, NotFoundError } from '@/lib/errors';
+import {
+  checkFieldPermission,
+} from '@/lib/auth/field-permissions';
 import { getTraceId } from '@everystack/shared/logging';
 
 // ---------------------------------------------------------------------------
@@ -39,6 +42,7 @@ const createRecordSchema = z.object({
 
 const updateRecordFieldSchema = z.object({
   recordId: z.string().uuid(),
+  viewId: z.string().uuid(),
   fieldId: z.string().uuid(),
   value: z.unknown(),
 });
@@ -120,6 +124,15 @@ export async function updateRecordField(
 ): Promise<DbRecord> {
   const { userId, tenantId } = await getAuthContext();
   const validated = updateRecordFieldSchema.parse(input);
+
+  // Field-level permission check — throws ForbiddenError if denied
+  await checkFieldPermission(
+    tenantId,
+    validated.viewId,
+    userId,
+    validated.fieldId,
+    'read_write',
+  );
 
   const db = getDbForTenant(tenantId, 'write');
 
@@ -492,6 +505,7 @@ const bulkDeleteRecordsSchema = z.object({
 
 const bulkUpdateRecordFieldSchema = z.object({
   recordIds: z.array(z.string().uuid()).min(1).max(MAX_BULK_UPDATE),
+  viewId: z.string().uuid(),
   fieldId: z.string().uuid(),
   value: z.unknown(),
 });
@@ -569,6 +583,15 @@ export async function bulkUpdateRecordField(
 ): Promise<{ count: number }> {
   const { userId, tenantId } = await getAuthContext();
   const validated = bulkUpdateRecordFieldSchema.parse(input);
+
+  // Field-level permission check — all-or-nothing
+  await checkFieldPermission(
+    tenantId,
+    validated.viewId,
+    userId,
+    validated.fieldId,
+    'read_write',
+  );
 
   const db = getDbForTenant(tenantId, 'write');
 

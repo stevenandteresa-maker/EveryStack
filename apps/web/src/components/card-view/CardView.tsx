@@ -56,6 +56,8 @@ export interface CardViewProps {
 
   // Toolbar props (pass-through for shared controls)
   toolbarProps: Omit<GridToolbarProps, 'density' | 'onSetDensity'>;
+  /** Field IDs that are hidden due to field-level permissions. */
+  hiddenFieldIds?: Set<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,8 +186,15 @@ export const CardView = memo(function CardView({
   collapsedGroups,
   onToggleGroupCollapsed,
   toolbarProps,
+  hiddenFieldIds,
 }: CardViewProps) {
   const t = useTranslations('card_view');
+
+  // Filter out permission-hidden fields from visible fields
+  const effectiveVisibleFields = useMemo(() => {
+    if (!hiddenFieldIds || hiddenFieldIds.size === 0) return visibleFields;
+    return visibleFields.filter((f) => !hiddenFieldIds.has(f.id));
+  }, [visibleFields, hiddenFieldIds]);
 
   // Compute groups from records if grouping is active
   const groupTree = useMemo(() => {
@@ -233,7 +242,7 @@ export const CardView = memo(function CardView({
             groups={groupTree}
             fields={fields}
             allFields={fields}
-            visibleFields={visibleFields}
+            visibleFields={effectiveVisibleFields}
             layout={layout}
             cardColumns={cardColumns}
             collapsedGroups={collapsedGroups}
@@ -247,7 +256,7 @@ export const CardView = memo(function CardView({
               <RecordCard
                 key={record.id}
                 record={record}
-                fields={visibleFields}
+                fields={effectiveVisibleFields}
                 layout={layout}
                 onExpandRecord={onExpandRecord}
                 onSaveField={onSaveField}

@@ -8,6 +8,7 @@
  */
 
 import { createHash, randomBytes } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { getDbForTenant } from '../db/client';
 import type { DrizzleClient } from '../db/client';
 import { generateUUIDv7 } from '../db/uuid';
@@ -978,4 +979,119 @@ export async function createTestSection(
   };
 
   return firstRow(await db.insert(sections).values(values).returning());
+}
+
+// ---------------------------------------------------------------------------
+// Tier 16 — View with Permissions (Phase 3A-iii Prompt 4)
+// ---------------------------------------------------------------------------
+
+export interface TestViewWithPermissionsResult {
+  view: View;
+  table: Table;
+  fields: Field[];
+}
+
+/**
+ * Creates a view with field-level permissions pre-configured.
+ * Accepts optional ViewPermissions shape (roleRestrictions, individualOverrides).
+ * Defaults to a view with no restrictions (empty arrays).
+ * Auto-creates parent table and fields if not provided.
+ *
+ * @param options.tenantId - Use an existing tenant
+ * @param options.tableId - Use an existing table (must belong to tenantId)
+ * @param options.fieldCount - Number of fields to create (default: 3)
+ * @param options.fieldOverrides - Partial<NewField>[] for specific field configs
+ * @param options.permissions - ViewPermissions JSONB shape (defaults to empty)
+ * @param options.viewOverrides - Additional overrides for the view itself
+ */
+export async function createTestViewWithPermissions(
+  options?: {
+    tenantId?: string;
+    tableId?: string;
+    fieldCount?: number;
+    fieldOverrides?: Array<Partial<NewField>>;
+    permissions?: {
+      roles?: Array<'team_member' | 'viewer'>;
+      specificUsers?: string[];
+      excludedUsers?: string[];
+      fieldPermissions?: {
+        roleRestrictions?: Array<{
+          tableId: string;
+          role: 'team_member' | 'viewer' | 'manager';
+          fieldId: string;
+          accessState: 'read_write' | 'read_only' | 'hidden';
+        }>;
+        individualOverrides?: Array<{
+          tableId: string;
+          userId: string;
+          fieldId: string;
+          accessState: 'read_write' | 'read_only' | 'hidden';
+        }>;
+      };
+    };
+    viewOverrides?: Partial<NewView>;
+  },
+): Promise<TestViewWithPermissionsResult> {
+  const fieldCount = options?.fieldCount ?? 3;
+
+  // Create table (or reuse provided tableId + tenantId)
+  let tableId = options?.tableId;
+  let resolvedTenantId = options?.tenantId;
+
+  if (!tableId) {
+    const table = await createTestTable(resolvedTenantId ? { tenantId: resolvedTenantId } : undefined);
+    tableId = table.id;
+    resolvedTenantId = table.tenantId;
+  }
+
+  if (!resolvedTenantId) {
+    throw new Error('createTestViewWithPermissions: tenantId is required when tableId is provided');
+  }
+
+  // Create fields
+  const createdFields: Field[] = [];
+  for (let i = 0; i < fieldCount; i++) {
+    const fieldOverride = options?.fieldOverrides?.[i] ?? {};
+    const field = await createTestField({
+      tenantId: resolvedTenantId,
+      tableId,
+      name: `Field ${i + 1}`,
+      sortOrder: i,
+      ...fieldOverride,
+    });
+    createdFields.push(field);
+  }
+
+  // Build permissions JSONB with defaults
+  const permissionsPayload = {
+    roles: options?.permissions?.roles ?? [],
+    specificUsers: options?.permissions?.specificUsers ?? [],
+    excludedUsers: options?.permissions?.excludedUsers ?? [],
+    fieldPermissions: {
+      roleRestrictions: options?.permissions?.fieldPermissions?.roleRestrictions ?? [],
+      individualOverrides: options?.permissions?.fieldPermissions?.individualOverrides ?? [],
+    },
+  };
+
+  // Build view config with all fields visible
+  const columns = createdFields.map((f) => ({
+    fieldId: f.id,
+    visible: true,
+  }));
+
+  const view = await createTestView({
+    tenantId: resolvedTenantId,
+    tableId,
+    config: { columns },
+    permissions: permissionsPayload,
+    ...options?.viewOverrides,
+  });
+
+  // Retrieve the table row for the return value
+  const db = getTestDb();
+  const [tableRow] = await db.select().from(tables).where(
+    eq(tables.id, tableId),
+  );
+
+  return { view, table: tableRow!, fields: createdFields };
 }

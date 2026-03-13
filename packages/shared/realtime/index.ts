@@ -18,3 +18,5 @@ export type {
   SyncConflictResolvedPayload,
   SyncConflictEventPayload,
 } from './sync-conflict-payloads';
+
+export type { PermissionUpdatedPayload } from './permission-payloads';

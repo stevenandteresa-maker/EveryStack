@@ -89,6 +89,8 @@ export interface GridCellProps {
   style?: React.CSSProperties;
   /** Lock info if this field is locked by another user. */
   lockInfo?: FieldLockInfo | null;
+  /** Permission-based read-only (field permission = read_only). */
+  readOnly?: boolean;
 }
 
 export const GridCell = memo(function GridCell({
@@ -104,6 +106,7 @@ export const GridCell = memo(function GridCell({
   validationError,
   style,
   lockInfo,
+  readOnly: permissionReadOnly,
 }: GridCellProps) {
   const canonicalData = record.canonicalData as Record<string, unknown> | null;
   const value = canonicalData?.[field.id] ?? null;
@@ -127,10 +130,11 @@ export const GridCell = memo(function GridCell({
   const ActiveComponent = isEditing && EditComponent ? EditComponent : DisplayComponent;
 
   const isLocked = lockInfo != null;
+  const isEffectivelyReadOnly = field.readOnly || !!permissionReadOnly;
 
   const handleClick = useCallback(() => {
     // Read-only cells or locked by another user: just set active, no edit
-    if (field.readOnly || isLocked) {
+    if (isEffectivelyReadOnly || isLocked) {
       onClick();
       return;
     }
@@ -158,7 +162,7 @@ export const GridCell = memo(function GridCell({
       clickCountRef.current = 0;
       onDoubleClick?.();
     }
-  }, [field.readOnly, isLocked, isDirectToggle, onClick, onDoubleClick]);
+  }, [isEffectivelyReadOnly, isLocked, isDirectToggle, onClick, onDoubleClick]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -166,7 +170,7 @@ export const GridCell = memo(function GridCell({
       if (isEditing) return;
 
       // Read-only cells or locked cells ignore keyboard input
-      if (field.readOnly || isLocked) return;
+      if (isEffectivelyReadOnly || isLocked) return;
 
       // Direct toggle types don't use replace mode
       if (isDirectToggle) return;
@@ -184,7 +188,7 @@ export const GridCell = memo(function GridCell({
         onStartReplace?.();
       }
     },
-    [isActive, isEditing, field.readOnly, isLocked, isDirectToggle, onStartReplace],
+    [isActive, isEditing, isEffectivelyReadOnly, isLocked, isDirectToggle, onStartReplace],
   );
 
   return (
@@ -198,6 +202,7 @@ export const GridCell = memo(function GridCell({
         isActive && !isEditing && 'ring-2 ring-inset z-10',
         isEditing && 'ring-2 ring-inset z-20 shadow-sm',
         validationError && 'ring-2 ring-inset ring-red-500 z-20',
+        isEffectivelyReadOnly && 'cursor-default',
       )}
       style={{
         borderColor: GRID_TOKENS.borderDefault,
@@ -211,7 +216,7 @@ export const GridCell = memo(function GridCell({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      <div className={cn('w-full truncate', isLocked && 'opacity-60')}>
+      <div className={cn('w-full truncate', (isLocked || permissionReadOnly) && 'opacity-75')}>
         <ActiveComponent {...rendererProps} />
       </div>
       {lockInfo && <FieldLockIndicator lockInfo={lockInfo} />}

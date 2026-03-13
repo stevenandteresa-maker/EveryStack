@@ -18,12 +18,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
-      include: ['db/**', 'ai/**', 'sync/**'],
+      include: ['db/**', 'ai/**', 'sync/**', 'auth/**'],
       exclude: ['db/migrations/**', '**/*.sql'],
       thresholds: {
         'db/': { lines: 90, branches: 85 },
         'ai/': { lines: 80, branches: 75 },
         'sync/': { lines: 90, branches: 85 },
+        'auth/permissions/': { lines: 90, branches: 85 },
       },
     },
     globalSetup: ['../../scripts/test-env-setup.ts'],

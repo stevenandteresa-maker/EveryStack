@@ -76,6 +76,8 @@ export interface GridRowProps {
   getFieldLock?: (recordId: string, fieldId: string) => FieldLockInfo | null;
   /** Color for the row presence indicator (left border). Empty string = no presence. */
   presenceColor?: string;
+  /** Field IDs that are read-only due to field-level permissions. */
+  readOnlyFieldIds?: Set<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,6 +121,7 @@ export const GridRow = memo(function GridRow({
   cellTintColors,
   getFieldLock,
   presenceColor,
+  readOnlyFieldIds,
 }: GridRowProps) {
   const t = useTranslations('grid');
   const [isHovered, setIsHovered] = useState(false);
@@ -261,6 +264,7 @@ export const GridRow = memo(function GridRow({
               onStartReplace={() => onCellStartReplace(record.id, field.id)}
               style={{ height: rowHeight }}
               lockInfo={fieldLock}
+              readOnly={readOnlyFieldIds?.has(field.id)}
             />
             {/* Expand icon on primary field hover */}
             {isPrimary && isHovered && (

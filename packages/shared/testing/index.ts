@@ -24,9 +24,10 @@ export {
   createTestSyncConflict,
   createTestSyncedFieldMapping,
   createTestSection,
+  createTestViewWithPermissions,
 } from './factories';
 
-export type { TestApiKeyResult } from './factories';
+export type { TestApiKeyResult, TestViewWithPermissionsResult } from './factories';
 
 export { testTenantIsolation } from './tenant-isolation';
 export type { TenantIsolationOptions } from './tenant-isolation';

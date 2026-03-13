@@ -46,6 +46,8 @@ export interface BulkActionsToolbarProps {
   fields: GridField[];
   /** When true, compress to icon-only strip (used when Record View is open) */
   compact?: boolean;
+  /** Field IDs that are read-only due to field-level permissions. */
+  readOnlyFieldIds?: Set<string>;
   onDelete: () => void;
   onBulkUpdateField: (fieldId: string, value: unknown) => void;
   onDuplicate: () => void;
@@ -61,6 +63,7 @@ export function BulkActionsToolbar({
   selectedCount,
   fields,
   compact = false,
+  readOnlyFieldIds,
   onDelete,
   onBulkUpdateField,
   onDuplicate,
@@ -68,12 +71,16 @@ export function BulkActionsToolbar({
   onClearSelection,
 }: BulkActionsToolbarProps) {
   const t = useTranslations('grid.bulk');
+  const tPerm = useTranslations('grid.permissions');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editFieldId, setEditFieldId] = useState<string>('');
   const [editValue, setEditValue] = useState('');
   const [editPopoverOpen, setEditPopoverOpen] = useState(false);
 
-  const editableFields = fields.filter((f) => !f.readOnly && !f.isSystem);
+  const editableFields = fields.filter(
+    (f) => !f.readOnly && !f.isSystem && !readOnlyFieldIds?.has(f.id),
+  );
+  const hasEditableFields = editableFields.length > 0;
 
   const handleDeleteClick = useCallback(() => {
     if (selectedCount >= 2) {
@@ -224,6 +231,8 @@ export function BulkActionsToolbar({
                 variant="ghost"
                 size="sm"
                 className="h-7 gap-1.5 text-xs"
+                disabled={!hasEditableFields}
+                title={!hasEditableFields ? tPerm('noEditPermission') : undefined}
               >
                 <Pencil className="h-3.5 w-3.5" />
                 {t('edit_field')}

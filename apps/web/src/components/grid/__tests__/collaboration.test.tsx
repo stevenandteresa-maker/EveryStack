@@ -863,7 +863,7 @@ describe('GridCell with lock', () => {
     );
 
     // Check that the cell content is dimmed
-    const cellContent = container.querySelector('.opacity-60');
+    const cellContent = container.querySelector('.opacity-75');
     expect(cellContent).toBeInTheDocument();
   });
 

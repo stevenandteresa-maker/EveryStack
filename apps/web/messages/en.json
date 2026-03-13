@@ -591,6 +591,12 @@
       "field_locked": "This field is being edited by another user",
       "updating": "Updating..."
     },
+    "permissions": {
+      "readOnly": "Read only",
+      "noEditPermission": "You don't have permission to edit this field",
+      "requiresRole": "Requires {role} role",
+      "bulkActionDenied": "You don't have permission to edit {count} of the selected fields"
+    },
     "combined_layout": {
       "grid_area": "Grid area",
       "thread_panel": "Record thread",
@@ -841,5 +847,35 @@
     "execution_errors": "{count, plural, one {# row had errors} other {# rows had errors}}.",
     "execution_download_errors": "Download error report",
     "execution_summary_toast": "Imported {imported} of {total} records. {failed, plural, =0 {} one {1 row had errors.} other {# rows had errors.}}"
+  },
+  "permissions": {
+    "configTitle": "Field Permissions",
+    "tabByRole": "By Role",
+    "tabByPerson": "By Person",
+    "fieldColumn": "Field",
+    "roleManager": "Manager",
+    "roleTeamMember": "Team Member",
+    "roleViewer": "Viewer",
+    "fullAccess": "Full access",
+    "readOnly": "Read only",
+    "hidden": "Hidden",
+    "setAll": "Set all",
+    "configSave": "Save permissions",
+    "configSaved": "Permissions saved",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "discardChanges": "Discard",
+    "saveError": "Failed to save permissions. Please try again.",
+    "stateReadWrite": "Full access",
+    "stateReadOnly": "Read only",
+    "stateHidden": "Hidden",
+    "stateEffective": "Effective",
+    "overrideLabel": "Override",
+    "overrideAdd": "Add override",
+    "overrideRemove": "Remove override",
+    "overrideRoleLevelState": "Role default: {state}",
+    "overrideCeilingBlocked": "Cannot exceed field-level setting",
+    "personSelect": "Select a person",
+    "personNoAccess": "No members have access to this view"
   }
 }

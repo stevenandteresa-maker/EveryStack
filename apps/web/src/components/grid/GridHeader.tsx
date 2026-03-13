@@ -10,7 +10,7 @@
 
 import { memo, useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Lock } from 'lucide-react';
 import type { Header } from '@tanstack/react-table';
 import type { EffectiveRole } from '@everystack/shared/auth';
 import { roleAtLeast } from '@everystack/shared/auth';
@@ -84,6 +84,8 @@ export interface GridHeaderProps {
   columnColors: Record<string, string>;
   sorts: SortLevel[];
   filteredFieldIds: Set<string>;
+  /** Field IDs that are read-only due to field-level permissions. */
+  readOnlyFieldIds?: Set<string>;
   allSelected?: boolean;
   someSelected?: boolean;
   onToggleSelectAll?: () => void;
@@ -115,6 +117,7 @@ export const GridHeader = memo(function GridHeader({
   columnColors,
   sorts,
   filteredFieldIds,
+  readOnlyFieldIds,
   allSelected,
   someSelected,
   onToggleSelectAll,
@@ -199,6 +202,7 @@ export const GridHeader = memo(function GridHeader({
             columnColors={columnColors}
             sortDirection={sortLevel?.direction}
             hasActiveFilter={hasActiveFilter}
+            isReadOnly={readOnlyFieldIds?.has(field.id)}
             onSelect={() => onSelectColumn(field.id)}
             onToggleSort={() => onToggleSort(field.id)}
             onSortAscending={() => onSortAscending(field.id)}
@@ -254,6 +258,7 @@ interface ColumnHeaderProps {
   columnColors: Record<string, string>;
   sortDirection?: 'asc' | 'desc';
   hasActiveFilter: boolean;
+  isReadOnly?: boolean;
   onSelect: () => void;
   onToggleSort: () => void;
   onSortAscending: () => void;
@@ -280,6 +285,7 @@ const ColumnHeader = memo(function ColumnHeader({
   columnColors,
   sortDirection,
   hasActiveFilter,
+  isReadOnly,
   onSelect,
   onToggleSort,
   onSortAscending,
@@ -393,7 +399,19 @@ const ColumnHeader = memo(function ColumnHeader({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="truncate">{field.name}</span>
+          <>
+            <span className="truncate">{field.name}</span>
+            {isReadOnly && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Lock className="shrink-0 h-3 w-3 opacity-50" aria-label={t('cells.read_only')} />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {t('cells.read_only')}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </>
         )}
 
         {/* Filter dot indicator */}

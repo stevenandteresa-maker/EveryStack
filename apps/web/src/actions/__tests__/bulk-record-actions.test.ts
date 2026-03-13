@@ -99,6 +99,11 @@ vi.mock('@/lib/errors', () => ({
   },
 }));
 
+vi.mock('@/lib/auth/field-permissions', () => ({
+  checkFieldPermission: vi.fn().mockResolvedValue(undefined),
+  checkFieldPermissions: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ---------------------------------------------------------------------------
 // Import after mocks
 // ---------------------------------------------------------------------------
@@ -175,6 +180,7 @@ describe('bulkUpdateRecordField', () => {
   it('updates a field on multiple records and returns count', async () => {
     const result = await bulkUpdateRecordField({
       recordIds: ['a0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000002'],
+      viewId: 'a0000000-0000-4000-8000-000000000099',
       fieldId: 'a0000000-0000-4000-8000-000000000001',
       value: 'new value',
     });
@@ -196,6 +202,7 @@ describe('bulkUpdateRecordField', () => {
     await expect(
       bulkUpdateRecordField({
         recordIds: tooMany,
+        viewId: 'a0000000-0000-4000-8000-000000000099',
         fieldId: 'a0000000-0000-4000-8000-000000000001',
         value: 'test',
       }),

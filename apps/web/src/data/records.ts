@@ -17,6 +17,8 @@ import {
 } from '@everystack/shared/db';
 import type { DbRecord, SQL } from '@everystack/shared/db';
 import { NotFoundError } from '@/lib/errors';
+import { filterHiddenFields } from '@/lib/auth/field-permissions';
+import { getFieldPermissions } from '@/data/permissions';
 import { getQueue } from '@/lib/queue';
 import type { SortLevel } from '@/lib/types/grid';
 import type {
@@ -41,6 +43,10 @@ export interface GetRecordsByTableOptions {
   filters?: FilterConfig;
   /** Current user ID for $me token resolution in People filters. */
   currentUserId?: string;
+  /** View ID for field-level permission filtering. When set with userId, hidden fields are stripped. */
+  viewId?: string;
+  /** User ID for field-level permission filtering. Required when viewId is provided. */
+  userId?: string;
 }
 
 export interface PaginatedRecords {
@@ -102,8 +108,25 @@ export async function getRecordsByTable(
 
   const totalCount = Number(countResult[0]?.value ?? 0);
 
+  // Strip hidden fields from canonical_data when view-level permissions apply
+  let filteredRows = rows;
+  if (options?.viewId && options?.userId) {
+    const permissionMap = await getFieldPermissions(
+      tenantId,
+      options.viewId,
+      options.userId,
+    );
+    filteredRows = rows.map((row) => ({
+      ...row,
+      canonicalData: filterHiddenFields(
+        row.canonicalData as Record<string, unknown>,
+        permissionMap,
+      ),
+    }));
+  }
+
   return {
-    records: rows,
+    records: filteredRows,
     totalCount,
     hasMore: offset + rows.length < totalCount,
   };
@@ -414,6 +437,7 @@ export function buildFilterClauses(
 export async function getRecordById(
   tenantId: string,
   recordId: string,
+  options?: { viewId?: string; userId?: string },
 ): Promise<DbRecord> {
   const db = getDbForTenant(tenantId, 'read');
 
@@ -433,6 +457,22 @@ export async function getRecordById(
 
   if (!row) {
     throw new NotFoundError('Record not found');
+  }
+
+  // Strip hidden fields from canonical_data when view-level permissions apply
+  if (options?.viewId && options?.userId) {
+    const permissionMap = await getFieldPermissions(
+      tenantId,
+      options.viewId,
+      options.userId,
+    );
+    return {
+      ...row,
+      canonicalData: filterHiddenFields(
+        row.canonicalData as Record<string, unknown>,
+        permissionMap,
+      ),
+    };
   }
 
   return row;
