@@ -105,17 +105,17 @@ When a unit moves to `failed-review`:
   - Branch: `build/3a-iii-field-permissions`
   - Notes: Verified 2026-03-13
 
-- [ ] **Unit 5: Grid/View Permission-Aware Rendering** — `in-progress`
+- [x] **Unit 5: Grid/View Permission-Aware Rendering** — `passed-review`
   - Produces: `useFieldPermissions()` hook, `PermissionProvider` context, `usePermission()` hook; updated `DataGrid`, `GridCell`, `RecordView`, `CardView`, `BulkActionsToolbar` with permission filtering
   - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`, Unit 4 `handlePermissionUpdated`
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 6: Permission Configuration UI** — `pending`
+- [ ] **Unit 6: Permission Configuration UI** — `in-progress`
   - Produces: `RoleLevelPermissionGrid`, `IndividualOverrideView`, `PermissionConfigPanel`, `PermissionStateBadge` components; `updateViewPermissions()`, `updateFieldGlobalPermissions()` server actions
   - Consumes: Unit 1 types + schemas, Unit 2 data access + cache, Unit 4 `publishPermissionUpdate()`, Unit 5 `PermissionProvider`
-  - Branch:
-  - Notes:
+  - Branch: `build/3a-iii-field-permissions`
+  - Notes: Prompt 10 complete — server actions, PermissionStateBadge, RoleLevelPermissionGrid, PermissionConfigPanel created. IndividualOverrideView placeholder for Prompt 11.
 
 ---
 

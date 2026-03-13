@@ -847,5 +847,23 @@
     "execution_errors": "{count, plural, one {# fila tuvo errores} other {# filas tuvieron errores}}.",
     "execution_download_errors": "Descargar informe de errores",
     "execution_summary_toast": "Se importaron {imported} de {total} registros. {failed, plural, =0 {} one {1 fila tuvo errores.} other {# filas tuvieron errores.}}"
+  },
+  "permissions": {
+    "configTitle": "Permisos de campos",
+    "tabByRole": "Por rol",
+    "tabByPerson": "Por persona",
+    "fieldColumn": "Campo",
+    "roleManager": "Gerente",
+    "roleTeamMember": "Miembro del equipo",
+    "roleViewer": "Visor",
+    "fullAccess": "Acceso completo",
+    "readOnly": "Solo lectura",
+    "hidden": "Oculto",
+    "setAll": "Establecer todo",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando…",
+    "discardChanges": "Descartar",
+    "saveError": "Error al guardar permisos. Inténtalo de nuevo.",
+    "individualOverridesPlaceholder": "Las excepciones individuales estarán disponibles en una próxima actualización."
   }
 }

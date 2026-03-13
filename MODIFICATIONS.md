@@ -133,17 +133,23 @@ built → failed-review → built (retry after fixes)
 ## Session D — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** built
-**Prompt(s):** Prompt 8 (Unit 5 — PermissionProvider context)
+**Status:** passed-review
+**Prompt(s):** Prompts 8–9 (Unit 5)
 
 ### Files Created
-- `apps/web/src/components/permissions/PermissionProvider.tsx`
-- `apps/web/src/components/permissions/__tests__/PermissionProvider.test.tsx`
-- `apps/web/src/lib/hooks/use-field-permissions.ts`
-- `apps/web/src/lib/hooks/__tests__/use-field-permissions.test.ts`
+- apps/web/src/hooks/use-field-permissions.ts
+- apps/web/src/hooks/use-field-permissions.test.ts
+- apps/web/src/components/permissions/PermissionProvider.tsx
 
 ### Files Modified
-- None
+- apps/web/src/components/grid/DataGrid.tsx (permission-aware column filtering)
+- apps/web/src/components/grid/GridCell.tsx (read-only prop)
+- apps/web/src/components/grid/GridHeader.tsx (lock icon for read-only)
+- apps/web/src/components/grid/BulkActionsToolbar.tsx (permission gating)
+- apps/web/src/components/record-view/ (hidden/read-only fields)
+- apps/web/src/components/card-view/ (hidden fields)
+- apps/web/messages/en.json (permission i18n keys)
+- apps/web/messages/es.json (permission i18n keys)
 
 ### Schema Changes
 - None
@@ -155,22 +161,19 @@ built → failed-review → built (retry after fixes)
 
 **Date:** 2026-03-13
 **Status:** built
-**Prompt(s):** Prompt 9 (Unit 6 — Permission-aware rendering)
+**Prompt(s):** Prompt 10 (Unit 6 — Part 1)
 
 ### Files Created
-- None
+- `apps/web/src/actions/permission-actions.ts` — Server actions: updateViewPermissions, updateFieldGlobalPermissions
+- `apps/web/src/actions/__tests__/permission-actions.test.ts` — 13 tests for permission server actions
+- `apps/web/src/components/permissions/PermissionStateBadge.tsx` — Visual badge for read_write/read_only/hidden states
+- `apps/web/src/components/permissions/RoleLevelPermissionGrid.tsx` — Role-level permission grid with click-to-cycle and bulk set
+- `apps/web/src/components/permissions/PermissionConfigPanel.tsx` — Tab container (By Role / By Person)
 
 ### Files Modified
-- `apps/web/src/components/grid/GridCell.tsx` — Added `readOnly` prop for permission-based read-only, cursor-default and opacity-75 styling
-- `apps/web/src/components/grid/GridRow.tsx` — Added `readOnlyFieldIds` prop, passes to GridCell
-- `apps/web/src/components/grid/GridHeader.tsx` — Added `readOnlyFieldIds` prop, shows Lock icon on read-only column headers
-- `apps/web/src/components/grid/DataGrid.tsx` — Added `readOnlyFieldIds` prop, passes to GridHeader, BulkActionsToolbar, and GridRow
-- `apps/web/src/components/grid/BulkActionsToolbar.tsx` — Added `readOnlyFieldIds` prop, filters editable fields list, disables edit button with title when no writable fields
-- `apps/web/src/components/record-view/RecordViewCanvas.tsx` — Added `hiddenFieldIds` and `readOnlyFieldIds` props, filters hidden fields from layout, passes readOnly to FieldRenderer
-- `apps/web/src/components/card-view/CardView.tsx` — Added `hiddenFieldIds` prop, filters hidden fields from visible fields
-- `apps/web/src/components/grid/__tests__/collaboration.test.tsx` — Updated opacity class assertion from `opacity-60` to `opacity-75`
-- `apps/web/messages/en.json` — Added `grid.permissions` i18n keys (readOnly, noEditPermission, requiresRole, bulkActionDenied)
-- `apps/web/messages/es.json` — Added `grid.permissions` i18n keys (Spanish translations)
+- `apps/web/messages/en.json` — Added `permissions` namespace (18 keys)
+- `apps/web/messages/es.json` — Added `permissions` namespace (18 keys)
+- `TASK-STATUS.md` — Updated Unit 6 notes
 
 ### Schema Changes
 - None

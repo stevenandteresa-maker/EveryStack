@@ -847,5 +847,23 @@
     "execution_errors": "{count, plural, one {# row had errors} other {# rows had errors}}.",
     "execution_download_errors": "Download error report",
     "execution_summary_toast": "Imported {imported} of {total} records. {failed, plural, =0 {} one {1 row had errors.} other {# rows had errors.}}"
+  },
+  "permissions": {
+    "configTitle": "Field Permissions",
+    "tabByRole": "By Role",
+    "tabByPerson": "By Person",
+    "fieldColumn": "Field",
+    "roleManager": "Manager",
+    "roleTeamMember": "Team Member",
+    "roleViewer": "Viewer",
+    "fullAccess": "Full access",
+    "readOnly": "Read only",
+    "hidden": "Hidden",
+    "setAll": "Set all",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "discardChanges": "Discard",
+    "saveError": "Failed to save permissions. Please try again.",
+    "individualOverridesPlaceholder": "Individual overrides will be available in a future update."
   }
 }
