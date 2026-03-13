@@ -74,7 +74,42 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
-_(No active sub-phases)_
+### 3B-i — Cross-Linking Engine
+
+**Started:** 2026-03-13
+**Completed:** In progress
+
+#### Subdivision Units
+
+- [ ] **Unit 1: Cross-Link Types, Validation Schemas & Registry** — `pending`
+  - Produces: `RelationshipType`, `LinkScopeFilter`, `CrossLinkFieldValue`, `CROSS_LINK_LIMITS` types/constants; `createCrossLinkSchema`, `updateCrossLinkSchema`, `linkScopeFilterSchema` Zod schemas; `linked_record` FieldTypeRegistry registration; `extractCrossLinkField()`, `setCrossLinkField()` utilities — all from `packages/shared/sync/cross-link-*.ts`
+  - Consumes: None — first unit. Uses existing `FieldTypeRegistry`, Drizzle schema types
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `pending`
+  - Produces: `createCrossLinkDefinition`, `updateCrossLinkDefinition`, `deleteCrossLinkDefinition`, `linkRecords`, `unlinkRecords` server actions; `getCrossLinkDefinition`, `listCrossLinkDefinitions`, `getCrossLinksByTarget`, `validateLinkTarget`, `checkCrossLinkPermission` data functions; `createTestCrossLinkWithIndex` factory
+  - Consumes: Unit 1 types, schemas, utilities
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 3: Query-Time Resolution & Permission Intersection** — `pending`
+  - Produces: `resolveLinkedRecordsL0`, `resolveLinkedRecordsL1`, `resolveLinkedRecordsL2` resolution functions; `LinkedRecordTree` type; `resolveLinkedRecordPermissions`, `filterLinkedRecordByPermissions` permission functions — from `apps/web/src/data/cross-link-resolution.ts`
+  - Consumes: Unit 1 types + utilities, Unit 2 `getCrossLinkDefinition()`
+  - Branch:
+  - Notes: Parallel with Units 4 and 5
+
+- [ ] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `pending`
+  - Produces: `cross-link` BullMQ queue + job types; `processCrossLinkCascade`, `processIndexRebuild` processors; `enqueueCascadeJob`, `checkCascadeBackpressure` helpers; `scheduleIntegrityCheck` — from `apps/worker/src/processors/cross-link/`
+  - Consumes: Unit 1 types + utilities, Unit 2 cross-link index data
+  - Branch:
+  - Notes: Parallel with Units 3 and 5
+
+- [ ] **Unit 5: Link Picker UI** — `pending`
+  - Produces: `LinkPicker`, `LinkPickerProvider`, `LinkedRecordChip`, `LinkPickerSearchResults`, `LinkPickerInlineCreate` components; `useLinkPicker` hook; `searchLinkableRecords`, `getRecentLinkedRecords` data functions — from `apps/web/src/components/cross-links/`
+  - Consumes: Unit 1 types, Unit 2 CRUD actions, Unit 3 permission resolution
+  - Branch:
+  - Notes: Parallel with Units 3 and 4
 
 ---
 

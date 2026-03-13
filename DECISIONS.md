@@ -42,4 +42,14 @@ Was this a choice between 2+ viable architectural approaches?
 
 ## Log
 
+### 2026-03-13 — 3B-i — Exclude Impact Analysis & Convert to Native Table from build scope
+
+**Decision:** Impact Analysis and Convert to Native Table are excluded from the 3B-i build despite appearing in the phase division doc's Includes list, because `cross-linking.md` explicitly marks both sections as Post-MVP per GLOSSARY.md scope labels.
+
+**Rationale:** The reference doc was updated on 2026-03-13 with scope labels: "Impact Analysis *(Post-MVP)*" (lines 496–531) and "Convert to Native Table *(Post-MVP)*" (lines 533–582). Per CLAUDE.md hierarchy rule, GLOSSARY.md is the ultimate authority for scope definitions, and reference docs are authoritative on architecture and behavior. The phase division doc predates the scope label update and included these features in error.
+
+**Alternatives rejected:** Building impact analysis and convert-to-native as additional units — rejected because GLOSSARY.md is the scope authority and both are clearly labeled Post-MVP. Building stubs/extension points only — rejected because the subdivision strategy says don't build post-MVP extensions; the cross-link data model already has the schema hooks needed.
+
+**Affects:** 3B-i subdivision doc (5 units instead of 7), phase division doc (Includes list is stale for these two items).
+
 <!-- Newest entries go here, above older entries. -->
