@@ -339,3 +339,19 @@ export type {
   CreateSchemaChangeInput,
   SyncSchemaChangeRow,
 } from './sync-schema-changes';
+
+// Cross-link types and utilities
+export type {
+  RelationshipType,
+  LinkScopeOperator,
+  LinkScopeCondition,
+  LinkScopeFilter,
+  LinkedRecordEntry as CrossLinkLinkedRecordEntry,
+  CrossLinkFieldValue,
+} from './cross-link-types';
+export {
+  RELATIONSHIP_TYPES,
+  CROSS_LINK_LIMITS,
+  extractCrossLinkField,
+  setCrossLinkField,
+} from './cross-link-types';

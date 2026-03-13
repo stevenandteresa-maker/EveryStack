@@ -20,8 +20,12 @@ import {
   crossLinks,
   crossLinkIndex,
   fields,
+  tables,
 } from '@everystack/shared/db';
 import type { DbRecord, Field, CrossLink } from '@everystack/shared/db';
+import { resolveEffectiveRole } from '@everystack/shared/auth';
+import { roleAtLeast } from '@everystack/shared/auth';
+import type { LinkScopeFilter, LinkScopeCondition } from '@everystack/shared/sync';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -217,4 +221,300 @@ export async function getLinkedRecordCount(
     );
 
   return Number(result[0]?.value ?? 0);
+}
+
+// ---------------------------------------------------------------------------
+// getCrossLinkDefinition
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch a single cross-link definition by ID, tenant-scoped.
+ */
+export async function getCrossLinkDefinition(
+  tenantId: string,
+  crossLinkId: string,
+): Promise<CrossLink | null> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  const rows = await db
+    .select()
+    .from(crossLinks)
+    .where(
+      and(
+        eq(crossLinks.tenantId, tenantId),
+        eq(crossLinks.id, crossLinkId),
+      ),
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// listCrossLinkDefinitions
+// ---------------------------------------------------------------------------
+
+/**
+ * List all cross-link definitions where source_table_id = tableId,
+ * ordered by created_at.
+ */
+export async function listCrossLinkDefinitions(
+  tenantId: string,
+  tableId: string,
+): Promise<CrossLink[]> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  return db
+    .select()
+    .from(crossLinks)
+    .where(
+      and(
+        eq(crossLinks.tenantId, tenantId),
+        eq(crossLinks.sourceTableId, tableId),
+      ),
+    )
+    .orderBy(asc(crossLinks.createdAt));
+}
+
+// ---------------------------------------------------------------------------
+// getCrossLinksByTarget
+// ---------------------------------------------------------------------------
+
+/**
+ * Reverse lookup: all cross-link definitions pointing at targetTableId.
+ */
+export async function getCrossLinksByTarget(
+  tenantId: string,
+  targetTableId: string,
+): Promise<CrossLink[]> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  return db
+    .select()
+    .from(crossLinks)
+    .where(
+      and(
+        eq(crossLinks.tenantId, tenantId),
+        eq(crossLinks.targetTableId, targetTableId),
+      ),
+    )
+    .orderBy(asc(crossLinks.createdAt));
+}
+
+// ---------------------------------------------------------------------------
+// validateLinkTarget
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluate a single LinkScopeCondition against a record's canonical data.
+ */
+function evaluateScopeCondition(
+  condition: LinkScopeCondition,
+  canonicalData: Record<string, unknown>,
+): boolean {
+  const fieldValue = canonicalData[condition.field_id];
+
+  switch (condition.operator) {
+    case 'is_empty':
+      return fieldValue === undefined || fieldValue === null || fieldValue === '';
+    case 'is_not_empty':
+      return fieldValue !== undefined && fieldValue !== null && fieldValue !== '';
+    case 'eq':
+      return fieldValue === condition.value;
+    case 'neq':
+      return fieldValue !== condition.value;
+    case 'in':
+      return Array.isArray(condition.value) && condition.value.includes(fieldValue);
+    case 'not_in':
+      return Array.isArray(condition.value) && !condition.value.includes(fieldValue);
+    case 'contains': {
+      if (typeof fieldValue === 'string' && typeof condition.value === 'string') {
+        return fieldValue.includes(condition.value);
+      }
+      if (Array.isArray(fieldValue)) {
+        return fieldValue.includes(condition.value);
+      }
+      return false;
+    }
+    default:
+      return false;
+  }
+}
+
+/**
+ * Evaluate a LinkScopeFilter against a record's canonical data.
+ */
+function evaluateScopeFilter(
+  filter: LinkScopeFilter,
+  canonicalData: Record<string, unknown>,
+): boolean {
+  if (filter.conditions.length === 0) return true;
+
+  if (filter.logic === 'and') {
+    return filter.conditions.every((c: LinkScopeCondition) => evaluateScopeCondition(c, canonicalData));
+  }
+  return filter.conditions.some((c: LinkScopeCondition) => evaluateScopeCondition(c, canonicalData));
+}
+
+/**
+ * Validates whether a target record is a valid link target for a cross-link.
+ *
+ * Checks:
+ * - Target record exists and belongs to correct target table
+ * - Target record is not archived
+ * - Scope filter passes
+ * - Same-record self-link blocked
+ * - Link count under max_links_per_record limit
+ */
+export async function validateLinkTarget(
+  tenantId: string,
+  crossLinkId: string,
+  targetRecordId: string,
+  sourceRecordId?: string,
+): Promise<{ valid: boolean; reason?: string }> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  // Fetch the cross-link definition
+  const definition = await getCrossLinkDefinition(tenantId, crossLinkId);
+  if (!definition) {
+    return { valid: false, reason: 'Cross-link definition not found' };
+  }
+
+  // Same-record self-link check
+  if (sourceRecordId && sourceRecordId === targetRecordId) {
+    return { valid: false, reason: 'A record cannot link to itself' };
+  }
+
+  // Fetch target record
+  const targetRows = await db
+    .select()
+    .from(records)
+    .where(
+      and(
+        eq(records.tenantId, tenantId),
+        eq(records.id, targetRecordId),
+      ),
+    )
+    .limit(1);
+
+  const targetRecord = targetRows[0];
+  if (!targetRecord) {
+    return { valid: false, reason: 'Target record does not exist' };
+  }
+
+  // Verify target belongs to the correct table
+  if (targetRecord.tableId !== definition.targetTableId) {
+    return { valid: false, reason: 'Target record does not belong to the target table' };
+  }
+
+  // Check archived
+  if (targetRecord.archivedAt !== null) {
+    return { valid: false, reason: 'Target record is archived' };
+  }
+
+  // Evaluate scope filter
+  if (definition.linkScopeFilter) {
+    const filter = definition.linkScopeFilter as unknown as LinkScopeFilter;
+    if (filter.conditions && filter.conditions.length > 0) {
+      const passes = evaluateScopeFilter(filter, targetRecord.canonicalData);
+      if (!passes) {
+        return { valid: false, reason: 'Target record does not match scope filter' };
+      }
+    }
+  }
+
+  // Check link count limit (count existing links for the source record)
+  if (sourceRecordId) {
+    const countResult = await db
+      .select({ value: count() })
+      .from(crossLinkIndex)
+      .where(
+        and(
+          eq(crossLinkIndex.tenantId, tenantId),
+          eq(crossLinkIndex.crossLinkId, crossLinkId),
+          eq(crossLinkIndex.sourceRecordId, sourceRecordId),
+        ),
+      );
+
+    const currentCount = Number(countResult[0]?.value ?? 0);
+    if (currentCount >= definition.maxLinksPerRecord) {
+      return { valid: false, reason: 'Link count exceeds max_links_per_record limit' };
+    }
+  }
+
+  return { valid: true };
+}
+
+// ---------------------------------------------------------------------------
+// checkCrossLinkPermission
+// ---------------------------------------------------------------------------
+
+/**
+ * Check whether a user has permission for a cross-link operation.
+ *
+ * - `create` / `structural`: Must be Manager of both tables (same workspace),
+ *   or Admin/Owner (cross-workspace).
+ * - `operational`: Must be Manager of either table.
+ *
+ * Uses resolveEffectiveRole() on both source and target table workspaces.
+ */
+export async function checkCrossLinkPermission(
+  tenantId: string,
+  userId: string,
+  sourceTableId: string,
+  targetTableId: string,
+  operation: 'create' | 'structural' | 'operational',
+): Promise<boolean> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  // Look up workspaces for both tables
+  const [sourceTable] = await db
+    .select({ workspaceId: tables.workspaceId })
+    .from(tables)
+    .where(
+      and(
+        eq(tables.tenantId, tenantId),
+        eq(tables.id, sourceTableId),
+      ),
+    )
+    .limit(1);
+
+  const [targetTable] = await db
+    .select({ workspaceId: tables.workspaceId })
+    .from(tables)
+    .where(
+      and(
+        eq(tables.tenantId, tenantId),
+        eq(tables.id, targetTableId),
+      ),
+    )
+    .limit(1);
+
+  if (!sourceTable || !targetTable) return false;
+
+  // Resolve effective roles on each workspace
+  const sourceRole = await resolveEffectiveRole(userId, tenantId, sourceTable.workspaceId);
+  const targetRole = await resolveEffectiveRole(userId, tenantId, targetTable.workspaceId);
+
+  if (operation === 'operational') {
+    // Manager of either table suffices
+    const sourceOk = sourceRole !== null && roleAtLeast(sourceRole, 'manager');
+    const targetOk = targetRole !== null && roleAtLeast(targetRole, 'manager');
+    return sourceOk || targetOk;
+  }
+
+  // create / structural — need authority over both sides
+  const sameWorkspace = sourceTable.workspaceId === targetTable.workspaceId;
+
+  if (sameWorkspace) {
+    // Manager of workspace (which covers both tables) is sufficient
+    return sourceRole !== null && roleAtLeast(sourceRole, 'manager');
+  }
+
+  // Cross-workspace: Admin or Owner required
+  // Admin/Owner roles are tenant-level, so resolveEffectiveRole returns them
+  // regardless of workspace — checking on either workspace works
+  const highestRole = sourceRole ?? targetRole;
+  if (!highestRole) return false;
+  return roleAtLeast(highestRole, 'admin');
 }

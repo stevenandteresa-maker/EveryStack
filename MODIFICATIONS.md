@@ -57,6 +57,25 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-13
+**Status:** built
+**Prompt(s):** Prompt 3 (Unit 2 — data functions)
+
+### Files Modified
+- `apps/web/src/data/cross-links.ts` — Added getCrossLinkDefinition, listCrossLinkDefinitions, getCrossLinksByTarget, validateLinkTarget, checkCrossLinkPermission data functions
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts` — Extended with integration tests for all 5 new data functions + tenant isolation tests
+- `packages/shared/sync/index.ts` — Added cross-link type and utility re-exports from barrel
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session A — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-13

@@ -6,11 +6,21 @@ import {
   createTestRecord,
   createTestCrossLink,
   createTestUser,
+  createTestTenantMembership,
+  createTestWorkspaceMembership,
   testTenantIsolation,
 } from '@everystack/shared/testing';
 import { getDbForTenant, crossLinkIndex } from '@everystack/shared/db';
 import { generateUUIDv7 } from '@everystack/shared/db';
-import { getLinkedRecords, getLinkedRecordCount } from '../cross-links';
+import {
+  getLinkedRecords,
+  getLinkedRecordCount,
+  getCrossLinkDefinition,
+  listCrossLinkDefinitions,
+  getCrossLinksByTarget,
+  validateLinkTarget,
+  checkCrossLinkPermission,
+} from '../cross-links';
 
 describe('Cross-Link Data Functions', () => {
   // -------------------------------------------------------------------------
@@ -373,6 +383,829 @@ describe('Cross-Link Data Functions', () => {
         sourceField.id,
       );
       expect(count).toBe(0);
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // getCrossLinkDefinition
+  // -------------------------------------------------------------------------
+
+  describe('getCrossLinkDefinition', () => {
+    it('returns correct definition by ID', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const targetDisplayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: targetDisplayField.id,
+        createdBy: user.id,
+      });
+
+      const result = await getCrossLinkDefinition(tenant.id, crossLink.id);
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe(crossLink.id);
+      expect(result!.sourceTableId).toBe(sourceTable.id);
+      expect(result!.targetTableId).toBe(targetTable.id);
+    }, 30_000);
+
+    it('returns null for wrong tenant', async () => {
+      const tenant1 = await createTestTenant();
+      const tenant2 = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant1.id });
+      const sourceField = await createTestField({
+        tenantId: tenant1.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant1.id });
+      const targetDisplayField = await createTestField({
+        tenantId: tenant1.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant1.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: targetDisplayField.id,
+        createdBy: user.id,
+      });
+
+      const result = await getCrossLinkDefinition(tenant2.id, crossLink.id);
+      expect(result).toBeNull();
+    }, 30_000);
+
+    it('returns null for non-existent ID', async () => {
+      const tenant = await createTestTenant();
+      const result = await getCrossLinkDefinition(tenant.id, generateUUIDv7());
+      expect(result).toBeNull();
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // listCrossLinkDefinitions
+  // -------------------------------------------------------------------------
+
+  describe('listCrossLinkDefinitions', () => {
+    it('returns only definitions for specified table', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const table1 = await createTestTable({ tenantId: tenant.id });
+      const table2 = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      const field1 = await createTestField({
+        tenantId: tenant.id,
+        tableId: table1.id,
+        name: 'Link1',
+        fieldType: 'cross_link',
+      });
+      const field2 = await createTestField({
+        tenantId: tenant.id,
+        tableId: table2.id,
+        name: 'Link2',
+        fieldType: 'cross_link',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: table1.id,
+        sourceFieldId: field1.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: table2.id,
+        sourceFieldId: field2.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const result = await listCrossLinkDefinitions(tenant.id, table1.id);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.sourceTableId).toBe(table1.id);
+    }, 30_000);
+
+    it('returns empty array when no definitions exist', async () => {
+      const tenant = await createTestTenant();
+      const result = await listCrossLinkDefinitions(tenant.id, generateUUIDv7());
+      expect(result).toEqual([]);
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // getCrossLinksByTarget
+  // -------------------------------------------------------------------------
+
+  describe('getCrossLinksByTarget', () => {
+    it('returns reverse lookups correctly', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable1 = await createTestTable({ tenantId: tenant.id });
+      const sourceTable2 = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      const field1 = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable1.id,
+        name: 'Link1',
+        fieldType: 'cross_link',
+      });
+      const field2 = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable2.id,
+        name: 'Link2',
+        fieldType: 'cross_link',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable1.id,
+        sourceFieldId: field1.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+      await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable2.id,
+        sourceFieldId: field2.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const result = await getCrossLinksByTarget(tenant.id, targetTable.id);
+      expect(result).toHaveLength(2);
+      const sourceTableIds = result.map((cl) => cl.sourceTableId);
+      expect(sourceTableIds).toContain(sourceTable1.id);
+      expect(sourceTableIds).toContain(sourceTable2.id);
+    }, 30_000);
+
+    it('returns empty array when no definitions point at table', async () => {
+      const tenant = await createTestTenant();
+      const result = await getCrossLinksByTarget(tenant.id, generateUUIDv7());
+      expect(result).toEqual([]);
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // validateLinkTarget
+  // -------------------------------------------------------------------------
+
+  describe('validateLinkTarget', () => {
+    it('validates a valid target record', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const targetRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        targetRecord.id,
+      );
+      expect(result.valid).toBe(true);
+      expect(result.reason).toBeUndefined();
+    }, 30_000);
+
+    it('rejects archived records', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const targetRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        archivedAt: new Date(),
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        targetRecord.id,
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Target record is archived');
+    }, 30_000);
+
+    it('rejects same-record self-links', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const table = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: table.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      // Same-table cross-link (allowed), but same-record self-link blocked
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: table.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: table.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const record = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: table.id,
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        record.id,
+        record.id, // same record as source
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('A record cannot link to itself');
+    }, 30_000);
+
+    it('rejects records that fail scope filter', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const statusField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Status',
+        fieldType: 'text',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+        linkScopeFilter: {
+          conditions: [
+            { field_id: statusField.id, operator: 'in', value: ['Active', 'Pending'] },
+          ],
+          logic: 'and',
+        },
+      });
+
+      // Record with status = "Closed" should fail the scope filter
+      const targetRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [statusField.id]: 'Closed' },
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        targetRecord.id,
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Target record does not match scope filter');
+    }, 30_000);
+
+    it('accepts records that pass scope filter', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const statusField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Status',
+        fieldType: 'text',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+        linkScopeFilter: {
+          conditions: [
+            { field_id: statusField.id, operator: 'in', value: ['Active', 'Pending'] },
+          ],
+          logic: 'and',
+        },
+      });
+
+      const targetRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [statusField.id]: 'Active' },
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        targetRecord.id,
+      );
+      expect(result.valid).toBe(true);
+    }, 30_000);
+
+    it('rejects non-existent records', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        generateUUIDv7(),
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Target record does not exist');
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // checkCrossLinkPermission
+  // -------------------------------------------------------------------------
+
+  describe('checkCrossLinkPermission', () => {
+    it('allows create when user is Manager of both tables in same workspace', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+      const workspace = (await createTestTable({ tenantId: tenant.id }));
+
+      // Create tables in the same workspace
+      const sourceTable = await createTestTable({
+        tenantId: tenant.id,
+        workspaceId: workspace.workspaceId,
+      });
+      const targetTable = await createTestTable({
+        tenantId: tenant.id,
+        workspaceId: workspace.workspaceId,
+      });
+
+      // Grant tenant membership and workspace Manager role
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'member',
+      });
+      await createTestWorkspaceMembership({
+        tenantId: tenant.id,
+        workspaceId: workspace.workspaceId,
+        userId: user.id,
+        role: 'manager',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'create',
+      );
+      expect(result).toBe(true);
+    }, 30_000);
+
+    it('denies create when user is only team_member', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+      });
+
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'member',
+      });
+      await createTestWorkspaceMembership({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+        userId: user.id,
+        role: 'team_member',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'create',
+      );
+      expect(result).toBe(false);
+    }, 30_000);
+
+    it('allows create cross-workspace when user is Admin', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      // Admin is tenant-level — no workspace membership needed
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'admin',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'create',
+      );
+      expect(result).toBe(true);
+    }, 30_000);
+
+    it('denies create cross-workspace when user is Manager of only one workspace', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      // Make sure tables are in different workspaces (default behavior of createTestTable)
+      expect(sourceTable.workspaceId).not.toBe(targetTable.workspaceId);
+
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'member',
+      });
+      await createTestWorkspaceMembership({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+        userId: user.id,
+        role: 'manager',
+      });
+      // No membership on target workspace
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'create',
+      );
+      expect(result).toBe(false);
+    }, 30_000);
+
+    it('allows operational when Manager of either table', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'member',
+      });
+      // Manager of source workspace only
+      await createTestWorkspaceMembership({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+        userId: user.id,
+        role: 'manager',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'operational',
+      );
+      expect(result).toBe(true);
+    }, 30_000);
+
+    it('denies operational when viewer only', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+      });
+
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'member',
+      });
+      await createTestWorkspaceMembership({
+        tenantId: tenant.id,
+        workspaceId: sourceTable.workspaceId,
+        userId: user.id,
+        role: 'viewer',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'operational',
+      );
+      expect(result).toBe(false);
+    }, 30_000);
+
+    it('allows structural for Owner', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+
+      await createTestTenantMembership({
+        tenantId: tenant.id,
+        userId: user.id,
+        role: 'owner',
+      });
+
+      const result = await checkCrossLinkPermission(
+        tenant.id,
+        user.id,
+        sourceTable.id,
+        targetTable.id,
+        'structural',
+      );
+      expect(result).toBe(true);
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // Tenant Isolation — new data functions
+  // -------------------------------------------------------------------------
+
+  describe('getCrossLinkDefinition — tenant isolation', () => {
+    it('enforces tenant isolation', async () => {
+      const user = await createTestUser();
+      let crossLinkId: string;
+
+      await testTenantIsolation({
+        setup: async (tenantId) => {
+          const sourceTable = await createTestTable({ tenantId });
+          const sourceField = await createTestField({
+            tenantId,
+            tableId: sourceTable.id,
+            name: 'Link',
+            fieldType: 'cross_link',
+          });
+          const targetTable = await createTestTable({ tenantId });
+          const displayField = await createTestField({
+            tenantId,
+            tableId: targetTable.id,
+            name: 'Name',
+            fieldType: 'text',
+          });
+          const crossLink = await createTestCrossLink({
+            tenantId,
+            sourceTableId: sourceTable.id,
+            sourceFieldId: sourceField.id,
+            targetTableId: targetTable.id,
+            targetDisplayFieldId: displayField.id,
+            createdBy: user.id,
+          });
+          crossLinkId = crossLink.id;
+        },
+        query: async (tenantId) => {
+          const result = await getCrossLinkDefinition(tenantId, crossLinkId!);
+          return result ? [result] : [];
+        },
+      });
+    }, 30_000);
+  });
+
+  describe('listCrossLinkDefinitions — tenant isolation', () => {
+    it('enforces tenant isolation', async () => {
+      const user = await createTestUser();
+      let sourceTableId: string;
+
+      await testTenantIsolation({
+        setup: async (tenantId) => {
+          const sourceTable = await createTestTable({ tenantId });
+          sourceTableId = sourceTable.id;
+          const sourceField = await createTestField({
+            tenantId,
+            tableId: sourceTable.id,
+            name: 'Link',
+            fieldType: 'cross_link',
+          });
+          const targetTable = await createTestTable({ tenantId });
+          const displayField = await createTestField({
+            tenantId,
+            tableId: targetTable.id,
+            name: 'Name',
+            fieldType: 'text',
+          });
+          await createTestCrossLink({
+            tenantId,
+            sourceTableId: sourceTable.id,
+            sourceFieldId: sourceField.id,
+            targetTableId: targetTable.id,
+            targetDisplayFieldId: displayField.id,
+            createdBy: user.id,
+          });
+        },
+        query: async (tenantId) => {
+          return listCrossLinkDefinitions(tenantId, sourceTableId!);
+        },
+      });
+    }, 30_000);
+  });
+
+  describe('getCrossLinksByTarget — tenant isolation', () => {
+    it('enforces tenant isolation', async () => {
+      const user = await createTestUser();
+      let targetTableId: string;
+
+      await testTenantIsolation({
+        setup: async (tenantId) => {
+          const sourceTable = await createTestTable({ tenantId });
+          const sourceField = await createTestField({
+            tenantId,
+            tableId: sourceTable.id,
+            name: 'Link',
+            fieldType: 'cross_link',
+          });
+          const targetTable = await createTestTable({ tenantId });
+          targetTableId = targetTable.id;
+          const displayField = await createTestField({
+            tenantId,
+            tableId: targetTable.id,
+            name: 'Name',
+            fieldType: 'text',
+          });
+          await createTestCrossLink({
+            tenantId,
+            sourceTableId: sourceTable.id,
+            sourceFieldId: sourceField.id,
+            targetTableId: targetTable.id,
+            targetDisplayFieldId: displayField.id,
+            createdBy: user.id,
+          });
+        },
+        query: async (tenantId) => {
+          return getCrossLinksByTarget(tenantId, targetTableId!);
+        },
+      });
     }, 30_000);
   });
 });

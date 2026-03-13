@@ -87,7 +87,7 @@ When a unit moves to `failed-review`:
   - Branch: `build/3b-i-cross-linking`
   - Notes:
 
-- [ ] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `pending`
+- [ ] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `in-progress`
   - Produces: `createCrossLinkDefinition`, `updateCrossLinkDefinition`, `deleteCrossLinkDefinition`, `linkRecords`, `unlinkRecords` server actions; `getCrossLinkDefinition`, `listCrossLinkDefinitions`, `getCrossLinksByTarget`, `validateLinkTarget`, `checkCrossLinkPermission` data functions; `createTestCrossLinkWithIndex` factory
   - Consumes: Unit 1 types, schemas, utilities
   - Branch:
