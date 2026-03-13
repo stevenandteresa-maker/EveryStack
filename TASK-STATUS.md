@@ -87,19 +87,19 @@ When a unit moves to `failed-review`:
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `in-progress`
+- [x] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `passed-review`
   - Produces: `getFieldPermissions()`, `invalidatePermissionCache()`, `PERMISSION_CACHE_KEY_PATTERN`, `PERMISSION_CACHE_TTL` from `apps/web/src/data/permissions.ts`; `createTestViewWithPermissions()` factory
   - Consumes: Unit 1 types + resolution functions
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `pending`
+- [ ] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `in-progress`
   - Produces: `checkFieldPermission()`, `checkFieldPermissions()`, `filterHiddenFields()`, `logPermissionDenial()` from `apps/web/src/lib/auth/field-permissions.ts`; updated `updateRecord`, `bulkUpdateRecords` server actions
   - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`
   - Branch:
   - Notes:
 
-- [ ] **Unit 4: Real-Time Invalidation** — `pending`
+- [ ] **Unit 4: Real-Time Invalidation** — `in-progress`
   - Produces: `REALTIME_EVENTS.PERMISSION_UPDATED`, `PermissionUpdatedPayload`, `publishPermissionUpdate()`, `handlePermissionUpdated` client handler
   - Consumes: Unit 2 `invalidatePermissionCache()`
   - Branch:

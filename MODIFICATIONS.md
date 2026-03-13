@@ -88,28 +88,41 @@ built → failed-review → built (retry after fixes)
 ## Session B — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** built
-**Prompt(s):** Prompt 3 (Unit 2)
+**Status:** passed-review
+**Prompt(s):** Prompts 3–4 (Unit 2)
 
 ### Files Created
-- `apps/web/src/data/permissions.ts` — Data access layer for field permissions with Redis cache
-- `apps/web/src/data/__tests__/permissions.test.ts` — Unit tests (17 tests) for permission data layer
+- `apps/web/src/data/permissions.ts`
+- `apps/web/src/data/permissions.test.ts`
+- `apps/web/src/data/permissions.integration.test.ts`
 
 ### Files Modified
-- `packages/shared/auth/index.ts` — Added `resolveFieldPermission`, `resolveAllFieldPermissions`, `comparePermissionStates` to barrel exports
+- `packages/shared/testing/factories.ts` (added createTestViewWithPermissions)
 
 ### Schema Changes
 - None
 
 ### New Domain Terms Introduced
-- `PERMISSION_CACHE_KEY_PATTERN` — Redis key format: `cache:t:{tenantId}:perm:{viewId}:{userId}`
-- `PERMISSION_CACHE_TTL` — 300 second cache TTL for resolved permission maps
+- None
 
-### Notes
-- `getFieldPermissions()` bridges the pure resolution engine (Unit 1) with DB queries and Redis caching
-- `invalidatePermissionCache()` supports both targeted (single user) and bulk (SCAN-based) invalidation
-- Fail-open on Redis errors — permission resolution falls back to DB queries
-- No role → all fields hidden (no-access path)
+## Session C — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** built
+**Prompt(s):** Prompt 5 (Unit 3)
+
+### Files Created
+- `apps/web/src/lib/auth/field-permissions.ts` — Permission enforcement guards (checkFieldPermission, checkFieldPermissions, filterHiddenFields, logPermissionDenial)
+- `apps/web/src/lib/auth/__tests__/field-permissions.test.ts` — 18 unit tests for enforcement guards
+
+### Files Modified
+- None
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `PermissionDenialDetails` — Interface for structured permission denial context (action, resource, resourceId, fieldIds, deniedCount)
 
 ---
 
