@@ -50,7 +50,7 @@ vi.mock('@/data/tables', () => ({
 const mockResolveEffectiveRole = vi.fn();
 const mockResolveAllFieldPermissions = vi.fn();
 vi.mock('@everystack/shared/auth', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@everystack/shared/auth')>();
+  const original = await importOriginal<Record<string, unknown>>();
   return {
     ...original,
     resolveEffectiveRole: (...args: unknown[]) => mockResolveEffectiveRole(...args),
