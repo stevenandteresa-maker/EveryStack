@@ -93,22 +93,22 @@ When a unit moves to `failed-review`:
   - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
-- [ ] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `in-progress`
+- [x] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `passed-review`
   - Produces: `checkFieldPermission()`, `checkFieldPermissions()`, `filterHiddenFields()`, `logPermissionDenial()` from `apps/web/src/lib/auth/field-permissions.ts`; updated `updateRecord`, `bulkUpdateRecords` server actions
   - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`
-  - Branch:
-  - Notes:
+  - Branch: `build/3a-iii-field-permissions`
+  - Notes: Verified 2026-03-13
 
-- [ ] **Unit 4: Real-Time Invalidation** — `in-progress`
+- [x] **Unit 4: Real-Time Invalidation** — `passed-review`
   - Produces: `REALTIME_EVENTS.PERMISSION_UPDATED`, `PermissionUpdatedPayload`, `publishPermissionUpdate()`, `handlePermissionUpdated` client handler
   - Consumes: Unit 2 `invalidatePermissionCache()`
-  - Branch:
-  - Notes:
+  - Branch: `build/3a-iii-field-permissions`
+  - Notes: Verified 2026-03-13
 
-- [ ] **Unit 5: Grid/View Permission-Aware Rendering** — `pending`
+- [ ] **Unit 5: Grid/View Permission-Aware Rendering** — `in-progress`
   - Produces: `useFieldPermissions()` hook, `PermissionProvider` context, `usePermission()` hook; updated `DataGrid`, `GridCell`, `RecordView`, `CardView`, `BulkActionsToolbar` with permission filtering
   - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`, Unit 4 `handlePermissionUpdated`
-  - Branch:
+  - Branch: `build/3a-iii-field-permissions`
   - Notes:
 
 - [ ] **Unit 6: Permission Configuration UI** — `pending`
