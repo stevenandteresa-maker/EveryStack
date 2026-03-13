@@ -28,7 +28,6 @@ import { getAuthContext } from '@/lib/auth-context';
 import { wrapUnknownError, NotFoundError } from '@/lib/errors';
 import {
   checkFieldPermission,
-  checkFieldPermissions,
 } from '@/lib/auth/field-permissions';
 import { getTraceId } from '@everystack/shared/logging';
 
