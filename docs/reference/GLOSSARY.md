@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-12 — Added Process & Workflow section (7 terms: Build Unit, Subdivision Doc, Interface Contract, Context Manifest, Context Budget Test, Planning Gate, Seam). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms (Card View, Summary Footer, Color Coding, Inline Sub-Table, CSV Import, Field-Level Presence Locking); broadened Section definition from sidebar-only to universal list organizer. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
+> Last updated: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms (FieldPermissionState, ViewPermissions, ViewFieldPermissions, RoleRestriction, IndividualOverride, FieldPermissionMap, ResolvedPermissionContext) and 4 UI component terms (Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge). Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
 
 ---
 
@@ -750,6 +750,23 @@ Five roles across two levels. Presented as a single flat hierarchy in the UI —
 ### Field Permissions
 
 Every field resolves to one of three states per user: **read-write**, **read-only**, or **hidden**. Manager+ controls field visibility per role per Table View. Individual overrides can further restrict or restore access for specific users.
+
+**Implementation types (from `packages/shared/auth/permissions/`):**
+
+- **FieldPermissionState** — Union type for field access levels: `read_write | read_only | hidden`. The atomic unit of the permission model.
+- **ViewPermissions** — Interface defining role/user access and field permissions for a Table View. Stored as JSONB on `views.permissions`.
+- **ViewFieldPermissions** — Interface grouping role restrictions (Layer 2a) and individual overrides (Layer 2b) for a view.
+- **RoleRestriction** — Interface for Layer 2a per-role field access narrowing. Narrows the global ceiling set on `fields.permissions`.
+- **IndividualOverride** — Interface for Layer 2b per-user field access override. Can further restrict or restore access relative to the role restriction.
+- **FieldPermissionMap** — `Map<fieldId, FieldPermissionState>` returned by batch resolution. Used by UI components to filter/gate field rendering.
+- **ResolvedPermissionContext** — Interface containing all inputs needed for the 7-step permission cascade (role, view permissions, field defaults, individual overrides).
+
+**Configuration UI components (from `apps/web/src/components/permissions/`):**
+
+- **Permission Config Panel** — The top-level panel for configuring field-level permissions on a Table View. Combines role-level grid and individual override management.
+- **RoleLevelPermissionGrid** — Matrix UI: rows = fields, columns = roles. Click to cycle through `read_write → read_only → hidden` states per cell.
+- **IndividualOverrideView** — Per-user override management with effective permission preview. Shows resolved state after all layers.
+- **PermissionStateBadge** — Visual indicator for `read_write` / `read_only` / `hidden` states. Used in grids, headers, and config panels.
 
 ---
 

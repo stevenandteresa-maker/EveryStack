@@ -74,52 +74,46 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
-### 3A-iii — Field-Level Permissions: Model, Resolution & Config UI
-
-**Started:** 2026-03-12
-**Completed:** 2026-03-13
-
-#### Subdivision Units
-
-- [x] **Unit 1: Permission Types & Resolution Engine** — `passed-review`
-  - Produces: `FieldPermissionState`, `ViewPermissions`, `ViewFieldPermissions`, `RoleRestriction`, `IndividualOverride`, `FieldPermissionMap`, `ResolvedPermissionContext` types; `viewPermissionsSchema`, `fieldPermissionsSchema` Zod schemas; `resolveFieldPermission()`, `resolveAllFieldPermissions()` pure functions — all from `packages/shared/auth/permissions/`
-  - Consumes: None — first unit. Uses existing `EffectiveRole`, `roleAtLeast()` from `packages/shared/auth/`
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes:
-
-- [x] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `passed-review`
-  - Produces: `getFieldPermissions()`, `invalidatePermissionCache()`, `PERMISSION_CACHE_KEY_PATTERN`, `PERMISSION_CACHE_TTL` from `apps/web/src/data/permissions.ts`; `createTestViewWithPermissions()` factory
-  - Consumes: Unit 1 types + resolution functions
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes:
-
-- [x] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `passed-review`
-  - Produces: `checkFieldPermission()`, `checkFieldPermissions()`, `filterHiddenFields()`, `logPermissionDenial()` from `apps/web/src/lib/auth/field-permissions.ts`; updated `updateRecord`, `bulkUpdateRecords` server actions
-  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes: Verified 2026-03-13
-
-- [x] **Unit 4: Real-Time Invalidation** — `passed-review`
-  - Produces: `REALTIME_EVENTS.PERMISSION_UPDATED`, `PermissionUpdatedPayload`, `publishPermissionUpdate()`, `handlePermissionUpdated` client handler
-  - Consumes: Unit 2 `invalidatePermissionCache()`
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes: Verified 2026-03-13
-
-- [x] **Unit 5: Grid/View Permission-Aware Rendering** — `passed-review`
-  - Produces: `useFieldPermissions()` hook, `PermissionProvider` context, `usePermission()` hook; updated `DataGrid`, `GridCell`, `RecordView`, `CardView`, `BulkActionsToolbar` with permission filtering
-  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`, Unit 4 `handlePermissionUpdated`
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes:
-
-- [x] **Unit 6: Permission Configuration UI** — `passed-review`
-  - Produces: `RoleLevelPermissionGrid`, `IndividualOverrideView`, `PermissionConfigPanel`, `PermissionStateBadge` components; `updateViewPermissions()`, `updateFieldGlobalPermissions()` server actions
-  - Consumes: Unit 1 types + schemas, Unit 2 data access + cache, Unit 4 `publishPermissionUpdate()`, Unit 5 `PermissionProvider`
-  - Branch: `build/3a-iii-field-permissions`
-  - Notes: Verified 2026-03-13. All contracts exported, all CI gates green, cross-unit integration verified.
+_(No active sub-phases)_
 
 ---
 
 ## Completed Sub-Phases
 
-<!-- Move sub-phase blocks here once all units are docs-synced.
-     Keeps the active section focused on current work. -->
+### 3A-iii — Field-Level Permissions: Model, Resolution & Config UI
+
+**Started:** 2026-03-12
+**Completed:** 2026-03-13
+**Docs synced:** 2026-03-13
+
+#### Subdivision Units
+
+- [x] **Unit 1: Permission Types & Resolution Engine** — `docs-synced`
+  - Produces: `FieldPermissionState`, `ViewPermissions`, `ViewFieldPermissions`, `RoleRestriction`, `IndividualOverride`, `FieldPermissionMap`, `ResolvedPermissionContext` types; `viewPermissionsSchema`, `fieldPermissionsSchema` Zod schemas; `resolveFieldPermission()`, `resolveAllFieldPermissions()` pure functions — all from `packages/shared/auth/permissions/`
+  - Consumes: None — first unit. Uses existing `EffectiveRole`, `roleAtLeast()` from `packages/shared/auth/`
+  - Branch: `build/3a-iii-field-permissions`
+
+- [x] **Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache** — `docs-synced`
+  - Produces: `getFieldPermissions()`, `invalidatePermissionCache()`, `PERMISSION_CACHE_KEY_PATTERN`, `PERMISSION_CACHE_TTL` from `apps/web/src/data/permissions.ts`; `createTestViewWithPermissions()` factory
+  - Consumes: Unit 1 types + resolution functions
+  - Branch: `build/3a-iii-field-permissions`
+
+- [x] **Unit 3: Action Layer — Permission Enforcement + Audit Logging** — `docs-synced`
+  - Produces: `checkFieldPermission()`, `checkFieldPermissions()`, `filterHiddenFields()`, `logPermissionDenial()` from `apps/web/src/lib/auth/field-permissions.ts`; updated `updateRecord`, `bulkUpdateRecords` server actions
+  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`
+  - Branch: `build/3a-iii-field-permissions`
+
+- [x] **Unit 4: Real-Time Invalidation** — `docs-synced`
+  - Produces: `REALTIME_EVENTS.PERMISSION_UPDATED`, `PermissionUpdatedPayload`, `publishPermissionUpdate()`, `handlePermissionUpdated` client handler
+  - Consumes: Unit 2 `invalidatePermissionCache()`
+  - Branch: `build/3a-iii-field-permissions`
+
+- [x] **Unit 5: Grid/View Permission-Aware Rendering** — `docs-synced`
+  - Produces: `useFieldPermissions()` hook, `PermissionProvider` context, `usePermission()` hook; updated `DataGrid`, `GridCell`, `RecordView`, `CardView`, `BulkActionsToolbar` with permission filtering
+  - Consumes: Unit 1 types, Unit 2 `getFieldPermissions()`, Unit 4 `handlePermissionUpdated`
+  - Branch: `build/3a-iii-field-permissions`
+
+- [x] **Unit 6: Permission Configuration UI** — `docs-synced`
+  - Produces: `RoleLevelPermissionGrid`, `IndividualOverrideView`, `PermissionConfigPanel`, `PermissionStateBadge` components; `updateViewPermissions()`, `updateFieldGlobalPermissions()` server actions
+  - Consumes: Unit 1 types + schemas, Unit 2 data access + cache, Unit 4 `publishPermissionUpdate()`, Unit 5 `PermissionProvider`
+  - Branch: `build/3a-iii-field-permissions`
