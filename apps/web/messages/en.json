@@ -591,6 +591,12 @@
       "field_locked": "This field is being edited by another user",
       "updating": "Updating..."
     },
+    "permissions": {
+      "readOnly": "Read only",
+      "noEditPermission": "You don't have permission to edit this field",
+      "requiresRole": "Requires {role} role",
+      "bulkActionDenied": "You don't have permission to edit {count} of the selected fields"
+    },
     "combined_layout": {
       "grid_area": "Grid area",
       "thread_panel": "Record thread",

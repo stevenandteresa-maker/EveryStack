@@ -156,6 +156,8 @@ export interface DataGridProps {
   summaryFooterConfig?: SummaryFooterConfig;
   onSetColumnAggregation?: (fieldId: string, aggregationType: AggregationType) => void;
   // Record View integration
+  /** Field IDs that are read-only due to field-level permissions. */
+  readOnlyFieldIds?: Set<string>;
   /** Whether Record View is currently open (compresses bulk toolbar) */
   isRecordViewOpen?: boolean;
   /** Called when user clicks expand icon on a row */
@@ -253,6 +255,7 @@ export function DataGrid({
   colorRules = createEmptyColorRulesConfig(),
   summaryFooterConfig = createDefaultSummaryFooterConfig(),
   onSetColumnAggregation,
+  readOnlyFieldIds,
   isRecordViewOpen = false,
   onExpandRecord,
   viewName = 'Grid',
@@ -873,6 +876,7 @@ export function DataGrid({
         selectedCount={selectedRows.size}
         fields={orderedFields}
         compact={isRecordViewOpen}
+        readOnlyFieldIds={readOnlyFieldIds}
         onDelete={handleBulkDelete}
         onBulkUpdateField={handleBulkUpdateField}
         onDuplicate={handleBulkDuplicate}
@@ -907,6 +911,7 @@ export function DataGrid({
           columnColors={columnColors}
           sorts={sorts}
           filteredFieldIds={filteredFieldIds}
+          readOnlyFieldIds={readOnlyFieldIds}
           allSelected={rowSelection.allSelected}
           someSelected={rowSelection.someSelected}
           onToggleSelectAll={rowSelection.toggleSelectAll}
@@ -1039,6 +1044,7 @@ export function DataGrid({
                   onCopyRecordLink={onCopyRecordLink}
                   rowTintColor={colorEval?.rowColor}
                   cellTintColors={colorEval?.cellColors}
+                  readOnlyFieldIds={readOnlyFieldIds}
                 />
               );
             })
@@ -1090,6 +1096,7 @@ export function DataGrid({
                   onCopyRecordLink={onCopyRecordLink}
                   rowTintColor={colorEval?.rowColor}
                   cellTintColors={colorEval?.cellColors}
+                  readOnlyFieldIds={readOnlyFieldIds}
                 />
               );
             })}

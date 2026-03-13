@@ -32,6 +32,10 @@ export interface RecordViewCanvasProps {
   onLayoutChange?: (layout: RecordViewLayout) => void;
   onNavigateToLinkedRecord?: (recordId: string) => void;
   readOnly?: boolean;
+  /** Field IDs that are hidden due to field-level permissions. */
+  hiddenFieldIds?: Set<string>;
+  /** Field IDs that are read-only due to field-level permissions. */
+  readOnlyFieldIds?: Set<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,6 +51,8 @@ export function RecordViewCanvas({
   onLayoutChange,
   onNavigateToLinkedRecord,
   readOnly = false,
+  hiddenFieldIds,
+  readOnlyFieldIds,
 }: RecordViewCanvasProps) {
   const t = useTranslations('record_view');
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -56,9 +62,10 @@ export function RecordViewCanvas({
   // Build a field map for quick lookup
   const fieldMap = useMemo(() => new Map(fields.map((f) => [f.id, f])), [fields]);
 
-  // Filter layout fields: only those in the fields list, and matching the active tab
+  // Filter layout fields: only those in the fields list, not hidden by permissions, and matching the active tab
   const layoutFields = layout.fields.filter((lf) => {
     if (!fieldMap.has(lf.fieldId)) return false;
+    if (hiddenFieldIds?.has(lf.fieldId)) return false;
     // Tab filtering: null tab means "default tab", specific tab IDs for custom tabs
     if (activeTabId && activeTabId !== DEFAULT_TAB_ID) {
       return lf.tab === activeTabId;
@@ -210,7 +217,7 @@ export function RecordViewCanvas({
                 record={record}
                 onSave={onFieldSave}
                 columnSpan={1}
-                readOnly={readOnly}
+                readOnly={readOnly || !!readOnlyFieldIds?.has(field.id)}
                 onNavigateToLinkedRecord={onNavigateToLinkedRecord}
                 onTab={() => handleFieldTab(layoutField.fieldId)}
               />

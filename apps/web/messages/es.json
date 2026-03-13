@@ -591,6 +591,12 @@
       "field_locked": "Este campo está siendo editado por otro usuario",
       "updating": "Actualizando..."
     },
+    "permissions": {
+      "readOnly": "Solo lectura",
+      "noEditPermission": "No tienes permiso para editar este campo",
+      "requiresRole": "Requiere el rol de {role}",
+      "bulkActionDenied": "No tienes permiso para editar {count} de los campos seleccionados"
+    },
     "combined_layout": {
       "grid_area": "Área de cuadrícula",
       "thread_panel": "Hilo del registro",
