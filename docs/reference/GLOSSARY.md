@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms (FieldPermissionState, ViewPermissions, ViewFieldPermissions, RoleRestriction, IndividualOverride, FieldPermissionMap, ResolvedPermissionContext) and 4 UI component terms (Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge). Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
+> Last updated: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms (FieldPermissionState, ViewPermissions, ViewFieldPermissions, RoleRestriction, IndividualOverride, FieldPermissionMap, ResolvedPermissionContext) and 4 UI component terms (Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge). Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
 
 ---
 
@@ -363,6 +363,14 @@ A relationship between two tables — even if those tables are in different work
 
 **What a Cross-Link is:** A platform-agnostic record relationship managed by EveryStack.
 **What a Cross-Link is NOT:** A native relationship in Airtable/SmartSuite/Notion. Cross-links exist only in EveryStack's data layer. They are never synced back to the source platform.
+
+### Link Picker
+
+The modal UI for searching, selecting, and creating linked records when editing a Linked Record field. Supports tsvector prefix search on the target table's display field, a "Recent" section (last 5 links by this user), inline record creation ("+ New [target table name]"), scope filter awareness, and single-select vs multi-select modes based on relationship type. Configured `card_fields` determine which target record fields appear in result rows.
+
+**MVP scope:** Full Link Picker with search, recent, inline create, scope filter, single/multi-select, card field previews.
+
+**See:** `cross-linking.md` > Link Picker UX.
 
 ---
 
