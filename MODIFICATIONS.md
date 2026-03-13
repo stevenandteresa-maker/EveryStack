@@ -57,10 +57,20 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+_(No active sessions)_
+
+---
+
+## Archive
+
+<!-- Docs Agent moves completed (docs-synced) session blocks here
+     during Step 5, newest first. This keeps the active section
+     focused on unsynced work. -->
+
 ## Session A — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 1–2 (Unit 1)
 
 ### Files Created
@@ -88,7 +98,7 @@ built → failed-review → built (retry after fixes)
 ## Session B — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 3–4 (Unit 2)
 
 ### Files Created
@@ -108,7 +118,7 @@ built → failed-review → built (retry after fixes)
 ## Session C — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 5–7 (Units 3 + 4)
 
 ### Files Created
@@ -133,7 +143,7 @@ built → failed-review → built (retry after fixes)
 ## Session D — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 8–9 (Unit 5)
 
 ### Files Created
@@ -160,7 +170,7 @@ built → failed-review → built (retry after fixes)
 ## Session E — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 10–11 (Unit 6 — phase complete)
 
 ### Files Created
@@ -181,11 +191,3 @@ built → failed-review → built (retry after fixes)
 
 ### New Domain Terms Introduced
 - Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge
-
----
-
-## Archive
-
-<!-- Docs Agent moves completed (docs-synced) session blocks here
-     during Step 5, newest first. This keeps the active section
-     focused on unsynced work. -->
