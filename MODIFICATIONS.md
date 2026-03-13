@@ -57,7 +57,28 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-_(No active sessions)_
+## Session A — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-13
+**Status:** passed-review
+**Prompt(s):** Prompts 1–2 (Unit 1)
+
+### Files Created
+- `packages/shared/sync/cross-link-types.ts` — Types, constants, and canonical field value utilities for cross-linking
+- `packages/shared/sync/cross-link-schemas.ts` — Zod validation schemas for cross-link CRUD and linking ops
+- `packages/shared/sync/cross-link-field-type.ts` — FieldTypeRegistry registration for `linked_record` on canonical platform
+- `packages/shared/sync/__tests__/cross-link-types.test.ts` — Unit tests for cross-link types and utilities
+- `packages/shared/sync/__tests__/cross-link-schemas.test.ts` — Unit tests for cross-link Zod schemas
+- `packages/shared/sync/__tests__/cross-link-field-type.test.ts` — Unit tests for linked_record registry registration
+
+### Files Modified
+- `TASK-STATUS.md` — Updated Unit 1 status to passed-review
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None (RelationshipType, CrossLinkFieldValue, LinkScopeFilter already in GLOSSARY)
 
 ---
 

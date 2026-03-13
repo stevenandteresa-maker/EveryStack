@@ -81,7 +81,7 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Cross-Link Types, Validation Schemas & Registry** — `in-progress`
+- [x] **Unit 1: Cross-Link Types, Validation Schemas & Registry** — `passed-review`
   - Produces: `RelationshipType`, `LinkScopeFilter`, `CrossLinkFieldValue`, `CROSS_LINK_LIMITS` types/constants; `createCrossLinkSchema`, `updateCrossLinkSchema`, `linkScopeFilterSchema` Zod schemas; `linked_record` FieldTypeRegistry registration; `extractCrossLinkField()`, `setCrossLinkField()` utilities — all from `packages/shared/sync/cross-link-*.ts`
   - Consumes: None — first unit. Uses existing `FieldTypeRegistry`, Drizzle schema types
   - Branch: `build/3b-i-cross-linking`
