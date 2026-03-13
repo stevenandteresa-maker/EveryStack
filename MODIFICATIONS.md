@@ -108,12 +108,39 @@ built → failed-review → built (retry after fixes)
 ## Session C — 3A-iii — build/3a-iii-field-permissions
 
 **Date:** 2026-03-13
-**Status:** built
-**Prompt(s):** Prompt 5 (Unit 3)
+**Status:** passed-review
+**Prompt(s):** Prompts 5–7 (Units 3 + 4)
 
 ### Files Created
-- `apps/web/src/lib/auth/field-permissions.ts` — Permission enforcement guards (checkFieldPermission, checkFieldPermissions, filterHiddenFields, logPermissionDenial)
-- `apps/web/src/lib/auth/__tests__/field-permissions.test.ts` — 18 unit tests for enforcement guards
+- apps/web/src/lib/auth/field-permissions.ts
+- apps/web/src/lib/auth/field-permissions.test.ts
+- apps/web/src/lib/realtime/permission-events.ts
+- apps/web/src/lib/realtime/permission-handlers.ts
+- apps/web/src/lib/realtime/permission-events.test.ts
+
+### Files Modified
+- packages/shared/realtime/events.ts (added PERMISSION_UPDATED)
+- packages/shared/realtime/types.ts (added PermissionUpdatedPayload)
+- apps/web/src/actions/record-actions.ts (added permission checks)
+- apps/web/src/data/records.ts (added filterHiddenFields)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+## Session D — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** built
+**Prompt(s):** Prompt 8 (Unit 5 — PermissionProvider context)
+
+### Files Created
+- `apps/web/src/components/permissions/PermissionProvider.tsx`
+- `apps/web/src/components/permissions/__tests__/PermissionProvider.test.tsx`
+- `apps/web/src/lib/hooks/use-field-permissions.ts`
+- `apps/web/src/lib/hooks/__tests__/use-field-permissions.test.ts`
 
 ### Files Modified
 - None
@@ -122,7 +149,34 @@ built → failed-review → built (retry after fixes)
 - None
 
 ### New Domain Terms Introduced
-- `PermissionDenialDetails` — Interface for structured permission denial context (action, resource, resourceId, fieldIds, deniedCount)
+- None
+
+## Session E — 3A-iii — build/3a-iii-field-permissions
+
+**Date:** 2026-03-13
+**Status:** built
+**Prompt(s):** Prompt 9 (Unit 6 — Permission-aware rendering)
+
+### Files Created
+- None
+
+### Files Modified
+- `apps/web/src/components/grid/GridCell.tsx` — Added `readOnly` prop for permission-based read-only, cursor-default and opacity-75 styling
+- `apps/web/src/components/grid/GridRow.tsx` — Added `readOnlyFieldIds` prop, passes to GridCell
+- `apps/web/src/components/grid/GridHeader.tsx` — Added `readOnlyFieldIds` prop, shows Lock icon on read-only column headers
+- `apps/web/src/components/grid/DataGrid.tsx` — Added `readOnlyFieldIds` prop, passes to GridHeader, BulkActionsToolbar, and GridRow
+- `apps/web/src/components/grid/BulkActionsToolbar.tsx` — Added `readOnlyFieldIds` prop, filters editable fields list, disables edit button with title when no writable fields
+- `apps/web/src/components/record-view/RecordViewCanvas.tsx` — Added `hiddenFieldIds` and `readOnlyFieldIds` props, filters hidden fields from layout, passes readOnly to FieldRenderer
+- `apps/web/src/components/card-view/CardView.tsx` — Added `hiddenFieldIds` prop, filters hidden fields from visible fields
+- `apps/web/src/components/grid/__tests__/collaboration.test.tsx` — Updated opacity class assertion from `opacity-60` to `opacity-75`
+- `apps/web/messages/en.json` — Added `grid.permissions` i18n keys (readOnly, noEditPermission, requiresRole, bulkActionDenied)
+- `apps/web/messages/es.json` — Added `grid.permissions` i18n keys (Spanish translations)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
 
 ---
 
