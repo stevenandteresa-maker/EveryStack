@@ -14,6 +14,8 @@
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RoleLevelPermissionGrid } from './RoleLevelPermissionGrid';
+import { IndividualOverrideView } from './IndividualOverrideView';
+import type { WorkspaceMemberInfo } from './IndividualOverrideView';
 import type { ViewPermissions } from '@everystack/shared/auth';
 import type { Field } from '@everystack/shared/db';
 
@@ -25,6 +27,10 @@ export interface PermissionConfigPanelProps {
   isAdmin: boolean;
   fields: Field[];
   viewPermissions: ViewPermissions;
+  /** Workspace members who have access to this view (for "By Person" tab). */
+  members: WorkspaceMemberInfo[];
+  /** Field ID → fields.permissions JSONB (global defaults). */
+  fieldPermissions: Record<string, Record<string, unknown>>;
 }
 
 export function PermissionConfigPanel({
@@ -35,6 +41,8 @@ export function PermissionConfigPanel({
   isAdmin,
   fields,
   viewPermissions,
+  members,
+  fieldPermissions,
 }: PermissionConfigPanelProps) {
   const t = useTranslations('permissions');
 
@@ -63,10 +71,16 @@ export function PermissionConfigPanel({
         </TabsContent>
 
         <TabsContent value="by-person">
-          {/* IndividualOverrideView — Prompt 11 */}
-          <div className="py-8 text-center text-[13px] text-[var(--text-tertiary)]">
-            {t('individualOverridesPlaceholder')}
-          </div>
+          <IndividualOverrideView
+            viewId={viewId}
+            tableId={tableId}
+            tenantId={tenantId}
+            workspaceId={workspaceId}
+            fields={fields}
+            viewPermissions={viewPermissions}
+            members={members}
+            fieldPermissions={fieldPermissions}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -860,10 +860,22 @@
     "readOnly": "Read only",
     "hidden": "Hidden",
     "setAll": "Set all",
+    "configSave": "Save permissions",
+    "configSaved": "Permissions saved",
     "saveChanges": "Save changes",
     "saving": "Saving…",
     "discardChanges": "Discard",
     "saveError": "Failed to save permissions. Please try again.",
-    "individualOverridesPlaceholder": "Individual overrides will be available in a future update."
+    "stateReadWrite": "Full access",
+    "stateReadOnly": "Read only",
+    "stateHidden": "Hidden",
+    "stateEffective": "Effective",
+    "overrideLabel": "Override",
+    "overrideAdd": "Add override",
+    "overrideRemove": "Remove override",
+    "overrideRoleLevelState": "Role default: {state}",
+    "overrideCeilingBlocked": "Cannot exceed field-level setting",
+    "personSelect": "Select a person",
+    "personNoAccess": "No members have access to this view"
   }
 }

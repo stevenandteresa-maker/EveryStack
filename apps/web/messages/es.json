@@ -860,10 +860,22 @@
     "readOnly": "Solo lectura",
     "hidden": "Oculto",
     "setAll": "Establecer todo",
+    "configSave": "Guardar permisos",
+    "configSaved": "Permisos guardados",
     "saveChanges": "Guardar cambios",
     "saving": "Guardando…",
     "discardChanges": "Descartar",
     "saveError": "Error al guardar permisos. Inténtalo de nuevo.",
-    "individualOverridesPlaceholder": "Las excepciones individuales estarán disponibles en una próxima actualización."
+    "stateReadWrite": "Acceso completo",
+    "stateReadOnly": "Solo lectura",
+    "stateHidden": "Oculto",
+    "stateEffective": "Efectivo",
+    "overrideLabel": "Excepción",
+    "overrideAdd": "Agregar excepción",
+    "overrideRemove": "Eliminar excepción",
+    "overrideRoleLevelState": "Rol por defecto: {state}",
+    "overrideCeilingBlocked": "No puede exceder la configuración a nivel de campo",
+    "personSelect": "Seleccionar una persona",
+    "personNoAccess": "Ningún miembro tiene acceso a esta vista"
   }
 }
