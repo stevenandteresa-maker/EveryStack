@@ -81,13 +81,13 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: SDS Types & Core Builders** — `in-progress`
+- [x] **Unit 1: SDS Types & Core Builders** — `passed-review`
   - Produces: `WorkspaceDescriptor`, `BaseDescriptor`, `TableDescriptor`, `FieldDescriptor`, `LinkEdge` types; `mapFieldToDescriptor()`, `buildTableDescriptor()`, `buildWorkspaceDescriptor()` — from `packages/shared/ai/schema-descriptor/`
   - Consumes: None — first unit. Uses existing FieldTypeRegistry, Drizzle schema, cross-link types from 3B-i
   - Branch: `build/3b-ii-sds-command-bar`
   - Notes:
 
-- [ ] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `pending`
+- [ ] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `in-progress`
   - Produces: `filterDescriptorByPermissions()`, `computeSchemaVersionHash()`, `SchemaDescriptorCache` class, `estimateTokens()`, `condenseDescriptor()`, `SchemaDescriptorService` class with `describeWorkspace()`, `describeTable()`, `describeLinks()` — from `packages/shared/ai/schema-descriptor/`
   - Consumes: Unit 1 types + builder functions
   - Branch:

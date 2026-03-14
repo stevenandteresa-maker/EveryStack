@@ -57,17 +57,21 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-## Session G — 3B-ii SDS Unit 1 — build/3b-ii-sds-command-bar
+## Session A — Phase 3B-ii — build/3b-ii-sds-command-bar
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompts 1–2 (Unit 1 — SDS types + field mapper)
+**Status:** passed-review
+**Prompt(s):** Prompts 1–4 (Unit 1: SDS Types & Core Builders)
 
 ### Files Created
-- `packages/shared/ai/schema-descriptor/types.ts` — SDS descriptor types: FieldDescriptor, TableDescriptor, BaseDescriptor, LinkEdge, WorkspaceDescriptor (Prompt 1)
-- `packages/shared/ai/schema-descriptor/index.ts` — Barrel export for SDS types + mapFieldToDescriptor
+- `packages/shared/ai/schema-descriptor/types.ts` — SDS descriptor types: FieldDescriptor, TableDescriptor, BaseDescriptor, LinkEdge, WorkspaceDescriptor
+- `packages/shared/ai/schema-descriptor/index.ts` — Barrel export for all SDS types + builder functions
 - `packages/shared/ai/schema-descriptor/field-mapper.ts` — mapFieldToDescriptor() — maps Drizzle Field row to LLM-optimized FieldDescriptor
-- `packages/shared/ai/schema-descriptor/__tests__/field-mapper.test.ts` — 46 unit tests covering all MVP field types, select options, currency_code, linked_record metadata, unknown types
+- `packages/shared/ai/schema-descriptor/table-builder.ts` — buildTableDescriptor() — assembles TableDescriptor with pg_stat row counts and cross-link metadata
+- `packages/shared/ai/schema-descriptor/workspace-builder.ts` — buildWorkspaceDescriptor() — assembles full WorkspaceDescriptor with base grouping and deduplicated link_graph
+- `packages/shared/ai/schema-descriptor/__tests__/field-mapper.test.ts` — 46 unit tests for field mapper (all MVP field types, select options, currency_code, linked_record metadata)
+- `packages/shared/ai/schema-descriptor/__tests__/table-builder.integration.test.ts` — Integration tests for table builder (tenant isolation, pg_stat row counts, cross-link batch fetch)
+- `packages/shared/ai/schema-descriptor/__tests__/workspace-builder.integration.test.ts` — Integration tests for workspace builder (base grouping, native tables, link_graph deduplication)
 
 ### Files Modified
 - (none beyond files created above)
@@ -76,15 +80,47 @@ built → failed-review → built (retry after fixes)
 - (none)
 
 ### Schema Changes
-- (none — no migration)
+- None
 
 ### New Domain Terms Introduced
-- `FieldDescriptor` — LLM-optimized JSON shape for a single field (type, searchable, aggregatable, options, linked metadata)
-- `mapFieldToDescriptor()` — Pure function mapping a Drizzle Field row + optional CrossLink to a FieldDescriptor
+- `SchemaDescriptorService / SDS` — Service that produces LLM-optimized workspace metadata for AI consumption
+- `WorkspaceDescriptor` — Top-level LLM-optimized schema for a workspace (bases, tables, fields, link_graph)
+- `BaseDescriptor` — Groups tables by their source platform base connection
+- `TableDescriptor` — Per-table metadata with approximate row count and field descriptors
+- `FieldDescriptor` — Per-field metadata with type-specific hints (searchable, aggregatable, options, linked metadata)
+- `LinkEdge` — Cross-link relationship in the workspace link graph (from/to dotted paths, cardinality, label)
 
 ### Notes
-- `linked_base` is not set by `mapFieldToDescriptor()` — requires base connection lookup. Table builder (Prompt 3) will populate this.
-- Coverage: 100% statements, 90.9% branches, 100% functions, 100% lines.
+- `linked_base` is not set by `mapFieldToDescriptor()` — requires base connection lookup; workspace builder resolves this via tableToBaseMap.
+- All 8 interface contracts verified: 5 types exported, 3 functions exported with correct signatures.
+
+## Session B — Phase 3B-ii — build/3b-ii-sds-command-bar
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompt 5 (Unit 2: SDS Permission Filter)
+
+### Files Created
+- `packages/shared/ai/schema-descriptor/permission-filter.ts` — filterDescriptorByPermissions() — deep-copies and filters WorkspaceDescriptor by user permissions (role-based Table View access, field-level hidden/read_only resolution, link graph pruning, cross-link restricted target handling)
+- `packages/shared/ai/schema-descriptor/__tests__/permission-filter.test.ts` — 15 unit tests covering Owner/Admin bypass, Team Member partial access, hidden field security, link graph pruning, cross-link edge case, deep-copy safety, tenant isolation, manager access, specific user grants, excluded users
+
+### Files Modified
+- `packages/shared/ai/schema-descriptor/index.ts` — Added barrel export for filterDescriptorByPermissions
+
+### Files Deleted
+- (none)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- (none — uses existing permission and descriptor terminology)
+
+### Notes
+- Uses structuredClone() for deep-copy safety — cached descriptors are never mutated
+- Permission resolution uses resolveEffectiveRole() + resolveAllFieldPermissions() from existing auth package
+- Cross-link edge case: linked_record fields with inaccessible targets get linked_table: null, cardinality: 'restricted'
+- Coverage: 89% statements, 88.76% lines on permission-filter.ts
 
 ---
 

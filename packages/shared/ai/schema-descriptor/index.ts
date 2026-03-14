@@ -14,3 +14,4 @@ export type {
 export { mapFieldToDescriptor } from './field-mapper';
 export { buildTableDescriptor } from './table-builder';
 export { buildWorkspaceDescriptor } from './workspace-builder';
+export { filterDescriptorByPermissions } from './permission-filter';
