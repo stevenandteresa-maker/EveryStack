@@ -6,7 +6,21 @@
  * are hardcoded, no DB table yet).
  */
 
-import type { CommandEntry } from '../../../../apps/web/src/lib/command-bar/types';
+/**
+ * Local mirror of CommandEntry from apps/web/src/lib/command-bar/types.ts.
+ * Duplicated here to avoid cross-package imports that break shared's rootDir.
+ */
+interface CommandEntry {
+  id: string;
+  command_key: string;
+  label: string;
+  description: string;
+  category: string;
+  source: string; // 'system' | 'automation' | 'custom'
+  context_scopes: string[]; // 'global' | 'table_view' | 'record_detail' | 'chat'
+  permission_required: string;
+  sort_order: number;
+}
 
 let counter = 0;
 

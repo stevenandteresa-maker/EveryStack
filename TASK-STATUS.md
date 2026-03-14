@@ -93,7 +93,7 @@ When a unit moves to `failed-review`:
   - Branch:
   - Notes:
 
-- [ ] **Unit 3: Command Bar Search & Navigation Data Layer** — `pending`
+- [ ] **Unit 3: Command Bar Search & Navigation Data Layer** — `in-progress`
   - Produces: `searchRecords()`, `searchTablesAndViews()`, `getCommandRegistry()`, `trackRecentItem()`, `getRecentItems()` data functions; `SearchResult`, `NavigationResult`, `CommandEntry`, `RecentItem` types — from `apps/web/src/data/` and `apps/web/src/lib/command-bar/`
   - Consumes: None — parallel with Units 1–2. Uses existing DB schema, tsvector indexes, permission utilities
   - Branch:

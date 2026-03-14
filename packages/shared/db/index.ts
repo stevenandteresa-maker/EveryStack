@@ -119,6 +119,8 @@ export {
   formsRelations,
   sections,
   sectionsRelations,
+  userRecentItems,
+  userRecentItemsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -152,4 +154,5 @@ export type {
   RecordViewConfig, NewRecordViewConfig,
   Form, NewForm,
   Section, NewSection,
+  UserRecentItem, NewUserRecentItem,
 } from './schema';
