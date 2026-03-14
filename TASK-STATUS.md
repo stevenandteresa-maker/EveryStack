@@ -93,13 +93,13 @@ When a unit moves to `failed-review`:
   - Branch:
   - Notes:
 
-- [ ] **Unit 3: Command Bar Search & Navigation Data Layer** — `in-progress`
+- [x] **Unit 3: Command Bar Search & Navigation Data Layer** — `passed-review`
   - Produces: `searchRecords()`, `searchTablesAndViews()`, `getCommandRegistry()`, `trackRecentItem()`, `getRecentItems()` data functions; `SearchResult`, `NavigationResult`, `CommandEntry`, `RecentItem` types — from `apps/web/src/data/` and `apps/web/src/lib/command-bar/`
   - Consumes: None — parallel with Units 1–2. Uses existing DB schema, tsvector indexes, permission utilities
-  - Branch:
-  - Notes: Parallel with Units 1–2
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: Parallel with Units 1–2. All 7 contracts verified 2026-03-14.
 
-- [ ] **Unit 4: Command Bar UI & AI Search Channel** — `pending`
+- [ ] **Unit 4: Command Bar UI & AI Search Channel** — `in-progress` (Prompt 12 complete)
   - Produces: `CommandBar`, `CommandBarProvider`, `CommandBarSearchResults`, `CommandBarSlashMenu`, `CommandBarAIChannel`, `CommandBarRecentItems` components; `useCommandBar()` hook; `executeSlashCommand()`, `aiSearchQuery()` server actions — from `apps/web/src/components/command-bar/` and `apps/web/src/actions/`
   - Consumes: Unit 2 `SchemaDescriptorService` + token estimator, Unit 3 search/command/recent data functions
   - Branch:

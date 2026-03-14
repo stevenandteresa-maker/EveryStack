@@ -898,5 +898,15 @@
     "overrideCeilingBlocked": "Cannot exceed field-level setting",
     "personSelect": "Select a person",
     "personNoAccess": "No members have access to this view"
+  },
+  "commandBar": {
+    "placeholder": "Ask or do anything…",
+    "emptyRecent": "Start typing to search, use / for commands, or ask a question",
+    "searchHeading": "Search",
+    "searchPlaceholder": "Type to search records, tables, and views…",
+    "slashHeading": "Commands",
+    "slashPlaceholder": "Type a command…",
+    "aiHeading": "AI",
+    "aiPlaceholder": "Ask a question…"
   }
 }

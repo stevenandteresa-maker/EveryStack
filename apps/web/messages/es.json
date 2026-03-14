@@ -898,5 +898,15 @@
     "overrideCeilingBlocked": "No puede exceder la configuración a nivel de campo",
     "personSelect": "Seleccionar una persona",
     "personNoAccess": "Ningún miembro tiene acceso a esta vista"
+  },
+  "commandBar": {
+    "placeholder": "Pregunta o haz cualquier cosa…",
+    "emptyRecent": "Escribe para buscar, usa / para comandos, o haz una pregunta",
+    "searchHeading": "Búsqueda",
+    "searchPlaceholder": "Escribe para buscar registros, tablas y vistas…",
+    "slashHeading": "Comandos",
+    "slashPlaceholder": "Escribe un comando…",
+    "aiHeading": "IA",
+    "aiPlaceholder": "Haz una pregunta…"
   }
 }
