@@ -12,3 +12,5 @@ export type {
 } from './types';
 
 export { mapFieldToDescriptor } from './field-mapper';
+export { buildTableDescriptor } from './table-builder';
+export { buildWorkspaceDescriptor } from './workspace-builder';
