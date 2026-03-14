@@ -355,3 +355,17 @@ export {
   extractCrossLinkField,
   setCrossLinkField,
 } from './cross-link-types';
+export {
+  createCrossLinkSchema,
+  updateCrossLinkSchema,
+  linkScopeFilterSchema,
+  linkScopeConditionSchema,
+  linkRecordsSchema,
+  unlinkRecordsSchema,
+} from './cross-link-schemas';
+export type {
+  CreateCrossLinkInput,
+  UpdateCrossLinkInput,
+  LinkRecordsInput,
+  UnlinkRecordsInput,
+} from './cross-link-schemas';

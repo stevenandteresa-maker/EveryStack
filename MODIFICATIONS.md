@@ -57,6 +57,27 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session C — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompt 4 (Unit 2 — definition CRUD server actions)
+
+### Files Created
+- `apps/web/src/actions/cross-link-actions.ts` — Server actions for cross-link definition CRUD (create, update, delete) with permission checks, tenant boundary enforcement, and audit logging
+- `apps/web/src/actions/__tests__/cross-link-actions.test.ts` — Unit tests for all 3 CRUD actions (15 tests covering permissions, limits, cascading delete)
+
+### Files Modified
+- `packages/shared/sync/index.ts` — Added cross-link Zod schema and type re-exports (createCrossLinkSchema, updateCrossLinkSchema, etc.)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-13
