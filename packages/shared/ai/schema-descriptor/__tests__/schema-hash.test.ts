@@ -256,35 +256,24 @@ describe('computeSchemaVersionHash', () => {
   // -----------------------------------------------------------------------
 
   it('returns a deterministic hash for empty workspace', async () => {
-    const db = createMockDb({ tables: [], fields: [], crossLinks: [] });
-
     // Empty workspace triggers early return — no fields/crossLinks queries
-    // Override mock to handle the early return path
-    let callCount = 0;
     const emptyDb = {
       select: vi.fn(() => ({
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            orderBy: vi.fn(() => {
-              callCount++;
-              return Promise.resolve([]);
-            }),
+            orderBy: vi.fn(() => Promise.resolve([])),
           })),
         })),
       })),
     } as unknown as Parameters<typeof computeSchemaVersionHash>[2];
 
     const hash1 = await computeSchemaVersionHash(WORKSPACE_ID, TENANT_ID, emptyDb);
-    callCount = 0;
 
     const emptyDb2 = {
       select: vi.fn(() => ({
         from: vi.fn(() => ({
           where: vi.fn(() => ({
-            orderBy: vi.fn(() => {
-              callCount++;
-              return Promise.resolve([]);
-            }),
+            orderBy: vi.fn(() => Promise.resolve([])),
           })),
         })),
       })),
