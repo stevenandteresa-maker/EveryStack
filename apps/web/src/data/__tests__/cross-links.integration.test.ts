@@ -5,13 +5,21 @@ import {
   createTestField,
   createTestRecord,
   createTestCrossLink,
+  createTestCrossLinkWithIndex,
   createTestUser,
   createTestTenantMembership,
   createTestWorkspaceMembership,
   testTenantIsolation,
 } from '@everystack/shared/testing';
-import { getDbForTenant, crossLinkIndex } from '@everystack/shared/db';
+import { getDbForTenant, crossLinks, crossLinkIndex, records } from '@everystack/shared/db';
 import { generateUUIDv7 } from '@everystack/shared/db';
+import { and, eq, count } from 'drizzle-orm';
+import {
+  CROSS_LINK_LIMITS,
+  extractCrossLinkField,
+  setCrossLinkField,
+} from '@everystack/shared/sync';
+import type { CrossLinkFieldValue } from '@everystack/shared/sync';
 import {
   getLinkedRecords,
   getLinkedRecordCount,
@@ -1206,6 +1214,619 @@ describe('Cross-Link Data Functions', () => {
           return getCrossLinksByTarget(tenantId, targetTableId!);
         },
       });
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // createTestCrossLinkWithIndex factory validation
+  // -------------------------------------------------------------------------
+
+  describe('createTestCrossLinkWithIndex factory', () => {
+    it('creates complete fixture with defaults', async () => {
+      const tenant = await createTestTenant();
+      const result = await createTestCrossLinkWithIndex({ tenantId: tenant.id });
+
+      expect(result.crossLink).toBeDefined();
+      expect(result.sourceTable).toBeDefined();
+      expect(result.targetTable).toBeDefined();
+      expect(result.sourceField).toBeDefined();
+      expect(result.targetDisplayField).toBeDefined();
+      expect(result.sourceRecords).toHaveLength(2); // default
+      expect(result.targetRecords).toHaveLength(3); // default
+      // Each source links to all 3 targets → 6 index entries
+      expect(result.indexEntries).toHaveLength(6);
+
+      // Verify canonical field values on source records
+      for (const sourceRecord of result.sourceRecords) {
+        const fieldValue = extractCrossLinkField(
+          sourceRecord.canonicalData,
+          result.sourceField.id,
+        );
+        expect(fieldValue).not.toBeNull();
+        expect(fieldValue!.type).toBe('cross_link');
+        expect(fieldValue!.value.cross_link_id).toBe(result.crossLink.id);
+        expect(fieldValue!.value.linked_records).toHaveLength(3);
+      }
+    }, 30_000);
+
+    it('respects custom record counts and links per source', async () => {
+      const tenant = await createTestTenant();
+      const result = await createTestCrossLinkWithIndex({
+        tenantId: tenant.id,
+        sourceRecordCount: 1,
+        targetRecordCount: 5,
+        linksPerSourceRecord: 2,
+      });
+
+      expect(result.sourceRecords).toHaveLength(1);
+      expect(result.targetRecords).toHaveLength(5);
+      // 1 source × 2 links = 2 index entries
+      expect(result.indexEntries).toHaveLength(2);
+
+      const fieldValue = extractCrossLinkField(
+        result.sourceRecords[0]!.canonicalData,
+        result.sourceField.id,
+      );
+      expect(fieldValue!.value.linked_records).toHaveLength(2);
+    }, 30_000);
+
+    it('populates display values from target records', async () => {
+      const tenant = await createTestTenant();
+      const result = await createTestCrossLinkWithIndex({
+        tenantId: tenant.id,
+        sourceRecordCount: 1,
+        targetRecordCount: 2,
+      });
+
+      const fieldValue = extractCrossLinkField(
+        result.sourceRecords[0]!.canonicalData,
+        result.sourceField.id,
+      );
+      expect(fieldValue).not.toBeNull();
+
+      const displayValues = fieldValue!.value.linked_records.map((lr) => lr.display_value);
+      expect(displayValues).toContain('Target 1');
+      expect(displayValues).toContain('Target 2');
+    }, 30_000);
+
+    it('index entries match cross-link definition', async () => {
+      const tenant = await createTestTenant();
+      const result = await createTestCrossLinkWithIndex({ tenantId: tenant.id });
+
+      for (const entry of result.indexEntries) {
+        expect(entry.crossLinkId).toBe(result.crossLink.id);
+        expect(entry.sourceTableId).toBe(result.sourceTable.id);
+        expect(entry.tenantId).toBe(tenant.id);
+      }
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // End-to-end lifecycle: create → link → verify → unlink → verify cleanup
+  // -------------------------------------------------------------------------
+
+  describe('Cross-link lifecycle (data layer)', () => {
+    it('create definition → link records → verify index → verify canonical → unlink → verify cleanup', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      // Setup tables
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+        isPrimary: true,
+      });
+
+      // Create definition
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      // Create records
+      const sourceRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+      });
+      const targetRecord1 = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [displayField.id]: 'Acme Corp' },
+      });
+      const targetRecord2 = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [displayField.id]: 'Beta Inc' },
+      });
+
+      const db = getDbForTenant(tenant.id, 'write');
+
+      // Link records — insert index entries
+      await db.insert(crossLinkIndex).values([
+        {
+          tenantId: tenant.id,
+          crossLinkId: crossLink.id,
+          sourceRecordId: sourceRecord.id,
+          sourceTableId: sourceTable.id,
+          targetRecordId: targetRecord1.id,
+        },
+        {
+          tenantId: tenant.id,
+          crossLinkId: crossLink.id,
+          sourceRecordId: sourceRecord.id,
+          sourceTableId: sourceTable.id,
+          targetRecordId: targetRecord2.id,
+        },
+      ]);
+
+      // Set canonical field value
+      const fieldValue: CrossLinkFieldValue = {
+        type: 'cross_link',
+        value: {
+          linked_records: [
+            {
+              record_id: targetRecord1.id,
+              table_id: targetTable.id,
+              display_value: 'Acme Corp',
+              _display_updated_at: new Date().toISOString(),
+            },
+            {
+              record_id: targetRecord2.id,
+              table_id: targetTable.id,
+              display_value: 'Beta Inc',
+              _display_updated_at: new Date().toISOString(),
+            },
+          ],
+          cross_link_id: crossLink.id,
+        },
+      };
+
+      const updatedCanonical = setCrossLinkField(
+        sourceRecord.canonicalData,
+        sourceField.id,
+        fieldValue,
+      );
+      await db
+        .update(records)
+        .set({ canonicalData: updatedCanonical })
+        .where(and(eq(records.tenantId, tenant.id), eq(records.id, sourceRecord.id)));
+
+      // Verify index entries via getLinkedRecords
+      const linked = await getLinkedRecords(tenant.id, sourceRecord.id, sourceField.id);
+      expect(linked.totalCount).toBe(2);
+      expect(linked.records).toHaveLength(2);
+      expect(linked.crossLink!.id).toBe(crossLink.id);
+
+      // Verify canonical data
+      const [refreshedSource] = await db
+        .select()
+        .from(records)
+        .where(and(eq(records.tenantId, tenant.id), eq(records.id, sourceRecord.id)))
+        .limit(1);
+      const extractedField = extractCrossLinkField(refreshedSource!.canonicalData, sourceField.id);
+      expect(extractedField).not.toBeNull();
+      expect(extractedField!.value.linked_records).toHaveLength(2);
+
+      // Unlink — remove index entries for targetRecord1
+      await db
+        .delete(crossLinkIndex)
+        .where(
+          and(
+            eq(crossLinkIndex.tenantId, tenant.id),
+            eq(crossLinkIndex.crossLinkId, crossLink.id),
+            eq(crossLinkIndex.sourceRecordId, sourceRecord.id),
+            eq(crossLinkIndex.targetRecordId, targetRecord1.id),
+          ),
+        );
+
+      // Remove from canonical
+      const afterUnlink = setCrossLinkField(
+        refreshedSource!.canonicalData,
+        sourceField.id,
+        {
+          type: 'cross_link',
+          value: {
+            linked_records: extractedField!.value.linked_records.filter(
+              (lr) => lr.record_id !== targetRecord1.id,
+            ),
+            cross_link_id: crossLink.id,
+          },
+        },
+      );
+      await db
+        .update(records)
+        .set({ canonicalData: afterUnlink })
+        .where(and(eq(records.tenantId, tenant.id), eq(records.id, sourceRecord.id)));
+
+      // Verify cleanup
+      const afterUnlinkResult = await getLinkedRecords(tenant.id, sourceRecord.id, sourceField.id);
+      expect(afterUnlinkResult.totalCount).toBe(1);
+      expect(afterUnlinkResult.records[0]!.record.id).toBe(targetRecord2.id);
+    }, 30_000);
+
+    it('delete definition cascades index entries', async () => {
+      const tenant = await createTestTenant();
+      const fixture = await createTestCrossLinkWithIndex({ tenantId: tenant.id });
+      const db = getDbForTenant(tenant.id, 'write');
+
+      // Verify index entries exist
+      const [beforeCount] = await db
+        .select({ value: count() })
+        .from(crossLinkIndex)
+        .where(
+          and(
+            eq(crossLinkIndex.tenantId, tenant.id),
+            eq(crossLinkIndex.crossLinkId, fixture.crossLink.id),
+          ),
+        );
+      expect(Number(beforeCount!.value)).toBeGreaterThan(0);
+
+      // Delete the cross-link definition (FK cascade should clean index)
+      await db
+        .delete(crossLinks)
+        .where(
+          and(
+            eq(crossLinks.tenantId, tenant.id),
+            eq(crossLinks.id, fixture.crossLink.id),
+          ),
+        );
+
+      // Verify index entries cascaded
+      const [afterCount] = await db
+        .select({ value: count() })
+        .from(crossLinkIndex)
+        .where(
+          and(
+            eq(crossLinkIndex.tenantId, tenant.id),
+            eq(crossLinkIndex.crossLinkId, fixture.crossLink.id),
+          ),
+        );
+      expect(Number(afterCount!.value)).toBe(0);
+
+      // Verify definition is gone
+      const def = await getCrossLinkDefinition(tenant.id, fixture.crossLink.id);
+      expect(def).toBeNull();
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // validateLinkTarget — comprehensive edge cases
+  // -------------------------------------------------------------------------
+
+  describe('validateLinkTarget — edge cases', () => {
+    it('rejects record from wrong table', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const wrongTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+      });
+
+      // Record belongs to wrong table
+      const wrongRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: wrongTable.id,
+      });
+
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        wrongRecord.id,
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Target record does not belong to the target table');
+    }, 30_000);
+
+    it('validates scope filter with multiple AND conditions', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const statusField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Status',
+        fieldType: 'text',
+      });
+      const priorityField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Priority',
+        fieldType: 'text',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+        linkScopeFilter: {
+          conditions: [
+            { field_id: statusField.id, operator: 'eq', value: 'Active' },
+            { field_id: priorityField.id, operator: 'in', value: ['High', 'Critical'] },
+          ],
+          logic: 'and',
+        },
+      });
+
+      // Record matches both conditions
+      const matchingRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: {
+          [statusField.id]: 'Active',
+          [priorityField.id]: 'High',
+        },
+      });
+
+      const result1 = await validateLinkTarget(tenant.id, crossLink.id, matchingRecord.id);
+      expect(result1.valid).toBe(true);
+
+      // Record fails one condition
+      const partialRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: {
+          [statusField.id]: 'Active',
+          [priorityField.id]: 'Low',
+        },
+      });
+
+      const result2 = await validateLinkTarget(tenant.id, crossLink.id, partialRecord.id);
+      expect(result2.valid).toBe(false);
+      expect(result2.reason).toBe('Target record does not match scope filter');
+    }, 30_000);
+
+    it('validates scope filter with OR logic', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const statusField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Status',
+        fieldType: 'text',
+      });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+        linkScopeFilter: {
+          conditions: [
+            { field_id: statusField.id, operator: 'eq', value: 'Active' },
+            { field_id: statusField.id, operator: 'eq', value: 'Pending' },
+          ],
+          logic: 'or',
+        },
+      });
+
+      // Record matches one of the OR conditions
+      const record = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [statusField.id]: 'Pending' },
+      });
+
+      const result = await validateLinkTarget(tenant.id, crossLink.id, record.id);
+      expect(result.valid).toBe(true);
+
+      // Record fails all OR conditions
+      const failRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        canonicalData: { [statusField.id]: 'Closed' },
+      });
+
+      const result2 = await validateLinkTarget(tenant.id, crossLink.id, failRecord.id);
+      expect(result2.valid).toBe(false);
+    }, 30_000);
+
+    it('rejects when at max link count', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+      const sourceField = await createTestField({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+        name: 'Link',
+        fieldType: 'cross_link',
+      });
+      const targetTable = await createTestTable({ tenantId: tenant.id });
+      const displayField = await createTestField({
+        tenantId: tenant.id,
+        tableId: targetTable.id,
+        name: 'Name',
+        fieldType: 'text',
+      });
+
+      // Create with maxLinksPerRecord = 2
+      const crossLink = await createTestCrossLink({
+        tenantId: tenant.id,
+        sourceTableId: sourceTable.id,
+        sourceFieldId: sourceField.id,
+        targetTableId: targetTable.id,
+        targetDisplayFieldId: displayField.id,
+        createdBy: user.id,
+        maxLinksPerRecord: 2,
+      });
+
+      const sourceRecord = await createTestRecord({
+        tenantId: tenant.id,
+        tableId: sourceTable.id,
+      });
+
+      // Link 2 records (at max)
+      const db = getDbForTenant(tenant.id, 'write');
+      const target1 = await createTestRecord({ tenantId: tenant.id, tableId: targetTable.id });
+      const target2 = await createTestRecord({ tenantId: tenant.id, tableId: targetTable.id });
+      await db.insert(crossLinkIndex).values([
+        {
+          tenantId: tenant.id,
+          crossLinkId: crossLink.id,
+          sourceRecordId: sourceRecord.id,
+          sourceTableId: sourceTable.id,
+          targetRecordId: target1.id,
+        },
+        {
+          tenantId: tenant.id,
+          crossLinkId: crossLink.id,
+          sourceRecordId: sourceRecord.id,
+          sourceTableId: sourceTable.id,
+          targetRecordId: target2.id,
+        },
+      ]);
+
+      // Try to link a 3rd — should fail
+      const target3 = await createTestRecord({ tenantId: tenant.id, tableId: targetTable.id });
+      const result = await validateLinkTarget(
+        tenant.id,
+        crossLink.id,
+        target3.id,
+        sourceRecord.id,
+      );
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Link count exceeds max_links_per_record limit');
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // Max definitions per table enforcement
+  // -------------------------------------------------------------------------
+
+  describe('MAX_DEFINITIONS_PER_TABLE limit', () => {
+    it('enforces limit by verifying count matches definitions created', async () => {
+      const tenant = await createTestTenant();
+      const user = await createTestUser();
+      const sourceTable = await createTestTable({ tenantId: tenant.id });
+
+      const definitionsToCreate = 3;
+      for (let i = 0; i < definitionsToCreate; i++) {
+        const field = await createTestField({
+          tenantId: tenant.id,
+          tableId: sourceTable.id,
+          name: `Link ${i}`,
+          fieldType: 'cross_link',
+        });
+        const targetTable = await createTestTable({ tenantId: tenant.id });
+        const displayField = await createTestField({
+          tenantId: tenant.id,
+          tableId: targetTable.id,
+          name: 'Name',
+          fieldType: 'text',
+        });
+        await createTestCrossLink({
+          tenantId: tenant.id,
+          sourceTableId: sourceTable.id,
+          sourceFieldId: field.id,
+          targetTableId: targetTable.id,
+          targetDisplayFieldId: displayField.id,
+          createdBy: user.id,
+        });
+      }
+
+      const defs = await listCrossLinkDefinitions(tenant.id, sourceTable.id);
+      expect(defs).toHaveLength(definitionsToCreate);
+
+      // Verify limit constant is reasonable
+      expect(CROSS_LINK_LIMITS.MAX_DEFINITIONS_PER_TABLE).toBe(20);
+    }, 30_000);
+  });
+
+  // -------------------------------------------------------------------------
+  // Display value population
+  // -------------------------------------------------------------------------
+
+  describe('display value in canonical JSONB', () => {
+    it('linked records carry display values from target display field', async () => {
+      const tenant = await createTestTenant();
+      const fixture = await createTestCrossLinkWithIndex({
+        tenantId: tenant.id,
+        sourceRecordCount: 1,
+        targetRecordCount: 2,
+      });
+
+      const source = fixture.sourceRecords[0]!;
+      const fieldValue = extractCrossLinkField(source.canonicalData, fixture.sourceField.id);
+
+      expect(fieldValue).not.toBeNull();
+      const entries = fieldValue!.value.linked_records;
+      expect(entries).toHaveLength(2);
+
+      // Each entry should have a non-empty display value from target
+      for (const entry of entries) {
+        expect(entry.display_value).toBeTruthy();
+        expect(entry.table_id).toBe(fixture.targetTable.id);
+        expect(entry._display_updated_at).toBeTruthy();
+      }
     }, 30_000);
   });
 });

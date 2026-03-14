@@ -57,6 +57,28 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompt 6 (Unit 2 — test factory extension + integration tests)
+
+### Files Created
+- None
+
+### Files Modified
+- `packages/shared/testing/factories.ts` — Added `createTestCrossLinkWithIndex()` factory with configurable source/target record counts, links per source, and canonical field value population
+- `packages/shared/testing/index.ts` — Exported `createTestCrossLinkWithIndex` and `TestCrossLinkWithIndexResult` type
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts` — Added 12 integration tests: factory validation (4), lifecycle create→link→unlink→cleanup (1), delete cascade (1), validateLinkTarget edge cases (4), MAX_DEFINITIONS_PER_TABLE (1), display value population (1)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session D — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14

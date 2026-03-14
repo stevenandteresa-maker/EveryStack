@@ -23,6 +23,7 @@ import {
   syncedFieldMappings,
   views,
   crossLinks,
+  crossLinkIndex,
   portals,
   portalAccess,
   forms,
@@ -87,7 +88,9 @@ import type {
   SyncConflict,
   NewSection,
   Section,
+  CrossLinkIndex,
 } from '../db/schema';
+import type { CrossLinkFieldValue, LinkedRecordEntry } from '../sync/cross-link-types';
 
 let testDbConn: DrizzleClient | undefined;
 
@@ -1094,4 +1097,148 @@ export async function createTestViewWithPermissions(
   );
 
   return { view, table: tableRow!, fields: createdFields };
+}
+
+// ---------------------------------------------------------------------------
+// Tier 17 — Cross-Link with Index (Phase 3B-i Prompt 6)
+// ---------------------------------------------------------------------------
+
+export interface TestCrossLinkWithIndexResult {
+  crossLink: CrossLink;
+  sourceTable: Table;
+  targetTable: Table;
+  sourceField: Field;
+  targetDisplayField: Field;
+  sourceRecords: DbRecord[];
+  targetRecords: DbRecord[];
+  indexEntries: CrossLinkIndex[];
+}
+
+/**
+ * Creates a complete cross-link test fixture: definition + source/target
+ * records + index entries + canonical field values on source records.
+ *
+ * Uses existing `createTestCrossLink` and `createTestRecord` factories.
+ *
+ * @param options.tenantId - Use an existing tenant
+ * @param options.crossLinkOverrides - Overrides for the cross-link definition
+ * @param options.sourceRecordCount - Number of source records (default: 2)
+ * @param options.targetRecordCount - Number of target records (default: 3)
+ * @param options.linksPerSourceRecord - Target records to link per source (default: all targets)
+ */
+export async function createTestCrossLinkWithIndex(
+  options?: {
+    tenantId?: string;
+    crossLinkOverrides?: Partial<NewCrossLink>;
+    sourceRecordCount?: number;
+    targetRecordCount?: number;
+    linksPerSourceRecord?: number;
+  },
+): Promise<TestCrossLinkWithIndexResult> {
+  const db = getTestDb();
+
+  const tenantId = options?.tenantId ?? (await createTestTenant()).id;
+  const sourceRecordCount = options?.sourceRecordCount ?? 2;
+  const targetRecordCount = options?.targetRecordCount ?? 3;
+
+  // Create source table + field
+  const sourceTable = await createTestTable({ tenantId });
+  const sourceField = await createTestField({
+    tenantId,
+    tableId: sourceTable.id,
+    name: 'Link Field',
+    fieldType: 'cross_link',
+  });
+
+  // Create target table + display field
+  const targetTable = await createTestTable({ tenantId });
+  const targetDisplayField = await createTestField({
+    tenantId,
+    tableId: targetTable.id,
+    name: 'Display Name',
+    fieldType: 'text',
+    isPrimary: true,
+  });
+
+  // Create cross-link definition
+  const crossLink = await createTestCrossLink({
+    tenantId,
+    sourceTableId: sourceTable.id,
+    sourceFieldId: sourceField.id,
+    targetTableId: targetTable.id,
+    targetDisplayFieldId: targetDisplayField.id,
+    ...options?.crossLinkOverrides,
+  });
+
+  // Create target records with display values
+  const targetRecords: DbRecord[] = [];
+  for (let i = 0; i < targetRecordCount; i++) {
+    const record = await createTestRecord({
+      tenantId,
+      tableId: targetTable.id,
+      canonicalData: { [targetDisplayField.id]: `Target ${i + 1}` },
+    });
+    targetRecords.push(record);
+  }
+
+  // Determine how many targets each source links to
+  const linksPerSource = options?.linksPerSourceRecord ?? targetRecordCount;
+  const targetsToLink = targetRecords.slice(0, linksPerSource);
+
+  // Create source records, index entries, and canonical field values
+  const sourceRecords: DbRecord[] = [];
+  const allIndexEntries: CrossLinkIndex[] = [];
+  const now = new Date().toISOString();
+
+  for (let i = 0; i < sourceRecordCount; i++) {
+    // Build linked record entries for canonical data
+    const linkedRecords: LinkedRecordEntry[] = targetsToLink.map((t) => ({
+      record_id: t.id,
+      table_id: targetTable.id,
+      display_value: String(
+        (t.canonicalData as Record<string, unknown>)[targetDisplayField.id] ?? '',
+      ),
+      _display_updated_at: now,
+    }));
+
+    const canonicalData: Record<string, unknown> = {
+      [sourceField.id]: {
+        type: 'cross_link',
+        value: {
+          linked_records: linkedRecords,
+          cross_link_id: crossLink.id,
+        },
+      } satisfies CrossLinkFieldValue,
+    };
+
+    const sourceRecord = await createTestRecord({
+      tenantId,
+      tableId: sourceTable.id,
+      canonicalData,
+    });
+    sourceRecords.push(sourceRecord);
+
+    // Insert index entries
+    const entries = targetsToLink.map((t) => ({
+      tenantId,
+      crossLinkId: crossLink.id,
+      sourceRecordId: sourceRecord.id,
+      sourceTableId: sourceTable.id,
+      targetRecordId: t.id,
+    }));
+
+    const inserted = await db.insert(crossLinkIndex).values(entries).returning();
+    allIndexEntries.push(...inserted);
+  }
+
+  return {
+    crossLink,
+    sourceTable,
+    targetTable,
+    sourceField,
+    targetDisplayField,
+    sourceRecords,
+    targetRecords,
+    indexEntries: allIndexEntries,
+  };
 }
