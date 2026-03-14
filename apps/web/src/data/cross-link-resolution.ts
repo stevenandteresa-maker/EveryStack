@@ -20,6 +20,7 @@ import {
   crossLinkIndex,
 } from '@everystack/shared/db';
 import type { DbRecord, CrossLink } from '@everystack/shared/db';
+import { CROSS_LINK_LIMITS } from '@everystack/shared/sync';
 import {
   resolveEffectiveRole,
   resolveAllFieldPermissions,
@@ -29,6 +30,7 @@ import { extractCrossLinkField } from '@everystack/shared/sync';
 import type { CrossLinkFieldValue } from '@everystack/shared/sync';
 import { getTableById } from '@/data/tables';
 import { getFieldsByTable } from '@/data/fields';
+import { getCrossLinkDefinition } from '@/data/cross-links';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,6 +44,13 @@ export interface LinkedRecordResult {
 export interface LinkedRecordsResponse {
   records: LinkedRecordResult[];
   totalCount: number;
+}
+
+export interface LinkedRecordTree {
+  root: string;
+  levels: Array<{ depth: number; records: DbRecord[] }>;
+  truncated: boolean;
+  truncationReason?: 'circuit_breaker' | 'max_depth';
 }
 
 // ---------------------------------------------------------------------------
@@ -248,4 +257,118 @@ export function filterLinkedRecordByPermissions(
     ...record,
     canonicalData: filteredData,
   };
+}
+
+// ---------------------------------------------------------------------------
+// L2 — Bounded traversal with circuit breaker
+// ---------------------------------------------------------------------------
+
+/**
+ * Iterative bounded traversal of cross-linked records.
+ *
+ * Starting from a root record, follows cross-link references level by level
+ * up to `maxDepth` (hard-capped at CROSS_LINK_LIMITS.MAX_DEPTH = 5).
+ * Uses a `visited` Set for cycle detection — each record appears at most once.
+ *
+ * Circuit breaker: if any level contains more than
+ * CROSS_LINK_LIMITS.CIRCUIT_BREAKER_THRESHOLD (1000) records, traversal
+ * stops immediately and a truncated result is returned.
+ *
+ * @see docs/reference/cross-linking.md § Level 2 — Cross-Link Traversal
+ */
+export async function resolveLinkedRecordsL2(
+  tenantId: string,
+  recordId: string,
+  crossLinkId: string,
+  maxDepth?: number,
+): Promise<LinkedRecordTree> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  // Resolve effective max depth from definition or parameter
+  let effectiveMaxDepth = maxDepth ?? CROSS_LINK_LIMITS.DEFAULT_DEPTH;
+
+  if (effectiveMaxDepth === undefined || maxDepth === undefined) {
+    const definition = await getCrossLinkDefinition(tenantId, crossLinkId);
+    if (definition) {
+      effectiveMaxDepth = maxDepth ?? definition.maxDepth;
+    }
+  }
+
+  // Hard cap at system maximum
+  effectiveMaxDepth = Math.min(effectiveMaxDepth, CROSS_LINK_LIMITS.MAX_DEPTH);
+
+  const tree: LinkedRecordTree = {
+    root: recordId,
+    levels: [],
+    truncated: false,
+  };
+
+  let currentLevelIds = [recordId];
+  const visited = new Set<string>([recordId]);
+
+  for (let depth = 0; depth < effectiveMaxDepth; depth++) {
+    if (currentLevelIds.length === 0) break;
+
+    // Fetch records at current level
+    const levelRecords = await db
+      .select()
+      .from(records)
+      .where(
+        and(
+          eq(records.tenantId, tenantId),
+          inArray(records.id, currentLevelIds),
+          isNull(records.archivedAt),
+        ),
+      );
+
+    tree.levels.push({ depth, records: levelRecords });
+
+    // Collect next level from cross-link index
+    const nextLevelIds: string[] = [];
+
+    if (levelRecords.length > 0) {
+      const levelRecordIds = levelRecords.map((r) => r.id);
+
+      const indexRows = await db
+        .select({
+          targetRecordId: crossLinkIndex.targetRecordId,
+        })
+        .from(crossLinkIndex)
+        .where(
+          and(
+            eq(crossLinkIndex.tenantId, tenantId),
+            eq(crossLinkIndex.crossLinkId, crossLinkId),
+            inArray(crossLinkIndex.sourceRecordId, levelRecordIds),
+          ),
+        );
+
+      for (const row of indexRows) {
+        if (!visited.has(row.targetRecordId)) {
+          visited.add(row.targetRecordId);
+          nextLevelIds.push(row.targetRecordId);
+        }
+      }
+    }
+
+    // Circuit breaker: too many records at next level
+    if (nextLevelIds.length > CROSS_LINK_LIMITS.CIRCUIT_BREAKER_THRESHOLD) {
+      tree.truncated = true;
+      tree.truncationReason = 'circuit_breaker';
+      break;
+    }
+
+    currentLevelIds = nextLevelIds;
+  }
+
+  // If we exhausted depth without completing traversal, mark as max_depth truncated
+  if (
+    !tree.truncated &&
+    currentLevelIds.length > 0 &&
+    tree.levels.length >= effectiveMaxDepth
+  ) {
+    tree.truncated = true;
+    tree.truncationReason = 'max_depth';
+  }
+
+  return tree;
 }

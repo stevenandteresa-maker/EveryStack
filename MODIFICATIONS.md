@@ -57,19 +57,19 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 6 (Unit 2 — test factory extension + integration tests)
+**Status:** passed-review
+**Prompt(s):** Prompts 3–4 (Unit 2, first half)
 
 ### Files Created
-- None
+- `apps/web/src/actions/cross-link-actions.ts`
+- `apps/web/src/actions/__tests__/cross-link-actions.test.ts`
 
 ### Files Modified
-- `packages/shared/testing/factories.ts` — Added `createTestCrossLinkWithIndex()` factory with configurable source/target record counts, links per source, and canonical field value population
-- `packages/shared/testing/index.ts` — Exported `createTestCrossLinkWithIndex` and `TestCrossLinkWithIndexResult` type
-- `apps/web/src/data/__tests__/cross-links.integration.test.ts` — Added 12 integration tests: factory validation (4), lifecycle create→link→unlink→cleanup (1), delete cascade (1), validateLinkTarget edge cases (4), MAX_DEFINITIONS_PER_TABLE (1), display value population (1)
+- `apps/web/src/data/cross-links.ts` (added 5 new data functions)
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts` (extended)
 
 ### Schema Changes
 - None
@@ -83,54 +83,36 @@ built → failed-review → built (retry after fixes)
 
 **Date:** 2026-03-14
 **Status:** built
-**Prompt(s):** Prompt 5 (Unit 2 — record link/unlink actions + index maintenance)
+**Prompt(s):** Prompt 8 (Unit 3, L2 bounded traversal)
 
 ### Files Created
-- `apps/web/src/lib/cross-link-cascade.ts` — Stub module for display value cascade job enqueueing (no-op, implemented in Unit 4)
+- None
 
 ### Files Modified
-- `apps/web/src/actions/cross-link-actions.ts` — Added `linkRecords()` and `unlinkRecords()` server actions with index maintenance, canonical JSONB updates, and audit logging
-- `apps/web/src/actions/__tests__/cross-link-actions.test.ts` — Added 8 tests for linkRecords/unlinkRecords (index creation, max_links_per_record, invalid targets, duplicate handling, canonical JSONB updates, audit log)
+- `apps/web/src/data/cross-link-resolution.ts` — Added `LinkedRecordTree` type and `resolveLinkedRecordsL2()` with iterative bounded traversal, cycle detection, and circuit breaker
+- `apps/web/src/data/__tests__/cross-link-resolution.integration.test.ts` — Added 8 L2 tests: traversal, maxDepth, circuit breaker, cycle detection, performance, tenant isolation
 
 ### Schema Changes
 - None
 
 ### New Domain Terms Introduced
-- None
+- `LinkedRecordTree` — Return type for L2 bounded traversal containing root, levels, and truncation state
 
 ---
 
 ## Session C — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 4 (Unit 2 — definition CRUD server actions)
+**Status:** passed-review
+**Prompt(s):** Prompts 5–6 (Unit 2, second half)
 
 ### Files Created
-- `apps/web/src/actions/cross-link-actions.ts` — Server actions for cross-link definition CRUD (create, update, delete) with permission checks, tenant boundary enforcement, and audit logging
-- `apps/web/src/actions/__tests__/cross-link-actions.test.ts` — Unit tests for all 3 CRUD actions (15 tests covering permissions, limits, cascading delete)
+- `apps/web/src/lib/cross-link-cascade.ts` (stub — replaced in Unit 4)
 
 ### Files Modified
-- `packages/shared/sync/index.ts` — Added cross-link Zod schema and type re-exports (createCrossLinkSchema, updateCrossLinkSchema, etc.)
-
-### Schema Changes
-- None
-
-### New Domain Terms Introduced
-- None
-
----
-
-## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
-
-**Date:** 2026-03-13
-**Status:** built
-**Prompt(s):** Prompt 3 (Unit 2 — data functions)
-
-### Files Modified
-- `apps/web/src/data/cross-links.ts` — Added getCrossLinkDefinition, listCrossLinkDefinitions, getCrossLinksByTarget, validateLinkTarget, checkCrossLinkPermission data functions
-- `apps/web/src/data/__tests__/cross-links.integration.test.ts` — Extended with integration tests for all 5 new data functions + tenant isolation tests
-- `packages/shared/sync/index.ts` — Added cross-link type and utility re-exports from barrel
+- `apps/web/src/actions/cross-link-actions.ts` (added linkRecords, unlinkRecords)
+- `packages/shared/testing/factories.ts` (added createTestCrossLinkWithIndex)
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts` (extended)
 
 ### Schema Changes
 - None

@@ -87,13 +87,13 @@ When a unit moves to `failed-review`:
   - Branch: `build/3b-i-cross-linking`
   - Notes:
 
-- [ ] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `in-progress`
+- [x] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `passed-review`
   - Produces: `createCrossLinkDefinition`, `updateCrossLinkDefinition`, `deleteCrossLinkDefinition`, `linkRecords`, `unlinkRecords` server actions; `getCrossLinkDefinition`, `listCrossLinkDefinitions`, `getCrossLinksByTarget`, `validateLinkTarget`, `checkCrossLinkPermission` data functions; `createTestCrossLinkWithIndex` factory
   - Consumes: Unit 1 types, schemas, utilities
   - Branch:
   - Notes:
 
-- [ ] **Unit 3: Query-Time Resolution & Permission Intersection** — `pending`
+- [ ] **Unit 3: Query-Time Resolution & Permission Intersection** — `in-progress`
   - Produces: `resolveLinkedRecordsL0`, `resolveLinkedRecordsL1`, `resolveLinkedRecordsL2` resolution functions; `LinkedRecordTree` type; `resolveLinkedRecordPermissions`, `filterLinkedRecordByPermissions` permission functions — from `apps/web/src/data/cross-link-resolution.ts`
   - Consumes: Unit 1 types + utilities, Unit 2 `getCrossLinkDefinition()`
   - Branch:
