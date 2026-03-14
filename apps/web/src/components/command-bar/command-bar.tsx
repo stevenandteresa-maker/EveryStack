@@ -12,15 +12,50 @@ import {
   CommandItem,
 } from '@/components/ui/command';
 import { useCommandBar } from './command-bar-provider';
+import { CommandBarSearchResults } from './search-results';
+import { CommandBarSlashMenu } from './slash-menu';
+import type {
+  CommandEntry,
+  SearchResult,
+  NavigationResult,
+} from '@/lib/command-bar/types';
 
 // ---------------------------------------------------------------------------
 // CommandBar — persistent modal (never unmounts, toggles via isOpen)
 // ---------------------------------------------------------------------------
 
-export function CommandBar() {
+interface CommandBarProps {
+  workspaceId?: string;
+  tenantId?: string;
+  userId?: string;
+  commands?: CommandEntry[];
+  searchRecordsFn?: (
+    tenantId: string,
+    workspaceId: string,
+    query: string,
+    opts?: { tableId?: string; userId?: string },
+  ) => Promise<SearchResult[]>;
+  searchTablesAndViewsFn?: (
+    tenantId: string,
+    workspaceId: string,
+    query: string,
+    userId: string,
+  ) => Promise<NavigationResult[]>;
+  onCommandSelect?: (command: CommandEntry) => void;
+}
+
+export function CommandBar({
+  workspaceId = '',
+  tenantId = '',
+  userId = '',
+  commands = [],
+  searchRecordsFn,
+  searchTablesAndViewsFn,
+  onCommandSelect,
+}: CommandBarProps) {
   const t = useTranslations('commandBar');
   const { state, open, close, setQuery } = useCommandBar();
-  const { isOpen, activeChannel, query } = state;
+  const { isOpen, activeChannel, query, scopedTableId } = state;
 
   // -----------------------------------------------------------------------
   // Global keyboard shortcuts
@@ -95,8 +130,22 @@ export function CommandBar() {
               </CommandEmpty>
             )}
 
-            {/* Channel: search */}
-            {activeChannel === 'search' && (
+            {/* Channel: search — records + tables/views */}
+            {activeChannel === 'search' && searchRecordsFn && searchTablesAndViewsFn && (
+              <CommandBarSearchResults
+                query={query}
+                scopedTableId={scopedTableId}
+                workspaceId={workspaceId}
+                tenantId={tenantId}
+                userId={userId}
+                searchRecordsFn={searchRecordsFn}
+                searchTablesAndViewsFn={searchTablesAndViewsFn}
+                onSelect={close}
+              />
+            )}
+
+            {/* Channel: search fallback when no search fns provided */}
+            {activeChannel === 'search' && (!searchRecordsFn || !searchTablesAndViewsFn) && (
               <CommandGroup
                 heading={t('searchHeading')}
                 data-testid="command-bar-channel-search"
@@ -106,7 +155,19 @@ export function CommandBar() {
             )}
 
             {/* Channel: slash commands */}
-            {activeChannel === 'slash' && (
+            {activeChannel === 'slash' && commands.length > 0 && (
+              <CommandBarSlashMenu
+                query={query}
+                commands={commands}
+                onSelect={(cmd) => {
+                  onCommandSelect?.(cmd);
+                  close();
+                }}
+              />
+            )}
+
+            {/* Channel: slash fallback when no commands provided */}
+            {activeChannel === 'slash' && commands.length === 0 && (
               <CommandGroup
                 heading={t('slashHeading')}
                 data-testid="command-bar-channel-slash"
@@ -115,7 +176,7 @@ export function CommandBar() {
               </CommandGroup>
             )}
 
-            {/* Channel: AI */}
+            {/* Channel: AI (Prompt 14) */}
             {activeChannel === 'ai' && (
               <CommandGroup
                 heading={t('aiHeading')}
