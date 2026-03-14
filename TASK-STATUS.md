@@ -93,13 +93,13 @@ When a unit moves to `failed-review`:
   - Branch:
   - Notes:
 
-- [ ] **Unit 3: Query-Time Resolution & Permission Intersection** — `in-progress`
+- [x] **Unit 3: Query-Time Resolution & Permission Intersection** — `passed-review`
   - Produces: `resolveLinkedRecordsL0`, `resolveLinkedRecordsL1`, `resolveLinkedRecordsL2` resolution functions; `LinkedRecordTree` type; `resolveLinkedRecordPermissions`, `filterLinkedRecordByPermissions` permission functions — from `apps/web/src/data/cross-link-resolution.ts`
   - Consumes: Unit 1 types + utilities, Unit 2 `getCrossLinkDefinition()`
   - Branch:
   - Notes: Parallel with Units 4 and 5
 
-- [ ] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `pending`
+- [ ] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `in-progress`
   - Produces: `cross-link` BullMQ queue + job types; `processCrossLinkCascade`, `processIndexRebuild` processors; `enqueueCascadeJob`, `checkCascadeBackpressure` helpers; `scheduleIntegrityCheck` — from `apps/worker/src/processors/cross-link/`
   - Consumes: Unit 1 types + utilities, Unit 2 cross-link index data
   - Branch:

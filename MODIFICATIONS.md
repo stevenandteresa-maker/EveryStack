@@ -57,6 +57,31 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompt 9 (Unit 4, first half)
+
+### Files Created
+- `apps/worker/src/processors/cross-link/cascade.ts` — Cross-link display value cascade processor with content hash optimization, batched updates, single-hop rule
+- `apps/worker/src/processors/cross-link/__tests__/cascade.test.ts` — Unit tests for cascade processor (11 tests)
+
+### Files Modified
+- `packages/shared/queue/constants.ts` — Added `cross-link` to `QUEUE_NAMES`
+- `packages/shared/queue/types.ts` — Added `CrossLinkCascadeJobData`, `CrossLinkIndexRebuildJobData` types
+- `packages/shared/queue/index.ts` — Added new type exports
+- `packages/shared/realtime/events.ts` — Added `DISPLAY_VALUE_UPDATED` to `REALTIME_EVENTS`
+- `apps/web/src/lib/cross-link-cascade.ts` — Replaced stub with real BullMQ enqueue implementation with jobId dedup
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
@@ -82,15 +107,15 @@ built → failed-review → built (retry after fixes)
 ## Session D — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 8 (Unit 3, L2 bounded traversal)
+**Status:** passed-review
+**Prompt(s):** Prompts 7–8 (Unit 3)
 
 ### Files Created
-- None
+- `apps/web/src/data/cross-link-resolution.ts` — L0/L1/L2 resolution functions, permission intersection, LinkedRecordTree type
+- `apps/web/src/data/__tests__/cross-link-resolution.integration.test.ts` — Integration tests for all resolution levels, permissions, and tenant isolation
 
 ### Files Modified
-- `apps/web/src/data/cross-link-resolution.ts` — Added `LinkedRecordTree` type and `resolveLinkedRecordsL2()` with iterative bounded traversal, cycle detection, and circuit breaker
-- `apps/web/src/data/__tests__/cross-link-resolution.integration.test.ts` — Added 8 L2 tests: traversal, maxDepth, circuit breaker, cycle detection, performance, tenant isolation
+- None
 
 ### Schema Changes
 - None
