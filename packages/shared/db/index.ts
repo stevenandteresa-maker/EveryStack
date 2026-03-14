@@ -119,6 +119,10 @@ export {
   formsRelations,
   sections,
   sectionsRelations,
+  userRecentItems,
+  userRecentItemsRelations,
+  commandBarSessions,
+  commandBarSessionsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -152,4 +156,6 @@ export type {
   RecordViewConfig, NewRecordViewConfig,
   Form, NewForm,
   Section, NewSection,
+  UserRecentItem, NewUserRecentItem,
+  CommandBarSession, NewCommandBarSession,
 } from './schema';

@@ -898,5 +898,28 @@
     "overrideCeilingBlocked": "Cannot exceed field-level setting",
     "personSelect": "Select a person",
     "personNoAccess": "No members have access to this view"
+  },
+  "commandBar": {
+    "placeholder": "Ask or do anything…",
+    "emptyRecent": "Start typing to search, use / for commands, or ask a question",
+    "searchHeading": "Search",
+    "searchPlaceholder": "Type to search records, tables, and views…",
+    "searchRecordsHeading": "Records",
+    "searchTablesHeading": "Tables",
+    "searchViewsHeading": "Views",
+    "searchNoResults": "No results found",
+    "slashHeading": "Commands",
+    "slashPlaceholder": "Type a command…",
+    "slashNoResults": "No matching commands",
+    "aiHeading": "AI",
+    "aiPlaceholder": "Ask a question…",
+    "aiUnavailable": "AI is currently unavailable. Please try again later.",
+    "aiCreditsUsed": "{credits} credits used",
+    "aiConfirm": "Confirm",
+    "aiCancel": "Cancel",
+    "aiActionExecuted": "Action executed successfully",
+    "recentHeading": "Recent",
+    "scopedLabel": "Current Table",
+    "scopedHint": "Search is scoped to this table"
   }
 }

@@ -55,3 +55,8 @@ export {
 export { expectQueryTime } from './performance';
 
 export { checkAccessibility } from './a11y';
+
+export {
+  createTestCommandRegistryEntry,
+  resetCommandRegistryCounter,
+} from './factories/command-registry';

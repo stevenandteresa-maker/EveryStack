@@ -97,6 +97,21 @@ export { AIService, FEATURE_TASK_MAP } from './service';
 export type { StreamResult, AIJobPayload, AIJobResult } from './streaming';
 export { createAIStream } from './streaming';
 
+// Schema Descriptor Service — LLM-optimized workspace metadata types and runtime
+export type {
+  FieldDescriptor,
+  TableDescriptor,
+  BaseDescriptor,
+  LinkEdge,
+  WorkspaceDescriptor,
+} from './schema-descriptor';
+export {
+  SchemaDescriptorService,
+  SchemaDescriptorCache,
+  condenseDescriptor,
+  estimateTokens,
+} from './schema-descriptor';
+
 // Data contract — canonical JSONB ↔ AI translation
 export { canonicalToAIContext } from './data-contract';
 export { aiToCanonical } from './data-contract';

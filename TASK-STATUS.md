@@ -81,29 +81,29 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: SDS Types & Core Builders** — `pending`
+- [x] **Unit 1: SDS Types & Core Builders** — `passed-review`
   - Produces: `WorkspaceDescriptor`, `BaseDescriptor`, `TableDescriptor`, `FieldDescriptor`, `LinkEdge` types; `mapFieldToDescriptor()`, `buildTableDescriptor()`, `buildWorkspaceDescriptor()` — from `packages/shared/ai/schema-descriptor/`
   - Consumes: None — first unit. Uses existing FieldTypeRegistry, Drizzle schema, cross-link types from 3B-i
-  - Branch:
+  - Branch: `build/3b-ii-sds-command-bar`
   - Notes:
 
-- [ ] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `pending`
+- [ ] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `in-progress`
   - Produces: `filterDescriptorByPermissions()`, `computeSchemaVersionHash()`, `SchemaDescriptorCache` class, `estimateTokens()`, `condenseDescriptor()`, `SchemaDescriptorService` class with `describeWorkspace()`, `describeTable()`, `describeLinks()` — from `packages/shared/ai/schema-descriptor/`
   - Consumes: Unit 1 types + builder functions
   - Branch:
   - Notes:
 
-- [ ] **Unit 3: Command Bar Search & Navigation Data Layer** — `pending`
+- [x] **Unit 3: Command Bar Search & Navigation Data Layer** — `passed-review`
   - Produces: `searchRecords()`, `searchTablesAndViews()`, `getCommandRegistry()`, `trackRecentItem()`, `getRecentItems()` data functions; `SearchResult`, `NavigationResult`, `CommandEntry`, `RecentItem` types — from `apps/web/src/data/` and `apps/web/src/lib/command-bar/`
   - Consumes: None — parallel with Units 1–2. Uses existing DB schema, tsvector indexes, permission utilities
-  - Branch:
-  - Notes: Parallel with Units 1–2
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: Parallel with Units 1–2. All 7 contracts verified 2026-03-14.
 
-- [ ] **Unit 4: Command Bar UI & AI Search Channel** — `pending`
+- [x] **Unit 4: Command Bar UI & AI Search Channel** — `passed-review`
   - Produces: `CommandBar`, `CommandBarProvider`, `CommandBarSearchResults`, `CommandBarSlashMenu`, `CommandBarAIChannel`, `CommandBarRecentItems` components; `useCommandBar()` hook; `executeSlashCommand()`, `aiSearchQuery()` server actions — from `apps/web/src/components/command-bar/` and `apps/web/src/actions/`
   - Consumes: Unit 2 `SchemaDescriptorService` + token estimator, Unit 3 search/command/recent data functions
-  - Branch:
-  - Notes:
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: All 9 contracts verified. All 7 cross-unit integrations verified. 2077 tests pass. 2026-03-14.
 
 ---
 
