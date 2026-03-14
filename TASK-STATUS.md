@@ -77,7 +77,7 @@ When a unit moves to `failed-review`:
 ### 3B-i — Cross-Linking Engine
 
 **Started:** 2026-03-13
-**Completed:** In progress
+**Completed:** 2026-03-14
 
 #### Subdivision Units
 
@@ -105,11 +105,11 @@ When a unit moves to `failed-review`:
   - Branch:
   - Notes: Parallel with Units 3 and 5
 
-- [ ] **Unit 5: Link Picker UI** — `in-progress` (Prompt 11 done; Prompt 12 pending)
+- [x] **Unit 5: Link Picker UI** — `passed-review`
   - Produces: `LinkPicker`, `LinkPickerProvider`, `LinkedRecordChip`, `LinkPickerSearchResults`, `LinkPickerInlineCreate` components; `useLinkPicker` hook; `searchLinkableRecords`, `getRecentLinkedRecords` data functions — from `apps/web/src/components/cross-links/`
   - Consumes: Unit 1 types, Unit 2 CRUD actions, Unit 3 permission resolution
   - Branch: `build/3b-i-cross-linking`
-  - Notes: Prompt 11 delivered: data functions (search + recent), LinkPickerProvider, useLinkPicker, LinkPicker, LinkPickerSearchResults. Prompt 12 pending: inline create, LinkedRecordChip, grid/RecordView integration.
+  - Notes: Prompts 11–12 complete. All contracts verified. Phase 3B-i fully passed review 2026-03-14.
 
 ---
 

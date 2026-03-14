@@ -60,18 +60,24 @@ built → failed-review → built (retry after fixes)
 ## Session F — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 11 (Unit 5)
+**Status:** passed-review
+**Prompt(s):** Prompts 11–12 (Unit 5)
 
 ### Files Created
 - `apps/web/src/components/cross-links/link-picker-provider.tsx` — LinkPickerProvider context managing Link Picker state (open/close, mode, selectedIds)
 - `apps/web/src/components/cross-links/use-link-picker.ts` — useLinkPicker hook with open/close/select/confirm/remove actions
 - `apps/web/src/components/cross-links/link-picker.tsx` — LinkPicker dialog with Command (cmdk) search, recent section, single/multi-link modes
 - `apps/web/src/components/cross-links/link-picker-search-results.tsx` — LinkPickerSearchResults with card_fields preview, permission-aware filtering, scroll-to-load
+- `apps/web/src/components/cross-links/link-picker-inline-create.tsx` — LinkPickerInlineCreate for creating new records directly from the Link Picker
+- `apps/web/src/components/cross-links/linked-record-chip.tsx` — LinkedRecordChip displaying linked record display value with click-to-open
+- `apps/web/src/components/cross-links/__tests__/LinkPickerInlineCreate.test.tsx` — Unit tests for inline create component
+- `apps/web/src/components/cross-links/__tests__/LinkedRecordChip.test.tsx` — Unit tests for LinkedRecordChip component
 
 ### Files Modified
 - `apps/web/src/data/cross-links.ts` — Added `searchLinkableRecords()` (tsvector prefix matching + scope filter) and `getRecentLinkedRecords()`
-- `apps/web/messages/en.json` — Added `link_picker` namespace with 9 i18n keys
+- `apps/web/src/components/grid/cells/` — Linked Record cell — Link Picker integration
+- `apps/web/src/components/record-view/` — Linked field — Link Picker integration
+- `apps/web/messages/en.json` — Added `link_picker` namespace with i18n keys
 - `apps/web/messages/es.json` — Added `link_picker` namespace with Spanish translations
 
 ### Schema Changes
