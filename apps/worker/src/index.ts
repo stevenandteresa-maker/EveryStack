@@ -18,6 +18,8 @@ import type { IncrementalSyncJobData } from '@everystack/shared/queue';
 import { InitialSyncProcessor } from './processors/sync/initial-sync';
 import { InboundSyncProcessor } from './processors/sync/sync-inbound';
 import { SyncScheduler } from './processors/sync/sync-scheduler';
+import { CrossLinkCascadeProcessor } from './processors/cross-link/cascade';
+import { CrossLinkIndexRebuildProcessor } from './processors/cross-link/index-rebuild';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -55,6 +57,13 @@ initialSyncProcessor.start();
 const inboundSyncProcessor = new InboundSyncProcessor(eventPublisher);
 inboundSyncProcessor.start();
 
+// Cross-link processors
+const cascadeProcessor = new CrossLinkCascadeProcessor(eventPublisher);
+cascadeProcessor.start();
+
+const indexRebuildProcessor = new CrossLinkIndexRebuildProcessor();
+indexRebuildProcessor.start();
+
 // Sync scheduler: adaptive polling via BullMQ repeatable job
 const schedulerRedis = createRedisClient('sync-scheduler');
 const syncScheduler = new SyncScheduler(
@@ -70,6 +79,8 @@ registerShutdownHandler(async () => fileRouter.close());
 registerShutdownHandler(async () => orphanProcessor.close());
 registerShutdownHandler(async () => initialSyncProcessor.close());
 registerShutdownHandler(async () => inboundSyncProcessor.close());
+registerShutdownHandler(async () => cascadeProcessor.close());
+registerShutdownHandler(async () => indexRebuildProcessor.close());
 registerShutdownHandler(async () => syncScheduler.stop());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);

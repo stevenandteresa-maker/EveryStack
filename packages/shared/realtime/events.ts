@@ -42,6 +42,9 @@ export const REALTIME_EVENTS = {
   // Permission events
   PERMISSION_UPDATED: 'permission.updated',
 
+  // Cross-link events
+  DISPLAY_VALUE_UPDATED: 'cross_link.display_value_updated',
+
   // Notification events
   NOTIFICATION_CREATED: 'notification.created',
 } as const;

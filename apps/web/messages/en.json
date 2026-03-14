@@ -739,6 +739,8 @@
     "no_linked_records": "No linked records",
     "linked_records_label": "Linked records",
     "linked_record_navigate": "Navigate to {name}",
+    "add_linked_record": "Add linked record",
+    "add_link": "Add",
     "config_picker_label": "Switch record view config",
     "config_save_as_new": "Save as new config",
     "config_new_name_placeholder": "Config name",
@@ -847,6 +849,25 @@
     "execution_errors": "{count, plural, one {# row had errors} other {# rows had errors}}.",
     "execution_download_errors": "Download error report",
     "execution_summary_toast": "Imported {imported} of {total} records. {failed, plural, =0 {} one {1 row had errors.} other {# rows had errors.}}"
+  },
+  "link_picker": {
+    "title": "Link Record",
+    "search_placeholder": "Search records…",
+    "recent": "Recent",
+    "all_records": "All records",
+    "no_results": "No matching records found",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "done": "Done ({count})",
+    "remove_selected": "Remove {name}",
+    "inline_create_new": "+ New {tableName}",
+    "inline_create_submit": "Create & Link",
+    "inline_create_creating": "Creating…",
+    "new_record": "record"
+  },
+  "linked_record_chip": {
+    "navigate": "Navigate to {name}",
+    "remove": "Remove link to {name}"
   },
   "permissions": {
     "configTitle": "Field Permissions",

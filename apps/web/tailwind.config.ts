@@ -107,6 +107,10 @@ const config: Config = {
         mono: ['var(--font-mono)', 'monospace'],
       },
       keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
         'accordion-down': {
           from: { height: '0' },
           to: { height: 'var(--radix-accordion-content-height)' },
@@ -117,6 +121,7 @@ const config: Config = {
         },
       },
       animation: {
+        shimmer: 'shimmer 1.5s ease-in-out infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },

@@ -76,6 +76,20 @@ export interface DocumentGenJobData extends BaseJobData {
 }
 
 // ---------------------------------------------------------------------------
+// Cross-link jobs
+// ---------------------------------------------------------------------------
+
+export interface CrossLinkCascadeJobData extends BaseJobData {
+  targetRecordId: string;
+  priority: 'high' | 'low';
+  reason: 'user_edit' | 'sync_inbound' | 'bulk_delete' | 'display_value_refresh';
+}
+
+export interface CrossLinkIndexRebuildJobData extends BaseJobData {
+  crossLinkId: string;
+}
+
+// ---------------------------------------------------------------------------
 // Queue → JobData mapping
 // ---------------------------------------------------------------------------
 
@@ -91,6 +105,7 @@ export interface QueueJobDataMap {
   automation: AutomationJobData;
   'document-gen': DocumentGenJobData;
   cleanup: FileOrphanCleanupJobData;
+  'cross-link': CrossLinkCascadeJobData | CrossLinkIndexRebuildJobData;
 }
 
 /** Compile-time check: QueueJobDataMap must cover every QueueName. */

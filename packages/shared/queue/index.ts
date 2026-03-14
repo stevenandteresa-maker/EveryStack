@@ -13,5 +13,7 @@ export type {
   EmailJobData,
   AutomationJobData,
   DocumentGenJobData,
+  CrossLinkCascadeJobData,
+  CrossLinkIndexRebuildJobData,
   QueueJobDataMap,
 } from './types';

@@ -101,6 +101,16 @@
   .tap-gap {
     gap: 8px;
   }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(245, 158, 11, 0.15) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+  }
 }
 
 /*

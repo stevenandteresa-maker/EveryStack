@@ -739,6 +739,8 @@
     "no_linked_records": "Sin registros vinculados",
     "linked_records_label": "Registros vinculados",
     "linked_record_navigate": "Navegar a {name}",
+    "add_linked_record": "Agregar registro vinculado",
+    "add_link": "Agregar",
     "config_picker_label": "Cambiar configuración de vista de registro",
     "config_save_as_new": "Guardar como nueva configuración",
     "config_new_name_placeholder": "Nombre de configuración",
@@ -847,6 +849,25 @@
     "execution_errors": "{count, plural, one {# fila tuvo errores} other {# filas tuvieron errores}}.",
     "execution_download_errors": "Descargar informe de errores",
     "execution_summary_toast": "Se importaron {imported} de {total} registros. {failed, plural, =0 {} one {1 fila tuvo errores.} other {# filas tuvieron errores.}}"
+  },
+  "link_picker": {
+    "title": "Vincular registro",
+    "search_placeholder": "Buscar registros…",
+    "recent": "Recientes",
+    "all_records": "Todos los registros",
+    "no_results": "No se encontraron registros",
+    "loading": "Cargando…",
+    "cancel": "Cancelar",
+    "done": "Listo ({count})",
+    "remove_selected": "Quitar {name}",
+    "inline_create_new": "+ Nuevo {tableName}",
+    "inline_create_submit": "Crear y vincular",
+    "inline_create_creating": "Creando…",
+    "new_record": "registro"
+  },
+  "linked_record_chip": {
+    "navigate": "Navegar a {name}",
+    "remove": "Quitar vínculo a {name}"
   },
   "permissions": {
     "configTitle": "Permisos de campos",

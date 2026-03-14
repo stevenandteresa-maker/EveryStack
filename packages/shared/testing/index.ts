@@ -25,9 +25,10 @@ export {
   createTestSyncedFieldMapping,
   createTestSection,
   createTestViewWithPermissions,
+  createTestCrossLinkWithIndex,
 } from './factories';
 
-export type { TestApiKeyResult, TestViewWithPermissionsResult } from './factories';
+export type { TestApiKeyResult, TestViewWithPermissionsResult, TestCrossLinkWithIndexResult } from './factories';
 
 export { testTenantIsolation } from './tenant-isolation';
 export type { TenantIsolationOptions } from './tenant-isolation';
