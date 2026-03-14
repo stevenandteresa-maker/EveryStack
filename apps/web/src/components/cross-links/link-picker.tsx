@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLinkPicker } from './use-link-picker';
 import { LinkPickerSearchResults } from './link-picker-search-results';
+import { LinkPickerInlineCreate } from './link-picker-inline-create';
 import {
   searchLinkableRecords,
   getRecentLinkedRecords,
@@ -183,6 +184,14 @@ export function LinkPicker({ tenantId, userId }: LinkPickerProps) {
     return labels;
   }, [picker.selectedIds, picker.mode, recentAsResults, results]);
 
+  // Handle inline create completion: add new record to results and auto-select
+  const handleInlineCreated = useCallback(
+    (recordId: string, _displayValue: string) => {
+      picker.select(recordId);
+    },
+    [picker],
+  );
+
   const showRecent = query.trim().length === 0 && recentAsResults.length > 0;
 
   return (
@@ -264,6 +273,17 @@ export function LinkPicker({ tenantId, userId }: LinkPickerProps) {
             </CommandGroup>
           </CommandList>
         </Command>
+
+        {/* Inline create — below search */}
+        {definition && picker.sourceRecordId && (
+          <LinkPickerInlineCreate
+            definition={definition}
+            cardFields={cardFields}
+            sourceRecordId={picker.sourceRecordId}
+            tenantId={tenantId}
+            onCreated={handleInlineCreated}
+          />
+        )}
 
         {/* Footer — only in multi mode */}
         {picker.mode === 'multi' && (

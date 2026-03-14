@@ -19,10 +19,9 @@ import { cn } from '@/lib/utils';
 import { getCellRenderer } from '@/components/grid/GridCell';
 import type { CellRendererProps } from '@/components/grid/GridCell';
 import { useCellEdit } from '@/lib/hooks/use-cell-edit';
-import {
-  LinkedRecordPills,
-  type LinkedRecordPill,
-} from './LinkedRecordPills';
+import { type LinkedRecordPill } from './LinkedRecordPills';
+import { LinkedRecordChip } from '@/components/cross-links/linked-record-chip';
+import { useLinkPicker } from '@/components/cross-links/use-link-picker';
 import { InlineSubTable } from './InlineSubTable';
 import type { InlineSubTableConfig } from './use-inline-sub-table';
 import type { GridField, GridRecord } from '@/lib/types/grid';
@@ -90,10 +89,33 @@ export interface FieldRendererProps {
 
 /**
  * Extracts linked record pills from a linked_record field value.
- * The canonical value can be an array of { id, displayValue } objects
- * or an array of record IDs (strings).
+ * Supports both cross_link format and legacy array format.
  */
 function extractLinkedRecordPills(value: unknown): LinkedRecordPill[] {
+  // Cross-link canonical format
+  if (
+    value != null &&
+    typeof value === 'object' &&
+    'type' in value &&
+    (value as Record<string, unknown>).type === 'cross_link'
+  ) {
+    const clValue = value as unknown as {
+      value: {
+        linked_records: Array<{
+          record_id: string;
+          display_value: string;
+          _display_updated_at?: string;
+        }>;
+        cross_link_id: string;
+      };
+    };
+    return clValue.value.linked_records.map((entry) => ({
+      recordId: entry.record_id,
+      displayValue: entry.display_value || entry.record_id,
+    }));
+  }
+
+  // Legacy array format
   if (!Array.isArray(value)) return [];
   return value
     .map((item): LinkedRecordPill | null => {
@@ -120,6 +142,27 @@ function extractLinkedRecordPills(value: unknown): LinkedRecordPill[] {
       return null;
     })
     .filter((p): p is LinkedRecordPill => p !== null);
+}
+
+/**
+ * Extracts cross_link_id from a cross-link field value or field config.
+ */
+function extractCrossLinkId(
+  value: unknown,
+  field: GridField,
+): string | null {
+  // From canonical cross-link value
+  if (
+    value != null &&
+    typeof value === 'object' &&
+    'type' in value &&
+    (value as Record<string, unknown>).type === 'cross_link'
+  ) {
+    return (value as unknown as { value: { cross_link_id: string } }).value.cross_link_id ?? null;
+  }
+  // From field config
+  const config = field.config as Record<string, unknown> | null;
+  return (config?.crossLinkId as string) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,9 +271,12 @@ export function FieldRenderer({
           onDeleteLink={inlineSubTableData.onDeleteLink}
         />
       ) : isLinkedRecord && onNavigateToLinkedRecord ? (
-        <LinkedRecordPills
-          pills={extractLinkedRecordPills(value)}
-          onNavigateToRecord={onNavigateToLinkedRecord}
+        <LinkedRecordFieldValue
+          value={value}
+          field={field}
+          record={record}
+          readOnly={readOnly}
+          onNavigateToLinkedRecord={onNavigateToLinkedRecord}
         />
       ) : (
         <div
@@ -252,6 +298,80 @@ export function FieldRenderer({
             </span>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// LinkedRecordFieldValue — renders linked records with chips + Link Picker add
+// ---------------------------------------------------------------------------
+
+interface LinkedRecordFieldValueProps {
+  value: unknown;
+  field: GridField;
+  record: GridRecord;
+  readOnly: boolean;
+  onNavigateToLinkedRecord: (recordId: string) => void;
+}
+
+function LinkedRecordFieldValue({
+  value,
+  field,
+  record,
+  readOnly,
+  onNavigateToLinkedRecord,
+}: LinkedRecordFieldValueProps) {
+  const t = useTranslations('record_view');
+  const picker = useLinkPicker();
+
+  const pills = extractLinkedRecordPills(value);
+  const crossLinkId = extractCrossLinkId(value, field);
+
+  const handleAddClick = useCallback(() => {
+    if (!crossLinkId) return;
+    picker.open(crossLinkId, record.id);
+  }, [crossLinkId, record.id, picker]);
+
+  const handleRemove = useCallback(
+    (recordId: string) => {
+      if (!crossLinkId) return;
+      picker.remove(recordId);
+    },
+    [crossLinkId, picker],
+  );
+
+  const isEditable = !readOnly && !field.readOnly;
+
+  if (pills.length === 0 && !isEditable) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t('no_linked_records')}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5" role="list" aria-label={t('linked_records_label')}>
+      {pills.map((pill) => (
+        <LinkedRecordChip
+          key={pill.recordId}
+          recordId={pill.recordId}
+          displayValue={pill.displayValue}
+          editable={isEditable}
+          onNavigate={onNavigateToLinkedRecord}
+          onRemove={isEditable ? handleRemove : undefined}
+        />
+      ))}
+      {isEditable && crossLinkId && (
+        <button
+          type="button"
+          onClick={handleAddClick}
+          className="flex h-6 items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 px-2 text-xs text-muted-foreground hover:border-muted-foreground/60 hover:text-foreground transition-colors"
+          aria-label={t('add_linked_record')}
+        >
+          + {t('add_link')}
+        </button>
       )}
     </div>
   );
