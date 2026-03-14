@@ -1,24 +1,26 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   Command,
   CommandInput,
   CommandList,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
 } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
 import { useCommandBar } from './command-bar-provider';
 import { CommandBarSearchResults } from './search-results';
 import { CommandBarSlashMenu } from './slash-menu';
 import { CommandBarAIChannel } from './ai-channel';
+import { CommandBarRecentItems } from './recent-items';
 import type {
   CommandEntry,
   SearchResult,
   NavigationResult,
+  RecentItem,
 } from '@/lib/command-bar/types';
 
 // ---------------------------------------------------------------------------
@@ -29,6 +31,7 @@ interface CommandBarProps {
   workspaceId?: string;
   tenantId?: string;
   userId?: string;
+  scopedTableName?: string;
   commands?: CommandEntry[];
   searchRecordsFn?: (
     tenantId: string,
@@ -42,6 +45,29 @@ interface CommandBarProps {
     query: string,
     userId: string,
   ) => Promise<NavigationResult[]>;
+  getRecentItemsFn?: (
+    userId: string,
+    tenantId: string,
+    limit?: number,
+  ) => Promise<RecentItem[]>;
+  trackRecentItemFn?: (
+    userId: string,
+    tenantId: string,
+    item: { item_type: string; item_id: string; display_name: string; entity_context?: string },
+  ) => Promise<void>;
+  createSessionFn?: (
+    userId: string,
+    tenantId: string,
+    context: { mode: string; scopedTableId?: string; currentPath?: string },
+  ) => Promise<string>;
+  closeSessionFn?: (
+    sessionId: string,
+    tenantId: string,
+    data: {
+      messages: Array<{ query: string; channel: string; timestamp: string }>;
+      resultSet: Record<string, unknown>;
+    },
+  ) => Promise<void>;
   onCommandSelect?: (command: CommandEntry) => void;
 }
 
@@ -49,14 +75,91 @@ export function CommandBar({
   workspaceId = '',
   tenantId = '',
   userId = '',
+  scopedTableName,
   commands = [],
   searchRecordsFn,
   searchTablesAndViewsFn,
+  getRecentItemsFn,
+  trackRecentItemFn,
+  createSessionFn,
+  closeSessionFn,
   onCommandSelect,
 }: CommandBarProps) {
   const t = useTranslations('commandBar');
   const { state, open, close, setQuery } = useCommandBar();
-  const { isOpen, activeChannel, query, scopedTableId } = state;
+  const { isOpen, activeChannel, query, scopedTableId, mode } = state;
+
+  // Session tracking refs
+  const sessionIdRef = useRef<string | null>(null);
+  const queriesRef = useRef<Array<{ query: string; channel: string; timestamp: string }>>([]);
+  const selectionsRef = useRef<Record<string, unknown>>({});
+
+  // -----------------------------------------------------------------------
+  // Session analytics — create on open, close on close
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    if (isOpen && createSessionFn && userId && tenantId) {
+      queriesRef.current = [];
+      selectionsRef.current = {};
+      createSessionFn(userId, tenantId, {
+        mode,
+        scopedTableId,
+        currentPath: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      })
+        .then((id) => {
+          sessionIdRef.current = id;
+        })
+        .catch(() => {
+          // Analytics failure is non-blocking
+        });
+    }
+
+    if (!isOpen && sessionIdRef.current && closeSessionFn && tenantId) {
+      const sid = sessionIdRef.current;
+      sessionIdRef.current = null;
+      closeSessionFn(sid, tenantId, {
+        messages: queriesRef.current,
+        resultSet: selectionsRef.current,
+      }).catch(() => {
+        // Analytics failure is non-blocking
+      });
+    }
+  }, [isOpen, createSessionFn, closeSessionFn, userId, tenantId, mode, scopedTableId]);
+
+  // Track queries for session analytics
+  useEffect(() => {
+    if (isOpen && query.trim()) {
+      queriesRef.current.push({
+        query,
+        channel: activeChannel ?? 'none',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, [isOpen, query, activeChannel]);
+
+  // -----------------------------------------------------------------------
+  // Track recent item helper
+  // -----------------------------------------------------------------------
+  const trackAndClose = useCallback(
+    (itemType: string, itemId: string, displayName: string, entityContext?: string) => {
+      if (trackRecentItemFn && userId && tenantId) {
+        trackRecentItemFn(userId, tenantId, {
+          item_type: itemType,
+          item_id: itemId,
+          display_name: displayName,
+          entity_context: entityContext,
+        }).catch(() => {
+          // Tracking failure is non-blocking
+        });
+      }
+      selectionsRef.current = {
+        ...selectionsRef.current,
+        lastSelected: { itemType, itemId, displayName },
+      };
+      close();
+    },
+    [trackRecentItemFn, userId, tenantId, close],
+  );
 
   // -----------------------------------------------------------------------
   // Global keyboard shortcuts
@@ -107,6 +210,13 @@ export function CommandBar({
   );
 
   // -----------------------------------------------------------------------
+  // Scoped mode: filter slash commands to table_view context
+  // -----------------------------------------------------------------------
+  const effectiveCommands = mode === 'scoped'
+    ? commands.filter((cmd) => cmd.context_scopes.includes('table_view'))
+    : commands;
+
+  // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
   return (
@@ -117,6 +227,21 @@ export function CommandBar({
       >
         <DialogTitle className="sr-only">{t('placeholder')}</DialogTitle>
         <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+          {/* Scoped mode badge */}
+          {mode === 'scoped' && scopedTableId && (
+            <div
+              className="flex items-center gap-2 border-b px-3 py-1.5"
+              data-testid="scoped-mode-badge"
+            >
+              <Badge variant="outline" className="text-xs">
+                {scopedTableName ?? t('scopedLabel')}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {t('scopedHint')}
+              </span>
+            </div>
+          )}
+
           <CommandInput
             placeholder={t('placeholder')}
             value={query}
@@ -124,11 +249,16 @@ export function CommandBar({
             data-testid="command-bar-input"
           />
           <CommandList>
-            {/* Channel: empty state — recent items placeholder (Prompt 15) */}
+            {/* Channel: empty state — show recent items */}
             {!activeChannel && (
-              <CommandEmpty data-testid="command-bar-empty">
-                {t('emptyRecent')}
-              </CommandEmpty>
+              <CommandBarRecentItems
+                tenantId={tenantId}
+                userId={userId}
+                getRecentItemsFn={getRecentItemsFn}
+                onSelect={(item) =>
+                  trackAndClose(item.item_type, item.item_id, item.display_name, item.entity_context)
+                }
+              />
             )}
 
             {/* Channel: search — records + tables/views */}
@@ -141,7 +271,11 @@ export function CommandBar({
                 userId={userId}
                 searchRecordsFn={searchRecordsFn}
                 searchTablesAndViewsFn={searchTablesAndViewsFn}
+                getRecentItemsFn={getRecentItemsFn}
                 onSelect={close}
+                onTrackItem={trackRecentItemFn ? (itemType, itemId, displayName, entityContext) => {
+                  trackAndClose(itemType, itemId, displayName, entityContext);
+                } : undefined}
               />
             )}
 
@@ -156,19 +290,19 @@ export function CommandBar({
             )}
 
             {/* Channel: slash commands */}
-            {activeChannel === 'slash' && commands.length > 0 && (
+            {activeChannel === 'slash' && effectiveCommands.length > 0 && (
               <CommandBarSlashMenu
                 query={query}
-                commands={commands}
+                commands={effectiveCommands}
                 onSelect={(cmd) => {
+                  trackAndClose('command', cmd.id, cmd.label);
                   onCommandSelect?.(cmd);
-                  close();
                 }}
               />
             )}
 
             {/* Channel: slash fallback when no commands provided */}
-            {activeChannel === 'slash' && commands.length === 0 && (
+            {activeChannel === 'slash' && effectiveCommands.length === 0 && (
               <CommandGroup
                 heading={t('slashHeading')}
                 data-testid="command-bar-channel-slash"
