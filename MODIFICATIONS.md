@@ -57,7 +57,34 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-(none)
+## Session G — 3B-ii SDS Unit 1 — build/3b-ii-sds-command-bar
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompts 1–2 (Unit 1 — SDS types + field mapper)
+
+### Files Created
+- `packages/shared/ai/schema-descriptor/types.ts` — SDS descriptor types: FieldDescriptor, TableDescriptor, BaseDescriptor, LinkEdge, WorkspaceDescriptor (Prompt 1)
+- `packages/shared/ai/schema-descriptor/index.ts` — Barrel export for SDS types + mapFieldToDescriptor
+- `packages/shared/ai/schema-descriptor/field-mapper.ts` — mapFieldToDescriptor() — maps Drizzle Field row to LLM-optimized FieldDescriptor
+- `packages/shared/ai/schema-descriptor/__tests__/field-mapper.test.ts` — 46 unit tests covering all MVP field types, select options, currency_code, linked_record metadata, unknown types
+
+### Files Modified
+- (none beyond files created above)
+
+### Files Deleted
+- (none)
+
+### Schema Changes
+- (none — no migration)
+
+### New Domain Terms Introduced
+- `FieldDescriptor` — LLM-optimized JSON shape for a single field (type, searchable, aggregatable, options, linked metadata)
+- `mapFieldToDescriptor()` — Pure function mapping a Drizzle Field row + optional CrossLink to a FieldDescriptor
+
+### Notes
+- `linked_base` is not set by `mapFieldToDescriptor()` — requires base connection lookup. Table builder (Prompt 3) will populate this.
+- Coverage: 100% statements, 90.9% branches, 100% functions, 100% lines.
 
 ---
 

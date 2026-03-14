@@ -10,3 +10,5 @@ export type {
   LinkEdge,
   WorkspaceDescriptor,
 } from './types';
+
+export { mapFieldToDescriptor } from './field-mapper';
