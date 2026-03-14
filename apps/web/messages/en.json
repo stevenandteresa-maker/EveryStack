@@ -917,6 +917,9 @@
     "aiCreditsUsed": "{credits} credits used",
     "aiConfirm": "Confirm",
     "aiCancel": "Cancel",
-    "aiActionExecuted": "Action executed successfully"
+    "aiActionExecuted": "Action executed successfully",
+    "recentHeading": "Recent",
+    "scopedLabel": "Current Table",
+    "scopedHint": "Search is scoped to this table"
   }
 }

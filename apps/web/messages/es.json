@@ -917,6 +917,9 @@
     "aiCreditsUsed": "{credits} créditos utilizados",
     "aiConfirm": "Confirmar",
     "aiCancel": "Cancelar",
-    "aiActionExecuted": "Acción ejecutada con éxito"
+    "aiActionExecuted": "Acción ejecutada con éxito",
+    "recentHeading": "Recientes",
+    "scopedLabel": "Tabla actual",
+    "scopedHint": "La búsqueda está limitada a esta tabla"
   }
 }
