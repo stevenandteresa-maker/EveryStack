@@ -848,6 +848,17 @@
     "execution_download_errors": "Descargar informe de errores",
     "execution_summary_toast": "Se importaron {imported} de {total} registros. {failed, plural, =0 {} one {1 fila tuvo errores.} other {# filas tuvieron errores.}}"
   },
+  "link_picker": {
+    "title": "Vincular registro",
+    "search_placeholder": "Buscar registros…",
+    "recent": "Recientes",
+    "all_records": "Todos los registros",
+    "no_results": "No se encontraron registros",
+    "loading": "Cargando…",
+    "cancel": "Cancelar",
+    "done": "Listo ({count})",
+    "remove_selected": "Quitar {name}"
+  },
   "permissions": {
     "configTitle": "Permisos de campos",
     "tabByRole": "Por rol",

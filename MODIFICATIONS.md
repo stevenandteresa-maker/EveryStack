@@ -57,22 +57,50 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+## Session F — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
 **Status:** built
-**Prompt(s):** Prompt 9 (Unit 4, first half)
+**Prompt(s):** Prompt 11 (Unit 5)
+
+### Files Created
+- `apps/web/src/components/cross-links/link-picker-provider.tsx` — LinkPickerProvider context managing Link Picker state (open/close, mode, selectedIds)
+- `apps/web/src/components/cross-links/use-link-picker.ts` — useLinkPicker hook with open/close/select/confirm/remove actions
+- `apps/web/src/components/cross-links/link-picker.tsx` — LinkPicker dialog with Command (cmdk) search, recent section, single/multi-link modes
+- `apps/web/src/components/cross-links/link-picker-search-results.tsx` — LinkPickerSearchResults with card_fields preview, permission-aware filtering, scroll-to-load
+
+### Files Modified
+- `apps/web/src/data/cross-links.ts` — Added `searchLinkableRecords()` (tsvector prefix matching + scope filter) and `getRecentLinkedRecords()`
+- `apps/web/messages/en.json` — Added `link_picker` namespace with 9 i18n keys
+- `apps/web/messages/es.json` — Added `link_picker` namespace with Spanish translations
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
+## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** passed-review
+**Prompt(s):** Prompts 9–10 (Unit 4)
 
 ### Files Created
 - `apps/worker/src/processors/cross-link/cascade.ts` — Cross-link display value cascade processor with content hash optimization, batched updates, single-hop rule
-- `apps/worker/src/processors/cross-link/__tests__/cascade.test.ts` — Unit tests for cascade processor (11 tests)
+- `apps/worker/src/processors/cross-link/index-rebuild.ts` — Cross-link index rebuild processor with cursor-based pagination
+- `apps/worker/src/processors/cross-link/integrity-check.ts` — Cross-link integrity check with adaptive sampling and conditional rebuild
+- `apps/worker/src/processors/cross-link/__tests__/cascade.test.ts` — Unit tests for cascade processor
 
 ### Files Modified
 - `packages/shared/queue/constants.ts` — Added `cross-link` to `QUEUE_NAMES`
 - `packages/shared/queue/types.ts` — Added `CrossLinkCascadeJobData`, `CrossLinkIndexRebuildJobData` types
-- `packages/shared/queue/index.ts` — Added new type exports
+- `apps/web/src/lib/cross-link-cascade.ts` — Replaced stub with real BullMQ enqueue implementation with backpressure
 - `packages/shared/realtime/events.ts` — Added `DISPLAY_VALUE_UPDATED` to `REALTIME_EVENTS`
-- `apps/web/src/lib/cross-link-cascade.ts` — Replaced stub with real BullMQ enqueue implementation with jobId dedup
+- `apps/worker/src/index.ts` — Registered cross-link processors
+- `apps/worker/src/queues.ts` — Registered cross-link queue
 
 ### Schema Changes
 - None

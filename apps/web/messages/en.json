@@ -848,6 +848,17 @@
     "execution_download_errors": "Download error report",
     "execution_summary_toast": "Imported {imported} of {total} records. {failed, plural, =0 {} one {1 row had errors.} other {# rows had errors.}}"
   },
+  "link_picker": {
+    "title": "Link Record",
+    "search_placeholder": "Search records…",
+    "recent": "Recent",
+    "all_records": "All records",
+    "no_results": "No matching records found",
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "done": "Done ({count})",
+    "remove_selected": "Remove {name}"
+  },
   "permissions": {
     "configTitle": "Field Permissions",
     "tabByRole": "By Role",

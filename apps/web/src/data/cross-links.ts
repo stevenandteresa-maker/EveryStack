@@ -15,7 +15,9 @@ import {
   isNull,
   inArray,
   asc,
+  desc,
   count,
+  sql,
   records,
   crossLinks,
   crossLinkIndex,
@@ -517,4 +519,176 @@ export async function checkCrossLinkPermission(
   const highestRole = sourceRole ?? targetRole;
   if (!highestRole) return false;
   return roleAtLeast(highestRole, 'admin');
+}
+
+// ---------------------------------------------------------------------------
+// SearchResult type for searchLinkableRecords
+// ---------------------------------------------------------------------------
+
+export interface SearchResult {
+  record: DbRecord;
+  displayValue: string;
+}
+
+// ---------------------------------------------------------------------------
+// searchLinkableRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Search linkable records on a cross-link's target table using tsvector
+ * prefix matching on the target display field. Applies scope filter from
+ * the cross-link definition.
+ *
+ * @see docs/reference/cross-linking.md § Link Picker UX — Search
+ */
+export async function searchLinkableRecords(
+  tenantId: string,
+  crossLinkId: string,
+  query: string,
+  opts?: { limit?: number; offset?: number },
+): Promise<SearchResult[]> {
+  const db = getDbForTenant(tenantId, 'read');
+  const limit = Math.min(opts?.limit ?? 100, 100);
+  const offset = opts?.offset ?? 0;
+
+  // Fetch cross-link definition
+  const definition = await getCrossLinkDefinition(tenantId, crossLinkId);
+  if (!definition) return [];
+
+  // Sanitize query for tsquery: strip special chars and append :* for prefix match
+  const sanitized = query.replace(/[^\w\s]/g, '').trim();
+  if (sanitized.length === 0) {
+    // No meaningful query — return first page of unarchived target records
+    const allRows = await db
+      .select()
+      .from(records)
+      .where(
+        and(
+          eq(records.tenantId, tenantId),
+          eq(records.tableId, definition.targetTableId),
+          isNull(records.archivedAt),
+        ),
+      )
+      .limit(limit)
+      .offset(offset);
+
+    return applySearchScopeFilter(allRows, definition);
+  }
+
+  // Build prefix tsquery: "word1:* & word2:*"
+  const tsQueryTerms = sanitized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => `${term}:*`)
+    .join(' & ');
+
+  // Search using tsvector on the display field within canonical_data JSONB
+  const displayFieldId = definition.targetDisplayFieldId;
+  const matchingRows = await db
+    .select()
+    .from(records)
+    .where(
+      and(
+        eq(records.tenantId, tenantId),
+        eq(records.tableId, definition.targetTableId),
+        isNull(records.archivedAt),
+        sql`to_tsvector('simple', coalesce(${records.canonicalData}->>${displayFieldId}, '')) @@ to_tsquery('simple', ${tsQueryTerms})`,
+      ),
+    )
+    .limit(limit)
+    .offset(offset);
+
+  return applySearchScopeFilter(matchingRows, definition);
+}
+
+/**
+ * Apply the cross-link scope filter to search results and extract display values.
+ */
+function applySearchScopeFilter(
+  rows: DbRecord[],
+  definition: CrossLink,
+): SearchResult[] {
+  const results: SearchResult[] = [];
+  const displayFieldId = definition.targetDisplayFieldId;
+
+  for (const row of rows) {
+    // Apply scope filter if defined
+    if (definition.linkScopeFilter) {
+      const filter = definition.linkScopeFilter as unknown as LinkScopeFilter;
+      if (filter.conditions && filter.conditions.length > 0) {
+        if (!evaluateScopeFilter(filter, row.canonicalData)) {
+          continue;
+        }
+      }
+    }
+
+    results.push({
+      record: row,
+      displayValue: String(row.canonicalData[displayFieldId] ?? ''),
+    });
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// getRecentLinkedRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the last N records linked by any user to this cross-link definition,
+ * ordered by most recently linked first. Used for the "Recent" section
+ * in the Link Picker.
+ *
+ * @see docs/reference/cross-linking.md § Link Picker UX — Recent Section
+ */
+export async function getRecentLinkedRecords(
+  tenantId: string,
+  crossLinkId: string,
+  _userId: string,
+  limit: number = 5,
+): Promise<DbRecord[]> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  // Fetch the most recent cross_link_index entries for this definition
+  const recentIndexRows = await db
+    .select({
+      targetRecordId: crossLinkIndex.targetRecordId,
+    })
+    .from(crossLinkIndex)
+    .where(
+      and(
+        eq(crossLinkIndex.tenantId, tenantId),
+        eq(crossLinkIndex.crossLinkId, crossLinkId),
+      ),
+    )
+    .orderBy(desc(crossLinkIndex.createdAt))
+    .limit(limit);
+
+  if (recentIndexRows.length === 0) return [];
+
+  // Deduplicate target record IDs (same record may be linked from multiple sources)
+  const uniqueTargetIds = [...new Set(recentIndexRows.map((r) => r.targetRecordId))];
+
+  // Fetch the actual target records
+  const targetRecords = await db
+    .select()
+    .from(records)
+    .where(
+      and(
+        eq(records.tenantId, tenantId),
+        isNull(records.archivedAt),
+        inArray(records.id, uniqueTargetIds),
+      ),
+    );
+
+  // Preserve order from the index query
+  const recordMap = new Map(targetRecords.map((r) => [r.id, r]));
+  const ordered: DbRecord[] = [];
+  for (const id of uniqueTargetIds) {
+    const rec = recordMap.get(id);
+    if (rec) ordered.push(rec);
+  }
+
+  return ordered;
 }

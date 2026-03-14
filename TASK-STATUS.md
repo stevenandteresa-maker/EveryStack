@@ -99,17 +99,17 @@ When a unit moves to `failed-review`:
   - Branch:
   - Notes: Parallel with Units 4 and 5
 
-- [ ] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `in-progress`
+- [x] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `passed-review`
   - Produces: `cross-link` BullMQ queue + job types; `processCrossLinkCascade`, `processIndexRebuild` processors; `enqueueCascadeJob`, `checkCascadeBackpressure` helpers; `scheduleIntegrityCheck` — from `apps/worker/src/processors/cross-link/`
   - Consumes: Unit 1 types + utilities, Unit 2 cross-link index data
   - Branch:
   - Notes: Parallel with Units 3 and 5
 
-- [ ] **Unit 5: Link Picker UI** — `pending`
+- [ ] **Unit 5: Link Picker UI** — `in-progress` (Prompt 11 done; Prompt 12 pending)
   - Produces: `LinkPicker`, `LinkPickerProvider`, `LinkedRecordChip`, `LinkPickerSearchResults`, `LinkPickerInlineCreate` components; `useLinkPicker` hook; `searchLinkableRecords`, `getRecentLinkedRecords` data functions — from `apps/web/src/components/cross-links/`
   - Consumes: Unit 1 types, Unit 2 CRUD actions, Unit 3 permission resolution
-  - Branch:
-  - Notes: Parallel with Units 3 and 4
+  - Branch: `build/3b-i-cross-linking`
+  - Notes: Prompt 11 delivered: data functions (search + recent), LinkPickerProvider, useLinkPicker, LinkPicker, LinkPickerSearchResults. Prompt 12 pending: inline create, LinkedRecordChip, grid/RecordView integration.
 
 ---
 
