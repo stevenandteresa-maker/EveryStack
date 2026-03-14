@@ -7,6 +7,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const {
   mockWriteAuditLog,
   mockCheckCrossLinkPermission,
+  mockGetCrossLinkDefinition,
+  mockValidateLinkTarget,
+  mockEnqueueCascadeJob,
   mockDbChain,
   SOURCE_TABLE_ID,
   SOURCE_FIELD_ID,
@@ -16,6 +19,9 @@ const {
   GENERATED_UUID,
   TENANT_ID,
   USER_ID,
+  SOURCE_RECORD_ID,
+  TARGET_RECORD_ID_1,
+  TARGET_RECORD_ID_2,
 } = vi.hoisted(() => {
   const SOURCE_TABLE_ID = '11111111-1111-4111-8111-111111111111';
   const SOURCE_FIELD_ID = '22222222-2222-4222-8222-222222222222';
@@ -25,8 +31,14 @@ const {
   const GENERATED_UUID = '66666666-6666-4666-8666-666666666666';
   const TENANT_ID = '77777777-7777-4777-8777-777777777777';
   const USER_ID = '88888888-8888-4888-8888-888888888888';
+  const SOURCE_RECORD_ID = '99999999-9999-4999-8999-999999999999';
+  const TARGET_RECORD_ID_1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const TARGET_RECORD_ID_2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   const mockWriteAuditLog = vi.fn().mockResolvedValue(undefined);
   const mockCheckCrossLinkPermission = vi.fn().mockResolvedValue(true);
+  const mockGetCrossLinkDefinition = vi.fn();
+  const mockValidateLinkTarget = vi.fn();
+  const mockEnqueueCascadeJob = vi.fn().mockResolvedValue(undefined);
 
   // Build a flexible mock chain that tracks calls and returns configurable results
   const selectResults: unknown[][] = [];
@@ -61,12 +73,16 @@ const {
   const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
   const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
+  const mockOnConflictDoNothing = vi.fn().mockResolvedValue(undefined);
   const mockInsertReturning = vi.fn().mockImplementation(() => {
     const result = insertResults[insertCallIndex] ?? [];
     insertCallIndex++;
     return Promise.resolve(result);
   });
-  const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+  const mockInsertValues = vi.fn().mockReturnValue({
+    returning: mockInsertReturning,
+    onConflictDoNothing: mockOnConflictDoNothing,
+  });
   const mockInsert = vi.fn().mockReturnValue({ values: mockInsertValues });
 
   const mockUpdateReturning = vi.fn().mockResolvedValue([]);
@@ -102,8 +118,14 @@ const {
     GENERATED_UUID,
     TENANT_ID,
     USER_ID,
+    SOURCE_RECORD_ID,
+    TARGET_RECORD_ID_1,
+    TARGET_RECORD_ID_2,
     mockWriteAuditLog,
     mockCheckCrossLinkPermission,
+    mockGetCrossLinkDefinition,
+    mockValidateLinkTarget,
+    mockEnqueueCascadeJob,
     mockDbChain: {
       db: mockDb,
       selectResults,
@@ -125,6 +147,7 @@ const {
       mockUpdateReturning,
       mockDelete,
       mockDeleteWhere,
+      mockOnConflictDoNothing,
       mockTransaction,
     },
   };
@@ -158,6 +181,7 @@ vi.mock('@everystack/shared/db', () => ({
   eq: vi.fn((...args: unknown[]) => ({ type: 'eq', args })),
   and: vi.fn((...args: unknown[]) => ({ type: 'and', args })),
   count: vi.fn(() => 'count()'),
+  inArray: vi.fn((...args: unknown[]) => ({ type: 'inArray', args })),
   sql: Object.assign(
     vi.fn((...args: unknown[]) => ({ type: 'sql', args })),
     { raw: vi.fn((s: string) => s) },
@@ -175,6 +199,8 @@ vi.mock('@everystack/shared/db', () => ({
   crossLinkIndex: {
     tenantId: 'cross_link_index.tenant_id',
     crossLinkId: 'cross_link_index.cross_link_id',
+    sourceRecordId: 'cross_link_index.source_record_id',
+    targetRecordId: 'cross_link_index.target_record_id',
   },
   fields: {
     id: 'fields.id',
@@ -183,6 +209,7 @@ vi.mock('@everystack/shared/db', () => ({
     sortOrder: 'fields.sort_order',
   },
   records: {
+    id: 'records.id',
     tenantId: 'records.tenant_id',
     tableId: 'records.table_id',
     canonicalData: 'records.canonical_data',
@@ -217,6 +244,12 @@ vi.mock('@/lib/errors', () => {
 
 vi.mock('@/data/cross-links', () => ({
   checkCrossLinkPermission: mockCheckCrossLinkPermission,
+  getCrossLinkDefinition: mockGetCrossLinkDefinition,
+  validateLinkTarget: mockValidateLinkTarget,
+}));
+
+vi.mock('@/lib/cross-link-cascade', () => ({
+  enqueueCascadeJob: mockEnqueueCascadeJob,
 }));
 
 // ---------------------------------------------------------------------------
@@ -227,6 +260,8 @@ import {
   createCrossLinkDefinition,
   updateCrossLinkDefinition,
   deleteCrossLinkDefinition,
+  linkRecords,
+  unlinkRecords,
 } from '../cross-link-actions';
 
 // ---------------------------------------------------------------------------
@@ -553,5 +588,448 @@ describe('deleteCrossLinkDefinition', () => {
     await expect(deleteCrossLinkDefinition(GENERATED_UUID)).rejects.toThrow(
       /permission/i,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// linkRecords tests
+// ---------------------------------------------------------------------------
+
+const MOCK_SOURCE_RECORD = {
+  id: SOURCE_RECORD_ID,
+  tenantId: TENANT_ID,
+  tableId: SOURCE_TABLE_ID,
+  canonicalData: {},
+  syncMetadata: null,
+  searchVector: null,
+  archivedAt: null,
+  createdBy: USER_ID,
+  updatedBy: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const MOCK_TARGET_RECORD_1 = {
+  id: TARGET_RECORD_ID_1,
+  tenantId: TENANT_ID,
+  tableId: TARGET_TABLE_ID,
+  canonicalData: { [TARGET_DISPLAY_FIELD_ID]: 'Acme Corp' },
+  syncMetadata: null,
+  searchVector: null,
+  archivedAt: null,
+  createdBy: USER_ID,
+  updatedBy: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const _MOCK_TARGET_RECORD_2 = {
+  id: TARGET_RECORD_ID_2,
+  tenantId: TENANT_ID,
+  tableId: TARGET_TABLE_ID,
+  canonicalData: { [TARGET_DISPLAY_FIELD_ID]: 'Beta Inc' },
+  syncMetadata: null,
+  searchVector: null,
+  archivedAt: null,
+  createdBy: USER_ID,
+  updatedBy: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+describe('linkRecords', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDbChain.resetCallIndices();
+    mockDbChain.selectResults.length = 0;
+    mockDbChain.insertResults.length = 0;
+    mockGetCrossLinkDefinition.mockResolvedValue(MOCK_CROSS_LINK);
+    mockValidateLinkTarget.mockResolvedValue({ valid: true });
+    mockEnqueueCascadeJob.mockResolvedValue(undefined);
+  });
+
+  it('creates index entries and updates canonical JSONB correctly', async () => {
+    // count query (link count check — outside transaction)
+    setupSelectResults(
+      [{ value: 0 }],
+    );
+
+    // Mock transaction to control inner select behavior
+    mockDbChain.mockTransaction.mockImplementationOnce(async (fn: (tx: unknown) => unknown) => {
+      let txSelectCallIndex = 0;
+      const txSelectResultSets: unknown[][] = [
+        [MOCK_SOURCE_RECORD],              // source record
+        [MOCK_TARGET_RECORD_1],            // target records (inArray)
+      ];
+
+      const txMockLimit = vi.fn().mockImplementation(() => {
+        const result = txSelectResultSets[txSelectCallIndex] ?? [];
+        txSelectCallIndex++;
+        return Promise.resolve(result);
+      });
+
+      const txMockWhere = vi.fn().mockImplementation(() => {
+        const next = {
+          limit: txMockLimit,
+        };
+        // thenable for non-.limit() calls (target records query)
+        return Object.assign(next, {
+          then: (resolve: (v: unknown) => void, reject: (e: unknown) => void) => {
+            const result = txSelectResultSets[txSelectCallIndex] ?? [];
+            txSelectCallIndex++;
+            return Promise.resolve(result).then(resolve, reject);
+          },
+        });
+      });
+
+      const txMockFrom = vi.fn().mockReturnValue({ where: txMockWhere });
+      const txMockSelect = vi.fn().mockReturnValue({ from: txMockFrom });
+      const txMockOnConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+      const txMockInsertValues = vi.fn().mockReturnValue({
+        onConflictDoNothing: txMockOnConflictDoNothing,
+      });
+      const txMockInsert = vi.fn().mockReturnValue({ values: txMockInsertValues });
+
+      const txMockUpdateWhere = vi.fn().mockResolvedValue(undefined);
+      const txMockUpdateSet = vi.fn().mockReturnValue({ where: txMockUpdateWhere });
+      const txMockUpdate = vi.fn().mockReturnValue({ set: txMockUpdateSet });
+
+      const tx = {
+        select: txMockSelect,
+        insert: txMockInsert,
+        update: txMockUpdate,
+      };
+
+      return fn(tx);
+    });
+
+    await linkRecords({
+      crossLinkId: GENERATED_UUID,
+      sourceRecordId: SOURCE_RECORD_ID,
+      targetRecordIds: [TARGET_RECORD_ID_1],
+    });
+
+    // Verify validateLinkTarget was called
+    expect(mockValidateLinkTarget).toHaveBeenCalledWith(
+      TENANT_ID,
+      GENERATED_UUID,
+      TARGET_RECORD_ID_1,
+      SOURCE_RECORD_ID,
+    );
+
+    // Verify audit log was written
+    expect(mockWriteAuditLog).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: 'cross_link.records_linked',
+        entityType: 'cross_link',
+        details: expect.objectContaining({
+          sourceRecordId: SOURCE_RECORD_ID,
+          record_ids: [TARGET_RECORD_ID_1],
+        }),
+      }),
+    );
+
+    // Verify cascade job enqueued
+    expect(mockEnqueueCascadeJob).toHaveBeenCalledWith(
+      TENANT_ID,
+      TARGET_RECORD_ID_1,
+      'high',
+    );
+  });
+
+  it('respects max_links_per_record limit', async () => {
+    const definitionWithLowLimit = {
+      ...MOCK_CROSS_LINK,
+      maxLinksPerRecord: 2,
+    };
+    mockGetCrossLinkDefinition.mockResolvedValue(definitionWithLowLimit);
+
+    // count query returns 2 (at limit)
+    setupSelectResults(
+      [{ value: 2 }],
+    );
+
+    await expect(
+      linkRecords({
+        crossLinkId: GENERATED_UUID,
+        sourceRecordId: SOURCE_RECORD_ID,
+        targetRecordIds: [TARGET_RECORD_ID_1],
+      }),
+    ).rejects.toThrow(/exceed the limit/i);
+  });
+
+  it('rejects invalid targets', async () => {
+    mockValidateLinkTarget.mockResolvedValue({
+      valid: false,
+      reason: 'Target record is archived',
+    });
+
+    await expect(
+      linkRecords({
+        crossLinkId: GENERATED_UUID,
+        sourceRecordId: SOURCE_RECORD_ID,
+        targetRecordIds: [TARGET_RECORD_ID_1],
+      }),
+    ).rejects.toThrow(/Target record is archived/);
+  });
+
+  it('skips duplicate links via ON CONFLICT DO NOTHING', async () => {
+    // count query
+    setupSelectResults(
+      [{ value: 1 }], // one existing link
+    );
+
+    // source record already has one linked record
+    const existingCanonical = {
+      [SOURCE_FIELD_ID]: {
+        type: 'cross_link',
+        value: {
+          linked_records: [{
+            record_id: TARGET_RECORD_ID_1,
+            table_id: TARGET_TABLE_ID,
+            display_value: 'Acme Corp',
+            _display_updated_at: '2026-01-01T00:00:00Z',
+          }],
+          cross_link_id: GENERATED_UUID,
+        },
+      },
+    };
+
+    const txMockOnConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+
+    mockDbChain.mockTransaction.mockImplementationOnce(async (fn: (tx: unknown) => unknown) => {
+      let txIdx = 0;
+      const txResults: unknown[][] = [
+        [{ ...MOCK_SOURCE_RECORD, canonicalData: existingCanonical }],
+        [MOCK_TARGET_RECORD_1],
+      ];
+
+      const txLimit = vi.fn().mockImplementation(() => {
+        const r = txResults[txIdx] ?? [];
+        txIdx++;
+        return Promise.resolve(r);
+      });
+      const txWhere = vi.fn().mockImplementation(() => {
+        return Object.assign({ limit: txLimit }, {
+          then: (res: (v: unknown) => void, rej: (e: unknown) => void) => {
+            const r = txResults[txIdx] ?? [];
+            txIdx++;
+            return Promise.resolve(r).then(res, rej);
+          },
+        });
+      });
+
+      const tx = {
+        select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: txWhere }) }),
+        insert: vi.fn().mockReturnValue({
+          values: vi.fn().mockReturnValue({ onConflictDoNothing: txMockOnConflictDoNothing }),
+        }),
+        update: vi.fn().mockReturnValue({
+          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+        }),
+      };
+
+      return fn(tx);
+    });
+
+    await linkRecords({
+      crossLinkId: GENERATED_UUID,
+      sourceRecordId: SOURCE_RECORD_ID,
+      targetRecordIds: [TARGET_RECORD_ID_1], // same as existing
+    });
+
+    // onConflictDoNothing should have been called (index insert is idempotent)
+    expect(txMockOnConflictDoNothing).toHaveBeenCalled();
+  });
+
+  it('throws NotFoundError when definition does not exist', async () => {
+    mockGetCrossLinkDefinition.mockResolvedValue(null);
+
+    await expect(
+      linkRecords({
+        crossLinkId: GENERATED_UUID,
+        sourceRecordId: SOURCE_RECORD_ID,
+        targetRecordIds: [TARGET_RECORD_ID_1],
+      }),
+    ).rejects.toThrow(/not found/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// unlinkRecords tests
+// ---------------------------------------------------------------------------
+
+describe('unlinkRecords', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDbChain.resetCallIndices();
+    mockDbChain.selectResults.length = 0;
+    mockDbChain.insertResults.length = 0;
+    mockGetCrossLinkDefinition.mockResolvedValue(MOCK_CROSS_LINK);
+    mockEnqueueCascadeJob.mockResolvedValue(undefined);
+  });
+
+  it('removes index entries and updates canonical JSONB', async () => {
+    const existingCanonical = {
+      [SOURCE_FIELD_ID]: {
+        type: 'cross_link',
+        value: {
+          linked_records: [
+            {
+              record_id: TARGET_RECORD_ID_1,
+              table_id: TARGET_TABLE_ID,
+              display_value: 'Acme Corp',
+              _display_updated_at: '2026-01-01T00:00:00Z',
+            },
+            {
+              record_id: TARGET_RECORD_ID_2,
+              table_id: TARGET_TABLE_ID,
+              display_value: 'Beta Inc',
+              _display_updated_at: '2026-01-01T00:00:00Z',
+            },
+          ],
+          cross_link_id: GENERATED_UUID,
+        },
+      },
+    };
+
+    const txMockDeleteWhere = vi.fn().mockResolvedValue(undefined);
+    const txMockUpdateSet = vi.fn();
+    let capturedCanonicalData: unknown = null;
+
+    mockDbChain.mockTransaction.mockImplementationOnce(async (fn: (tx: unknown) => unknown) => {
+      let txIdx = 0;
+      const txResults: unknown[][] = [
+        [{ ...MOCK_SOURCE_RECORD, canonicalData: existingCanonical }],
+      ];
+
+      const txLimit = vi.fn().mockImplementation(() => {
+        const r = txResults[txIdx] ?? [];
+        txIdx++;
+        return Promise.resolve(r);
+      });
+      const txWhere = vi.fn().mockImplementation(() => {
+        return Object.assign({ limit: txLimit }, {
+          then: (res: (v: unknown) => void, rej: (e: unknown) => void) => {
+            const r = txResults[txIdx] ?? [];
+            txIdx++;
+            return Promise.resolve(r).then(res, rej);
+          },
+        });
+      });
+
+      txMockUpdateSet.mockImplementation((data: Record<string, unknown>) => {
+        capturedCanonicalData = data.canonicalData;
+        return { where: vi.fn().mockResolvedValue(undefined) };
+      });
+
+      const tx = {
+        select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: txWhere }) }),
+        delete: vi.fn().mockReturnValue({ where: txMockDeleteWhere }),
+        update: vi.fn().mockReturnValue({ set: txMockUpdateSet }),
+      };
+
+      return fn(tx);
+    });
+
+    await unlinkRecords({
+      crossLinkId: GENERATED_UUID,
+      sourceRecordId: SOURCE_RECORD_ID,
+      targetRecordIds: [TARGET_RECORD_ID_1],
+    });
+
+    // Delete was called (index entry removal)
+    expect(txMockDeleteWhere).toHaveBeenCalled();
+
+    // Canonical data should now only have TARGET_RECORD_ID_2
+    expect(capturedCanonicalData).toBeDefined();
+    const canonical = capturedCanonicalData as Record<string, unknown>;
+    const fieldValue = canonical[SOURCE_FIELD_ID] as {
+      type: string;
+      value: { linked_records: Array<{ record_id: string }> };
+    };
+    expect(fieldValue.value.linked_records).toHaveLength(1);
+    expect(fieldValue.value.linked_records[0]!.record_id).toBe(TARGET_RECORD_ID_2);
+
+    // Audit log
+    expect(mockWriteAuditLog).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: 'cross_link.records_unlinked',
+        details: expect.objectContaining({
+          sourceRecordId: SOURCE_RECORD_ID,
+          record_ids: [TARGET_RECORD_ID_1],
+        }),
+      }),
+    );
+
+    // Cascade job enqueued with low priority
+    expect(mockEnqueueCascadeJob).toHaveBeenCalledWith(
+      TENANT_ID,
+      TARGET_RECORD_ID_1,
+      'low',
+    );
+  });
+
+  it('writes audit log for unlink', async () => {
+    mockDbChain.mockTransaction.mockImplementationOnce(async (fn: (tx: unknown) => unknown) => {
+      let txIdx = 0;
+      const txResults: unknown[][] = [
+        [{ ...MOCK_SOURCE_RECORD, canonicalData: {} }], // no cross-link field
+      ];
+
+      const txLimit = vi.fn().mockImplementation(() => {
+        const r = txResults[txIdx] ?? [];
+        txIdx++;
+        return Promise.resolve(r);
+      });
+      const txWhere = vi.fn().mockImplementation(() => {
+        return Object.assign({ limit: txLimit }, {
+          then: (res: (v: unknown) => void, rej: (e: unknown) => void) => {
+            const r = txResults[txIdx] ?? [];
+            txIdx++;
+            return Promise.resolve(r).then(res, rej);
+          },
+        });
+      });
+
+      const tx = {
+        select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: txWhere }) }),
+        delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+        update: vi.fn().mockReturnValue({
+          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+        }),
+      };
+
+      return fn(tx);
+    });
+
+    await unlinkRecords({
+      crossLinkId: GENERATED_UUID,
+      sourceRecordId: SOURCE_RECORD_ID,
+      targetRecordIds: [TARGET_RECORD_ID_1],
+    });
+
+    expect(mockWriteAuditLog).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: 'cross_link.records_unlinked',
+        entityType: 'cross_link',
+        entityId: GENERATED_UUID,
+      }),
+    );
+  });
+
+  it('throws NotFoundError when definition does not exist', async () => {
+    mockGetCrossLinkDefinition.mockResolvedValue(null);
+
+    await expect(
+      unlinkRecords({
+        crossLinkId: GENERATED_UUID,
+        sourceRecordId: SOURCE_RECORD_ID,
+        targetRecordIds: [TARGET_RECORD_ID_1],
+      }),
+    ).rejects.toThrow(/not found/i);
   });
 });

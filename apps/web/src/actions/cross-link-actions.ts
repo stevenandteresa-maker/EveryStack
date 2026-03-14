@@ -16,6 +16,7 @@ import {
   eq,
   and,
   count,
+  inArray,
   sql,
   crossLinks,
   crossLinkIndex,
@@ -33,10 +34,23 @@ import type { z } from 'zod';
 import {
   createCrossLinkSchema,
   updateCrossLinkSchema,
+  linkRecordsSchema,
+  unlinkRecordsSchema,
   CROSS_LINK_LIMITS,
+  extractCrossLinkField,
+  setCrossLinkField,
 } from '@everystack/shared/sync';
-import type { UpdateCrossLinkInput } from '@everystack/shared/sync';
-import { checkCrossLinkPermission } from '@/data/cross-links';
+import type {
+  UpdateCrossLinkInput,
+  CrossLinkFieldValue,
+  CrossLinkLinkedRecordEntry,
+} from '@everystack/shared/sync';
+import {
+  checkCrossLinkPermission,
+  getCrossLinkDefinition,
+  validateLinkTarget,
+} from '@/data/cross-links';
+import { enqueueCascadeJob } from '@/lib/cross-link-cascade';
 
 // ---------------------------------------------------------------------------
 // Structural vs Operational field sets
@@ -400,6 +414,313 @@ export async function deleteCrossLinkDefinition(id: string): Promise<void> {
         traceId: getTraceId(),
       });
     });
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// linkRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Link one or more target records to a source record via a cross-link.
+ *
+ * - Validates each target via validateLinkTarget (scope filter, existence, self-link)
+ * - Enforces max_links_per_record
+ * - Inserts cross_link_index entries (ON CONFLICT DO NOTHING for idempotency)
+ * - Updates source record's canonical_data with LinkedRecordEntry items
+ * - Enqueues display value cascade jobs (stub)
+ */
+export async function linkRecords(
+  input: z.input<typeof linkRecordsSchema>,
+): Promise<void> {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = linkRecordsSchema.parse(input);
+
+  const db = getDbForTenant(tenantId, 'write');
+
+  // Fetch the cross-link definition and verify tenant ownership
+  const definition = await getCrossLinkDefinition(tenantId, validated.crossLinkId);
+  if (!definition) {
+    throw new NotFoundError('Cross-link definition not found');
+  }
+
+  // Validate each target record
+  const validTargetIds: string[] = [];
+  for (const targetId of validated.targetRecordIds) {
+    const result = await validateLinkTarget(
+      tenantId,
+      validated.crossLinkId,
+      targetId,
+      validated.sourceRecordId,
+    );
+    if (!result.valid) {
+      throw new ForbiddenError(result.reason ?? 'Invalid link target');
+    }
+    validTargetIds.push(targetId);
+  }
+
+  // Check link count: current + new must not exceed max
+  const [countResult] = await db
+    .select({ value: count() })
+    .from(crossLinkIndex)
+    .where(
+      and(
+        eq(crossLinkIndex.tenantId, tenantId),
+        eq(crossLinkIndex.crossLinkId, validated.crossLinkId),
+        eq(crossLinkIndex.sourceRecordId, validated.sourceRecordId),
+      ),
+    );
+
+  const currentCount = Number(countResult?.value ?? 0);
+  if (currentCount + validTargetIds.length > definition.maxLinksPerRecord) {
+    throw new ForbiddenError(
+      `Adding ${validTargetIds.length} links would exceed the limit of ${definition.maxLinksPerRecord} links per record (current: ${currentCount})`,
+    );
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      // Fetch source record for canonical_data update
+      const [sourceRecord] = await tx
+        .select()
+        .from(records)
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            eq(records.id, validated.sourceRecordId),
+          ),
+        )
+        .limit(1);
+
+      if (!sourceRecord) {
+        throw new NotFoundError('Source record not found');
+      }
+
+      // Fetch target records to get display values
+      const targetRecords = await tx
+        .select()
+        .from(records)
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            inArray(records.id, validTargetIds),
+          ),
+        );
+
+      const targetRecordMap = new Map(targetRecords.map((r) => [r.id, r]));
+
+      // Batch insert cross_link_index entries (ON CONFLICT DO NOTHING)
+      const indexEntries = validTargetIds.map((targetId) => ({
+        tenantId,
+        crossLinkId: validated.crossLinkId,
+        sourceRecordId: validated.sourceRecordId,
+        sourceTableId: definition.sourceTableId,
+        targetRecordId: targetId,
+      }));
+
+      await tx
+        .insert(crossLinkIndex)
+        .values(indexEntries)
+        .onConflictDoNothing();
+
+      // Build new LinkedRecordEntry items from target records
+      const now = new Date().toISOString();
+      const newEntries: CrossLinkLinkedRecordEntry[] = validTargetIds.map((targetId) => {
+        const targetRecord = targetRecordMap.get(targetId);
+        const displayValue = targetRecord
+          ? String(
+              (targetRecord.canonicalData as Record<string, unknown>)[
+                definition.targetDisplayFieldId
+              ] ?? '',
+            )
+          : '';
+
+        return {
+          record_id: targetId,
+          table_id: definition.targetTableId,
+          display_value: displayValue,
+          _display_updated_at: now,
+        };
+      });
+
+      // Update source record's canonical_data
+      const existingField = extractCrossLinkField(
+        sourceRecord.canonicalData,
+        definition.sourceFieldId,
+      );
+
+      const existingEntries = existingField?.value.linked_records ?? [];
+
+      // Deduplicate: only add entries that don't already exist
+      const existingIds = new Set(existingEntries.map((e) => e.record_id));
+      const entriesToAdd = newEntries.filter((e) => !existingIds.has(e.record_id));
+
+      const allEntries = [
+        ...existingEntries,
+        ...entriesToAdd,
+      ] as CrossLinkFieldValue['value']['linked_records'];
+
+      const updatedCanonical = setCrossLinkField(
+        sourceRecord.canonicalData,
+        definition.sourceFieldId,
+        {
+          type: 'cross_link',
+          value: {
+            linked_records: allEntries,
+            cross_link_id: validated.crossLinkId,
+          },
+        },
+      );
+
+      await tx
+        .update(records)
+        .set({ canonicalData: updatedCanonical })
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            eq(records.id, validated.sourceRecordId),
+          ),
+        );
+
+      await writeAuditLog(tx as DrizzleTransaction, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'cross_link.records_linked',
+        entityType: 'cross_link',
+        entityId: validated.crossLinkId,
+        details: {
+          sourceRecordId: validated.sourceRecordId,
+          record_ids: validTargetIds,
+        },
+        traceId: getTraceId(),
+      });
+    });
+
+    // Enqueue cascade jobs for each linked target (outside transaction)
+    for (const targetId of validTargetIds) {
+      await enqueueCascadeJob(tenantId, targetId, 'high');
+    }
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// unlinkRecords
+// ---------------------------------------------------------------------------
+
+/**
+ * Unlink one or more target records from a source record.
+ *
+ * - Deletes cross_link_index entries for the specified pairs
+ * - Removes unlinked entries from source record's canonical_data
+ * - Enqueues display value cascade jobs (stub)
+ */
+export async function unlinkRecords(
+  input: z.input<typeof unlinkRecordsSchema>,
+): Promise<void> {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = unlinkRecordsSchema.parse(input);
+
+  const db = getDbForTenant(tenantId, 'write');
+
+  // Fetch the cross-link definition and verify tenant ownership
+  const definition = await getCrossLinkDefinition(tenantId, validated.crossLinkId);
+  if (!definition) {
+    throw new NotFoundError('Cross-link definition not found');
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      // Delete cross_link_index entries for each target
+      for (const targetId of validated.targetRecordIds) {
+        await tx
+          .delete(crossLinkIndex)
+          .where(
+            and(
+              eq(crossLinkIndex.tenantId, tenantId),
+              eq(crossLinkIndex.crossLinkId, validated.crossLinkId),
+              eq(crossLinkIndex.sourceRecordId, validated.sourceRecordId),
+              eq(crossLinkIndex.targetRecordId, targetId),
+            ),
+          );
+      }
+
+      // Fetch source record to update canonical_data
+      const [sourceRecord] = await tx
+        .select()
+        .from(records)
+        .where(
+          and(
+            eq(records.tenantId, tenantId),
+            eq(records.id, validated.sourceRecordId),
+          ),
+        )
+        .limit(1);
+
+      if (!sourceRecord) {
+        throw new NotFoundError('Source record not found');
+      }
+
+      // Remove unlinked entries from canonical_data
+      const existingField = extractCrossLinkField(
+        sourceRecord.canonicalData,
+        definition.sourceFieldId,
+      );
+
+      if (existingField) {
+        const unlinkSet = new Set(validated.targetRecordIds);
+        const filteredEntries = existingField.value.linked_records.filter(
+          (entry) => !unlinkSet.has(entry.record_id),
+        );
+
+        const updatedFieldValue: CrossLinkFieldValue = {
+          type: 'cross_link',
+          value: {
+            linked_records: filteredEntries,
+            cross_link_id: validated.crossLinkId,
+          },
+        };
+
+        const updatedCanonical = setCrossLinkField(
+          sourceRecord.canonicalData,
+          definition.sourceFieldId,
+          updatedFieldValue,
+        );
+
+        await tx
+          .update(records)
+          .set({ canonicalData: updatedCanonical })
+          .where(
+            and(
+              eq(records.tenantId, tenantId),
+              eq(records.id, validated.sourceRecordId),
+            ),
+          );
+      }
+
+      await writeAuditLog(tx as DrizzleTransaction, {
+        tenantId,
+        actorType: 'user',
+        actorId: userId,
+        action: 'cross_link.records_unlinked',
+        entityType: 'cross_link',
+        entityId: validated.crossLinkId,
+        details: {
+          sourceRecordId: validated.sourceRecordId,
+          record_ids: validated.targetRecordIds,
+        },
+        traceId: getTraceId(),
+      });
+    });
+
+    // Enqueue cascade jobs for each unlinked target (outside transaction)
+    for (const targetId of validated.targetRecordIds) {
+      await enqueueCascadeJob(tenantId, targetId, 'low');
+    }
   } catch (error) {
     throw wrapUnknownError(error);
   }

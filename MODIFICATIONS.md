@@ -57,6 +57,27 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session D — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** built
+**Prompt(s):** Prompt 5 (Unit 2 — record link/unlink actions + index maintenance)
+
+### Files Created
+- `apps/web/src/lib/cross-link-cascade.ts` — Stub module for display value cascade job enqueueing (no-op, implemented in Unit 4)
+
+### Files Modified
+- `apps/web/src/actions/cross-link-actions.ts` — Added `linkRecords()` and `unlinkRecords()` server actions with index maintenance, canonical JSONB updates, and audit logging
+- `apps/web/src/actions/__tests__/cross-link-actions.test.ts` — Added 8 tests for linkRecords/unlinkRecords (index creation, max_links_per_record, invalid targets, duplicate handling, canonical JSONB updates, audit log)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session C — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
