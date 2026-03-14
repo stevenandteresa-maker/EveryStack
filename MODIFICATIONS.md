@@ -57,10 +57,20 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+(none)
+
+---
+
+## Archive
+
+<!-- Docs Agent moves completed (docs-synced) session blocks here
+     during Step 5, newest first. This keeps the active section
+     focused on unsynced work. -->
+
 ## Session F — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 11–12 (Unit 5)
 
 ### Files Created
@@ -91,7 +101,7 @@ built → failed-review → built (retry after fixes)
 ## Session E — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 9–10 (Unit 4)
 
 ### Files Created
@@ -116,32 +126,10 @@ built → failed-review → built (retry after fixes)
 
 ---
 
-## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
-
-**Date:** 2026-03-14
-**Status:** passed-review
-**Prompt(s):** Prompts 3–4 (Unit 2, first half)
-
-### Files Created
-- `apps/web/src/actions/cross-link-actions.ts`
-- `apps/web/src/actions/__tests__/cross-link-actions.test.ts`
-
-### Files Modified
-- `apps/web/src/data/cross-links.ts` (added 5 new data functions)
-- `apps/web/src/data/__tests__/cross-links.integration.test.ts` (extended)
-
-### Schema Changes
-- None
-
-### New Domain Terms Introduced
-- None
-
----
-
 ## Session D — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 7–8 (Unit 3)
 
 ### Files Created
@@ -162,7 +150,7 @@ built → failed-review → built (retry after fixes)
 ## Session C — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-14
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 5–6 (Unit 2, second half)
 
 ### Files Created
@@ -181,10 +169,32 @@ built → failed-review → built (retry after fixes)
 
 ---
 
+## Session B — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
+
+**Date:** 2026-03-14
+**Status:** docs-synced
+**Prompt(s):** Prompts 3–4 (Unit 2, first half)
+
+### Files Created
+- `apps/web/src/actions/cross-link-actions.ts`
+- `apps/web/src/actions/__tests__/cross-link-actions.test.ts`
+
+### Files Modified
+- `apps/web/src/data/cross-links.ts` (added 5 new data functions)
+- `apps/web/src/data/__tests__/cross-links.integration.test.ts` (extended)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None
+
+---
+
 ## Session A — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
 **Date:** 2026-03-13
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 1–2 (Unit 1)
 
 ### Files Created
@@ -205,12 +215,6 @@ built → failed-review → built (retry after fixes)
 - None (RelationshipType, CrossLinkFieldValue, LinkScopeFilter already in GLOSSARY)
 
 ---
-
-## Archive
-
-<!-- Docs Agent moves completed (docs-synced) session blocks here
-     during Step 5, newest first. This keeps the active section
-     focused on unsynced work. -->
 
 ## Session A — 3A-iii — build/3a-iii-field-permissions
 
