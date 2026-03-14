@@ -462,3 +462,37 @@ built → failed-review → built (retry after fixes)
 
 ### New Domain Terms Introduced
 - CommandBarProvider, useCommandBar, deriveChannel, activeChannel (search | slash | ai)
+
+## Session D/E — Phase 3B-ii — build/3b-ii-sds-command-bar
+
+**Date:** 2026-03-14
+**Status:** passed-review
+**Prompt(s):** Prompts 12–15 (Unit 4: Command Bar UI & AI Search Channel)
+
+### Files Created
+- `apps/web/src/components/command-bar/command-bar-provider.tsx` — CommandBarProvider context, useCommandBar() hook, deriveChannel() intent routing
+- `apps/web/src/components/command-bar/command-bar.tsx` — CommandBar modal with keyboard shortcuts, session analytics, trackRecentItem wiring
+- `apps/web/src/components/command-bar/search-results.tsx` — CommandBarSearchResults with parallel record + navigation search, recent item boosting
+- `apps/web/src/components/command-bar/slash-menu.tsx` — CommandBarSlashMenu with fuzzy filtering by command_key, label, description
+- `apps/web/src/components/command-bar/ai-channel.tsx` — CommandBarAIChannel with SDS-powered natural language search via AIService
+- `apps/web/src/components/command-bar/recent-items.tsx` — CommandBarRecentItems with icon mapping, entity context display, filterRecentItemsByQuery()
+- `apps/web/src/components/command-bar/__tests__/command-bar.test.tsx` — 18 tests: deriveChannel, provider state, keyboard shortcuts
+- `apps/web/src/components/command-bar/__tests__/recent-items.test.tsx` — 17 tests: recent items rendering, selection tracking, scoped mode, session analytics, search boosting
+- `apps/web/src/actions/command-bar.ts` — executeSlashCommand() and aiSearchQuery() server actions (SDS + AIService integration)
+- `apps/web/src/data/command-bar-sessions.ts` — createCommandBarSession(), closeCommandBarSession(), getCommandBarSession() analytics data layer
+
+### Files Modified
+- `apps/web/messages/en.json` — Added commandBar i18n namespace (placeholder, searchHeading, slashHeading, aiHeading, recentHeading, scopedLabel, scopedHint, etc.)
+- `apps/web/messages/es.json` — Added commandBar i18n namespace (Spanish translations)
+- `packages/shared/db/index.ts` — Added re-exports for commandBarSessions, CommandBarSession, NewCommandBarSession
+
+### Schema Changes
+None
+
+### New Domain Terms Introduced
+- `CommandBar` — Persistent modal UI component for search, slash commands, and AI queries (Cmd+K global, Cmd+F scoped)
+- `CommandBarProvider` — React context provider managing Command Bar state (open/close, mode, query, channel)
+- `useCommandBar` — Hook exposing Command Bar state and actions (open, close, setQuery)
+- `activeChannel` — Derived channel (search | slash | ai) based on query intent routing
+- `intent routing` — Pattern where query prefix determines the active channel (plain text → search, / → slash, ? → AI)
+- `scoped mode` — Command Bar mode (Cmd+F) filtering results to the current table context

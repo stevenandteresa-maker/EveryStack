@@ -99,11 +99,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3b-ii-sds-command-bar`
   - Notes: Parallel with Units 1–2. All 7 contracts verified 2026-03-14.
 
-- [ ] **Unit 4: Command Bar UI & AI Search Channel** — `in-progress` (Prompt 12 complete)
+- [x] **Unit 4: Command Bar UI & AI Search Channel** — `passed-review`
   - Produces: `CommandBar`, `CommandBarProvider`, `CommandBarSearchResults`, `CommandBarSlashMenu`, `CommandBarAIChannel`, `CommandBarRecentItems` components; `useCommandBar()` hook; `executeSlashCommand()`, `aiSearchQuery()` server actions — from `apps/web/src/components/command-bar/` and `apps/web/src/actions/`
   - Consumes: Unit 2 `SchemaDescriptorService` + token estimator, Unit 3 search/command/recent data functions
-  - Branch:
-  - Notes:
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: All 9 contracts verified. All 7 cross-unit integrations verified. 2077 tests pass. 2026-03-14.
 
 ---
 
