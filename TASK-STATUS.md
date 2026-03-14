@@ -74,46 +74,49 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
+(none)
+
+---
+
+## Completed Sub-Phases
+
 ### 3B-i — Cross-Linking Engine
 
 **Started:** 2026-03-13
 **Completed:** 2026-03-14
+**Docs synced:** 2026-03-14
 
 #### Subdivision Units
 
-- [x] **Unit 1: Cross-Link Types, Validation Schemas & Registry** — `passed-review`
+- [x] **Unit 1: Cross-Link Types, Validation Schemas & Registry** — `docs-synced`
   - Produces: `RelationshipType`, `LinkScopeFilter`, `CrossLinkFieldValue`, `CROSS_LINK_LIMITS` types/constants; `createCrossLinkSchema`, `updateCrossLinkSchema`, `linkScopeFilterSchema` Zod schemas; `linked_record` FieldTypeRegistry registration; `extractCrossLinkField()`, `setCrossLinkField()` utilities — all from `packages/shared/sync/cross-link-*.ts`
   - Consumes: None — first unit. Uses existing `FieldTypeRegistry`, Drizzle schema types
   - Branch: `build/3b-i-cross-linking`
   - Notes:
 
-- [x] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `passed-review`
+- [x] **Unit 2: Cross-Link Definition CRUD & Record Linking** — `docs-synced`
   - Produces: `createCrossLinkDefinition`, `updateCrossLinkDefinition`, `deleteCrossLinkDefinition`, `linkRecords`, `unlinkRecords` server actions; `getCrossLinkDefinition`, `listCrossLinkDefinitions`, `getCrossLinksByTarget`, `validateLinkTarget`, `checkCrossLinkPermission` data functions; `createTestCrossLinkWithIndex` factory
   - Consumes: Unit 1 types, schemas, utilities
-  - Branch:
+  - Branch: `build/3b-i-cross-linking`
   - Notes:
 
-- [x] **Unit 3: Query-Time Resolution & Permission Intersection** — `passed-review`
+- [x] **Unit 3: Query-Time Resolution & Permission Intersection** — `docs-synced`
   - Produces: `resolveLinkedRecordsL0`, `resolveLinkedRecordsL1`, `resolveLinkedRecordsL2` resolution functions; `LinkedRecordTree` type; `resolveLinkedRecordPermissions`, `filterLinkedRecordByPermissions` permission functions — from `apps/web/src/data/cross-link-resolution.ts`
   - Consumes: Unit 1 types + utilities, Unit 2 `getCrossLinkDefinition()`
-  - Branch:
+  - Branch: `build/3b-i-cross-linking`
   - Notes: Parallel with Units 4 and 5
 
-- [x] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `passed-review`
+- [x] **Unit 4: Display Value Cascade & Scalability Infrastructure** — `docs-synced`
   - Produces: `cross-link` BullMQ queue + job types; `processCrossLinkCascade`, `processIndexRebuild` processors; `enqueueCascadeJob`, `checkCascadeBackpressure` helpers; `scheduleIntegrityCheck` — from `apps/worker/src/processors/cross-link/`
   - Consumes: Unit 1 types + utilities, Unit 2 cross-link index data
-  - Branch:
+  - Branch: `build/3b-i-cross-linking`
   - Notes: Parallel with Units 3 and 5
 
-- [x] **Unit 5: Link Picker UI** — `passed-review`
+- [x] **Unit 5: Link Picker UI** — `docs-synced`
   - Produces: `LinkPicker`, `LinkPickerProvider`, `LinkedRecordChip`, `LinkPickerSearchResults`, `LinkPickerInlineCreate` components; `useLinkPicker` hook; `searchLinkableRecords`, `getRecentLinkedRecords` data functions — from `apps/web/src/components/cross-links/`
   - Consumes: Unit 1 types, Unit 2 CRUD actions, Unit 3 permission resolution
   - Branch: `build/3b-i-cross-linking`
-  - Notes: Prompts 11–12 complete. All contracts verified. Phase 3B-i fully passed review 2026-03-14.
-
----
-
-## Completed Sub-Phases
+  - Notes: Prompts 11–12 complete. All contracts verified. Phase 3B-i fully passed review 2026-03-14. Docs synced 2026-03-14.
 
 ### 3A-iii — Field-Level Permissions: Model, Resolution & Config UI
 
