@@ -83,6 +83,10 @@ describe('REALTIME_EVENTS', () => {
     expect(REALTIME_EVENTS.PERMISSION_UPDATED).toBe('permission.updated');
   });
 
+  it('contains cross-link event', () => {
+    expect(REALTIME_EVENTS.DISPLAY_VALUE_UPDATED).toBe('cross_link.display_value_updated');
+  });
+
   it('contains notification event', () => {
     expect(REALTIME_EVENTS.NOTIFICATION_CREATED).toBe('notification.created');
   });
