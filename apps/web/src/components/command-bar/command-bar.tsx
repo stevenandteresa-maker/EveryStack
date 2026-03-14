@@ -14,6 +14,7 @@ import {
 import { useCommandBar } from './command-bar-provider';
 import { CommandBarSearchResults } from './search-results';
 import { CommandBarSlashMenu } from './slash-menu';
+import { CommandBarAIChannel } from './ai-channel';
 import type {
   CommandEntry,
   SearchResult,
@@ -176,14 +177,14 @@ export function CommandBar({
               </CommandGroup>
             )}
 
-            {/* Channel: AI (Prompt 14) */}
+            {/* Channel: AI */}
             {activeChannel === 'ai' && (
-              <CommandGroup
-                heading={t('aiHeading')}
-                data-testid="command-bar-channel-ai"
-              >
-                <CommandItem disabled>{t('aiPlaceholder')}</CommandItem>
-              </CommandGroup>
+              <CommandBarAIChannel
+                query={query}
+                workspaceId={workspaceId}
+                tenantId={tenantId}
+                userId={userId}
+              />
             )}
           </CommandList>
         </Command>

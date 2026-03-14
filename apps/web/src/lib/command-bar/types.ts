@@ -64,6 +64,39 @@ export interface RecentItemInput {
 }
 
 // ---------------------------------------------------------------------------
+// AI Search
+// ---------------------------------------------------------------------------
+
+export type AISearchResultType = 'read' | 'action';
+
+export interface AISearchResult {
+  success: boolean;
+  type: AISearchResultType;
+  content: string;
+  intent?: string;
+  actionSuggestion?: {
+    label: string;
+    description: string;
+    commandKey?: string;
+    params?: Record<string, unknown>;
+  };
+  creditsCharged: number;
+  creditsRemaining: number;
+  error?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Command Execution
+// ---------------------------------------------------------------------------
+
+export interface CommandResult {
+  success: boolean;
+  message?: string;
+  navigationTarget?: string;
+  error?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Search Params
 // ---------------------------------------------------------------------------
 

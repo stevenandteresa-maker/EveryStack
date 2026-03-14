@@ -904,9 +904,19 @@
     "emptyRecent": "Escribe para buscar, usa / para comandos, o haz una pregunta",
     "searchHeading": "Búsqueda",
     "searchPlaceholder": "Escribe para buscar registros, tablas y vistas…",
+    "searchRecordsHeading": "Registros",
+    "searchTablesHeading": "Tablas",
+    "searchViewsHeading": "Vistas",
+    "searchNoResults": "No se encontraron resultados",
     "slashHeading": "Comandos",
     "slashPlaceholder": "Escribe un comando…",
+    "slashNoResults": "No hay comandos coincidentes",
     "aiHeading": "IA",
-    "aiPlaceholder": "Haz una pregunta…"
+    "aiPlaceholder": "Haz una pregunta…",
+    "aiUnavailable": "La IA no está disponible en este momento. Inténtalo de nuevo más tarde.",
+    "aiCreditsUsed": "{credits} créditos utilizados",
+    "aiConfirm": "Confirmar",
+    "aiCancel": "Cancelar",
+    "aiActionExecuted": "Acción ejecutada con éxito"
   }
 }
