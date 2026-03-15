@@ -42,6 +42,7 @@ Platform sends emails on behalf of the system. No compose UI. No user-authored c
 
 - Workspace invitations ("You've been invited to join {workspace}")
 - System alerts (sync failures, automation errors, storage quota warnings)
+- Client thread notification ("New reply in {recordTitle}" — fires when a workspace user posts in a record's client thread; notifies the portal client via email so they know to check the portal). See `communications.md` § Record Thread.
 
 **Note:** Password reset and magic link auth handled by Clerk's built-in email system, not EveryStack's Resend integration.
 

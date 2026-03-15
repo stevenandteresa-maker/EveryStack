@@ -247,7 +247,7 @@ A configurable canvas for viewing and editing a single record. When a user click
 
 ### Record Thread
 
-A contextual communication panel tied to a specific record. Opens alongside the Record View (to its right, 25% of screen width). Contains record-scoped comments, @mentions, activity history, and (post-MVP) client-visible messages.
+A contextual communication panel tied to a specific record. Opens alongside the Record View (to its right, 25% of screen width). Uses a **two-thread model (CP-001-D):** every record has an **internal thread** (`thread_type: 'internal'` — "Team Notes," workspace users only) and optionally a **client thread** (`thread_type: 'client'` — "Client Messages," workspace users + portal client, created when Client Messaging is enabled in portal settings). Record View shows both as tabs: "Team Notes" (always present) + "Client Messages" (when enabled). Two separate threads eliminate accidental internal-to-client message leaks. Contains record-scoped comments, @mentions, and activity history. Client thread notification email fires via Resend when a workspace user replies in the client thread.
 
 **Behavior:** Opens from within an expanded Record View. Overlay-style (same as Record View). Both panels coexist at 55% + 25% of screen width.
 
