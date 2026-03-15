@@ -57,6 +57,33 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session C — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** built
+**Prompt(s):** Prompt 8 (Unit 3: PresenceService — Redis Heartbeat + Custom Status)
+
+### Files Created
+- `apps/realtime/src/types/chat.ts` — Shared types for chat/presence/notification events (ChatPresenceState, PresenceEntry, ChatEvent, TypingEvent)
+- `apps/realtime/src/services/presence-service.ts` — PresenceService class with Redis-backed presence state (setPresence, getPresence, heartbeat, getUserStatus, removePresence)
+- `apps/web/src/data/presence.ts` — Custom status CRUD data functions (updateCustomStatus, getCustomStatus, clearExpiredStatuses)
+- `apps/realtime/src/services/__tests__/presence-service.test.ts` — 21 unit tests for PresenceService (TTL, heartbeat, DND, tenant isolation, SCAN pagination)
+- `apps/web/src/data/__tests__/presence.test.ts` — 9 integration tests for custom status CRUD (CRUD, expiry cleanup, tenant isolation)
+
+### Files Modified
+- None
+
+### Files Deleted
+- None
+
+### Schema Changes
+- None (custom status columns already exist on workspace_memberships: status_emoji, status_text, status_clear_at)
+
+### New Domain Terms
+- `ChatPresenceState` — string type for chat presence states (online, away, dnd, offline); distinct from existing `PresenceState` in `packages/shared/realtime/types.ts` which is for grid collaboration presence
+
+---
+
 ## Session A — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-15
@@ -94,23 +121,50 @@ built → failed-review → built (retry after fixes)
 ## Session B — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-15
-**Status:** built
-**Prompt(s):** Prompt 5 (Unit 2: NotificationService core + notification data functions)
+**Status:** passed-review
+**Prompt(s):** Prompts 5–7 (Unit 2: Notification Pipeline & System Email)
 
 ### Files Created
 - `packages/shared/db/migrations/0026_extend_notifications_schema.sql` — Migration adding missing columns to notifications table (title, body, source_type, source_record_id, actor_id, group_key, read_at)
 - `apps/web/src/data/notifications.ts` — Notification CRUD: createNotification, getNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead (Redis-cached unread count)
-- `apps/web/src/lib/notifications/notification-service.ts` — NotificationService class with create() method: inserts notification, checks preferences, routes to in-app (Redis pub/sub) and/or email (BullMQ enqueue). Handles priority override for mention/dm, muted thread suppression, best-effort error handling
+- `apps/web/src/lib/notifications/notification-service.ts` — NotificationService class with create() method: inserts notification, checks preferences, routes to in-app (Redis pub/sub) and/or email (BullMQ enqueue)
 - `apps/web/src/data/__tests__/notifications.integration.test.ts` — Integration tests: tenant isolation, CRUD, pagination, unread count, mark-read
 - `apps/web/src/lib/notifications/__tests__/notification-service.test.ts` — Unit tests: routing logic, 8 notification types, priority override, mute suppression, error handling
+- `apps/web/src/lib/email/resend-service.ts` — ResendEmailService wrapping Resend SDK with rate limiting, retry, and structured logging
+- `apps/web/src/lib/email/__tests__/resend-service.test.ts` — Unit tests for ResendEmailService
+- `apps/worker/src/processors/notification/notification-router.ts` — BullMQ notification router processor dispatching to email-send and cleanup sub-processors
+- `apps/worker/src/processors/notification/email-send.ts` — Email send processor using ResendEmailService with template resolution
+- `apps/worker/src/processors/notification/cleanup.ts` — Notification cleanup processor for purging old read notifications
+- `apps/worker/src/processors/notification/__tests__/notification-router.test.ts` — Unit tests for notification router
+- `apps/worker/src/processors/notification/__tests__/email-send.test.ts` — Unit tests for email send processor
+- `apps/worker/src/processors/notification/__tests__/cleanup.test.ts` — Unit tests for cleanup processor
+- `apps/web/src/data/notification-preferences.ts` — Notification preferences CRUD: getPreferences, updatePreferences, muteThread, unmuteThread
+- `apps/web/src/data/__tests__/notification-preferences.integration.test.ts` — Integration tests for notification preferences
+- `apps/web/src/actions/notifications.ts` — Server actions for notification operations (mark read, update preferences, mute/unmute)
+- `apps/web/src/actions/__tests__/notifications.test.ts` — Unit tests for notification server actions
+- `apps/web/src/lib/email/templates/invitation-email.tsx` — React Email invitation template
+- `apps/web/src/lib/email/templates/system-alert-email.tsx` — React Email system alert template
+- `apps/web/src/lib/email/templates/client-thread-reply-email.tsx` — React Email client thread reply template
+- `apps/web/src/lib/email/templates/index.ts` — Template barrel export
+- `apps/web/src/lib/email/__tests__/templates.test.tsx` — Snapshot tests for email templates
+- `apps/worker/src/processors/notification/email-templates.ts` — Email template resolver mapping notification types to React Email templates
+- `apps/worker/src/processors/notification/__tests__/email-templates.test.ts` — Unit tests for email template resolver
 
 ### Files Modified
 - `packages/shared/db/schema/notifications.ts` — Added columns: title, body, sourceType, sourceRecordId, actorId, groupKey, readAt; added actor relation
 - `packages/shared/db/index.ts` — Added notifications, userNotificationPreferences table/type exports
 - `packages/shared/db/migrations/meta/_journal.json` — Added entry for migration 0026
 - `packages/shared/queue/constants.ts` — Added 'notification' queue name
-- `packages/shared/queue/types.ts` — Added NotificationEmailSendJobData, NotificationCleanupJobData interfaces and notification queue mapping
+- `packages/shared/queue/types.ts` — Added NotificationEmailSendJobData, NotificationCleanupJobData interfaces and notification queue mapping; updated for template data
 - `packages/shared/queue/index.ts` — Added notification job type exports
+- `packages/shared/queue/__tests__/constants.test.ts` — Updated for new queue name
+- `apps/web/package.json` — Added @react-email/components, react-email dependencies
+- `apps/worker/package.json` — Added resend dependency
+- `apps/worker/src/index.ts` — Registered notification processors
+- `apps/web/src/__tests__/auth-flow.integration.test.ts` — Test fixes for verification pass
+- `apps/web/src/__tests__/role-check.integration.test.ts` — Test fixes for verification pass
+- `apps/web/src/__tests__/webhook-user-created.integration.test.ts` — Test fixes for verification pass
+- `pnpm-lock.yaml` — Updated lockfile
 
 ### Schema Changes
 - Extended table: `notifications` — Added columns: title (VARCHAR 255), body (VARCHAR 500 nullable), source_type (VARCHAR 50), source_record_id (UUID), actor_id (UUID FK → users), group_key (VARCHAR 255), read_at (TIMESTAMPTZ)
@@ -120,6 +174,7 @@ built → failed-review → built (retry after fixes)
 ### New Domain Terms Introduced
 - `NotificationService` — Service class that orchestrates notification creation and delivery routing (in-app via Redis pub/sub, email via BullMQ)
 - `NotificationType` — 8 notification categories: mention, dm, thread_reply, approval_requested, approval_decided, automation_failed, sync_error, system
+- `ResendEmailService` — Wrapper around Resend SDK providing rate limiting, retry, and structured logging for transactional email
 
 ---
 

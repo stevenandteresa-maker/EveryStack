@@ -87,17 +87,17 @@ When a unit moves to `failed-review`:
   - Branch: `build/3c-comms`
   - Notes: Prompts 1–4 complete. Verified 2026-03-15.
 
-- [ ] **Unit 2: Notification Pipeline & System Email** — `in-progress`
+- [x] **Unit 2: Notification Pipeline & System Email** — `passed-review`
   - Produces: `NotificationService.create()` with delivery routing; notification CRUD; notification preferences CRUD; BullMQ `notification` queue + email send/cleanup processors; `ResendEmailService`; React Email templates (invitation, system alert, client thread reply); `Notification`, `NotificationPreferences` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
   - Branch: `build/3c-comms`
-  - Notes: Parallel with Units 3 and 4
+  - Notes: Prompts 5–7 complete. Verified 2026-03-15.
 
-- [ ] **Unit 3: Presence & Real-Time Chat Infrastructure** — `pending`
+- [ ] **Unit 3: Presence & Real-Time Chat Infrastructure** — `in-progress`
   - Produces: `PresenceService` (Redis heartbeat, state management); Socket.IO handlers (ChatHandler, PresenceHandler, NotificationHandler); Redis pub/sub chat event subscriber; `publishChatEvent()`, `publishNotificationEvent()`; custom status CRUD; `PresenceState`, `ChatEvent` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
-  - Branch:
-  - Notes: Parallel with Units 2 and 4
+  - Branch: `build/3c-comms`
+  - Notes: Parallel with Units 2 and 4. Prompt 8 complete (PresenceService + custom status + 30 tests). Prompts 9–10 remaining.
 
 - [ ] **Unit 4: Chat Editor (TipTap Environment 1)** — `pending`
   - Produces: `ChatEditor` (3 input states, progressive disclosure); `ChatEditorToolbar`; `MentionDropdown`; `EmojiPicker`; `EmojiReactions`; `MessageRenderer`; `MessageItem`; `ChatAttachmentButton`; `useChatEditor()` hook; TipTap extension config
