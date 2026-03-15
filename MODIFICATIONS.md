@@ -57,47 +57,83 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-## Session A — Phase 3B-ii — build/3b-ii-sds-command-bar
+(No active sessions)
+
+---
+
+## Archive
+
+<!-- Docs Agent moves completed (docs-synced) session blocks here
+     during Step 5, newest first. This keeps the active section
+     focused on unsynced work. -->
+
+## Session D/E — Phase 3B-ii — build/3b-ii-sds-command-bar
 
 **Date:** 2026-03-14
-**Status:** passed-review
-**Prompt(s):** Prompts 1–4 (Unit 1: SDS Types & Core Builders)
+**Status:** docs-synced
+**Prompt(s):** Prompts 12–15 (Unit 4: Command Bar UI & AI Search Channel)
 
 ### Files Created
-- `packages/shared/ai/schema-descriptor/types.ts` — SDS descriptor types: FieldDescriptor, TableDescriptor, BaseDescriptor, LinkEdge, WorkspaceDescriptor
-- `packages/shared/ai/schema-descriptor/index.ts` — Barrel export for all SDS types + builder functions
-- `packages/shared/ai/schema-descriptor/field-mapper.ts` — mapFieldToDescriptor() — maps Drizzle Field row to LLM-optimized FieldDescriptor
-- `packages/shared/ai/schema-descriptor/table-builder.ts` — buildTableDescriptor() — assembles TableDescriptor with pg_stat row counts and cross-link metadata
-- `packages/shared/ai/schema-descriptor/workspace-builder.ts` — buildWorkspaceDescriptor() — assembles full WorkspaceDescriptor with base grouping and deduplicated link_graph
-- `packages/shared/ai/schema-descriptor/__tests__/field-mapper.test.ts` — 46 unit tests for field mapper (all MVP field types, select options, currency_code, linked_record metadata)
-- `packages/shared/ai/schema-descriptor/__tests__/table-builder.integration.test.ts` — Integration tests for table builder (tenant isolation, pg_stat row counts, cross-link batch fetch)
-- `packages/shared/ai/schema-descriptor/__tests__/workspace-builder.integration.test.ts` — Integration tests for workspace builder (base grouping, native tables, link_graph deduplication)
+- `apps/web/src/components/command-bar/command-bar-provider.tsx` — CommandBarProvider context, useCommandBar() hook, deriveChannel() intent routing
+- `apps/web/src/components/command-bar/command-bar.tsx` — CommandBar modal with keyboard shortcuts, session analytics, trackRecentItem wiring
+- `apps/web/src/components/command-bar/search-results.tsx` — CommandBarSearchResults with parallel record + navigation search, recent item boosting
+- `apps/web/src/components/command-bar/slash-menu.tsx` — CommandBarSlashMenu with fuzzy filtering by command_key, label, description
+- `apps/web/src/components/command-bar/ai-channel.tsx` — CommandBarAIChannel with SDS-powered natural language search via AIService
+- `apps/web/src/components/command-bar/recent-items.tsx` — CommandBarRecentItems with icon mapping, entity context display, filterRecentItemsByQuery()
+- `apps/web/src/components/command-bar/__tests__/command-bar.test.tsx` — 18 tests: deriveChannel, provider state, keyboard shortcuts
+- `apps/web/src/components/command-bar/__tests__/recent-items.test.tsx` — 17 tests: recent items rendering, selection tracking, scoped mode, session analytics, search boosting
+- `apps/web/src/actions/command-bar.ts` — executeSlashCommand() and aiSearchQuery() server actions (SDS + AIService integration)
+- `apps/web/src/data/command-bar-sessions.ts` — createCommandBarSession(), closeCommandBarSession(), getCommandBarSession() analytics data layer
 
 ### Files Modified
-- (none beyond files created above)
+- `apps/web/messages/en.json` — Added commandBar i18n namespace (placeholder, searchHeading, slashHeading, aiHeading, recentHeading, scopedLabel, scopedHint, etc.)
+- `apps/web/messages/es.json` — Added commandBar i18n namespace (Spanish translations)
+- `packages/shared/db/index.ts` — Added re-exports for commandBarSessions, CommandBarSession, NewCommandBarSession
 
-### Files Deleted
-- (none)
+### Schema Changes
+None
+
+### New Domain Terms Introduced
+- `CommandBar` — Persistent modal UI component for search, slash commands, and AI queries (Cmd+K global, Cmd+F scoped)
+- `CommandBarProvider` — React context provider managing Command Bar state (open/close, mode, query, channel)
+- `useCommandBar` — Hook exposing Command Bar state and actions (open, close, setQuery)
+- `activeChannel` — Derived channel (search | slash | ai) based on query intent routing
+- `intent routing` — Pattern where query prefix determines the active channel (plain text → search, / → slash, ? → AI)
+- `scoped mode` — Command Bar mode (Cmd+F) filtering results to the current table context
+
+### Notes
+- Session G (Prompt 12 initial build) was superseded by this combined D/E session covering Prompts 12–15.
+
+---
+
+## Session G — Phase 3B-ii — build/3b-ii-sds-command-bar
+
+**Date:** 2026-03-14
+**Status:** docs-synced
+**Prompt(s):** Prompt 12 (Unit 4: CommandBar Shell, Provider & Keyboard Shortcuts — initial build, superseded by Session D/E)
+
+### Files Created
+- `apps/web/src/components/command-bar/command-bar-provider.tsx` — CommandBarProvider context, useCommandBar() hook, deriveChannel() intent routing
+- `apps/web/src/components/command-bar/command-bar.tsx` — CommandBar modal component built on shadcn/ui Command (cmdk), global keyboard shortcuts (Cmd+K, Cmd+F)
+- `apps/web/src/components/command-bar/__tests__/command-bar.test.tsx` — 18 tests: deriveChannel unit tests, provider state tests, keyboard shortcut tests
+
+### Files Modified
+- `apps/web/src/app/(app)/layout.tsx` — Wrapped AppShell with CommandBarProvider, added CommandBar component
+- `apps/web/messages/en.json` — Added commandBar i18n namespace
+- `apps/web/messages/es.json` — Added commandBar i18n namespace (Spanish)
 
 ### Schema Changes
 - None
 
 ### New Domain Terms Introduced
-- `SchemaDescriptorService / SDS` — Service that produces LLM-optimized workspace metadata for AI consumption
-- `WorkspaceDescriptor` — Top-level LLM-optimized schema for a workspace (bases, tables, fields, link_graph)
-- `BaseDescriptor` — Groups tables by their source platform base connection
-- `TableDescriptor` — Per-table metadata with approximate row count and field descriptors
-- `FieldDescriptor` — Per-field metadata with type-specific hints (searchable, aggregatable, options, linked metadata)
-- `LinkEdge` — Cross-link relationship in the workspace link graph (from/to dotted paths, cardinality, label)
+- CommandBarProvider, useCommandBar, deriveChannel, activeChannel (search | slash | ai)
 
-### Notes
-- `linked_base` is not set by `mapFieldToDescriptor()` — requires base connection lookup; workspace builder resolves this via tableToBaseMap.
-- All 8 interface contracts verified: 5 types exported, 3 functions exported with correct signatures.
+---
 
 ## Session C — Phase 3B-ii — build/3b-ii-sds-command-bar
 
 **Date:** 2026-03-14
-**Status:** passed-review
+**Status:** docs-synced
 **Prompt(s):** Prompts 9–11 (Unit 3: Command Bar Search & Navigation Data Layer)
 
 ### Files Created
@@ -131,11 +167,13 @@ built → failed-review → built (retry after fixes)
 - Verification pass fixed two issues: (1) userRecentItems missing from db barrel export, (2) command-registry factory had cross-package import violating shared rootDir.
 - All 7 interface contracts verified. Typecheck, lint, tests (1997), coverage all pass.
 
+---
+
 ## Session B — Phase 3B-ii — build/3b-ii-sds-command-bar
 
 **Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 5 (Unit 2: SDS Permission Filter)
+**Status:** docs-synced
+**Prompt(s):** Prompt 5 (Unit 2: SDS Permission Filter — partial; cache, schema-hash, token-estimator, and service files built in a later unlogged session)
 
 ### Files Created
 - `packages/shared/ai/schema-descriptor/permission-filter.ts` — filterDescriptorByPermissions() — deep-copies and filters WorkspaceDescriptor by user permissions (role-based Table View access, field-level hidden/read_only resolution, link graph pruning, cross-link restricted target handling)
@@ -158,14 +196,48 @@ built → failed-review → built (retry after fixes)
 - Permission resolution uses resolveEffectiveRole() + resolveAllFieldPermissions() from existing auth package
 - Cross-link edge case: linked_record fields with inaccessible targets get linked_table: null, cardinality: 'restricted'
 - Coverage: 89% statements, 88.76% lines on permission-filter.ts
+- **Docs Agent note (2026-03-15):** Session B only logged permission-filter.ts. The remaining Unit 2 files (cache.ts, schema-hash.ts, token-estimator.ts, service.ts + tests) were built in a later session that was not logged in MODIFICATIONS.md. All files verified present on main via git log.
 
 ---
 
-## Archive
+## Session A — Phase 3B-ii — build/3b-ii-sds-command-bar
 
-<!-- Docs Agent moves completed (docs-synced) session blocks here
-     during Step 5, newest first. This keeps the active section
-     focused on unsynced work. -->
+**Date:** 2026-03-14
+**Status:** docs-synced
+**Prompt(s):** Prompts 1–4 (Unit 1: SDS Types & Core Builders)
+
+### Files Created
+- `packages/shared/ai/schema-descriptor/types.ts` — SDS descriptor types: FieldDescriptor, TableDescriptor, BaseDescriptor, LinkEdge, WorkspaceDescriptor
+- `packages/shared/ai/schema-descriptor/index.ts` — Barrel export for all SDS types + builder functions
+- `packages/shared/ai/schema-descriptor/field-mapper.ts` — mapFieldToDescriptor() — maps Drizzle Field row to LLM-optimized FieldDescriptor
+- `packages/shared/ai/schema-descriptor/table-builder.ts` — buildTableDescriptor() — assembles TableDescriptor with pg_stat row counts and cross-link metadata
+- `packages/shared/ai/schema-descriptor/workspace-builder.ts` — buildWorkspaceDescriptor() — assembles full WorkspaceDescriptor with base grouping and deduplicated link_graph
+- `packages/shared/ai/schema-descriptor/__tests__/field-mapper.test.ts` — 46 unit tests for field mapper (all MVP field types, select options, currency_code, linked_record metadata)
+- `packages/shared/ai/schema-descriptor/__tests__/table-builder.integration.test.ts` — Integration tests for table builder (tenant isolation, pg_stat row counts, cross-link batch fetch)
+- `packages/shared/ai/schema-descriptor/__tests__/workspace-builder.integration.test.ts` — Integration tests for workspace builder (base grouping, native tables, link_graph deduplication)
+
+### Files Modified
+- (none beyond files created above)
+
+### Files Deleted
+- (none)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `SchemaDescriptorService / SDS` — Service that produces LLM-optimized workspace metadata for AI consumption
+- `WorkspaceDescriptor` — Top-level LLM-optimized schema for a workspace (bases, tables, fields, link_graph)
+- `BaseDescriptor` — Groups tables by their source platform base connection
+- `TableDescriptor` — Per-table metadata with approximate row count and field descriptors
+- `FieldDescriptor` — Per-field metadata with type-specific hints (searchable, aggregatable, options, linked metadata)
+- `LinkEdge` — Cross-link relationship in the workspace link graph (from/to dotted paths, cardinality, label)
+
+### Notes
+- `linked_base` is not set by `mapFieldToDescriptor()` — requires base connection lookup; workspace builder resolves this via tableToBaseMap.
+- All 8 interface contracts verified: 5 types exported, 3 functions exported with correct signatures.
+
+---
 
 ## Session F — 3B-i Cross-Linking Engine — build/3b-i-cross-linking
 
@@ -440,59 +512,3 @@ built → failed-review → built (retry after fixes)
 
 ### New Domain Terms Introduced
 - Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge
-
-## Session G — Phase 3B-ii — build/3b-ii-sds-command-bar
-
-**Date:** 2026-03-14
-**Status:** built
-**Prompt(s):** Prompt 12 (Unit 4: CommandBar Shell, Provider & Keyboard Shortcuts)
-
-### Files Created
-- `apps/web/src/components/command-bar/command-bar-provider.tsx` — CommandBarProvider context, useCommandBar() hook, deriveChannel() intent routing
-- `apps/web/src/components/command-bar/command-bar.tsx` — CommandBar modal component built on shadcn/ui Command (cmdk), global keyboard shortcuts (Cmd+K, Cmd+F)
-- `apps/web/src/components/command-bar/__tests__/command-bar.test.tsx` — 18 tests: deriveChannel unit tests, provider state tests, keyboard shortcut tests
-
-### Files Modified
-- `apps/web/src/app/(app)/layout.tsx` — Wrapped AppShell with CommandBarProvider, added CommandBar component
-- `apps/web/messages/en.json` — Added commandBar i18n namespace
-- `apps/web/messages/es.json` — Added commandBar i18n namespace (Spanish)
-
-### Schema Changes
-- None
-
-### New Domain Terms Introduced
-- CommandBarProvider, useCommandBar, deriveChannel, activeChannel (search | slash | ai)
-
-## Session D/E — Phase 3B-ii — build/3b-ii-sds-command-bar
-
-**Date:** 2026-03-14
-**Status:** passed-review
-**Prompt(s):** Prompts 12–15 (Unit 4: Command Bar UI & AI Search Channel)
-
-### Files Created
-- `apps/web/src/components/command-bar/command-bar-provider.tsx` — CommandBarProvider context, useCommandBar() hook, deriveChannel() intent routing
-- `apps/web/src/components/command-bar/command-bar.tsx` — CommandBar modal with keyboard shortcuts, session analytics, trackRecentItem wiring
-- `apps/web/src/components/command-bar/search-results.tsx` — CommandBarSearchResults with parallel record + navigation search, recent item boosting
-- `apps/web/src/components/command-bar/slash-menu.tsx` — CommandBarSlashMenu with fuzzy filtering by command_key, label, description
-- `apps/web/src/components/command-bar/ai-channel.tsx` — CommandBarAIChannel with SDS-powered natural language search via AIService
-- `apps/web/src/components/command-bar/recent-items.tsx` — CommandBarRecentItems with icon mapping, entity context display, filterRecentItemsByQuery()
-- `apps/web/src/components/command-bar/__tests__/command-bar.test.tsx` — 18 tests: deriveChannel, provider state, keyboard shortcuts
-- `apps/web/src/components/command-bar/__tests__/recent-items.test.tsx` — 17 tests: recent items rendering, selection tracking, scoped mode, session analytics, search boosting
-- `apps/web/src/actions/command-bar.ts` — executeSlashCommand() and aiSearchQuery() server actions (SDS + AIService integration)
-- `apps/web/src/data/command-bar-sessions.ts` — createCommandBarSession(), closeCommandBarSession(), getCommandBarSession() analytics data layer
-
-### Files Modified
-- `apps/web/messages/en.json` — Added commandBar i18n namespace (placeholder, searchHeading, slashHeading, aiHeading, recentHeading, scopedLabel, scopedHint, etc.)
-- `apps/web/messages/es.json` — Added commandBar i18n namespace (Spanish translations)
-- `packages/shared/db/index.ts` — Added re-exports for commandBarSessions, CommandBarSession, NewCommandBarSession
-
-### Schema Changes
-None
-
-### New Domain Terms Introduced
-- `CommandBar` — Persistent modal UI component for search, slash commands, and AI queries (Cmd+K global, Cmd+F scoped)
-- `CommandBarProvider` — React context provider managing Command Bar state (open/close, mode, query, channel)
-- `useCommandBar` — Hook exposing Command Bar state and actions (open, close, setQuery)
-- `activeChannel` — Derived channel (search | slash | ai) based on query intent routing
-- `intent routing` — Pattern where query prefix determines the active channel (plain text → search, / → slash, ? → AI)
-- `scoped mode` — Command Bar mode (Cmd+F) filtering results to the current table context

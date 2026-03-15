@@ -74,40 +74,41 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
-### 3B-ii — Schema Descriptor Service & Command Bar
-
-**Started:** 2026-03-14
-**Completed:** In progress
-
-#### Subdivision Units
-
-- [x] **Unit 1: SDS Types & Core Builders** — `passed-review`
-  - Produces: `WorkspaceDescriptor`, `BaseDescriptor`, `TableDescriptor`, `FieldDescriptor`, `LinkEdge` types; `mapFieldToDescriptor()`, `buildTableDescriptor()`, `buildWorkspaceDescriptor()` — from `packages/shared/ai/schema-descriptor/`
-  - Consumes: None — first unit. Uses existing FieldTypeRegistry, Drizzle schema, cross-link types from 3B-i
-  - Branch: `build/3b-ii-sds-command-bar`
-  - Notes:
-
-- [ ] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `in-progress`
-  - Produces: `filterDescriptorByPermissions()`, `computeSchemaVersionHash()`, `SchemaDescriptorCache` class, `estimateTokens()`, `condenseDescriptor()`, `SchemaDescriptorService` class with `describeWorkspace()`, `describeTable()`, `describeLinks()` — from `packages/shared/ai/schema-descriptor/`
-  - Consumes: Unit 1 types + builder functions
-  - Branch:
-  - Notes:
-
-- [x] **Unit 3: Command Bar Search & Navigation Data Layer** — `passed-review`
-  - Produces: `searchRecords()`, `searchTablesAndViews()`, `getCommandRegistry()`, `trackRecentItem()`, `getRecentItems()` data functions; `SearchResult`, `NavigationResult`, `CommandEntry`, `RecentItem` types — from `apps/web/src/data/` and `apps/web/src/lib/command-bar/`
-  - Consumes: None — parallel with Units 1–2. Uses existing DB schema, tsvector indexes, permission utilities
-  - Branch: `build/3b-ii-sds-command-bar`
-  - Notes: Parallel with Units 1–2. All 7 contracts verified 2026-03-14.
-
-- [x] **Unit 4: Command Bar UI & AI Search Channel** — `passed-review`
-  - Produces: `CommandBar`, `CommandBarProvider`, `CommandBarSearchResults`, `CommandBarSlashMenu`, `CommandBarAIChannel`, `CommandBarRecentItems` components; `useCommandBar()` hook; `executeSlashCommand()`, `aiSearchQuery()` server actions — from `apps/web/src/components/command-bar/` and `apps/web/src/actions/`
-  - Consumes: Unit 2 `SchemaDescriptorService` + token estimator, Unit 3 search/command/recent data functions
-  - Branch: `build/3b-ii-sds-command-bar`
-  - Notes: All 9 contracts verified. All 7 cross-unit integrations verified. 2077 tests pass. 2026-03-14.
-
 ---
 
 ## Completed Sub-Phases
+
+### 3B-ii — Schema Descriptor Service & Command Bar
+
+**Started:** 2026-03-14
+**Completed:** 2026-03-15
+**Docs synced:** 2026-03-15
+
+#### Subdivision Units
+
+- [x] **Unit 1: SDS Types & Core Builders** — `docs-synced`
+  - Produces: `WorkspaceDescriptor`, `BaseDescriptor`, `TableDescriptor`, `FieldDescriptor`, `LinkEdge` types; `mapFieldToDescriptor()`, `buildTableDescriptor()`, `buildWorkspaceDescriptor()` — from `packages/shared/ai/schema-descriptor/`
+  - Consumes: None — first unit. Uses existing FieldTypeRegistry, Drizzle schema, cross-link types from 3B-i
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: Docs synced 2026-03-15.
+
+- [x] **Unit 2: SDS Permission Filter, Caching & Service Facade** — `docs-synced`
+  - Produces: `filterDescriptorByPermissions()`, `computeSchemaVersionHash()`, `SchemaDescriptorCache` class, `estimateTokens()`, `condenseDescriptor()`, `SchemaDescriptorService` class with `describeWorkspace()`, `describeTable()`, `describeLinks()` — from `packages/shared/ai/schema-descriptor/`
+  - Consumes: Unit 1 types + builder functions
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: MODIFICATIONS.md Session B only covered permission-filter; cache, schema-hash, token-estimator, and service files were built in a later session not logged. Docs synced 2026-03-15.
+
+- [x] **Unit 3: Command Bar Search & Navigation Data Layer** — `docs-synced`
+  - Produces: `searchRecords()`, `searchTablesAndViews()`, `getCommandRegistry()`, `trackRecentItem()`, `getRecentItems()` data functions; `SearchResult`, `NavigationResult`, `CommandEntry`, `RecentItem` types — from `apps/web/src/data/` and `apps/web/src/lib/command-bar/`
+  - Consumes: None — parallel with Units 1–2. Uses existing DB schema, tsvector indexes, permission utilities
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: Parallel with Units 1–2. All 7 contracts verified 2026-03-14. Docs synced 2026-03-15.
+
+- [x] **Unit 4: Command Bar UI & AI Search Channel** — `docs-synced`
+  - Produces: `CommandBar`, `CommandBarProvider`, `CommandBarSearchResults`, `CommandBarSlashMenu`, `CommandBarAIChannel`, `CommandBarRecentItems` components; `useCommandBar()` hook; `executeSlashCommand()`, `aiSearchQuery()` server actions — from `apps/web/src/components/command-bar/` and `apps/web/src/actions/`
+  - Consumes: Unit 2 `SchemaDescriptorService` + token estimator, Unit 3 search/command/recent data functions
+  - Branch: `build/3b-ii-sds-command-bar`
+  - Notes: All 9 contracts verified. All 7 cross-unit integrations verified. 2077 tests pass. 2026-03-14. Docs synced 2026-03-15.
 
 ### 3B-i — Cross-Linking Engine
 
