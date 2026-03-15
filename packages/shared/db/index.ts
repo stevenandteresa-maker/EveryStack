@@ -129,6 +129,10 @@ export {
   userRecentItemsRelations,
   commandBarSessions,
   commandBarSessionsRelations,
+  notifications,
+  notificationsRelations,
+  userNotificationPreferences,
+  userNotificationPreferencesRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -167,4 +171,6 @@ export type {
   UserRecentItem, NewUserRecentItem,
   CommandBarSession, NewCommandBarSession,
   UserSavedMessage, NewUserSavedMessage,
+  Notification, NewNotification,
+  UserNotificationPreference, NewUserNotificationPreference,
 } from './schema';

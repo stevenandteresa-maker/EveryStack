@@ -81,16 +81,16 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Schema Migration & Thread/Message Data Layer** — `in-progress`
+- [x] **Unit 1: Schema Migration & Thread/Message Data Layer** — `passed-review`
   - Produces: `source_note_id` migration; thread/message/participant/bookmark/pin CRUD functions; DM/Group DM creation; `searchThreadMessages()`; server actions; `Thread`, `ThreadMessage`, `ThreadParticipant` types; test factories
   - Consumes: None — first unit. Uses existing Drizzle schema (threads, thread_messages, thread_participants, user_saved_messages)
   - Branch: `build/3c-comms`
-  - Notes: Prompt 1 complete (source_note_id migration). Prompt 2 complete (thread CRUD: createThread, getThread, getThreadByScope, listThreadsForUser, getOrCreateDMThread, createGroupDM in apps/web/src/data/threads.ts).
+  - Notes: Prompts 1–4 complete. Verified 2026-03-15.
 
-- [ ] **Unit 2: Notification Pipeline & System Email** — `pending`
+- [ ] **Unit 2: Notification Pipeline & System Email** — `in-progress`
   - Produces: `NotificationService.create()` with delivery routing; notification CRUD; notification preferences CRUD; BullMQ `notification` queue + email send/cleanup processors; `ResendEmailService`; React Email templates (invitation, system alert, client thread reply); `Notification`, `NotificationPreferences` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
-  - Branch:
+  - Branch: `build/3c-comms`
   - Notes: Parallel with Units 3 and 4
 
 - [ ] **Unit 3: Presence & Real-Time Chat Infrastructure** — `pending`

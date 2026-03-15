@@ -90,6 +90,25 @@ export interface CrossLinkIndexRebuildJobData extends BaseJobData {
 }
 
 // ---------------------------------------------------------------------------
+// Notification jobs
+// ---------------------------------------------------------------------------
+
+export interface NotificationEmailSendJobData extends BaseJobData {
+  notificationId: string;
+  userId: string;
+  type: string;
+  title: string;
+  body?: string;
+  actorId?: string;
+  sourceThreadId?: string;
+  sourceRecordId?: string;
+}
+
+export interface NotificationCleanupJobData extends BaseJobData {
+  olderThanDays: number;
+}
+
+// ---------------------------------------------------------------------------
 // Queue → JobData mapping
 // ---------------------------------------------------------------------------
 
@@ -106,6 +125,7 @@ export interface QueueJobDataMap {
   'document-gen': DocumentGenJobData;
   cleanup: FileOrphanCleanupJobData;
   'cross-link': CrossLinkCascadeJobData | CrossLinkIndexRebuildJobData;
+  notification: NotificationEmailSendJobData | NotificationCleanupJobData;
 }
 
 /** Compile-time check: QueueJobDataMap must cover every QueueName. */

@@ -57,7 +57,69 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-(No active sessions)
+## Session A — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** passed-review
+**Prompt(s):** Prompts 1–4 (Unit 1: Schema Migration & Thread/Message Data Layer)
+
+### Files Created
+- `packages/shared/db/migrations/0025_add_user_notes_and_source_note_id.sql` — Migration adding user_notes table and source_note_id FK column to thread_messages
+- `packages/shared/db/schema/user-notes.ts` — Drizzle schema for user_notes table
+- `apps/web/src/data/threads.ts` — Thread CRUD: createThread, getThread, getThreadByScope, listThreadsForUser, getOrCreateDMThread, createGroupDM
+- `apps/web/src/data/thread-messages.ts` — Message CRUD: createMessage, getMessage, listMessages, updateMessage, softDeleteMessage, pinMessage, unpinMessage, getPinnedMessages, searchThreadMessages
+- `apps/web/src/data/thread-participants.ts` — Participant CRUD: addParticipant, removeParticipant, getParticipants, updateLastRead
+- `apps/web/src/data/saved-messages.ts` — Saved message CRUD: saveMessage, unsaveMessage, getSavedMessages
+- `apps/web/src/actions/threads.ts` — Server actions for thread/message/participant/saved-message operations
+- `apps/web/src/data/__tests__/thread-comms.integration.test.ts` — Integration tests for all thread, message, participant, and saved-message data functions
+- `packages/shared/testing/factories/threads.ts` — Test factories: createTestThread, createTestThreadMessage, createTestThreadParticipant
+- `docs/Playbooks/Phase 3/prompting-roadmap-phase-3c.md` — Phase 3C prompting roadmap
+- `docs/Playbooks/Phase 3/prompting-roadmap-phase-3c.docx` — Phase 3C prompting roadmap (Word format)
+
+### Files Modified
+- `packages/shared/db/schema/thread-messages.ts` — Added source_note_id column (UUID, nullable, FK → user_notes)
+- `packages/shared/db/schema/index.ts` — Added user-notes schema export
+- `packages/shared/db/migrations/meta/_journal.json` — Added entry for migration 0025
+- `packages/shared/db/index.ts` — Added re-exports for user_notes, thread-related types
+- `packages/shared/testing/index.ts` — Added barrel export for thread factories
+- `TASK-STATUS.md` — Updated Unit 1 status
+
+### Schema Changes
+- Added table: `user_notes` — Stores shared notes that can be referenced by thread messages
+- Added column: `thread_messages.source_note_id` — UUID, nullable, FK → user_notes(id), links a message to its source note
+
+### New Domain Terms Introduced
+- None (thread, message, participant, saved message already in GLOSSARY)
+
+## Session B — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** built
+**Prompt(s):** Prompt 5 (Unit 2: NotificationService core + notification data functions)
+
+### Files Created
+- `packages/shared/db/migrations/0026_extend_notifications_schema.sql` — Migration adding missing columns to notifications table (title, body, source_type, source_record_id, actor_id, group_key, read_at)
+- `apps/web/src/data/notifications.ts` — Notification CRUD: createNotification, getNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead (Redis-cached unread count)
+- `apps/web/src/lib/notifications/notification-service.ts` — NotificationService class with create() method: inserts notification, checks preferences, routes to in-app (Redis pub/sub) and/or email (BullMQ enqueue). Handles priority override for mention/dm, muted thread suppression, best-effort error handling
+- `apps/web/src/data/__tests__/notifications.integration.test.ts` — Integration tests: tenant isolation, CRUD, pagination, unread count, mark-read
+- `apps/web/src/lib/notifications/__tests__/notification-service.test.ts` — Unit tests: routing logic, 8 notification types, priority override, mute suppression, error handling
+
+### Files Modified
+- `packages/shared/db/schema/notifications.ts` — Added columns: title, body, sourceType, sourceRecordId, actorId, groupKey, readAt; added actor relation
+- `packages/shared/db/index.ts` — Added notifications, userNotificationPreferences table/type exports
+- `packages/shared/db/migrations/meta/_journal.json` — Added entry for migration 0026
+- `packages/shared/queue/constants.ts` — Added 'notification' queue name
+- `packages/shared/queue/types.ts` — Added NotificationEmailSendJobData, NotificationCleanupJobData interfaces and notification queue mapping
+- `packages/shared/queue/index.ts` — Added notification job type exports
+
+### Schema Changes
+- Extended table: `notifications` — Added columns: title (VARCHAR 255), body (VARCHAR 500 nullable), source_type (VARCHAR 50), source_record_id (UUID), actor_id (UUID FK → users), group_key (VARCHAR 255), read_at (TIMESTAMPTZ)
+- Added index: `notifications_group_key_created_idx` on (group_key, created_at) WHERE group_key IS NOT NULL
+- Added index: `notifications_user_tenant_created_idx` on (user_id, tenant_id, created_at DESC)
+
+### New Domain Terms Introduced
+- `NotificationService` — Service class that orchestrates notification creation and delivery routing (in-app via Redis pub/sub, email via BullMQ)
+- `NotificationType` — 8 notification categories: mention, dm, thread_reply, approval_requested, approval_decided, automation_failed, sync_error, system
 
 ---
 

@@ -15,5 +15,7 @@ export type {
   DocumentGenJobData,
   CrossLinkCascadeJobData,
   CrossLinkIndexRebuildJobData,
+  NotificationEmailSendJobData,
+  NotificationCleanupJobData,
   QueueJobDataMap,
 } from './types';
