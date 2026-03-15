@@ -74,6 +74,49 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
+### 3C — Record Thread, DMs, Notifications & System Email
+
+**Started:** 2026-03-15
+**Completed:** In progress
+
+#### Subdivision Units
+
+- [ ] **Unit 1: Schema Migration & Thread/Message Data Layer** — `pending`
+  - Produces: `source_note_id` migration; thread/message/participant/bookmark/pin CRUD functions; DM/Group DM creation; `searchThreadMessages()`; server actions; `Thread`, `ThreadMessage`, `ThreadParticipant` types; test factories
+  - Consumes: None — first unit. Uses existing Drizzle schema (threads, thread_messages, thread_participants, user_saved_messages)
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 2: Notification Pipeline & System Email** — `pending`
+  - Produces: `NotificationService.create()` with delivery routing; notification CRUD; notification preferences CRUD; BullMQ `notification` queue + email send/cleanup processors; `ResendEmailService`; React Email templates (invitation, system alert, client thread reply); `Notification`, `NotificationPreferences` types
+  - Consumes: Unit 1 `Thread`, `ThreadMessage` types
+  - Branch:
+  - Notes: Parallel with Units 3 and 4
+
+- [ ] **Unit 3: Presence & Real-Time Chat Infrastructure** — `pending`
+  - Produces: `PresenceService` (Redis heartbeat, state management); Socket.IO handlers (ChatHandler, PresenceHandler, NotificationHandler); Redis pub/sub chat event subscriber; `publishChatEvent()`, `publishNotificationEvent()`; custom status CRUD; `PresenceState`, `ChatEvent` types
+  - Consumes: Unit 1 `Thread`, `ThreadMessage` types
+  - Branch:
+  - Notes: Parallel with Units 2 and 4
+
+- [ ] **Unit 4: Chat Editor (TipTap Environment 1)** — `pending`
+  - Produces: `ChatEditor` (3 input states, progressive disclosure); `ChatEditorToolbar`; `MentionDropdown`; `EmojiPicker`; `EmojiReactions`; `MessageRenderer`; `MessageItem`; `ChatAttachmentButton`; `useChatEditor()` hook; TipTap extension config
+  - Consumes: None — no unit dependencies. Uses TipTap, emoji-mart, shadcn/ui libraries
+  - Branch:
+  - Notes: Parallel with all units (no unit deps)
+
+- [ ] **Unit 5: Record Thread & DM UI** — `pending`
+  - Produces: `RecordThreadPanel`; `ThreadTabBar` (Team Notes / Client Messages); `ThreadLensBar` (All/Notes/Activity/Files); `ThreadMessageList`; `ThreadReplyPanel`; `ThreadSearchBar`; `SharedNoteMessage`; `ClientVisibleBanner`; `PinnedMessagesPanel`; `ThreadNavDropdown`; `DMConversation`; `GroupDMHeader`; `useThread()`, `useThreadSearch()`, `useTypingIndicator()` hooks
+  - Consumes: Unit 1 data functions + actions, Unit 3 real-time events + publish functions, Unit 4 ChatEditor + MessageItem + EmojiReactions
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 6: Notification UI & Chat Quick Panel** — `pending`
+  - Produces: `NotificationBell`; `NotificationTray`; `NotificationItem`; `NotificationGroup`; `useNotifications()` hook; `ChatQuickPanel`; `ChatQuickPanelItem`; `PresenceIndicator`; `CustomStatusDisplay`; `CustomStatusEditor`; `usePresence()` hook
+  - Consumes: Unit 2 notification data + actions, Unit 3 real-time events + presence, Unit 5 DM navigation target + thread list
+  - Branch:
+  - Notes:
+
 ---
 
 ## Completed Sub-Phases
