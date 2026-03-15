@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-14 — Phase 3B-i docs sync: added LinkedRecordTree implementation term. Prior: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms (FieldPermissionState, ViewPermissions, ViewFieldPermissions, RoleRestriction, IndividualOverride, FieldPermissionMap, ResolvedPermissionContext) and 4 UI component terms (Permission Config Panel, RoleLevelPermissionGrid, IndividualOverrideView, PermissionStateBadge). Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition. Prior: 2026-03-09 — Added AI Skills & Platform Agents section (9 terms). Prior: 2026-03-09 — Post-Phase 3A-i docs sync (Grid View, TableType, Tab Color + sub-definitions).
+> Last updated: 2026-03-15 — Phase 3B-ii docs sync: expanded SDS definition with 5 descriptor types, cache/invalidation terms, and service facade; expanded Command Bar definition with search channels, intent routing, scoped mode, CommandBarProvider, and Command Registry. Prior: 2026-03-14 — Phase 3B-i docs sync: added LinkedRecordTree implementation term. Prior: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms and 4 UI component terms. Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition.
 
 ---
 
@@ -459,6 +459,23 @@ A service that produces structured descriptions of a tenant's schema — tables,
 
 **Why it matters:** SDS is what makes EveryStack's AI _contextual_. Instead of a generic chatbot, every AI call knows: "This workspace has a Clients table linked to Projects linked to Invoices, and the user is looking at Project #47 for Acme Corp." That context is what produces useful results.
 
+**Descriptor types (from `packages/shared/ai/schema-descriptor/types.ts`):**
+
+- **WorkspaceDescriptor** — Top-level LLM-optimized schema for a workspace. Contains bases, tables, fields, and a deduplicated `link_graph` of cross-link relationships. The primary output consumed by all AI features.
+- **BaseDescriptor** — Groups tables by their source platform base connection. Provides platform context (source, base name) so the AI understands where data originates.
+- **TableDescriptor** — Per-table metadata including approximate row count (via `pg_stat_user_tables`), field descriptors, and `card_fields` for display value context.
+- **FieldDescriptor** — Per-field metadata with type-specific hints (`searchable`, `aggregatable`, `options` for selects, `linked_table`/`linked_base` for linked records). Optimized for AI to understand field capabilities without raw schema.
+- **LinkEdge** — A cross-link relationship in the workspace link graph. Contains `from`/`to` dotted paths (e.g., `"Base.Table.Field"`), cardinality, and label. Deduplicated at the workspace level.
+
+**Caching and invalidation (from `packages/shared/ai/schema-descriptor/cache.ts`):**
+
+- **SchemaDescriptorCache** — 2-tier cache (in-memory LRU + Redis) for workspace descriptors. Keyed by `tenantId:workspaceId:userId`. Invalidated via schema version hash comparison.
+- **Schema version hash** — A deterministic hash computed from table/field/cross-link metadata. When the hash changes (e.g., a field is added or renamed), cached descriptors are invalidated. Computed by `computeSchemaVersionHash()`.
+
+**Service facade (from `packages/shared/ai/schema-descriptor/service.ts`):**
+
+- **SchemaDescriptorService** — The public API class with `describeWorkspace()`, `describeTable()`, and `describeLinks()` methods. Orchestrates building, permission filtering, caching, and token estimation. All AI features consume SDS through this facade — never through builders directly.
+
 ### AI Credit System
 
 A simple metering system. Each AI operation costs credits. Credits are included in the plan (200–20,000/month depending on tier). Features gracefully disable at exhaustion — no overages, no blocking, no surprises.
@@ -836,6 +853,20 @@ A universal UI primitive for organizing any long list. A section is a named, col
 ### Command Bar
 
 A keyboard-triggered (⌘K / Ctrl+K) universal search and command interface. Supports: record search, table navigation, slash commands, and (MVP) natural language AI search.
+
+**Search channels and intent routing:** The Command Bar uses three channels, selected automatically by query prefix:
+- **Search channel** — Plain text queries trigger parallel record search (tsvector full-text) and navigation search (tables, views). Default channel.
+- **Slash channel** — Queries starting with `/` display the command registry (~18 MVP slash commands) with fuzzy filtering by command key, label, and description.
+- **AI channel** — Queries starting with `?` route to natural language AI search via SDS context and AIService.
+
+**Intent routing** is the pattern where the query prefix determines the active channel (`deriveChannel()` in `CommandBarProvider`). This enables a single input to serve all three interaction modes.
+
+**Scoped mode:** Triggered by ⌘F / Ctrl+F. Filters search results to the current table context. The Command Bar displays a scope indicator showing the active table name.
+
+**Implementation components (from `apps/web/src/components/command-bar/`):**
+
+- **CommandBarProvider** — React context provider managing Command Bar state (open/close, mode, query, active channel). Provides `useCommandBar()` hook.
+- **Command Registry** — Data layer (`apps/web/src/data/command-registry.ts`) providing `getCommandRegistry()` with role-based and scope-based filtering. Each command has a `command_key` (unique identifier) and `context_scopes` (array of scopes where the command appears: `global`, `table_view`, `record_detail`, `chat`).
 
 ### Tech Stack
 
