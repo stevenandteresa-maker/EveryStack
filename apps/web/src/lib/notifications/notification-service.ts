@@ -18,13 +18,13 @@ import {
   userNotificationPreferences,
   threadParticipants,
 } from '@everystack/shared/db';
-import { createRedisClient } from '@everystack/shared/redis';
 import { webLogger } from '@everystack/shared/logging';
 import { getQueue } from '@/lib/queue';
 import { generateUUIDv7 } from '@everystack/shared/db';
 import { createNotification } from '@/data/notifications';
 import type { CreateNotificationParams } from '@/data/notifications';
 import type { NotificationEmailSendJobData } from '@everystack/shared/queue';
+import { publishNotificationEvent } from '@/lib/realtime/notification-events';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,22 +75,6 @@ const TYPE_TO_PREF_KEY: Record<string, keyof Pick<NotificationPreferences, 'ment
 
 /** Priority types that always deliver regardless of mute schedule */
 const PRIORITY_TYPES = new Set(['mention', 'dm']);
-
-// ---------------------------------------------------------------------------
-// Redis client (lazy singleton for notification pub/sub)
-// ---------------------------------------------------------------------------
-
-let _redisPub: ReturnType<typeof createRedisClient> | null = null;
-
-function getRedisPub() {
-  if (!_redisPub) {
-    _redisPub = createRedisClient('notification-pub');
-    _redisPub.connect().catch(() => {
-      // Connection will be retried on next publish
-    });
-  }
-  return _redisPub;
-}
 
 // ---------------------------------------------------------------------------
 // NotificationService
@@ -149,18 +133,10 @@ export class NotificationService {
     const isPriority = PRIORITY_TYPES.has(params.type);
     const isMuteActive = this.isMuteActive(prefs);
 
-    // Step 3: In-app delivery
+    // Step 3: In-app delivery via publishNotificationEvent (fire-and-forget)
     const shouldDeliverInApp = isPriority || (!isMuteActive && (categoryPref?.inApp ?? true));
     if (shouldDeliverInApp) {
-      try {
-        const redis = getRedisPub();
-        await redis.publish(
-          `user:${params.userId}:notifications`,
-          JSON.stringify(notification),
-        );
-      } catch (error) {
-        logger.warn({ err: error }, 'Failed to publish notification to Redis — client will see on tray open');
-      }
+      void publishNotificationEvent(params.userId, notification);
     }
 
     // Step 4: Email delivery

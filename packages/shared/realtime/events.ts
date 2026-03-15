@@ -45,8 +45,19 @@ export const REALTIME_EVENTS = {
   // Cross-link events
   DISPLAY_VALUE_UPDATED: 'cross_link.display_value_updated',
 
+  // Chat / Thread events
+  MESSAGE_NEW: 'message.new',
+  MESSAGE_EDIT: 'message.edit',
+  MESSAGE_DELETE: 'message.delete',
+  TYPING_START: 'typing.start',
+  TYPING_STOP: 'typing.stop',
+
+  // Presence events
+  PRESENCE_UPDATE: 'presence.update',
+
   // Notification events
   NOTIFICATION_CREATED: 'notification.created',
+  NOTIFICATION_NEW: 'notification.new',
 } as const;
 
 /** Union type of all valid real-time event name values. */

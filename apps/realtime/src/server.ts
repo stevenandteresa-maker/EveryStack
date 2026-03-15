@@ -6,7 +6,11 @@ import { realtimeLogger } from '@everystack/shared/logging';
 import { authenticateSocket } from './middleware/auth';
 import { registerRoomHandlers } from './handlers/room-handler';
 import { registerLockHandlers } from './handlers/lock-handler';
+import { registerChatHandlers } from './handlers/chat-handler';
+import { registerPresenceHandlers } from './handlers/presence-handler';
+import { registerNotificationHandlers } from './handlers/notification-handler';
 import { startRedisEventSubscriber } from './subscribers/redis-event-subscriber';
+import { PresenceService } from './services/presence-service';
 
 const logger = realtimeLogger;
 
@@ -41,6 +45,12 @@ export function createRealtimeServer() {
   // Dedicated Redis client for field lock operations (get/set/del)
   const lockRedisClient = createRedisClient('realtime-lock');
 
+  // Dedicated Redis client for presence operations (get/set/scan)
+  const presenceRedisClient = createRedisClient('realtime-presence');
+
+  // Dedicated Redis client for notification subscriptions (subscribe mode)
+  const notificationSubClient = createRedisClient('realtime-notification-sub');
+
   const adapterReady = Promise.all([
     pubClient.connect(),
     subClient.connect(),
@@ -51,6 +61,9 @@ export function createRealtimeServer() {
 
   // Authenticate every socket connection via Clerk JWT
   io.use(authenticateSocket);
+
+  // Create PresenceService instance (shared across handlers)
+  const presenceService = new PresenceService(presenceRedisClient);
 
   // Connection lifecycle
   io.on('connection', (socket) => {
@@ -71,6 +84,15 @@ export function createRealtimeServer() {
     // Register field lock handlers
     registerLockHandlers(socket, io, lockRedisClient);
 
+    // Register chat handlers (thread join/leave, typing indicators)
+    registerChatHandlers(socket, io, presenceService);
+
+    // Register presence handlers (heartbeat, status, disconnect cleanup)
+    registerPresenceHandlers(socket, io, presenceService);
+
+    // Register notification handlers (Redis channel subscription, DND suppression)
+    registerNotificationHandlers(socket, notificationSubClient, presenceService);
+
     socket.on('disconnect', (reason) => {
       logger.info(
         { socketId: socket.id, userId, tenantId, reason },
@@ -86,7 +108,7 @@ export function createRealtimeServer() {
     });
   });
 
-  return { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, adapterReady };
+  return { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, presenceRedisClient, notificationSubClient, adapterReady };
 }
 
 /**
@@ -94,13 +116,15 @@ export function createRealtimeServer() {
  * Called from index.ts entry point.
  */
 export async function startServer() {
-  const { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, adapterReady } =
+  const { httpServer, io, pubClient, subClient, eventSubClient, lockRedisClient, presenceRedisClient, notificationSubClient, adapterReady } =
     createRealtimeServer();
 
   await adapterReady;
 
-  // Connect lock Redis client
+  // Connect auxiliary Redis clients
   await lockRedisClient.connect();
+  await presenceRedisClient.connect();
+  await notificationSubClient.connect();
 
   // Start Redis event subscriber with dedicated client
   await eventSubClient.connect();
@@ -116,7 +140,7 @@ export async function startServer() {
 
     io.close();
 
-    await Promise.all([pubClient.quit(), subClient.quit(), eventSubClient.quit(), lockRedisClient.quit()]).catch((err) => {
+    await Promise.all([pubClient.quit(), subClient.quit(), eventSubClient.quit(), lockRedisClient.quit(), presenceRedisClient.quit(), notificationSubClient.quit()]).catch((err) => {
       logger.warn({ err }, 'Error closing Redis connections');
     });
 

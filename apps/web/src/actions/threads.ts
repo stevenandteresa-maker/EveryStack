@@ -23,6 +23,7 @@ import { createMessage, editMessage, deleteMessage, pinMessage, unpinMessage } f
 import { getOrCreateDMThread, createGroupDM } from '@/data/threads';
 import { saveMessage as saveMessageData, unsaveMessage as unsaveMessageData } from '@/data/saved-messages';
 import { addParticipant } from '@/data/thread-participants';
+import { publishChatEvent } from '@/lib/realtime/chat-events';
 
 // ---------------------------------------------------------------------------
 // Zod schemas
@@ -132,6 +133,13 @@ export async function sendMessage(
       attachments: validated.attachments,
     });
 
+    // Fire-and-forget: publish chat event for real-time delivery
+    void publishChatEvent(tenantId, validated.threadId, {
+      type: 'message:new',
+      threadId: validated.threadId,
+      payload: message,
+    }, userId);
+
     return message;
   } catch (error) {
     throw wrapUnknownError(error);
@@ -155,7 +163,16 @@ export async function editMessageAction(
   }
 
   try {
-    return await editMessage(tenantId, validated.messageId, validated.content);
+    const updated = await editMessage(tenantId, validated.messageId, validated.content);
+
+    // Fire-and-forget: publish chat event for real-time delivery
+    void publishChatEvent(tenantId, message.threadId, {
+      type: 'message:edit',
+      threadId: message.threadId,
+      payload: updated,
+    }, userId);
+
+    return updated;
   } catch (error) {
     throw wrapUnknownError(error);
   }
@@ -181,6 +198,13 @@ export async function deleteMessageAction(
 
   try {
     await deleteMessage(tenantId, validated.messageId, userId);
+
+    // Fire-and-forget: publish chat event for real-time delivery
+    void publishChatEvent(tenantId, message.threadId, {
+      type: 'message:delete',
+      threadId: message.threadId,
+      payload: { messageId: validated.messageId },
+    }, userId);
   } catch (error) {
     throw wrapUnknownError(error);
   }
