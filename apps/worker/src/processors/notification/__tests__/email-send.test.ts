@@ -42,6 +42,13 @@ vi.mock('../../lib/sentry', () => ({
   captureJobError: vi.fn(),
 }));
 
+vi.mock('../email-templates', () => ({
+  renderInvitationEmail: vi.fn(async () => '<html>invitation</html>'),
+  renderSystemAlertEmail: vi.fn(async () => '<html>system-alert</html>'),
+  renderClientThreadReplyEmail: vi.fn(async () => '<html>client-reply</html>'),
+  renderGenericNotificationEmail: vi.fn(async (params: { title: string }) => `<html>${params.title}</html>`),
+}));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -105,7 +112,7 @@ describe('NotificationEmailSendProcessor', () => {
       from: 'EveryStack <notifications@everystack.com>',
       to: ['user@example.com'],
       subject: 'Sarah mentioned you in Project Alpha',
-      html: expect.stringContaining('Sarah mentioned you'),
+      html: expect.any(String),
     });
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.objectContaining({ notificationId: 'notif-001', emailId: 'email-123' }),
@@ -113,20 +120,87 @@ describe('NotificationEmailSendProcessor', () => {
     );
   });
 
-  it('sends HTML with escaped content', async () => {
-    mockEmailsSend.mockResolvedValue({
-      data: { id: 'email-456' },
-      error: null,
-    });
+  it('uses invitation template for invitation type', async () => {
+    mockEmailsSend.mockResolvedValue({ data: { id: 'email-inv' }, error: null });
+
+    const { renderInvitationEmail } = await import('../email-templates');
 
     await processor.processJob(
-      createMockJob({ title: 'Alert: <script>alert("xss")</script>' }),
+      createMockJob({
+        type: 'invitation',
+        metadata: { workspaceName: 'Acme', inviterName: 'Bob', inviteUrl: 'https://example.com/invite' },
+      }),
       mockLogger,
     );
 
-    const html = mockEmailsSend.mock.calls[0]![0].html;
-    expect(html).not.toContain('<script>');
-    expect(html).toContain('&lt;script&gt;');
+    expect(renderInvitationEmail).toHaveBeenCalledWith({
+      workspaceName: 'Acme',
+      inviterName: 'Bob',
+      inviteUrl: 'https://example.com/invite',
+    });
+  });
+
+  it('uses system alert template for sync_error type', async () => {
+    mockEmailsSend.mockResolvedValue({ data: { id: 'email-alert' }, error: null });
+
+    const { renderSystemAlertEmail } = await import('../email-templates');
+
+    await processor.processJob(
+      createMockJob({
+        type: 'sync_error',
+        title: 'Airtable sync failed',
+        body: 'Connection timeout',
+        metadata: { workspaceName: 'Acme', dashboardUrl: 'https://example.com/dash' },
+      }),
+      mockLogger,
+    );
+
+    expect(renderSystemAlertEmail).toHaveBeenCalledWith({
+      alertType: 'sync_failure',
+      alertTitle: 'Airtable sync failed',
+      alertBody: 'Connection timeout',
+      workspaceName: 'Acme',
+      dashboardUrl: 'https://example.com/dash',
+    });
+  });
+
+  it('uses client thread reply template with message preview', async () => {
+    mockEmailsSend.mockResolvedValue({ data: { id: 'email-reply' }, error: null });
+
+    const { renderClientThreadReplyEmail } = await import('../email-templates');
+
+    const longBody = 'A'.repeat(200);
+    await processor.processJob(
+      createMockJob({
+        type: 'client_thread_reply',
+        body: longBody,
+        metadata: { senderName: 'Alice', recordTitle: 'Invoice #42', portalUrl: 'https://portal.example.com' },
+      }),
+      mockLogger,
+    );
+
+    expect(renderClientThreadReplyEmail).toHaveBeenCalledWith({
+      senderName: 'Alice',
+      recordTitle: 'Invoice #42',
+      messagePreview: 'A'.repeat(120),
+      portalUrl: 'https://portal.example.com',
+    });
+  });
+
+  it('uses generic template for unknown notification types', async () => {
+    mockEmailsSend.mockResolvedValue({ data: { id: 'email-gen' }, error: null });
+
+    const { renderGenericNotificationEmail } = await import('../email-templates');
+
+    await processor.processJob(
+      createMockJob({ type: 'some_unknown_type', title: 'Hello', body: 'World' }),
+      mockLogger,
+    );
+
+    expect(renderGenericNotificationEmail).toHaveBeenCalledWith({
+      title: 'Hello',
+      body: 'World',
+    });
   });
 
   it('throws on Resend API error (enables retry)', async () => {

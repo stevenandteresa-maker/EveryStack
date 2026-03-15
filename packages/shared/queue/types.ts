@@ -102,6 +102,10 @@ export interface NotificationEmailSendJobData extends BaseJobData {
   actorId?: string;
   sourceThreadId?: string;
   sourceRecordId?: string;
+  /** Recipient email address */
+  email?: string;
+  /** Template-specific metadata (workspaceName, inviterName, portalUrl, etc.) */
+  metadata?: Record<string, string>;
 }
 
 export interface NotificationCleanupJobData extends BaseJobData {

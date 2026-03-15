@@ -15,6 +15,12 @@ import type { NotificationEmailSendJobData } from '@everystack/shared/queue';
 import { Resend } from 'resend';
 
 import { BaseProcessor } from '../../lib/base-processor';
+import {
+  renderInvitationEmail,
+  renderSystemAlertEmail,
+  renderClientThreadReplyEmail,
+  renderGenericNotificationEmail,
+} from './email-templates';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -53,21 +59,20 @@ export class NotificationEmailSendProcessor extends BaseProcessor<NotificationEm
     job: Job<NotificationEmailSendJobData>,
     logger: Logger,
   ): Promise<void> {
-    const { notificationId, userId, type, title, body } = job.data;
+    const { notificationId, userId, type, title } = job.data;
 
     logger.info(
       { notificationId, userId, type },
       'Processing notification email',
     );
 
-    // Render email HTML from notification data.
-    // Prompt 7 will add React Email templates — for now, use a simple HTML wrapper.
-    const html = renderNotificationEmail({ type, title, body });
+    // Render email HTML using React Email templates based on notification type.
+    const html = await renderEmailForNotificationType(job.data);
 
     // Look up user email — placeholder until user lookup is wired.
     // For now, the job data should include the recipient address,
     // but we fall back to userId as a safeguard.
-    const to = (job.data as NotificationEmailSendJobData & { email?: string }).email ?? userId;
+    const to = job.data.email ?? userId;
 
     try {
       const result = await this.resend.emails.send({
@@ -119,32 +124,44 @@ export class NotificationEmailSendProcessor extends BaseProcessor<NotificationEm
 }
 
 // ---------------------------------------------------------------------------
-// Simple HTML renderer (replaced by React Email templates in Prompt 7)
+// Template routing — determines React Email template based on notification type
 // ---------------------------------------------------------------------------
 
-function renderNotificationEmail(params: {
-  type: string;
-  title: string;
-  body?: string;
-}): string {
-  const { title, body } = params;
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8" /></head>
-<body style="font-family: 'DM Sans', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h2 style="color: #1a1a1a; margin-bottom: 16px;">${escapeHtml(title)}</h2>
-  ${body ? `<p style="color: #4a4a4a; line-height: 1.6;">${escapeHtml(body)}</p>` : ''}
-  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;" />
-  <p style="color: #999; font-size: 12px;">You received this email from EveryStack.</p>
-</body>
-</html>`;
-}
+async function renderEmailForNotificationType(
+  data: NotificationEmailSendJobData,
+): Promise<string> {
+  const metadata = data.metadata ?? {};
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  switch (data.type) {
+    case 'invitation':
+      return renderInvitationEmail({
+        workspaceName: metadata['workspaceName'] ?? 'your workspace',
+        inviterName: metadata['inviterName'] ?? 'A team member',
+        inviteUrl: metadata['inviteUrl'] ?? '',
+      });
+
+    case 'sync_error':
+    case 'automation_failed':
+      return renderSystemAlertEmail({
+        alertType: data.type === 'sync_error' ? 'sync_failure' : 'automation_error',
+        alertTitle: data.title,
+        alertBody: data.body ?? '',
+        workspaceName: metadata['workspaceName'] ?? '',
+        dashboardUrl: metadata['dashboardUrl'] ?? '',
+      });
+
+    case 'client_thread_reply':
+      return renderClientThreadReplyEmail({
+        senderName: metadata['senderName'] ?? 'Someone',
+        recordTitle: metadata['recordTitle'] ?? 'a record',
+        messagePreview: (data.body ?? '').slice(0, 120),
+        portalUrl: metadata['portalUrl'] ?? '',
+      });
+
+    default:
+      return renderGenericNotificationEmail({
+        title: data.title,
+        body: data.body,
+      });
+  }
 }
