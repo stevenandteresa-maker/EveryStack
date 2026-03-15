@@ -228,6 +228,7 @@ These docs define the agent workflow, planning process, and build state tracking
 | `3a-iii-subdivision.md`      | 468   | **MVP — Core UX** | Subdivision: 6 units — Permission Types & Resolution Engine, Data Layer + Redis Cache, Action Enforcement, Real-Time Invalidation, Grid/View Rendering, Config UI. Critical path 4 deep. Units 3+4 parallel. | `permissions.md`, `realtime.md`, `design-system.md`, `TASK-STATUS.md` | 2026-03-12 |
 | `3b-i-subdivision.md`        | 428   | **MVP — Core UX** | Subdivision: 5 units — Types/Validation/Registry, CRUD & Record Linking, Query-Time Resolution & Perms, Display Value Cascade, Link Picker UI. Critical path 3 deep. Units 3+4+5 parallel. | `cross-linking.md`, `permissions.md`, `TASK-STATUS.md` | 2026-03-13 |
 | `3b-ii-subdivision.md`       | 285   | **MVP — Core UX** | Subdivision: 4 units — SDS Types & Core Builders, SDS Permission Filter/Caching/Facade, Command Bar Search & Data Layer, Command Bar UI & AI Channel. Critical path 3 deep. Unit 3 parallel with Units 1–2. | `schema-descriptor-service.md`, `command-bar.md`, `permissions.md`, `TASK-STATUS.md` | 2026-03-14 |
+| `3c-subdivision.md`          | 518   | **MVP — Core UX** | Subdivision: 6 units — Schema Migration & Data Layer, Notification Pipeline & System Email, Presence & Real-Time Chat, Chat Editor (TipTap Env 1), Record Thread & DM UI, Notification UI & Quick Panel. Critical path 4 deep. Units 2+3+4 parallel. | `communications.md`, `email.md`, `realtime.md`, `data-model.md`, `TASK-STATUS.md` | 2026-03-15 |
 
 ---
 
