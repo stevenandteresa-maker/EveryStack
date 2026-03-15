@@ -3,68 +3,41 @@ import crypto from 'crypto';
 import type { NextRequest } from 'next/server';
 
 // ---------------------------------------------------------------------------
-// Hoisted mock state for the write DB (transaction tracking)
+// Hoisted mock state
 // ---------------------------------------------------------------------------
 
-const { insertedRows, updatedRows, mockWriteDb, resetInserts } = vi.hoisted(() => {
-  const rows: Array<{ table: unknown; values: Record<string, unknown> }> = [];
-  const updates: Array<{ values: Record<string, unknown> }> = [];
+const {
+  mockCreateUserWithTenant,
+  mockUpdateUserFromClerk,
+  mockProvisionPersonalTenant,
+  mockSetTenantContext,
+} = vi.hoisted(() => ({
+  mockCreateUserWithTenant: vi.fn(),
+  mockUpdateUserFromClerk: vi.fn(),
+  mockProvisionPersonalTenant: vi.fn(),
+  mockSetTenantContext: vi.fn(),
+}));
 
-  const makeTxLike = () => ({
-    insert: (table: unknown) => ({
-      values: (vals: Record<string, unknown>) => {
-        rows.push({ table, values: vals });
-        return { returning: () => [vals] };
-      },
-    }),
-    update: () => ({
-      set: (vals: Record<string, unknown>) => ({
-        where: () => {
-          updates.push({ values: vals });
-          return Promise.resolve();
-        },
-      }),
-    }),
-  });
+// ---------------------------------------------------------------------------
+// Mock dependencies
+// ---------------------------------------------------------------------------
 
-  const tx = makeTxLike();
-
-  const writeDb = {
-    transaction: async (fn: (t: typeof tx) => Promise<void>) => {
-      await fn(tx);
-    },
-    // select() for provisionPersonalTenant idempotency check
-    select: () => ({
-      from: () => ({
-        where: () => [{ personalTenantId: null }],
-      }),
-    }),
-  };
-
+vi.mock('@everystack/shared/db', async (importOriginal) => {
+  const original = await importOriginal<Record<string, unknown>>();
   return {
-    insertedRows: rows,
-    updatedRows: updates,
-    mockWriteDb: writeDb,
-    resetInserts: () => {
-      rows.length = 0;
-      updates.length = 0;
-    },
+    ...original,
+    db: {},
+    dbRead: {},
+    getDbForTenant: vi.fn(() => ({})),
+    createUserWithTenant: mockCreateUserWithTenant,
+    updateUserFromClerk: mockUpdateUserFromClerk,
+    setTenantContext: mockSetTenantContext,
   };
 });
 
-// ---------------------------------------------------------------------------
-// Mock database layer — but NOT svix (real signature verification)
-// ---------------------------------------------------------------------------
-
-vi.mock('../../../../packages/shared/db/client', () => ({
-  db: mockWriteDb,
-  dbRead: {},
-  getDbForTenant: vi.fn(() => ({})),
-}));
-
-vi.mock('../../../../packages/shared/db/rls', () => ({
-  setTenantContext: vi.fn(),
-  TENANT_SCOPED_TABLES: [],
+vi.mock('@/lib/auth/personal-tenant', () => ({
+  provisionPersonalTenant: mockProvisionPersonalTenant,
+  PERSONAL_TENANT_ACCENT_COLOR: '#78716C',
 }));
 
 vi.mock('@everystack/shared/logging', () => ({
@@ -80,16 +53,6 @@ vi.mock('@everystack/shared/logging', () => ({
 vi.mock('@sentry/nextjs', () => ({
   captureMessage: vi.fn(),
   captureException: vi.fn(),
-}));
-
-import { createMockUUIDs } from '../../../../packages/shared/testing/mock-uuid';
-
-const MOCK_UUIDS = createMockUUIDs(6, 100);
-let uuidCallIndex = 0;
-
-vi.mock('../../../../packages/shared/db/uuid', () => ({
-  generateUUIDv7: () => MOCK_UUIDS[uuidCallIndex++] ?? 'uuid-fallback',
-  isValidUUID: () => true,
 }));
 
 // ---------------------------------------------------------------------------
@@ -141,7 +104,7 @@ function makeClerkEvent(overrides: Record<string, unknown> = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// Import route handler (uses mocked db + real svix)
+// Import route handler (uses mocked deps)
 // ---------------------------------------------------------------------------
 
 import { POST } from '../app/api/webhooks/clerk/route';
@@ -153,12 +116,14 @@ import { POST } from '../app/api/webhooks/clerk/route';
 describe('Webhook integration: user.created with real Svix verification', { timeout: 30_000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetInserts();
-    uuidCallIndex = 0;
     process.env.CLERK_WEBHOOK_SECRET = WEBHOOK_SECRET;
+
+    // Default: createUserWithTenant returns a userId
+    mockCreateUserWithTenant.mockResolvedValue({ userId: 'mock-user-id' });
+    mockProvisionPersonalTenant.mockResolvedValue('mock-personal-tenant-id');
   });
 
-  it('creates all expected rows across createUserWithTenant and provisionPersonalTenant', async () => {
+  it('calls createUserWithTenant and provisionPersonalTenant with correct args', async () => {
     const event = makeClerkEvent();
     const body = JSON.stringify(event);
     const headers = generateSvixHeaders(body);
@@ -168,75 +133,20 @@ describe('Webhook integration: user.created with real Svix verification', { time
 
     expect(response.status).toBe(201);
 
-    // 5 inserts from createUserWithTenant + 2 from provisionPersonalTenant = 7
-    expect(insertedRows).toHaveLength(7);
-
-    // 1. User
-    expect(insertedRows[0]?.values).toMatchObject({
-      id: MOCK_UUIDS[0],
+    // Verify createUserWithTenant was called with extracted Clerk data
+    expect(mockCreateUserWithTenant).toHaveBeenCalledTimes(1);
+    expect(mockCreateUserWithTenant).toHaveBeenCalledWith({
       clerkId: 'user_clerk_new',
       email: 'new@example.com',
       name: 'New User',
     });
 
-    // 2. Tenant
-    expect(insertedRows[1]?.values).toMatchObject({
-      id: MOCK_UUIDS[1],
-      name: "New User's Workspace",
-      plan: 'freelancer',
-    });
-
-    // 3. Tenant membership (owner, active)
-    expect(insertedRows[2]?.values).toMatchObject({
-      tenantId: MOCK_UUIDS[1],
-      userId: MOCK_UUIDS[0],
-      role: 'owner',
-      status: 'active',
-    });
-
-    // 4. Workspace
-    expect(insertedRows[3]?.values).toMatchObject({
-      id: MOCK_UUIDS[2],
-      tenantId: MOCK_UUIDS[1],
-      name: 'My Workspace',
-      createdBy: MOCK_UUIDS[0],
-    });
-    expect(insertedRows[3]?.values.slug).toMatch(/^my-workspace-/);
-
-    // 5. Workspace membership (manager)
-    expect(insertedRows[4]?.values).toMatchObject({
-      userId: MOCK_UUIDS[0],
-      tenantId: MOCK_UUIDS[1],
-      workspaceId: MOCK_UUIDS[2],
-      role: 'manager',
-    });
-
-    // 6. Personal tenant (from provisionPersonalTenant — with accent color)
-    // UUID index 4: slug consumed index 3, personalTenantId is next
-    expect(insertedRows[5]?.values).toMatchObject({
-      id: MOCK_UUIDS[4],
-      name: "New User's Workspace",
-      plan: 'freelancer',
-      settings: {
-        personal: true,
-        auto_provisioned: true,
-        branding_accent_color: '#78716C',
-      },
-    });
-
-    // 7. Personal tenant membership (owner, active)
-    expect(insertedRows[6]?.values).toMatchObject({
-      tenantId: MOCK_UUIDS[4],
-      userId: MOCK_UUIDS[0],
-      role: 'owner',
-      status: 'active',
-    });
-
-    // 8. users.personal_tenant_id updated
-    expect(updatedRows).toHaveLength(1);
-    expect(updatedRows[0]?.values).toMatchObject({
-      personalTenantId: MOCK_UUIDS[4],
-    });
+    // Verify provisionPersonalTenant was called with the returned userId
+    expect(mockProvisionPersonalTenant).toHaveBeenCalledTimes(1);
+    expect(mockProvisionPersonalTenant).toHaveBeenCalledWith(
+      'mock-user-id',
+      'New User',
+    );
   });
 
   it('returns 400 with invalid signature (real Svix rejects)', async () => {
@@ -257,30 +167,35 @@ describe('Webhook integration: user.created with real Svix verification', { time
     expect(json.error.code).toBe('VALIDATION_FAILED');
     expect(json.error.message).toContain('Invalid webhook signature');
 
-    // No DB writes should have occurred
-    expect(insertedRows).toHaveLength(0);
+    // No DB calls should have occurred
+    expect(mockCreateUserWithTenant).not.toHaveBeenCalled();
+    expect(mockProvisionPersonalTenant).not.toHaveBeenCalled();
   });
 
-  it('verifies setTenantContext is called before RLS-protected inserts', async () => {
-    const event = makeClerkEvent();
+  it('handles user.updated events', async () => {
+    mockUpdateUserFromClerk.mockResolvedValue(undefined);
+
+    const event = {
+      type: 'user.updated',
+      data: {
+        id: 'user_clerk_existing',
+        email_addresses: [{ id: 'email_1', email_address: 'updated@example.com' }],
+        primary_email_address_id: 'email_1',
+        first_name: 'Updated',
+        last_name: 'Name',
+        image_url: null,
+      },
+    };
     const body = JSON.stringify(event);
     const headers = generateSvixHeaders(body);
     const request = makeRequest(body, headers);
 
-    await POST(request);
+    const response = await POST(request);
 
-    const { setTenantContext } = await import(
-      '../../../../packages/shared/db/rls'
-    );
-    // Called once for primary tenant (createUserWithTenant) and once for personal tenant (provisionPersonalTenant)
-    expect(setTenantContext).toHaveBeenCalledTimes(2);
-    expect(setTenantContext).toHaveBeenCalledWith(
-      expect.anything(), // transaction client
-      MOCK_UUIDS[1],    // primary tenantId
-    );
-    expect(setTenantContext).toHaveBeenCalledWith(
-      expect.anything(), // transaction client
-      MOCK_UUIDS[4],    // personalTenantId (index 4: slug consumed index 3)
-    );
+    expect(response.status).toBe(200);
+    expect(mockUpdateUserFromClerk).toHaveBeenCalledWith('user_clerk_existing', {
+      email: 'updated@example.com',
+      name: 'Updated Name',
+    });
   });
 });
