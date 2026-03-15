@@ -35,7 +35,7 @@ export type {
   GeneratedApiKey,
   ApiKeyCreateInput,
 } from './api-key-utils';
-export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc, count } from 'drizzle-orm';
+export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc, count, lt } from 'drizzle-orm';
 export type { SQL } from 'drizzle-orm';
 export { buildSearchVector, extractSearchableText } from './search';
 export type { SearchFieldDefinition } from './search';
