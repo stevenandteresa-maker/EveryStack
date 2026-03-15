@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Schema barrel file — all 59 Drizzle table definitions (50 MVP + 2 feature management + 7 platform admin)
+// Schema barrel file — all 60 Drizzle table definitions (51 MVP + 2 feature management + 7 platform admin)
 // Usage: import { users, tenants, workspaces } from '@everystack/shared/db/schema';
 // ---------------------------------------------------------------------------
 
@@ -141,6 +141,9 @@ export type { UserSavedMessage, NewUserSavedMessage } from './user-saved-message
 // ---------------------------------------------------------------------------
 // Tier 8 — Notifications & Personal
 // ---------------------------------------------------------------------------
+
+export { userNotes, userNotesRelations } from './user-notes';
+export type { UserNote, NewUserNote } from './user-notes';
 
 export { userTasks, userTasksRelations } from './user-tasks';
 export type { UserTask, NewUserTask } from './user-tasks';
