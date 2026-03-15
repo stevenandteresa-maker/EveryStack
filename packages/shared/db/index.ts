@@ -90,6 +90,8 @@ export {
   threadParticipantsRelations,
   threadMessages,
   threadMessagesRelations,
+  userSavedMessages,
+  userSavedMessagesRelations,
   files,
   filesRelations,
   apiKeys,
@@ -164,4 +166,5 @@ export type {
   Section, NewSection,
   UserRecentItem, NewUserRecentItem,
   CommandBarSession, NewCommandBarSession,
+  UserSavedMessage, NewUserSavedMessage,
 } from './schema';

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS user_notes (
   id UUID PRIMARY KEY,
   tenant_id UUID NOT NULL REFERENCES tenants(id),
   user_id UUID NOT NULL REFERENCES users(id),
-  record_id UUID REFERENCES records(id) ON DELETE SET NULL,
+  record_id UUID,
   title VARCHAR(255),
   content JSONB NOT NULL DEFAULT '{}',
   pinned BOOLEAN NOT NULL DEFAULT false,

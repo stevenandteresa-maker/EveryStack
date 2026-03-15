@@ -12,7 +12,7 @@ import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
 import { tenants } from './tenants';
 import { users } from './users';
-import { records } from './records';
+import { records } from './records'; // relation-only (no DB FK — records has composite PK)
 
 export const userNotes = pgTable(
   'user_notes',
@@ -24,8 +24,7 @@ export const userNotes = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id),
-    recordId: uuid('record_id')
-      .references(() => records.id, { onDelete: 'set null' }),
+    recordId: uuid('record_id'),
     title: varchar('title', { length: 255 }),
     content: jsonb('content').$type<Record<string, unknown>>().default({}).notNull(),
     pinned: boolean('pinned').default(false).notNull(),
