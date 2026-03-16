@@ -57,7 +57,81 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-(No active sessions)
+## Session A — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 1–2 (Unit 1: Document Template Data Layer)
+
+### Files Created
+- `packages/shared/db/schema/document-templates.ts` — Drizzle schema for `document_templates` table (UUIDv7 PK, tenant-scoped, JSONB content/settings, version tracking)
+- `packages/shared/db/schema/generated-documents.ts` — Drizzle schema for `generated_documents` table (UUIDv7 PK, tenant-scoped, template FK, file URL, AI-drafted flag)
+- `apps/web/src/data/document-templates.ts` — Tenant-scoped read queries: `getDocumentTemplate()`, `listDocumentTemplates()` with creator name join
+- `apps/web/src/data/generated-documents.ts` — Tenant-scoped read queries: `getGeneratedDocument()`, `listGeneratedDocuments()`
+- `apps/web/src/data/__tests__/document-templates.integration.test.ts` — Integration tests with tenant isolation for document template queries
+- `apps/web/src/data/__tests__/generated-documents.integration.test.ts` — Integration tests with tenant isolation for generated document queries
+- `apps/web/src/lib/schemas/document-templates.ts` — Zod schemas: `createDocumentTemplateSchema`, `updateDocumentTemplateSchema` (refine: at least one field), `duplicateDocumentTemplateSchema`, `deleteDocumentTemplateSchema`
+- `apps/web/src/actions/document-templates.ts` — Server actions: `createDocumentTemplate`, `updateDocumentTemplate` (version increment), `duplicateDocumentTemplate` ("(Copy)" suffix), `deleteDocumentTemplate` (blocks if generated docs exist)
+- `apps/web/src/actions/__tests__/document-template-actions.test.ts` — Unit tests for all 4 server actions (17 tests)
+
+### Files Modified
+- `packages/shared/db/index.ts` — Added exports for `documentTemplates`, `generatedDocuments` schemas and types
+- `packages/shared/testing/factories.ts` — Added `createTestDocumentTemplate()` and `createTestGeneratedDocument()` factories (Tier 8)
+- `packages/shared/testing/index.ts` — Re-exported both new test factories
+- `apps/web/src/components/chat/use-chat-editor.ts` — Fixed stale closure: `handleSend`/`handleCollapse` use `editorRef` instead of captured `editor` (compatibility with `immediatelyRender: false`)
+- `apps/web/src/app/dev/preview/preview-client.tsx` — Fixed lint: explicit `JSONContent` type import replacing inline `import()`
+
+### Files Deleted
+(None)
+
+### Schema Changes
+- Added table: `document_templates` — TipTap Smart Doc templates with JSONB content/settings, version tracking, per-table scoping
+- Added table: `generated_documents` — PDF output records with R2 file URLs, template FK, automation/AI metadata
+
+### New Domain Terms Introduced
+- `DocumentTemplate` — A TipTap Smart Doc template with merge tags, bound to a table, versioned
+- `GeneratedDocument` — A PDF (or other file type) generated from a template + record, stored in R2
+
+### Notes
+- Zod `createDocumentTemplateSchema` defaults: empty TipTap doc for content, A4/portrait/20mm margins for settings
+- `deleteDocumentTemplate` performs hard delete (not soft) but blocks if any `generated_documents` reference the template (ConflictError)
+- `updateDocumentTemplate` increments `version` on every update for change tracking
+
+## Session B — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-17
+**Status:** built
+**Prompt(s):** Prompt 3 (Unit 2: TipTap Env 2 Editor Core — Extension Config & Custom Nodes)
+
+### Files Created
+- `apps/web/src/components/editor/extensions/index.ts` — Smart Doc extension bundle: StarterKit, Underline, Highlight, Link, Image, Table, CodeBlockLowlight, TaskList/TaskItem, Placeholder, Typography, CharacterCount, TextAlign, Color/TextStyle, + custom nodes (MergeTag, RecordRef, Callout, SlashCommand)
+- `apps/web/src/components/editor/extensions/merge-tag/merge-tag.ts` — MergeTag custom inline atom node (attrs: tableId, fieldId, fallback)
+- `apps/web/src/components/editor/extensions/merge-tag/merge-tag-view.tsx` — MergeTag React NodeView (teal pill)
+- `apps/web/src/components/editor/extensions/record-ref/record-ref.ts` — RecordRef custom inline atom node (attrs: tableId, recordId, displayText)
+- `apps/web/src/components/editor/extensions/record-ref/record-ref-view.tsx` — RecordRef React NodeView (inline chip with record icon)
+- `apps/web/src/components/editor/extensions/callout/callout.ts` — Callout custom block node (attrs: emoji, color) with 4 variants (info/warning/success/error)
+- `apps/web/src/components/editor/extensions/callout/callout-view.tsx` — Callout React NodeView (colored admonition with clickable emoji to cycle variant)
+- `apps/web/src/components/editor/extensions/slash-command/slash-command.ts` — SlashCommand extension shell (plugin key + suggestion config placeholder for Unit 5)
+- `apps/web/src/components/editor/__tests__/extensions.test.ts` — 25 unit tests: extension bundle composition, config verification, MergeTag/RecordRef/Callout commands + HTML round-trip, formatting commands
+
+### Files Modified
+- `package.json` — Added pnpm overrides pinning all @tiptap/* packages to 3.20.2 (3.20.3 ships source-only, no dist/ — breaks Vite resolution)
+- `apps/web/package.json` — Added Env 2 TipTap extensions: highlight, image, table (+row/cell/header), code-block-lowlight, task-list/task-item, typography, character-count, text-align, color, text-style, code-block; added lowlight
+- `pnpm-lock.yaml` — Updated lockfile
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this prompt is UI/editor-only)
+
+### New Domain Terms Introduced
+(None — MergeTag, RecordRef, Callout already defined in smart-docs.md)
+
+### Notes
+- TipTap v3.20.3 ships raw TypeScript source without pre-built dist/ files, causing Vite/Vitest resolution failures. All TipTap packages pinned to 3.20.2 via pnpm overrides in root package.json.
+- StarterKit configured with `link: false, underline: false, codeBlock: false` to avoid duplicate extensions (Link, Underline configured separately with options; CodeBlock replaced by CodeBlockLowlight).
+- SlashCommand is a shell extension — the suggestion popup and command list will be wired in Unit 5 (Template Management UI).
 
 ---
 

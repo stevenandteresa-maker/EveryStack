@@ -81,16 +81,16 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Document Template Data Layer** — `in-progress`
+- [x] **Unit 1: Document Template Data Layer** — `passed-review`
   - Produces: `getDocumentTemplate()`, `listDocumentTemplates()`, `getGeneratedDocument()`, `listGeneratedDocuments()` data functions; `createDocumentTemplate`, `updateDocumentTemplate`, `duplicateDocumentTemplate`, `deleteDocumentTemplate` server actions; `DocumentTemplate`, `GeneratedDocument` types; Zod schemas; test factories
   - Consumes: None — first unit
   - Branch: `build/3d-document-templates`
-  - Notes:
+  - Notes: Prompts 1–2 complete. Verified 2026-03-16. All 6 interface contracts confirmed. 2471 tests pass, zero lint/type errors.
 
-- [ ] **Unit 2: TipTap Environment 2 Editor Core** — `pending`
+- [ ] **Unit 2: TipTap Environment 2 Editor Core** — `in-progress`
   - Produces: `SmartDocEditor`, `useSmartDocEditor()` hook; `smartDocExtensions` bundle; custom nodes (`MergeTag`, `RecordRef`, `Callout`); `SlashCommand` extension + list; `EditorToolbar`, `BubbleToolbar`, `BlockHandle`
   - Consumes: None — no unit dependencies (uses TipTap libraries + Env 1 patterns)
-  - Branch:
+  - Branch: `build/3d-document-templates`
   - Notes: Parallel with Unit 3 after Unit 1 completes
 
 - [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `pending`
