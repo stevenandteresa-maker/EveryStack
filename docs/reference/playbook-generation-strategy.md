@@ -775,3 +775,8 @@ Under the six-step lifecycle, this content is handled as follows:
 | **Decision point** | A binary fork in the roadmap with explicit instructions for each path |
 | **ADR** | Architecture Decision Record — documents a design decision, its rationale, and consequences |
 | **Consistency check** | Verification that glossary terms, MANIFEST entries, dependency graph, and cross-references are all in sync |
+| **RSA Classification** | A per-unit and per-prompt label (D, SH, or PJ) indicating how much the spec covers the required output. Assigned by the Planner at Gate 1, refined by the Playbook Author at Step 1, consumed by the Reviewer at Step 4. |
+| **Deterministic Path (D)** | RSA classification indicating the spec fully determines the output. No implementation choices. Binary review. |
+| **Structured Handoff (SH)** | RSA classification indicating the spec defines WHAT but not HOW. Builder makes implementation choices within documented constraints. Standard review. |
+| **Pure Judgment (PJ)** | RSA classification indicating the spec has a genuine gap. Must be surfaced to Steven before build. Highest review scrutiny. |
+| **PJ Decision Gate** | A summary table in the playbook's phase preamble listing all PJ-classified prompts. Steven reviews before Step 3 to resolve gaps or confirm judgment calls. |

@@ -979,6 +979,42 @@ A boundary where one build unit ends and another begins. Good seams produce unit
 
 **Appears in:** `SUBDIVISION-STRATEGY.md` § Finding Natural Seams, `planner/SKILL.md`
 
+### Reasoning Surface
+
+The total set of behaviors an AI agent or build unit must reason about. Smaller is better. Classified into three types: D, SH, PJ.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Reasoning Surface Audit, `CLAUDE.md` § Reasoning Surface Audit
+
+### Reasoning Surface Audit
+
+The classification pass that maps every behavior to D, SH, or PJ. In EveryStack's build (L1), the Planner classifies manually during subdivision.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Reasoning Surface Audit, `CLAUDE.md` § Reasoning Surface Audit, `playbook-gen/SKILL.md`, `reviewer/SKILL.md`, `buildprep/SKILL.md`
+
+### Deterministic Path
+
+RSA classification: spec fully determines the output. No implementation choices. Abbreviated as D.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Classification Rules, `CLAUDE.md` § RSA, `playbook-generation-strategy.md` § Glossary
+
+### Structured Handoff
+
+RSA classification: spec defines WHAT but not HOW. AI makes implementation choices within documented constraints. Abbreviated as SH.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Classification Rules, `CLAUDE.md` § RSA, `playbook-generation-strategy.md` § Glossary
+
+### Pure Judgment
+
+RSA classification: spec has a genuine gap. Requires unconstrained reasoning. Abbreviated as PJ.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § Classification Rules, `CLAUDE.md` § RSA, `playbook-generation-strategy.md` § Glossary
+
+### PJ Decision Gate
+
+Summary table in a playbook preamble listing all PJ-classified prompts for Steven's review before build.
+
+**Appears in:** `SUBDIVISION-STRATEGY.md` § The PJ Pre-Build Gate, `playbook-gen/SKILL.md` § PJ Decision Gate, `buildprep/SKILL.md`
+
 ---
 
 ## Plan Tiers (Canonical Reference)

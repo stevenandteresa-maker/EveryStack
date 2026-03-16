@@ -356,6 +356,11 @@ opportunities.]
 
 **Big-Picture Anchor:** [1–2 sentences on where this unit fits.]
 
+**RSA Classification:** [D / SH / PJ]
+**RSA Rationale:** [1–2 sentences. What makes this unit deterministic,
+structured, or judgment-dependent? Reference the specific spec sections
+that do or don't fully specify the output.]
+
 **Produces:**
 - [Interface contract — exports, types, side effects]
 
@@ -395,11 +400,11 @@ built.]
 
 ## Context Budget Verification
 
-| Unit | Doc Sections | Source Files | Prior Outputs | Est. Tokens | Passes |
-|------|-------------|-------------|---------------|-------------|--------|
-| 1    | 3 sections  | 2 files     | 0             | ~X,XXX      | Yes    |
-| 2    | 2 sections  | 3 files     | 2 (Unit 1)    | ~X,XXX      | Yes    |
-| ...  | ...         | ...         | ...           | ...         | ...    |
+| Unit | RSA | Doc Sections | Source Files | Prior Outputs | Est. Tokens | Passes |
+|------|-----|-------------|-------------|---------------|-------------|--------|
+| 1    | D   | 3 sections  | 2 files     | 0             | ~X,XXX      | Yes    |
+| 2    | SH  | 2 sections  | 3 files     | 2 (Unit 1)    | ~X,XXX      | Yes    |
+| ...  | ... | ...         | ...         | ...           | ...         | ...    |
 
 [If any unit exceeds ~40% budget, document the further subdivision plan.]
 ```
@@ -444,6 +449,112 @@ into an adjacent unit.
 
 ---
 
+## Reasoning Surface Audit (RSA)
+
+Every unit in a subdivision doc carries an RSA classification. This
+classification tells the Planner, Playbook Author, Reviewer, and
+Steven how much spec coverage exists for the unit's work.
+
+### Classification Rules
+
+1. **Classify at the unit level, not the prompt level.** The Planner
+   classifies units during Gate 1. The Playbook Author may refine
+   per-prompt in Step 1, but the unit classification is the primary
+   signal.
+
+2. **Default to SH.** Most build units are Structured Handoffs — the
+   spec says what to build, the builder decides how. Only classify D
+   when the spec genuinely leaves zero implementation choices. Only
+   classify PJ when the spec genuinely has a gap.
+
+3. **PJ units trigger a pre-build decision gate.** Before Step 3
+   begins, all PJ-classified units are surfaced to Steven. He either
+   resolves the gap (upgrading to SH or D) or confirms the builder
+   should use judgment. This prevents build surprises.
+
+4. **RSA rationale is mandatory.** A bare "D" or "SH" without
+   rationale is not useful. The rationale must reference specific
+   spec sections that do or don't cover the unit's work. Example:
+   "D — data-model.md § threads (lines 312–348) fully specifies
+   all columns, FKs, and constraints. No implementation choices."
+
+5. **Mixed units inherit the highest classification.** If a unit has
+   3 D behaviors and 1 SH behavior, classify the unit as SH. If it
+   has 5 SH behaviors and 1 PJ behavior, classify as PJ and document
+   which behavior is the PJ concern.
+
+### Classification Heuristics
+
+**Classify as D when:**
+- The data-model.md table definition fully specifies columns, types,
+  FKs, and constraints
+- The reference doc gives an explicit algorithm, formula, or config
+  schema
+- The acceptance criteria are binary spec-match checks ("column X
+  exists with type Y")
+- A prior sub-phase established a pattern and this unit repeats it
+  for a new entity
+
+**Classify as SH when:**
+- The spec defines the interface but not the internal implementation
+- Multiple valid implementation approaches exist within the spec's
+  constraints
+- The builder chooses data structures, caching strategies, or error
+  retry semantics
+- The acceptance criteria test behavior ("records are tenant-isolated")
+  not structure
+
+**Classify as PJ when:**
+- The spec says "TBD" or leaves a gap
+- An edge case isn't addressed in the reference doc
+- A UX decision depends on runtime behavior you haven't measured
+- The builder would need to ask Steven "what should happen when...?"
+
+### The PJ Pre-Build Gate
+
+Pure Judgment prompts MUST be surfaced to Steven as a batch before
+Step 3 begins. For each PJ prompt, Steven either:
+1. **Makes the decision** → classification upgrades to SH or D, doc
+   gets updated in Step 0, prompt gets rewritten
+2. **Confirms judgment call** → builder proceeds with their best
+   judgment, Steven reviews the output with extra attention
+
+This is the highest-value behavior RSA introduces: catching spec gaps
+before they become build surprises.
+
+### RSA in the Context Budget Verification Table
+
+Add an RSA column to the existing table:
+
+| Unit | RSA | Doc Sections | Source Files | Prior Outputs | Est. Tokens | Passes |
+|------|-----|-------------|-------------|---------------|-------------|--------|
+| 1    | D   | 3 sections  | 2 files     | 0             | ~X,XXX      | Yes    |
+| 2    | SH  | 2 sections  | 3 files     | 2 (Unit 1)    | ~X,XXX      | Yes    |
+| 3    | PJ  | 4 sections  | 1 file      | 1 (Unit 2)    | ~X,XXX      | Yes    |
+
+### What RSA Data Is For
+
+This classification data serves three purposes:
+
+1. **Immediate (L1):** Calibrates review depth and surfaces spec gaps
+   before the build starts. The Reviewer spends minimal time on D
+   prompts, standard time on SH, and extra scrutiny on PJ.
+
+2. **Training data for L3:** Every classified unit becomes training
+   data for AbleSpec's Decomposition Engine. When AbleSpec's L3
+   classification automates build-time RSA for a user's project, it
+   draws on patterns validated against EveryStack's build history.
+   The RSA Rationale text is especially valuable — it captures the
+   *reasoning* behind classifications, not just the labels.
+
+3. **Methodology validation for L4:** The distribution of D/SH/PJ
+   across EveryStack's build validates the classification framework
+   itself. If 80% of prompts are SH, that tells us the sweet spot
+   for spec coverage. This informs how AbleSpec eventually helps
+   users classify their own AI agents' behaviors (L4).
+
+---
+
 ## Worked Example
 
 Sub-phase: 3C — Omnichannel Messaging (hypothetical)
@@ -459,27 +570,37 @@ Sub-phase: 3C — Omnichannel Messaging (hypothetical)
 
 ```
 Unit 1: Schema & Types (Data)
+  - RSA: D — data-model.md fully specifies thread_messages and
+    thread_participants columns, FKs, constraints, and JSONB shapes.
   - Produces: table types, migration, test factories
   - Estimated: Low complexity
 
 Unit 2: Message CRUD (Service)
-  - Produces: create/read/list functions with tenant isolation
-  - Consumes: Unit 1 types
+  - RSA: SH — communications.md specifies the message model and
+    delivery requirements but builder chooses query patterns,
+    pagination strategy, and optimistic update implementation.
+  - Produces: createMessage, getThreadMessages, markAsRead functions
   - Estimated: Medium complexity
 
 Unit 3: Participant Management (Service)
+  - RSA: SH — communications.md defines participant roles and
+    permissions but builder decides on invitation flow and removal
+    cascade behavior.
   - Produces: add/remove/list participant functions
-  - Consumes: Unit 1 types
   - Estimated: Medium complexity
 
 Unit 4: Real-Time Broadcasting (Service + Worker)
+  - RSA: PJ — communications.md says "real-time message delivery"
+    but doesn't specify the transport mechanism (WebSocket, SSE,
+    polling). Builder must decide. **Surface to Steven before build.**
   - Produces: Socket.io event handlers, BullMQ job processor
-  - Consumes: Unit 2 + Unit 3 function signatures
   - Estimated: High complexity
 
-Unit 5: Thread UI (UI)
+Unit 5: Thread View UI (Interface)
+  - RSA: SH — ui-ux.md defines the thread layout and component
+    hierarchy but builder decides on virtualization strategy and
+    scroll behavior.
   - Produces: ThreadView, MessageComposer, ParticipantList components
-  - Consumes: Unit 2 + Unit 3 function signatures
   - Estimated: Medium complexity
 ```
 

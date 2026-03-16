@@ -94,6 +94,36 @@ or merge any branches.
 When activated, the Reviewer Agent executes the following evaluation
 sequence against the build diff.
 
+### Phase 0: RSA-Calibrated Triage
+
+Before evaluating individual acceptance criteria, scan the playbook for
+RSA classifications. These calibrate review depth per prompt:
+
+**D (Deterministic Path) prompts:**
+- Binary check only: does the code match the spec?
+- Focus on: exact column names, types, constraints, function signatures
+- Time allocation: minimal — these are the lowest-risk prompts
+- Common failure: typos, missing columns, wrong FK targets
+
+**SH (Structured Handoff) prompts:**
+- Normal review depth: validate against spec constraints + engineering
+  quality
+- Focus on: the constraint boundaries documented in RSA Rationale,
+  plus CLAUDE.md conventions
+- Time allocation: standard — these are the bulk of the review
+- Common failure: constraint violation, missing tenant isolation,
+  convention non-compliance
+
+**PJ (Pure Judgment) prompts:**
+- Highest scrutiny: verify the builder's judgment call is reasonable
+  and well-documented
+- Focus on: whether the implementation handles the edge case or gap
+  identified in the RSA Rationale
+- Time allocation: extra — these need the most careful evaluation
+- If a PJ prompt was supposed to go through the pre-build decision
+  gate but didn't, flag this as a process violation (non-blocking)
+- Note the judgment call made in the verdict for Steven's review
+
 ### Phase 1: Playbook Acceptance Criteria Verification
 
 This is the primary review. Every acceptance criterion in every prompt
@@ -337,6 +367,7 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 ### Prompt 1: [Prompt Name from Playbook]
 
 **Unit:** [Unit number from playbook]
+**RSA:** [D / SH / PJ]
 
 **Acceptance Criteria:**
 - [x] Criterion 1 — Met. [1-line evidence reference]
@@ -348,6 +379,10 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 
 **Scope Guard:**
 - [x] No violations (or: [ ] VIOLATION: [description])
+
+**[For PJ prompts only] Judgment Call Made:**
+[Describe the implementation decision the builder made for the
+spec gap identified in the RSA Rationale. Steven reviews this.]
 
 ---
 

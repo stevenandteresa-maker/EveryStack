@@ -360,6 +360,19 @@ This sub-phase is decomposed into [N] units per the subdivision doc
 | 2 | [name] | [key exports] | Unit 1 |
 | ... | ... | ... | ... |
 
+## PJ Decision Gate
+
+The following prompts require Steven's review before build begins.
+Each addresses a spec gap that may need resolution or explicit
+confirmation.
+
+| # | Prompt | PJ Concern | Resolution Options |
+|---|--------|------------|-------------------|
+| N | [name] | [the gap]  | (a) [option] (b) [option] (c) Proceed with builder judgment |
+
+> If no prompts are classified PJ, this table is omitted and replaced
+> with: "**PJ Decision Gate:** None — all prompts are D or SH."
+
 ### Skills for This Phase
 Load these skill files before executing any prompt:
 - `docs/skills/backend/SKILL.md` — [if backend]
@@ -410,6 +423,13 @@ Consumes: [from subdivision doc]
 - [ ] Specific testable condition
 - [ ] [CONTRACT] Export matches interface contract (on unit-final prompts)
 - [ ] ESLint and TypeScript compile with zero errors
+
+**RSA Classification:** [D / SH / PJ]
+**RSA Rationale:** [1–2 sentences. Reference specific spec sections.]
+**Reviewer Focus:** [What the reviewer should focus on given the
+classification. For D: "Spec-match check against [doc § section]."
+For SH: "Validate [constraint] from [doc § section]." For PJ:
+"Evaluate judgment call on [gap]. Steven reviews."]
 
 ### Do NOT Build
 - Out-of-scope item
@@ -534,3 +554,7 @@ Before delivering a playbook, verify:
 - [ ] Existing prompt roadmaps in reference docs consulted and adapted
 - [ ] Post-MVP features in "Do NOT Build" sections, not accidentally included
 - [ ] State file update instructions included in VERIFY boundaries
+- [ ] Every prompt has an RSA classification with rationale
+- [ ] All PJ prompts appear in the PJ Decision Gate table
+- [ ] PJ Decision Gate includes resolution options for each concern
+- [ ] RSA rationale references specific spec sections (not just "the spec")

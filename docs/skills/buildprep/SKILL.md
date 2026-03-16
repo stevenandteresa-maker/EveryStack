@@ -229,9 +229,18 @@ Follow the Gate 1 procedure from the planner skill exactly:
    - Context manifest (doc sections with line ranges, source files)
    - Acceptance criteria
 4. Build the dependency graph between units
-5. Run the context budget verification (no unit exceeds ~40% context)
-6. Update TASK-STATUS.md with one entry per unit (all `pending`)
-7. Update MANIFEST.md with the new subdivision doc entry
+5. Classify each unit's Reasoning Surface:
+   - D (Deterministic Path): spec fully determines the output
+   - SH (Structured Handoff): spec says WHAT, builder decides HOW
+   - PJ (Pure Judgment): spec has a genuine gap
+   Write a 1–2 sentence rationale for each classification
+   referencing specific spec sections.
+6. If any unit is classified PJ, list the PJ concerns in a
+   summary at the end of the subdivision doc for Steven to
+   review before Step 1 begins.
+7. Run the context budget verification (no unit exceeds ~40% context)
+8. Update TASK-STATUS.md with one entry per unit (all `pending`)
+9. Update MANIFEST.md with the new subdivision doc entry
 
 Save the subdivision doc to: docs/subdivisions/{SUBPHASE_LOWER}-subdivision.md
 
@@ -265,6 +274,8 @@ Verify:
 - First unit has no unit-to-unit Consumes dependencies
 - TASK-STATUS.md updated with one entry per unit
 - MANIFEST.md entry added for the subdivision doc
+- Every unit has an RSA classification (D, SH, or PJ) with rationale
+- PJ units have their concerns summarized at the end of the doc
 - All terms match GLOSSARY.md exactly
 
 Then merge:
@@ -309,6 +320,14 @@ Rules:
 - Every contract Produces entry must appear as a verifiable acceptance criterion
 - Follow the Playbook Document Template from the playbook-gen skill exactly
 - Include VERIFY session boundaries after each unit
+- Carry forward each unit's RSA classification to prompt-level
+  classifications. A prompt within a D unit is D. A prompt within
+  an SH unit is SH unless a specific prompt is D. A prompt within
+  a PJ unit inherits PJ unless the PJ concern doesn't apply to it.
+  Include RSA Classification, RSA Rationale, and Reviewer Focus on
+  every prompt in the playbook.
+- Produce a PJ Decision Gate table in the phase preamble listing all
+  PJ prompts for Steven's review before build.
 
 Save the playbook to: docs/Playbooks/{PLAYBOOK_FILENAME}
 

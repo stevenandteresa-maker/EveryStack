@@ -26,10 +26,10 @@
 | MVP Scope Guard                             | 493–503   |
 | Reference Doc vs. Phase Build Doc Hierarchy | 505–513   |
 | Agent Roster                                | 515–525   |
-| Build Lifecycle — Steps & Planning Gates    | 527–607   |
-| Scope Label Discipline                      | 609–620   |
-| CockroachDB Readiness — Active Safeguards   | 622–632   |
-| Pre-Merge Gates (CI)                        | 634–646   |
+| Build Lifecycle — Steps & Planning Gates    | 527–634   |
+| Scope Label Discipline                      | 636–647   |
+| CockroachDB Readiness — Active Safeguards   | 649–659   |
+| Pre-Merge Gates (CI)                        | 661–673   |
 
 ---
 
@@ -569,6 +569,33 @@ checklist. Playbooks are then generated at the subdivision level.
 **Context budget test:** If a unit's context manifest would exceed ~40%
 of a Claude Code context window (including CLAUDE.md, GLOSSARY.md, and
 the relevant source files), the unit must be subdivided further.
+
+### Reasoning Surface Audit (RSA)
+
+Every unit in a subdivision doc and every prompt in a playbook carries
+an RSA classification. The Planner assigns unit-level classifications
+during Gate 1. The Playbook Author refines to prompt-level during
+Step 1. The Reviewer uses classifications to calibrate review depth
+during Step 4.
+
+**Classifications:**
+- **D (Deterministic Path):** Spec fully determines the output.
+  Builder translates spec → code. Reviewer does a binary spec-match
+  check.
+- **SH (Structured Handoff):** Spec says WHAT, builder decides HOW.
+  Reviewer validates against documented constraints.
+- **PJ (Pure Judgment):** Spec has a gap. Must be surfaced to Steven
+  before build. Builder uses judgment; reviewer flags the decision
+  for Steven's attention.
+
+**PJ pre-build gate:** All PJ-classified prompts are presented to
+Steven before Step 3. He resolves the gap (upgrading classification)
+or confirms the builder should proceed with judgment.
+
+**L1 training data:** RSA classifications and rationale text are
+captured as training data for AbleSpec's L3 Decomposition Engine.
+Rich rationale (referencing specific spec sections) is more valuable
+than bare labels.
 
 ### Gate 2: Pre-Build Context Curation (between Step 2 and Step 3)
 
