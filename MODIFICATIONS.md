@@ -433,6 +433,58 @@ built → failed-review → built (retry after fixes)
 
 ---
 
+## Session F — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 17–19 (Unit 6: Notification UI & Chat Quick Panel)
+
+### Files Created
+- `apps/web/src/components/notifications/NotificationBell.tsx` — Bell icon button with real-time unread badge, opens NotificationTray
+- `apps/web/src/components/notifications/NotificationTray.tsx` — Popover tray displaying grouped notifications with mark-all-read and load-more
+- `apps/web/src/components/notifications/NotificationItem.tsx` — Single notification row with click handler and relative timestamp
+- `apps/web/src/components/notifications/NotificationGroup.tsx` — Grouped notifications with expand/collapse
+- `apps/web/src/components/notifications/use-notifications.ts` — useNotifications hook: notifications array, unread count, loading state, mutation callbacks
+- `apps/web/src/components/notifications/notification-grouping.ts` — Notification grouping logic by group_key
+- `apps/web/src/components/notifications/index.ts` — Barrel export for notification components and hook
+- `apps/web/src/components/notifications/__tests__/NotificationBell.test.tsx` — 10 tests for NotificationBell
+- `apps/web/src/components/notifications/__tests__/use-notifications.test.ts` — 5 tests for useNotifications hook
+- `apps/web/src/components/notifications/__tests__/notification-grouping.test.ts` — 7 tests for notification grouping logic
+- `apps/web/src/components/chat/ChatQuickPanel.tsx` — Sidebar conversation list with infinite scroll and real-time Socket.IO updates
+- `apps/web/src/components/chat/ChatQuickPanelItem.tsx` — Conversation row with avatar, unread badge, last message preview, relative timestamp
+- `apps/web/src/components/chat/__tests__/ChatQuickPanel.test.tsx` — 13 tests for ChatQuickPanel
+- `apps/web/src/components/presence/PresenceIndicator.tsx` — Colored dot indicator (online/away/dnd/offline) with size variants
+- `apps/web/src/components/presence/CustomStatusDisplay.tsx` — Inline emoji + text display with truncation
+- `apps/web/src/components/presence/CustomStatusEditor.tsx` — Popover editor with EmojiPicker, auto-clear options
+- `apps/web/src/components/presence/use-presence.ts` — usePresence hook: presence map, idle detection, heartbeat, Socket.IO subscriptions
+- `apps/web/src/components/presence/index.ts` — Barrel export for presence components and hook
+- `apps/web/src/components/presence/__tests__/presence.test.tsx` — 20 tests for presence components and hook
+- `apps/web/src/actions/notification-queries.ts` — Server-side notification query actions
+- `apps/web/src/actions/presence.ts` — Server actions for presence and custom status operations
+
+### Files Modified
+- `apps/web/src/components/layout/header.tsx` — Integrated NotificationBell into workspace header
+- `apps/web/src/components/layout/sidebar.tsx` — Integrated ChatQuickPanel into sidebar content zone
+- `apps/web/src/stores/sidebar-store.ts` — Added chat panel visibility state
+- `apps/web/src/actions/threads.ts` — Extended with thread list query for ChatQuickPanel
+- `apps/web/src/components/chat/GroupDMHeader.tsx` — Updated with presence indicator integration
+- `apps/web/src/components/chat/MentionDropdown.tsx` — Updated with presence dots on user entries
+- `apps/web/src/components/chat/MessageItem.tsx` — Updated with presence-aware author avatars
+- `apps/web/messages/en.json` — Added notifications, presence, chatQuickPanel i18n namespaces
+- `apps/web/messages/es.json` — Added notifications, presence, chatQuickPanel i18n namespaces (Spanish)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `NotificationBell` — Header component showing unread notification count with real-time badge updates
+- `NotificationTray` — Popover UI displaying grouped notifications with mark-all-read action
+- `ChatQuickPanel` — Sidebar panel showing recent conversations (threads + DMs) with unread indicators
+- `PresenceIndicator` — Visual dot component showing user online/away/dnd/offline state
+- `CustomStatusEditor` — Popover UI for setting emoji + text custom status with auto-clear scheduling
+
+---
+
 ## Archive
 
 <!-- Docs Agent moves completed (docs-synced) session blocks here
