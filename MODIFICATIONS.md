@@ -57,6 +57,137 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session G — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** built
+**Prompt(s):** Prompt 13 (Unit 4: MessageRenderer, MessageItem, EmojiReactions, EmojiPicker)
+
+### Files Created
+- `apps/web/src/components/chat/MessageRenderer.tsx` — Read-only TipTap JSON → styled HTML renderer (no editor instances). Renders: bold, italic, underline, strike, code, link, bullet list, ordered list, blockquote, mention pill (teal @Name), hard break.
+- `apps/web/src/components/chat/MessageItem.tsx` — Single message display: avatar (initials fallback), author name, timestamp, content (via MessageRenderer), hover menu (Edit/Delete/Pin/Save/Reply), inline edit mode with ChatEditor, "(edited)" indicator, deleted placeholder, system message (centered, muted).
+- `apps/web/src/components/chat/EmojiReactions.tsx` — Reaction chips below message: emoji + count + active highlight, click to toggle, "+" button opens EmojiPicker.
+- `apps/web/src/components/chat/EmojiPicker.tsx` — emoji-mart wrapper in shadcn/ui Popover: categories, search, skin tone selector.
+- `apps/web/src/components/chat/__tests__/MessageRenderer.test.tsx` — 16 tests: all mark types, lists, blockquote, mention pill, combined marks, hard break, empty doc, no contenteditable.
+- `apps/web/src/components/chat/__tests__/MessageItem.test.tsx` — 15 tests: avatar/name/timestamp, hover menu visibility, edit mode toggle, "(edited)" indicator, deleted placeholder, system message, callback invocations, pin/unpin text.
+- `apps/web/src/components/chat/__tests__/EmojiReactions.test.tsx` — 8 tests: chip rendering, active state, toggle callback, add reaction button, empty reactions, filtered empty arrays.
+- `apps/web/src/components/chat/__tests__/EmojiPicker.test.tsx` — 4 tests: popover rendering, config pass-through, emoji selection callback, trigger rendering.
+
+### Files Modified
+- `apps/web/messages/en.json` — Added `chat.messageItem`, `chat.emojiReactions`, `chat.emojiPicker` i18n namespaces
+- `apps/web/messages/es.json` — Added `chat.messageItem`, `chat.emojiReactions`, `chat.emojiPicker` i18n namespaces (Spanish)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `ThreadMessage` — TypeScript interface for message data consumed by MessageItem (id, content, reactions, is_edited, is_deleted, message_type)
+- `ReactionsMap` — JSONB shape type: `Record<string, string[]>` mapping emoji → user IDs
+
+### Notes
+- MessageRenderer deliberately avoids creating TipTap editor instances — uses pure recursive React element rendering for performance (200 messages = 200 HTML renders, not 200 editors).
+- MessageItem hover menu uses Radix DropdownMenu. Edit/Delete only shown for own messages. System messages render as centered muted text with no interaction affordances.
+- EmojiPicker wraps emoji-mart with `searchPosition="sticky"`, `skinTonePosition="search"`, `previewPosition="none"`, native emoji set.
+
+---
+
+## Session F — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** built
+**Prompt(s):** Prompt 12 (Unit 4: ChatEditor Component with Toolbar, Mentions, Attachments)
+
+### Files Created
+- `apps/web/src/components/chat/ChatEditor.tsx` — Main chat editor component with 3-state progressive disclosure (Compact/Focused/Expanded), drag-drop attachment support, mention dropdown integration
+- `apps/web/src/components/chat/ChatEditorToolbar.tsx` — Bubble toolbar on text selection (BubbleMenu) with 6 formatting actions: B, I, U, Link, Bullets, Numbers
+- `apps/web/src/components/chat/MentionDropdown.tsx` — @mention autocomplete dropdown with fuzzy filtering, person/group sections, arrow key navigation, teal pill rendering via TipTap Mention extension
+- `apps/web/src/components/chat/ChatAttachmentButton.tsx` — Paperclip attachment button with file picker, image thumbnails, file icon + name + size preview, remove functionality
+- `apps/web/src/components/chat/__tests__/ChatEditor.test.tsx` — 28 tests: 3 editor states, toolbar buttons/labels, mention dropdown rendering/filtering/selection, attachment button/preview/removal, drag-drop
+
+### Files Modified
+- `apps/web/src/components/chat/types.ts` — Added MentionDropdownState, ChatMentionSuggestionConfig types; added `type` field to MentionSuggestion; added mentionSuggestion to ChatEditorConfig
+- `apps/web/src/components/chat/extensions.ts` — Fixed Link/Underline as separate imports (not bundled in StarterKit v3); added mentionSuggestion pass-through to Mention.configure; fixed extension names list
+- `apps/web/src/components/chat/use-chat-editor.ts` — Pass mentionSuggestion from config to createChatEditorExtensions
+- `apps/web/package.json` — Added @tiptap/extension-bubble-menu dependency
+- `pnpm-lock.yaml` — Updated lockfile
+- `apps/web/messages/en.json` — Added chatEditor i18n namespace (placeholder, send, cancel, expand, collapse, attach, toolbar labels)
+- `apps/web/messages/es.json` — Added chatEditor i18n namespace (Spanish translations)
+
+### Schema Changes
+- None
+
+### Notes
+- Fixed bug in extensions.ts from Prompt 11: Link and Underline were listed in extension names but not actually imported/registered (StarterKit v3 doesn't bundle them). Now imported from @tiptap/extension-link and @tiptap/extension-underline respectively.
+- BubbleMenu is in @tiptap/react/menus (not @tiptap/react) in TipTap v3. Uses Floating UI `options` prop instead of deprecated `tippyOptions`.
+- Mention suggestion uses ref-bridge pattern: TipTap's imperative suggestion callbacks update React state via refs, MentionDropdown exposes onKeyDown via useImperativeHandle.
+
+---
+
+## Session E — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** built
+**Prompt(s):** Prompt 11 (Unit 4: TipTap Extension Config + useChatEditor Hook)
+
+### Files Created
+- `apps/web/src/components/chat/types.ts` — ChatEditorConfig, ChatEditorInstance, MentionSuggestion, ChatEditorState types
+- `apps/web/src/components/chat/extensions.ts` — createChatEditorExtensions() factory, CHAT_EDITOR_EXTENSION_NAMES, CHAT_EDITOR_EXCLUDED_EXTENSIONS constants
+- `apps/web/src/components/chat/use-chat-editor.ts` — useChatEditor() hook with 3-state machine (Compact/Focused/Expanded), keyboard shortcuts, TipTap integration
+- `apps/web/src/components/chat/__tests__/extensions.test.ts` — 14 tests: extension list verification, excluded extensions, link/mention config, markdown shortcuts
+- `apps/web/src/components/chat/__tests__/use-chat-editor.test.ts` — 13 tests: state machine transitions, send behavior, keyboard extension, types shape
+
+### Files Modified
+- `apps/web/package.json` — Added @tiptap/react, @tiptap/starter-kit, @tiptap/core, @tiptap/extension-mention, @tiptap/extension-link, @tiptap/extension-placeholder, @tiptap/extension-underline, @tiptap/pm, emoji-mart, @emoji-mart/react, @emoji-mart/data
+- `pnpm-lock.yaml` — Updated lockfile with TipTap and emoji-mart dependencies
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `chatEditorExtensions` — TipTap Environment 1 extension configuration (chat, not docs). 12 named extensions: bold, italic, underline, strike, code, bulletList, orderedList, blockquote, link, mention, placeholder, undoRedo
+- `ChatEditorState` — 3-state machine: compact (single-line), focused (active with actions), expanded (paragraph mode)
+- `chatKeyboard` — Custom TipTap extension handling Enter/Shift+Enter/Cmd+Enter/Escape/ArrowUp per state
+
+---
+
+## Session D — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** passed-review
+**Prompt(s):** Prompts 8–10 (Unit 3: Presence & Real-Time Chat Infrastructure)
+
+### Files Created
+- `apps/realtime/src/handlers/chat-handler.ts` — ChatHandler: thread:join, thread:leave, typing:start, typing:stop listeners + message broadcast
+- `apps/realtime/src/handlers/presence-handler.ts` — PresenceHandler: presence:heartbeat, presence:update, presence:status listeners + disconnect cleanup
+- `apps/realtime/src/handlers/notification-handler.ts` — NotificationHandler: subscribes to user:{userId}:notifications Redis channel, DND suppression
+- `apps/realtime/src/subscribers/chat-event-subscriber.ts` — Redis pub/sub subscriber bridging chat events to Socket.IO rooms
+- `apps/web/src/lib/realtime/chat-events.ts` — publishChatEvent() for message:new/edit/delete via Redis pub/sub
+- `apps/web/src/lib/realtime/notification-events.ts` — publishNotificationEvent() to user:{userId}:notifications channel
+- `apps/realtime/src/handlers/__tests__/chat-handler.test.ts` — Unit tests for ChatHandler
+- `apps/realtime/src/handlers/__tests__/presence-handler.test.ts` — Unit tests for PresenceHandler
+- `apps/realtime/src/handlers/__tests__/notification-handler.test.ts` — Unit tests for NotificationHandler
+- `apps/realtime/src/subscribers/__tests__/chat-event-subscriber.test.ts` — Unit tests for chat event subscriber
+- `apps/web/src/lib/realtime/__tests__/chat-events.test.ts` — Unit tests for publishChatEvent (9 tests)
+- `apps/web/src/lib/realtime/__tests__/notification-events.test.ts` — Unit tests for publishNotificationEvent (6 tests)
+
+### Files Modified
+- `apps/realtime/src/server.ts` — Registered ChatHandler, PresenceHandler, NotificationHandler
+- `apps/web/src/actions/threads.ts` — Wired publishChatEvent into message create/edit/delete actions
+- `apps/web/src/lib/notifications/notification-service.ts` — Wired publishNotificationEvent into delivery routing
+- `packages/shared/realtime/events.ts` — Added MESSAGE_NEW, MESSAGE_EDIT, MESSAGE_DELETE, NOTIFICATION_NEW, TYPING_START, TYPING_STOP events
+- `packages/shared/realtime/__tests__/types.test.ts` — Updated tests for new event constants
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `ChatHandler` — Socket.IO handler for thread join/leave and typing events, with message broadcast via Redis pub/sub
+- `PresenceHandler` — Socket.IO handler for heartbeat, status updates, and disconnect cleanup
+- `NotificationHandler` — Socket.IO handler subscribing to per-user Redis notification channels with DND bypass logic
+- `ChatEventSubscriber` — Redis pub/sub subscriber that bridges chat events from the web app to Socket.IO rooms
+
+---
+
 ## Session C — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-15

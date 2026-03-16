@@ -921,5 +921,48 @@
     "recentHeading": "Recent",
     "scopedLabel": "Current Table",
     "scopedHint": "Search is scoped to this table"
+  },
+  "chatEditor": {
+    "placeholder": "Type a message\u2026",
+    "send": "Send",
+    "cancel": "Cancel",
+    "expand": "Expand editor",
+    "collapse": "Collapse editor",
+    "attach": "Attach file",
+    "removeAttachment": "Remove attachment",
+    "mentionSuggestions": "Mention suggestions",
+    "toolbar": {
+      "label": "Formatting toolbar",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "link": "Link",
+      "linkPrompt": "Enter URL",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list"
+    }
+  },
+  "chat": {
+    "messageItem": {
+      "deleted": "This message was deleted",
+      "edited": "(edited)",
+      "edit": "Edit",
+      "delete": "Delete",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "save": "Save",
+      "reply": "Reply",
+      "moreActions": "More actions",
+      "editPlaceholder": "Edit message\u2026",
+      "editHintSave": "Cmd+Enter to save",
+      "editHintCancel": "Escape to cancel"
+    },
+    "emojiReactions": {
+      "toggle": "{emoji} {count}",
+      "addReaction": "Add reaction"
+    },
+    "emojiPicker": {
+      "title": "Pick an emoji"
+    }
   }
 }

@@ -93,13 +93,13 @@ When a unit moves to `failed-review`:
   - Branch: `build/3c-comms`
   - Notes: Prompts 5–7 complete. Verified 2026-03-15.
 
-- [ ] **Unit 3: Presence & Real-Time Chat Infrastructure** — `in-progress`
+- [x] **Unit 3: Presence & Real-Time Chat Infrastructure** — `passed-review`
   - Produces: `PresenceService` (Redis heartbeat, state management); Socket.IO handlers (ChatHandler, PresenceHandler, NotificationHandler); Redis pub/sub chat event subscriber; `publishChatEvent()`, `publishNotificationEvent()`; custom status CRUD; `PresenceState`, `ChatEvent` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
   - Branch: `build/3c-comms`
-  - Notes: Parallel with Units 2 and 4. Prompt 8 complete (PresenceService + custom status + 30 tests). Prompts 9–10 remaining.
+  - Notes: Prompts 8–10 complete. Verified 2026-03-15. All 8 contracts verified, 4585 tests pass.
 
-- [ ] **Unit 4: Chat Editor (TipTap Environment 1)** — `pending`
+- [ ] **Unit 4: Chat Editor (TipTap Environment 1)** — `in-progress`
   - Produces: `ChatEditor` (3 input states, progressive disclosure); `ChatEditorToolbar`; `MentionDropdown`; `EmojiPicker`; `EmojiReactions`; `MessageRenderer`; `MessageItem`; `ChatAttachmentButton`; `useChatEditor()` hook; TipTap extension config
   - Consumes: None — no unit dependencies. Uses TipTap, emoji-mart, shadcn/ui libraries
   - Branch:

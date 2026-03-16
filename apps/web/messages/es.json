@@ -921,5 +921,48 @@
     "recentHeading": "Recientes",
     "scopedLabel": "Tabla actual",
     "scopedHint": "La búsqueda está limitada a esta tabla"
+  },
+  "chatEditor": {
+    "placeholder": "Escribe un mensaje\u2026",
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "expand": "Expandir editor",
+    "collapse": "Contraer editor",
+    "attach": "Adjuntar archivo",
+    "removeAttachment": "Eliminar archivo adjunto",
+    "mentionSuggestions": "Sugerencias de mención",
+    "toolbar": {
+      "label": "Barra de formato",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado",
+      "link": "Enlace",
+      "linkPrompt": "Ingresa la URL",
+      "bulletList": "Lista con viñetas",
+      "orderedList": "Lista numerada"
+    }
+  },
+  "chat": {
+    "messageItem": {
+      "deleted": "Este mensaje fue eliminado",
+      "edited": "(editado)",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "pin": "Fijar",
+      "unpin": "Desfijar",
+      "save": "Guardar",
+      "reply": "Responder",
+      "moreActions": "Más acciones",
+      "editPlaceholder": "Editar mensaje\u2026",
+      "editHintSave": "Cmd+Enter para guardar",
+      "editHintCancel": "Escape para cancelar"
+    },
+    "emojiReactions": {
+      "toggle": "{emoji} {count}",
+      "addReaction": "Agregar reacción"
+    },
+    "emojiPicker": {
+      "title": "Elige un emoji"
+    }
   }
 }
