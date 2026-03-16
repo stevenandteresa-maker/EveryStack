@@ -50,6 +50,12 @@ vi.mock('@tanstack/react-query', () => ({
   }),
 }));
 
+vi.mock('@/actions/threads', () => ({
+  sendMessage: vi.fn().mockResolvedValue({ id: 'msg-new' }),
+  editMessageAction: vi.fn().mockResolvedValue(undefined),
+  deleteMessageAction: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@/actions/thread-queries', () => ({
   getMessagesAction: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
   markThreadReadAction: vi.fn().mockResolvedValue(undefined),
