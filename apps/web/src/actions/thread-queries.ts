@@ -10,7 +10,7 @@
 
 import { z } from 'zod';
 import { getAuthContext } from '@/lib/auth-context';
-import { getMessages } from '@/data/thread-messages';
+import { getMessages, searchThreadMessages, getPinnedMessages } from '@/data/thread-messages';
 import { updateLastRead, getUnreadCounts } from '@/data/thread-participants';
 import { wrapUnknownError } from '@/lib/errors';
 import type { MessageListOpts } from '@/data/thread-messages';
@@ -33,6 +33,15 @@ const markReadSchema = z.object({
 });
 
 const unreadCountSchema = z.object({
+  threadId: z.string().uuid(),
+});
+
+const searchSchema = z.object({
+  threadId: z.string().uuid(),
+  query: z.string().min(1).max(200),
+});
+
+const pinnedSchema = z.object({
   threadId: z.string().uuid(),
 });
 
@@ -90,6 +99,40 @@ export async function getUnreadCountAction(
   try {
     const counts = await getUnreadCounts(tenantId, userId);
     return counts[validated.threadId] ?? 0;
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// searchThreadMessagesAction
+// ---------------------------------------------------------------------------
+
+export async function searchThreadMessagesAction(
+  input: z.input<typeof searchSchema>,
+): Promise<ThreadMessage[]> {
+  const { tenantId } = await getAuthContext();
+  const validated = searchSchema.parse(input);
+
+  try {
+    return await searchThreadMessages(tenantId, validated.threadId, validated.query);
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getPinnedMessagesAction
+// ---------------------------------------------------------------------------
+
+export async function getPinnedMessagesAction(
+  input: z.input<typeof pinnedSchema>,
+): Promise<ThreadMessage[]> {
+  const { tenantId } = await getAuthContext();
+  const validated = pinnedSchema.parse(input);
+
+  try {
+    return await getPinnedMessages(tenantId, validated.threadId);
   } catch (error) {
     throw wrapUnknownError(error);
   }

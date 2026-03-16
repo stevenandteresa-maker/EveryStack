@@ -329,14 +329,14 @@ describe('RecordViewHeader', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('renders chat placeholder as disabled', () => {
+  it('renders chat button as disabled when no onToggleThread', () => {
     render(
       <IntlWrapper>
         <RecordViewHeader {...defaultHeaderProps} />
       </IntlWrapper>,
     );
 
-    const chatButton = screen.getByLabelText('Record thread (coming soon)');
+    const chatButton = screen.getByLabelText('Toggle record thread');
     expect(chatButton).toBeDisabled();
   });
 });

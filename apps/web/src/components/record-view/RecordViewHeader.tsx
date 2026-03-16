@@ -41,6 +41,8 @@ export interface RecordViewHeaderProps {
   activeConfigId?: string | null;
   /** Whether the thread panel is currently open */
   isThreadOpen?: boolean;
+  /** Unread message count for badge */
+  threadUnreadCount?: number;
   onNavigate: (direction: 'prev' | 'next') => void;
   onGoBack?: () => void;
   onSelectConfig?: (configId: string) => void;
@@ -65,6 +67,7 @@ export function RecordViewHeader({
   configs,
   activeConfigId,
   isThreadOpen = false,
+  threadUnreadCount = 0,
   onNavigate,
   onGoBack,
   onSelectConfig,
@@ -121,18 +124,28 @@ export function RecordViewHeader({
       {/* Right: controls */}
       <div className="flex items-center gap-1 shrink-0">
         {/* Chat icon — toggles Record Thread panel */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn('h-8 w-8', isThreadOpen && 'bg-accent')}
-          onClick={onToggleThread}
-          disabled={!onToggleThread}
-          aria-label={t('toggle_thread')}
-          aria-pressed={isThreadOpen}
-          data-testid="record-view-chat-icon"
-        >
-          <MessageCircle className="h-4 w-4" />
-        </Button>
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('h-8 w-8', isThreadOpen && 'bg-accent')}
+            onClick={onToggleThread}
+            disabled={!onToggleThread}
+            aria-label={t('toggle_thread')}
+            aria-pressed={isThreadOpen}
+            data-testid="record-view-chat-icon"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </Button>
+          {threadUnreadCount > 0 && !isThreadOpen && (
+            <span
+              className="absolute -top-1 -right-1 flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-teal-500 text-white text-[10px] font-medium"
+              data-testid="chat-unread-badge"
+            >
+              {threadUnreadCount > 99 ? '99+' : threadUnreadCount}
+            </span>
+          )}
+        </div>
 
         {/* Navigation arrows */}
         <Button

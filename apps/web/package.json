@@ -34,6 +34,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-email/components": "1.0.9",
     "@sentry/nextjs": "^10.42.0",
+    "@tanstack/react-virtual": "^3.13.21",
     "@tiptap/core": "^3.20.2",
     "@tiptap/extension-bubble-menu": "^3.20.2",
     "@tiptap/extension-link": "^3.20.2",

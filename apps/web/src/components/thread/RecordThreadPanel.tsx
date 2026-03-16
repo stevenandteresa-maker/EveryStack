@@ -4,14 +4,15 @@
  * RecordThreadPanel — 25% width panel that opens alongside the Record View
  * from the header chat icon.
  *
- * Contains: ThreadTabBar, ThreadLensBar, message list, ChatEditor input.
+ * Contains: ThreadTabBar, ThreadLensBar, ThreadMessageList (virtualized),
+ * ThreadSearchBar, PinnedMessagesPanel, ChatEditor input, typing indicator.
  *
  * @see docs/reference/communications.md § Record Thread
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { X } from 'lucide-react';
+import { Pin, Search, X } from 'lucide-react';
 import type { Socket } from 'socket.io-client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,9 +20,12 @@ import { ChatEditor } from '@/components/chat/ChatEditor';
 import { ThreadTabBar, type ThreadTab } from './ThreadTabBar';
 import { ThreadLensBar } from './ThreadLensBar';
 import { ClientVisibleBanner } from './ClientVisibleBanner';
-import { SharedNoteMessage } from './SharedNoteMessage';
+import { ThreadMessageList } from './ThreadMessageList';
+import { ThreadSearchBar } from './ThreadSearchBar';
+import { PinnedMessagesPanel } from './PinnedMessagesPanel';
 import { useThread, type LensFilter } from './use-thread';
-import type { ThreadMessage } from '@everystack/shared/db';
+import { useThreadSearch } from './use-thread-search';
+import { useTypingIndicator } from './use-typing-indicator';
 import type { JSONContent } from '@tiptap/core';
 
 // ---------------------------------------------------------------------------
@@ -33,6 +37,7 @@ interface RecordThreadPanelProps {
   tenantId: string;
   socket: Socket | null;
   currentUserId: string;
+  currentUserName?: string;
   /** Thread ID for internal thread (resolved by parent) */
   internalThreadId: string | null;
   /** Thread ID for client thread (null when Client Messaging disabled) */
@@ -49,16 +54,18 @@ export function RecordThreadPanel({
   tenantId: _tenantId,
   socket,
   currentUserId,
+  currentUserName = '',
   internalThreadId,
   clientThreadId,
   onClose,
 }: RecordThreadPanelProps) {
-  // recordId and tenantId are used in Prompt 15+ for thread navigation/creation
   void _recordId;
   void _tenantId;
   const t = useTranslations('thread');
   const [activeTab, setActiveTab] = useState<ThreadTab>('internal');
   const [lensFilter, setLensFilter] = useState<LensFilter>(undefined);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [pinnedOpen, setPinnedOpen] = useState(false);
 
   const clientThreadEnabled = clientThreadId !== null;
   const activeThreadId =
@@ -71,7 +78,6 @@ export function RecordThreadPanel({
   }, []);
 
   // Reset tab to internal if client thread becomes disabled
-  // Using state-based sync instead of useEffect to avoid set-state-in-effect lint
   const [trackedClientEnabled, setTrackedClientEnabled] = useState(clientThreadEnabled);
   if (trackedClientEnabled !== clientThreadEnabled) {
     setTrackedClientEnabled(clientThreadEnabled);
@@ -86,12 +92,48 @@ export function RecordThreadPanel({
     hasMore,
     loadMore,
     sendMessage,
+    editMessage,
+    deleteMessage,
   } = useThread({
     threadId: activeThreadId,
     socket,
     currentUserId,
     lensFilter,
   });
+
+  const { typingUsers, startTyping } = useTypingIndicator({
+    threadId: activeThreadId,
+    socket,
+    currentUserId,
+    currentUserName,
+  });
+
+  const search = useThreadSearch({
+    threadId: activeThreadId,
+    messages,
+    allLoaded: !hasMore,
+  });
+
+  const highlightMessageIds = useMemo(
+    () => new Set(search.results.map((m) => m.id)),
+    [search.results],
+  );
+
+  // Cmd+F handler
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        // Only intercept when panel is focused
+        const panel = document.querySelector('[data-testid="record-thread-panel"]');
+        if (panel?.contains(document.activeElement) || panel === document.activeElement) {
+          e.preventDefault();
+          setSearchOpen(true);
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSend = useCallback(
     (content: JSONContent) => {
@@ -100,9 +142,14 @@ export function RecordThreadPanel({
     [sendMessage],
   );
 
+  const handleScrollToMessage = useCallback((messageId: string) => {
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, []);
+
   return (
     <div
-      className="flex flex-col h-full border-l bg-background"
+      className="relative flex flex-col h-full border-l bg-background"
       style={{ width: '25%', minWidth: '280px' }}
       role="complementary"
       aria-label={t('panelLabel')}
@@ -111,16 +158,45 @@ export function RecordThreadPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b">
         <h3 className="text-sm font-semibold">{t('title')}</h3>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={onClose}
-          aria-label={t('closePanel')}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setSearchOpen(!searchOpen)}
+            aria-label={t('searchPlaceholder')}
+            data-testid="thread-search-toggle"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setPinnedOpen(!pinnedOpen)}
+            aria-label={t('pinnedButton')}
+            data-testid="thread-pinned-toggle"
+          >
+            <Pin className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+            aria-label={t('closePanel')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* Search bar */}
+      <ThreadSearchBar
+        search={search}
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
 
       {/* Tab bar */}
       <ThreadTabBar
@@ -132,37 +208,34 @@ export function RecordThreadPanel({
       {/* Lens bar */}
       <ThreadLensBar activeLens={lensFilter} onLensChange={setLensFilter} />
 
-      {/* Message list */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
-        {hasMore && (
-          <button
-            type="button"
-            className="w-full text-center text-xs text-muted-foreground py-1 hover:underline"
-            onClick={loadMore}
-            data-testid="thread-load-more"
-          >
-            {t('loadMore')}
-          </button>
-        )}
-
-        {isLoading ? (
+      {/* Message list — virtualized */}
+      {isLoading ? (
+        <div className="flex-1 px-3 py-2">
           <ThreadSkeleton />
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            {t('noMessages')}
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <MessageRow key={msg.id} message={msg} />
-          ))
-        )}
-      </div>
+        </div>
+      ) : messages.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          {t('noMessages')}
+        </div>
+      ) : (
+        <ThreadMessageList
+          messages={messages}
+          currentUserId={currentUserId}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+          onEdit={(id, content) => void editMessage(id, content)}
+          onDelete={(id) => void deleteMessage(id)}
+          typingUsers={typingUsers}
+          highlightMessageIds={highlightMessageIds}
+        />
+      )}
 
       {/* Client visible banner (only in client tab) */}
       {activeTab === 'client' && <ClientVisibleBanner />}
 
       {/* Chat input */}
-      <div className="border-t p-2">
+      <div className="border-t p-2" onKeyDown={() => startTyping()}>
         <ChatEditor
           onSend={handleSend}
           placeholder={
@@ -172,38 +245,16 @@ export function RecordThreadPanel({
           }
         />
       </div>
+
+      {/* Pinned messages overlay */}
+      <PinnedMessagesPanel
+        threadId={activeThreadId}
+        isOpen={pinnedOpen}
+        onClose={() => setPinnedOpen(false)}
+        onScrollToMessage={handleScrollToMessage}
+      />
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Message row — simple inline render (Prompt 15 adds virtualized list)
-// ---------------------------------------------------------------------------
-
-function MessageRow({ message }: { message: ThreadMessage }) {
-  const t = useTranslations('chat.messageItem');
-  const content =
-    typeof message.content === 'string'
-      ? message.content
-      : JSON.stringify(message.content);
-
-  const body = (
-    <div className="text-sm py-1">
-      <div className="text-xs text-muted-foreground mb-0.5">
-        {message.authorId?.slice(0, 8)}
-        {message.editedAt && (
-          <span className="ml-1 opacity-60">{t('edited')}</span>
-        )}
-      </div>
-      <div className="whitespace-pre-wrap break-words">{content}</div>
-    </div>
-  );
-
-  if (message.sourceNoteId) {
-    return <SharedNoteMessage>{body}</SharedNoteMessage>;
-  }
-
-  return body;
 }
 
 // ---------------------------------------------------------------------------

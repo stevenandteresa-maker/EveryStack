@@ -938,7 +938,27 @@
     "loadMore": "Load earlier messages",
     "noMessages": "No messages yet. Start the conversation.",
     "internalInputPlaceholder": "Write a team note\u2026",
-    "clientInputPlaceholder": "Reply to client\u2026"
+    "clientInputPlaceholder": "Reply to client\u2026",
+    "typingOne": "{name} is typing",
+    "typingTwo": "{name1} and {name2} are typing",
+    "typingMany": "{count} people are typing",
+    "replyPanelLabel": "Thread replies",
+    "replyPanelTitle": "Replies",
+    "replyPlaceholder": "Reply\u2026",
+    "replyChip": "{count, plural, one {1 reply} other {# replies}} \u00b7 last {time}",
+    "noReplies": "No replies yet.",
+    "searchPlaceholder": "Search in thread\u2026",
+    "searchCount": "{current} of {total}",
+    "searchNoResults": "No results",
+    "searchPrev": "Previous match",
+    "searchNext": "Next match",
+    "searchClose": "Close search",
+    "pinnedTitle": "Pinned Messages",
+    "noPinnedMessages": "No pinned messages.",
+    "pinnedButton": "Pinned messages",
+    "nav": {
+      "noRelated": "No related records"
+    }
   },
   "chatEditor": {
     "placeholder": "Type a message\u2026",
@@ -981,6 +1001,27 @@
     },
     "emojiPicker": {
       "title": "Pick an emoji"
+    },
+    "dm": {
+      "noMessages": "No messages yet. Say hello!",
+      "inputPlaceholder": "Type a message\u2026"
+    },
+    "groupDm": {
+      "participantCount": "{count}/{max} members",
+      "addParticipant": "Add participant",
+      "settings": "Group settings",
+      "nameEdited": "Group name updated"
+    },
+    "errors": {
+      "sendFailed": "Message failed to send. Retrying\u2026",
+      "sendFailedManual": "Message could not be sent. Tap to retry.",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
+      "permissionDenied": "You no longer have access to this thread.",
+      "attachmentFailed": "Upload failed \u2014 tap to retry.",
+      "attachmentTooLarge": "File exceeds 25MB limit.",
+      "rateLimited": "You're sending messages too quickly. Please slow down.",
+      "threadNotFound": "This conversation is no longer available."
     }
   }
 }

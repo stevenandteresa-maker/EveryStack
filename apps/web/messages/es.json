@@ -938,7 +938,27 @@
     "loadMore": "Cargar mensajes anteriores",
     "noMessages": "Aún no hay mensajes. Inicia la conversación.",
     "internalInputPlaceholder": "Escribe una nota del equipo\u2026",
-    "clientInputPlaceholder": "Responder al cliente\u2026"
+    "clientInputPlaceholder": "Responder al cliente\u2026",
+    "typingOne": "{name} está escribiendo",
+    "typingTwo": "{name1} y {name2} están escribiendo",
+    "typingMany": "{count} personas están escribiendo",
+    "replyPanelLabel": "Respuestas del hilo",
+    "replyPanelTitle": "Respuestas",
+    "replyPlaceholder": "Responder\u2026",
+    "replyChip": "{count, plural, one {1 respuesta} other {# respuestas}} · hace {time}",
+    "noReplies": "Aún no hay respuestas.",
+    "searchPlaceholder": "Buscar en el hilo\u2026",
+    "searchCount": "{current} de {total}",
+    "searchNoResults": "Sin resultados",
+    "searchPrev": "Coincidencia anterior",
+    "searchNext": "Siguiente coincidencia",
+    "searchClose": "Cerrar búsqueda",
+    "pinnedTitle": "Mensajes fijados",
+    "noPinnedMessages": "No hay mensajes fijados.",
+    "pinnedButton": "Mensajes fijados",
+    "nav": {
+      "noRelated": "No hay registros relacionados"
+    }
   },
   "chatEditor": {
     "placeholder": "Escribe un mensaje\u2026",
@@ -981,6 +1001,27 @@
     },
     "emojiPicker": {
       "title": "Elige un emoji"
+    },
+    "dm": {
+      "noMessages": "Aún no hay mensajes. ¡Di hola!",
+      "inputPlaceholder": "Escribe un mensaje\u2026"
+    },
+    "groupDm": {
+      "participantCount": "{count}/{max} miembros",
+      "addParticipant": "Agregar participante",
+      "settings": "Configuración del grupo",
+      "nameEdited": "Nombre del grupo actualizado"
+    },
+    "errors": {
+      "sendFailed": "No se pudo enviar el mensaje. Reintentando\u2026",
+      "sendFailedManual": "No se pudo enviar el mensaje. Toca para reintentar.",
+      "retry": "Reintentar",
+      "dismiss": "Descartar",
+      "permissionDenied": "Ya no tienes acceso a esta conversación.",
+      "attachmentFailed": "Error al subir \u2014 toca para reintentar.",
+      "attachmentTooLarge": "El archivo excede el límite de 25MB.",
+      "rateLimited": "Estás enviando mensajes muy rápido. Por favor, espera un momento.",
+      "threadNotFound": "Esta conversación ya no está disponible."
     }
   }
 }
