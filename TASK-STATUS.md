@@ -74,52 +74,55 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
+(No active sub-phases)
+
+---
+
+## Completed Sub-Phases
+
 ### 3C — Record Thread, DMs, Notifications & System Email
 
 **Started:** 2026-03-15
 **Completed:** 2026-03-16
+**Docs synced:** 2026-03-16
 
 #### Subdivision Units
 
-- [x] **Unit 1: Schema Migration & Thread/Message Data Layer** — `passed-review`
+- [x] **Unit 1: Schema Migration & Thread/Message Data Layer** — `docs-synced`
   - Produces: `source_note_id` migration; thread/message/participant/bookmark/pin CRUD functions; DM/Group DM creation; `searchThreadMessages()`; server actions; `Thread`, `ThreadMessage`, `ThreadParticipant` types; test factories
   - Consumes: None — first unit. Uses existing Drizzle schema (threads, thread_messages, thread_participants, user_saved_messages)
   - Branch: `build/3c-comms`
   - Notes: Prompts 1–4 complete. Verified 2026-03-15.
 
-- [x] **Unit 2: Notification Pipeline & System Email** — `passed-review`
+- [x] **Unit 2: Notification Pipeline & System Email** — `docs-synced`
   - Produces: `NotificationService.create()` with delivery routing; notification CRUD; notification preferences CRUD; BullMQ `notification` queue + email send/cleanup processors; `ResendEmailService`; React Email templates (invitation, system alert, client thread reply); `Notification`, `NotificationPreferences` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
   - Branch: `build/3c-comms`
   - Notes: Prompts 5–7 complete. Verified 2026-03-15.
 
-- [x] **Unit 3: Presence & Real-Time Chat Infrastructure** — `passed-review`
+- [x] **Unit 3: Presence & Real-Time Chat Infrastructure** — `docs-synced`
   - Produces: `PresenceService` (Redis heartbeat, state management); Socket.IO handlers (ChatHandler, PresenceHandler, NotificationHandler); Redis pub/sub chat event subscriber; `publishChatEvent()`, `publishNotificationEvent()`; custom status CRUD; `PresenceState`, `ChatEvent` types
   - Consumes: Unit 1 `Thread`, `ThreadMessage` types
   - Branch: `build/3c-comms`
   - Notes: Prompts 8–10 complete. Verified 2026-03-15. All 8 contracts verified, 4585 tests pass.
 
-- [x] **Unit 4: Chat Editor (TipTap Environment 1)** — `passed-review`
+- [x] **Unit 4: Chat Editor (TipTap Environment 1)** — `docs-synced`
   - Produces: `ChatEditor` (3 input states, progressive disclosure); `ChatEditorToolbar`; `MentionDropdown`; `EmojiPicker`; `EmojiReactions`; `MessageRenderer`; `MessageItem`; `ChatAttachmentButton`; `useChatEditor()` hook; TipTap extension config
   - Consumes: None — no unit dependencies. Uses TipTap, emoji-mart, shadcn/ui libraries
   - Branch: `build/3c-comms`
   - Notes: Prompts 11–13 complete. Verified 2026-03-16. All 4 contracts verified, 2301 tests pass.
 
-- [x] **Unit 5: Record Thread & DM UI** — `passed-review`
+- [x] **Unit 5: Record Thread & DM UI** — `docs-synced`
   - Produces: `RecordThreadPanel`; `ThreadTabBar` (Team Notes / Client Messages); `ThreadLensBar` (All/Notes/Activity/Files); `ThreadMessageList`; `ThreadReplyPanel`; `ThreadSearchBar`; `SharedNoteMessage`; `ClientVisibleBanner`; `PinnedMessagesPanel`; `ThreadNavDropdown`; `DMConversation`; `GroupDMHeader`; `useThread()`, `useThreadSearch()`, `useTypingIndicator()` hooks
   - Consumes: Unit 1 data functions + actions, Unit 3 real-time events + publish functions, Unit 4 ChatEditor + MessageItem + EmojiReactions
   - Branch: `build/3c-comms`
   - Notes: Prompts 14–16 complete. Verified 2026-03-16. All 5 contracts verified, 2385 tests pass.
 
-- [x] **Unit 6: Notification UI & Chat Quick Panel** — `passed-review`
+- [x] **Unit 6: Notification UI & Chat Quick Panel** — `docs-synced`
   - Produces: `NotificationBell`; `NotificationTray`; `NotificationItem`; `NotificationGroup`; `useNotifications()` hook; `ChatQuickPanel`; `ChatQuickPanelItem`; `PresenceIndicator`; `CustomStatusDisplay`; `CustomStatusEditor`; `usePresence()` hook
   - Consumes: Unit 2 notification data + actions, Unit 3 real-time events + presence, Unit 5 DM navigation target + thread list
   - Branch: `build/3c-comms`
   - Notes: Prompts 17–19 complete. Verified 2026-03-16. All 5 contracts verified, 2440 tests pass.
-
----
-
-## Completed Sub-Phases
 
 ### 3B-ii — Schema Descriptor Service & Command Bar
 

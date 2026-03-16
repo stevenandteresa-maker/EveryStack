@@ -5,10 +5,10 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
-**Last updated:** 2026-03-10
+**Last updated:** 2026-03-16
 **Branch:** `main`
 **Latest tag:** `v0.2.0-phase-2a`
-**Total commits:** 12 (squash merges)
+**Total commits:** 13 (squash merges)
 
 ---
 
@@ -941,29 +941,155 @@ Grid toolbar with sorts/filters/grouping/color coding, summary footer, bulk acti
 | **Record presence** | `useRecordPresence()` → `RowPresenceIndicator` colored border. Tracks which users are viewing which records |
 | **Realtime grid updates** | `useRealtimeUpdates()` subscribes to record CRUD events for live grid refresh |
 
+### Phase 3C — Record Thread, DMs, Notifications & System Email (Complete)
+
+Full communications stack: Record Thread with tabs/lenses, DMs/group DMs, notification pipeline with email delivery, real-time presence and chat infrastructure, TipTap chat editor, and notification/presence UI.
+
+**Data Layer (`apps/web/src/data/`, `apps/web/src/actions/`):**
+- `threads.ts` — Thread CRUD: createThread, getThread, getThreadByScope, listThreadsForUser, getOrCreateDMThread, createGroupDM
+- `thread-messages.ts` — Message CRUD: createMessage, getMessage, listMessages, updateMessage, softDeleteMessage, pinMessage, unpinMessage, getPinnedMessages, searchThreadMessages
+- `thread-participants.ts` — Participant CRUD: addParticipant, removeParticipant, getParticipants, updateLastRead
+- `saved-messages.ts` — Saved message CRUD: saveMessage, unsaveMessage, getSavedMessages
+- `notifications.ts` — Notification CRUD: createNotification, getNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead (Redis-cached unread count)
+- `notification-preferences.ts` — Preferences CRUD: getPreferences, updatePreferences, muteThread, unmuteThread
+- `presence.ts` — Custom status CRUD: updateCustomStatus, getCustomStatus, clearExpiredStatuses
+- `actions/threads.ts` — Server actions for thread/message/participant/saved-message operations + publishChatEvent integration
+- `actions/notifications.ts` — Server actions for mark read, update preferences, mute/unmute
+- `actions/thread-queries.ts` — Server actions: getMessagesAction, markThreadReadAction, searchThreadMessagesAction, pin/unpin
+- `actions/notification-queries.ts` — Server-side notification query actions
+- `actions/presence.ts` — Server actions for presence and custom status
+
+**Notification Pipeline (`apps/web/src/lib/notifications/`, `apps/web/src/lib/email/`, `apps/worker/src/processors/notification/`):**
+- `notification-service.ts` — NotificationService: create() with delivery routing (in-app via Redis pub/sub, email via BullMQ)
+- `resend-service.ts` — ResendEmailService wrapping Resend SDK with rate limiting, retry, structured logging
+- `templates/` — 3 React Email templates: invitation, system alert, client thread reply
+- `notification-router.ts` — BullMQ notification router processor
+- `email-send.ts` — Email send processor with template resolution
+- `cleanup.ts` — Notification cleanup processor for purging old read notifications
+- `email-templates.ts` — Template resolver mapping notification types to React Email templates
+
+**Real-Time Infrastructure (`apps/realtime/src/`):**
+- `handlers/chat-handler.ts` — ChatHandler: thread:join/leave, typing:start/stop, message broadcast via Redis pub/sub
+- `handlers/presence-handler.ts` — PresenceHandler: heartbeat, status updates, disconnect cleanup
+- `handlers/notification-handler.ts` — NotificationHandler: per-user Redis notification channel subscription, DND bypass
+- `subscribers/chat-event-subscriber.ts` — Redis pub/sub subscriber bridging chat events to Socket.IO rooms
+- `services/presence-service.ts` — PresenceService: Redis-backed presence state (setPresence, getPresence, heartbeat, getUserStatus, removePresence)
+- `types/chat.ts` — ChatPresenceState, PresenceEntry, ChatEvent, TypingEvent types
+
+**Event Publishing (`apps/web/src/lib/realtime/`):**
+- `chat-events.ts` — publishChatEvent() for message:new/edit/delete via Redis pub/sub
+- `notification-events.ts` — publishNotificationEvent() to user:{userId}:notifications channel
+
+**Chat Editor — TipTap Environment 1 (`apps/web/src/components/chat/`):**
+- `types.ts` — ChatEditorConfig, ChatEditorInstance, MentionSuggestion, ChatEditorState, MentionDropdownState types
+- `extensions.ts` — createChatEditorExtensions() factory, 12 named extensions
+- `use-chat-editor.ts` — useChatEditor() hook with 3-state machine (Compact/Focused/Expanded)
+- `ChatEditor.tsx` — Main chat editor with progressive disclosure, drag-drop attachments, mention dropdown
+- `ChatEditorToolbar.tsx` — BubbleMenu toolbar with 6 formatting actions
+- `MentionDropdown.tsx` — @mention autocomplete with fuzzy filtering, person/group sections
+- `ChatAttachmentButton.tsx` — Paperclip attachment button with file picker and preview
+- `MessageRenderer.tsx` — Read-only TipTap JSON → styled HTML renderer (no editor instances, pure recursive React rendering)
+- `MessageItem.tsx` — Single message display with avatar, hover menu, inline edit mode, emoji reactions
+- `EmojiReactions.tsx` — Reaction chips below messages with toggle and add button
+- `EmojiPicker.tsx` — emoji-mart wrapper in shadcn/ui Popover
+
+**Record Thread UI (`apps/web/src/components/thread/`):**
+- `RecordThreadPanel.tsx` — 25% width panel with tabs, lenses, message list, chat editor input
+- `ThreadTabBar.tsx` — "Team Notes" (internal) + "Client Messages" (client) tabs
+- `ThreadLensBar.tsx` — All | Notes | Activity | Files lens filter buttons
+- `ThreadMessageList.tsx` — Virtualized message list with date separators, infinite scroll
+- `ThreadReplyPanel.tsx` — Inline reply with quoted message preview
+- `ThreadSearchBar.tsx` — In-thread search with match highlighting, prev/next navigation
+- `PinnedMessagesPanel.tsx` — Slide-over panel for pinned messages
+- `ThreadNavDropdown.tsx` — Parent/sibling/child record navigation with unread indicators
+- `ClientVisibleBanner.tsx` — Amber warning in client thread tab
+- `SharedNoteMessage.tsx` — Teal-bordered shared note display
+- `use-thread.ts` — useThread() hook: TanStack Query infinite query + Socket.IO subscriptions
+- `use-thread-search.ts` — useThreadSearch(): debounced query, match cycling
+- `use-typing-indicator.ts` — useTypingIndicator(): Socket.IO typing events
+
+**DM UI (`apps/web/src/components/chat/`):**
+- `DMConversation.tsx` — DM/group DM conversation view with message list, typing indicator, chat editor, failed message retry
+- `GroupDMHeader.tsx` — Editable group name, participant avatars, presence indicators
+- `MessageErrorHandler.tsx` — Failed message retry with exponential backoff (3 attempts)
+- `ChatQuickPanel.tsx` — Sidebar conversation list with infinite scroll and real-time updates
+- `ChatQuickPanelItem.tsx` — Conversation row with avatar, unread badge, last message preview
+
+**Notification UI (`apps/web/src/components/notifications/`):**
+- `NotificationBell.tsx` — Bell icon button with real-time unread badge in header
+- `NotificationTray.tsx` — Popover tray with grouped notifications, mark-all-read, load-more
+- `NotificationItem.tsx` — Single notification row with click handler
+- `NotificationGroup.tsx` — Grouped notifications with expand/collapse
+- `use-notifications.ts` — useNotifications hook: array, unread count, mutations
+- `notification-grouping.ts` — Grouping logic by group_key
+
+**Presence UI (`apps/web/src/components/presence/`):**
+- `PresenceIndicator.tsx` — Colored dot (online/away/dnd/offline) with size variants
+- `CustomStatusDisplay.tsx` — Inline emoji + text display
+- `CustomStatusEditor.tsx` — Popover editor with EmojiPicker, auto-clear options
+- `use-presence.ts` — usePresence hook: presence map, idle detection, heartbeat, Socket.IO subscriptions
+
+**Schema Changes (2 migrations):**
+- `0025_add_user_notes_and_source_note_id.sql` — user_notes table, thread_messages.source_note_id FK
+- `0026_extend_notifications_schema.sql` — notifications: title, body, source_type, source_record_id, actor_id, group_key, read_at + indexes
+
+**Layout Integration:**
+- `RecordView.tsx` — Thread panel slot (25% width right panel), main content 75% when open
+- `RecordViewHeader.tsx` — Chat icon (MessageCircle) with teal unread badge, toggle thread
+- `header.tsx` — NotificationBell integrated into workspace header
+- `sidebar.tsx` — ChatQuickPanel integrated into sidebar content zone
+- `sidebar-store.ts` — Added chat panel visibility state
+
+**Realtime Events (`packages/shared/realtime/events.ts`):**
+- Added: MESSAGE_NEW, MESSAGE_EDIT, MESSAGE_DELETE, NOTIFICATION_NEW, TYPING_START, TYPING_STOP
+
+**Queue (`packages/shared/queue/`):**
+- Added `notification` queue name to QUEUE_NAMES
+- Added NotificationEmailSendJobData, NotificationCleanupJobData interfaces
+
+**Test Factories:**
+- `packages/shared/testing/factories/threads.ts` — createTestThread, createTestThreadMessage, createTestThreadParticipant
+
+**Dependencies Added:**
+- @tiptap/react, @tiptap/starter-kit, @tiptap/core, @tiptap/extension-mention, @tiptap/extension-link, @tiptap/extension-placeholder, @tiptap/extension-underline, @tiptap/extension-bubble-menu, @tiptap/pm
+- emoji-mart, @emoji-mart/react, @emoji-mart/data
+- @react-email/components, react-email (web), resend (worker)
+
+**i18n (`en.json` + `es.json`):**
+- New namespaces: thread (17 keys), chatEditor, chat.messageItem, chat.emojiReactions, chat.emojiPicker, notifications, presence, chatQuickPanel, thread search, pinned messages, DM, group DM, error handler
+
+**Patterns established:**
+- TipTap Environment 1 (chat) distinct from Environment 2 (Smart Docs, not yet built). 12 named extensions via `createChatEditorExtensions()`. MessageRenderer avoids editor instances — pure recursive React rendering.
+- ChatEditorState 3-state machine: compact → focused → expanded. Keyboard shortcuts per state (Enter sends in compact/focused, Cmd+Enter sends in expanded).
+- NotificationService orchestrates delivery: insert notification → check preferences → route to in-app and/or email. BullMQ `notification` queue for async email delivery.
+- PresenceService (Redis-backed) separate from grid collaboration presence. `ChatPresenceState` (online/away/dnd/offline) distinct from `PresenceState` for grid.
+- Record Thread: 2 tabs (Team Notes/Client Messages) × 4 lenses (All/Notes/Activity/Files). Thread IDs pre-resolved by parent (RecordView), passed to RecordThreadPanel.
+- ChatQuickPanel in sidebar + NotificationBell in header as ambient access patterns.
+- useThread() uses injectable fetchMessages/markRead for testability.
+
 ---
 
 ## What Does NOT Exist Yet
 
 **Sync Engine** — FieldTypeRegistry, canonical types, Airtable adapter (32 field types), and Notion adapter (18 property types) are operational. Initial sync, schema sync, orphan detection, outbound sync, conflict resolution, error recovery, priority scheduling, and smart polling are operational. SmartSuite adapter not yet implemented (adapter stub only). No webhook-based change detection (Airtable webhooks specced but not connected). No incremental/delta sync processor (uses full-table polling).
 
-**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 20 shadcn/ui primitives installed (added alert-dialog + progress in 3A-ii). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. TanStack Table + TanStack Virtual used by DataGrid. Zustand stores: sidebar-store (global) + use-grid-store (per-grid-instance).
+**UI / Design System** — Tailwind config, globals.css, CSS custom properties, and 20 shadcn/ui primitives installed (added alert-dialog + progress in 3A-ii). Application shell with multi-tenant navigation (sidebar with icon rail + content zone, accent header, content area), ShellAccentProvider, TenantSwitcher, contextual clarity signals operational. Sync setup wizard + filter builder + orphan UI + sync dashboard + sidebar badges (PlatformBadge, SyncStatusIcon) operational. TanStack Table + TanStack Virtual used by DataGrid. Zustand stores: sidebar-store (global) + use-grid-store (per-grid-instance). NotificationBell in header, ChatQuickPanel in sidebar.
 
 **Views / Grid / Card** — Grid view fully operational: DataGrid, 18 cell renderers, inline editing, keyboard navigation, clipboard, undo/redo, drag-to-fill, column management, row management, GridToolbar (sort, filter, group, color, hide fields, view switcher), SummaryFooter, BulkActionsToolbar, RecordCount, field-level presence (FieldLockIndicator), row-level presence (RowPresenceIndicator), realtime updates, GridRecordViewLayout (split-screen with Record View). Card view operational: CardView (3 layouts), RecordCard, CardViewToolbar. CSV Import operational: CsvImportWizard (5-step). Sections operational: SectionList, SectionHeader.
 
-**Record View** — Overlay operational: RecordView, RecordViewCanvas (1–4 column layout), FieldRenderer, RecordViewTabs, RecordViewHeader, RecordViewConfigPicker, InlineSubTable, LinkedRecordPills. Record Thread placeholder (UI shell only — no messaging implementation).
+**Record View** — Overlay operational: RecordView, RecordViewCanvas (1–4 column layout), FieldRenderer, RecordViewTabs, RecordViewHeader, RecordViewConfigPicker, InlineSubTable, LinkedRecordPills. Record Thread fully integrated (25% right panel with tabs, lenses, messaging, search, pins).
 
-**Cross-Linking** — Schema for `cross_links` + `cross_link_index` exists. `getLinkedRecords()` data function for Record View display. No cross-link creation UI or resolution engine.
+**Cross-Linking** — Cross-link engine fully operational: types/validation/registry, definition CRUD, record linking, query-time resolution (L0/L1/L2), permission intersection, display value cascade via BullMQ, Link Picker UI. See Phase 3B-i.
+
+**Communications** — Record Thread, DMs, group DMs, notification pipeline, system email, real-time presence, TipTap chat editor all operational. No base/table-level threads (post-MVP). No omnichannel (post-MVP). No connected inbox (post-MVP).
 
 **Portals & Forms** — Schema exists, no implementation. No portal auth (magic link/password), no form renderer.
 
 **Automations** — Schema for `automations` + `automation_runs` exists, no execution engine.
 
-**Communications** — Schema for `threads` + `thread_messages` + `thread_participants` (with external contact support) exists, no chat UI or real-time messaging.
-
 **Documents / PDF** — Schema for `document_templates` + `generated_documents` exists, no Gotenberg integration, no merge-tag engine.
 
-**AI Features** — AIService, providers, prompts, tools, metering, streaming, and data contract are operational. Feature Skill Registry skeleton operational (`packages/shared/ai/skills/`: `registry.ts`, `loader.ts`, `parser.ts`, `types.ts`, `index.ts` + 7 skill documents under `documents/platform/`). No AI feature UI yet (no Smart Fill panel, no NL Search bar, no Record Summarization widget). Vector embeddings and DuckDB Context Layer are Post-MVP.
+**AI Features** — AIService, providers, prompts, tools, metering, streaming, and data contract are operational. Schema Descriptor Service fully operational (types, builders, permission filter, cache, token estimator, service facade). Feature Skill Registry skeleton operational. Command Bar fully operational (search, navigation, slash commands, AI search channel). No other AI feature UI yet (no Smart Fill panel, no Record Summarization widget). Vector embeddings and DuckDB Context Layer are Post-MVP.
 
 **Platform Owner Console** — Schemas and reference doc exist (`platform-owner-console.md`). No admin UI, no Stripe integration, no impersonation flow.
 
@@ -971,17 +1097,17 @@ Grid toolbar with sorts/filters/grouping/color coding, summary footer, bulk acti
 
 **Platform API** — Auth middleware, rate limiting, error format, composed middleware (`withPlatformApi`), and `GET /api/v1/` health endpoint exist. No v1 data endpoints (CRUD for records, tables, fields).
 
-**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans + sync_dashboard/sync_failures/sync_notifications/reauth/schema_changes + grid (sort_panel, filter, grouping, color_rules, summary_footer, bulk_actions, view_switcher, hide_fields, toolbar, record_count) + record_view + card_view + sections + import + cells keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
+**i18n** — next-intl installed with non-routing locale strategy. `en.json` + `es.json` locale files exist with shell/sidebar/header/my_office + sync_wizard/sync_filter_editor/sync_orphans + sync_dashboard/sync_failures/sync_notifications/reauth/schema_changes + grid (sort_panel, filter, grouping, color_rules, summary_footer, bulk_actions, view_switcher, hide_fields, toolbar, record_count) + record_view + card_view + sections + import + cells + thread + chatEditor + chat.messageItem/emojiReactions/emojiPicker + notifications + presence + chatQuickPanel keys. `check:i18n` CI gate enforces zero hardcoded English strings. IntlWrapper available for testing.
 
-**Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, event publishing, and field-level lock handler are fully operational. Field-level presence locking and record-level presence tracking operational (via `field:lock`/`field:unlock` + `RECORD_PRESENCE_JOINED`/`RECORD_PRESENCE_LEFT` events).
+**Realtime** — Socket.io server with Redis adapter, Clerk JWT auth, room management, event publishing, field-level lock handler, ChatHandler, PresenceHandler, NotificationHandler, and ChatEventSubscriber fully operational. Field-level presence locking, record-level presence tracking, chat presence (online/away/dnd/offline), typing indicators, and per-user notification channels operational.
 
-**Worker Jobs** — BullMQ worker with 6 queues, 3 file processors (thumbnail, scan, orphan cleanup), initial sync processor, inbound sync processor, sync scheduler (30s tick), escalation check processor, and sync error handler operational. Email, automation, and document-gen processors not yet implemented.
+**Worker Jobs** — BullMQ worker with 7 queues (added `notification`), 3 file processors (thumbnail, scan, orphan cleanup), initial sync processor, inbound sync processor, sync scheduler (30s tick), escalation check processor, sync error handler, and notification processors (router, email-send, cleanup) operational. Automation and document-gen processors not yet implemented.
 
 **File Storage** — StorageClient interface, R2/MinIO client, presigned upload pipeline, MIME/magic byte validation, thumbnail generation, virus scanning, and orphan cleanup are operational. No file attachment UI yet (no record attachment picker, no file browser).
 
 **E2E Tests** — `apps/web/e2e/` contains only `.gitkeep`. Playwright not configured.
 
-**Server Actions / Data Functions** — Actions: `api-keys.ts`, `tenant-switch.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-filters.ts`, `sync-orphans.ts`, `sync-dashboard-actions.ts`, `sync-failure-actions.ts`, `sync-reauth.ts`, `sync-schema-actions.ts`, `record-actions.ts` (create, update, delete, duplicate, reorder, bulkDelete), `view-actions.ts` (CRUD, updateViewConfig, promote, lock), `record-view-actions.ts` (CRUD record view configs), `section-actions.ts` (CRUD sections, move items, reorder), `import-actions.ts` (importRecords batch). Data: `api-keys.ts`, `sidebar-navigation.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-dashboard.ts`, `sync-dashboard-conflicts.ts`, `sync-failures.ts`, `sync-schema-changes.ts`, `sync-status.ts`, `tables.ts`, `fields.ts`, `records.ts` (with filter/sort/group/aggregate), `views.ts` (shared + my views), `sections.ts`, `record-view-configs.ts`, `cross-links.ts` (with getLinkedRecords). No workspace/table management actions yet.
+**Server Actions / Data Functions** — Actions: `api-keys.ts`, `tenant-switch.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-filters.ts`, `sync-orphans.ts`, `sync-dashboard-actions.ts`, `sync-failure-actions.ts`, `sync-reauth.ts`, `sync-schema-actions.ts`, `record-actions.ts` (create, update, delete, duplicate, reorder, bulkDelete), `view-actions.ts` (CRUD, updateViewConfig, promote, lock), `record-view-actions.ts` (CRUD record view configs), `section-actions.ts` (CRUD sections, move items, reorder), `import-actions.ts` (importRecords batch), `threads.ts` (thread/message/participant/saved-message CRUD + publishChatEvent), `notifications.ts` (mark read, preferences, mute/unmute), `thread-queries.ts` (messages, search, pin), `notification-queries.ts`, `presence.ts`. Data: `api-keys.ts`, `sidebar-navigation.ts`, `sync-connections.ts`, `sync-setup.ts`, `sync-dashboard.ts`, `sync-dashboard-conflicts.ts`, `sync-failures.ts`, `sync-schema-changes.ts`, `sync-status.ts`, `tables.ts`, `fields.ts`, `records.ts` (with filter/sort/group/aggregate), `views.ts` (shared + my views), `sections.ts`, `record-view-configs.ts`, `cross-links.ts` (with getLinkedRecords), `threads.ts`, `thread-messages.ts`, `thread-participants.ts`, `saved-messages.ts`, `notifications.ts`, `notification-preferences.ts`, `presence.ts`. No workspace/table management actions yet.
 
 ---
 
@@ -1079,6 +1205,12 @@ Grid toolbar with sorts/filters/grouping/color coding, summary footer, bulk acti
 | **Field-level presence** | `useFieldLock()` → Socket.io `field:lock`/`field:unlock` → `FieldLockIndicator` avatar badge. Redis-backed with TTL |
 | **Record presence** | `useRecordPresence()` → `RowPresenceIndicator` colored left border. Tracks which users are viewing which records |
 | **Realtime grid** | `useRealtimeUpdates()` subscribes to record CRUD events for live grid refresh without polling |
+| **Chat editor (TipTap Env 1)** | `createChatEditorExtensions()` factory, 12 named extensions. `useChatEditor()` 3-state machine (compact/focused/expanded). `MessageRenderer` uses pure recursive React rendering, no TipTap editor instances |
+| **Record Thread** | 25% right panel in RecordView. 2 tabs (Team Notes/Client Messages) × 4 lenses (All/Notes/Activity/Files). Thread IDs pre-resolved by parent. `useThread()` with TanStack Query + Socket.IO |
+| **Chat presence** | `ChatPresenceState` (online/away/dnd/offline) distinct from grid `PresenceState`. `PresenceService` in realtime server, `usePresence()` hook in client |
+| **Notification pipeline** | `NotificationService.create()` → preference check → in-app (Redis pub/sub) + email (BullMQ `notification` queue → `ResendEmailService`). 8 notification types |
+| **Chat Quick Panel** | `ChatQuickPanel` in sidebar, `NotificationBell` in header. Ambient access patterns for conversations and notifications |
+| **Email templates** | React Email templates in `apps/web/src/lib/email/templates/`. 3 templates: invitation, system alert, client thread reply. Template resolver maps notification types to templates |
 
 ### Phase 3A-i — Grid View Core (Complete)
 

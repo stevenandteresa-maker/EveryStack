@@ -2,7 +2,7 @@
 
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
-> Last updated: 2026-03-15 — Phase 3B-ii docs sync: expanded SDS definition with 5 descriptor types, cache/invalidation terms, and service facade; expanded Command Bar definition with search channels, intent routing, scoped mode, CommandBarProvider, and Command Registry. Prior: 2026-03-14 — Phase 3B-i docs sync: added LinkedRecordTree implementation term. Prior: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms and 4 UI component terms. Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition.
+> Last updated: 2026-03-16 — Phase 3C docs sync: expanded Communications section with 16 implementation terms (ChatEditorState, ChatEditorExtensions, ReactionsMap, ChatPresenceState, ChatHandler, PresenceHandler, NotificationHandler, ChatEventSubscriber, NotificationService, NotificationType, ResendEmailService, NotificationBell, NotificationTray, ChatQuickPanel, PresenceIndicator, CustomStatusEditor); expanded Record Thread, Chat/DMs, and Notifications definitions with MVP implementation details. Prior: 2026-03-15 — Phase 3B-ii docs sync: expanded SDS definition with 5 descriptor types, cache/invalidation terms, and service facade; expanded Command Bar definition with search channels, intent routing, scoped mode, CommandBarProvider, and Command Registry. Prior: 2026-03-14 — Phase 3B-i docs sync: added LinkedRecordTree implementation term. Prior: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms and 4 UI component terms. Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition.
 
 ---
 
@@ -247,9 +247,17 @@ A configurable canvas for viewing and editing a single record. When a user click
 
 ### Record Thread
 
-A contextual communication panel tied to a specific record. Opens alongside the Record View (to its right, 25% of screen width). Contains record-scoped comments, @mentions, activity history, and (post-MVP) client-visible messages.
+A contextual communication panel tied to a specific record. Opens alongside the Record View (to its right, 25% of screen width). Contains record-scoped comments, @mentions, activity history, and client-visible messages.
 
-**Behavior:** Opens from within an expanded Record View. Overlay-style (same as Record View). Both panels coexist at 55% + 25% of screen width.
+**Behavior:** Opens from within an expanded Record View. Overlay-style (same as Record View). Both panels coexist at 55% + 25% of screen width. Toggle via chat icon in RecordViewHeader (MessageCircle icon with teal unread badge, 99+ cap).
+
+**Tabs:** Two tabs via `ThreadTabBar` — "Team Notes" (internal, always visible) and "Client Messages" (client scope, when portal clients are enabled). Tab selection determines `thread_type` filter.
+
+**Lenses:** Four lens filters via `ThreadLensBar` — All, Notes, Activity, Files. Filter messages within the active tab.
+
+**Key components:** `RecordThreadPanel` (shell), `ThreadMessageList` (virtualized with date separators, infinite scroll), `ThreadReplyPanel` (inline reply with quoted preview), `ThreadSearchBar` (match highlighting, prev/next navigation), `PinnedMessagesPanel` (slide-over), `ThreadNavDropdown` (parent/sibling/child record navigation with unread indicators), `ClientVisibleBanner` (amber warning in client tab), `SharedNoteMessage` (teal-bordered shared note display).
+
+**Hooks:** `useThread()` (TanStack Query infinite query + Socket.IO subscriptions), `useThreadSearch()` (debounced query, match cycling), `useTypingIndicator()` (typing broadcast).
 
 **Mobile:** When a record is expanded, the bottom tab bar contextually swaps from Quick Panel tabs to Record Thread tabs (Comments, Activity, Files, etc.).
 
@@ -746,11 +754,36 @@ Settings page for managing a sync connection (`/[workspaceId]/settings/sync/[bas
 
 Personal messaging — DMs with teammates, group DMs (3–8 people). Accessible via the Chat Quick Panel from any page. Workspace-scoped (you DM a teammate within a workspace context).
 
+**Key components:** `DMConversation` (full conversation view with message list, typing indicator, chat editor, failed message retry), `GroupDMHeader` (editable group name, participant avatars 3–8 cap, add participant), `MessageErrorHandler` (failed message retry with exponential backoff, 3 attempts).
+
 **Not to be confused with:** Record Thread (which is about a record, not a person-to-person conversation).
 
 ### Notifications
 
-In-app notifications surfaced in the Chat Quick Panel and on the My Office widget. Includes: @mentions, task assignments, automation completions, form submissions, portal activity, approval requests.
+In-app notifications surfaced via the `NotificationBell` in the workspace header and in the Chat Quick Panel. Includes: @mentions, DMs, thread replies, approval requests, automation failures, sync errors, system alerts.
+
+**Delivery routing:** `NotificationService` determines delivery channel(s) per notification type: in-app (Redis pub/sub → Socket.IO), email (BullMQ `notification` queue → `ResendEmailService`). User preferences and thread mute state control suppression.
+
+**8 notification types:** mention, dm, thread_reply, approval_requested, approval_decided, automation_failed, sync_error, system.
+
+### Implementation Terms — Communications
+
+- **ChatEditorState** — 3-state progressive disclosure machine for the chat input: `compact` (single-line), `focused` (active with formatting actions), `expanded` (paragraph mode). Managed by `useChatEditor()` hook.
+- **ChatEditorExtensions** — TipTap Environment 1 extension configuration for chat (not Smart Docs). 12 named extensions: bold, italic, underline, strike, code, bulletList, orderedList, blockquote, link, mention, placeholder, undoRedo. Created via `createChatEditorExtensions()` factory.
+- **ReactionsMap** — JSONB shape type `Record<string, string[]>` mapping emoji character → array of user IDs who reacted. Stored in `thread_messages.reactions`.
+- **ChatPresenceState** — String type for chat presence: `online`, `away`, `dnd`, `offline`. Distinct from grid collaboration `PresenceState` in `packages/shared/realtime/types.ts`. Managed by `PresenceService` with Redis-backed heartbeat.
+- **ChatHandler** — Socket.IO handler for `thread:join`, `thread:leave`, `typing:start`, `typing:stop` listeners with message broadcast via Redis pub/sub. Registered in `apps/realtime/src/handlers/chat-handler.ts`.
+- **PresenceHandler** — Socket.IO handler for `presence:heartbeat`, `presence:update`, `presence:status` listeners with disconnect cleanup. Registered in `apps/realtime/src/handlers/presence-handler.ts`.
+- **NotificationHandler** — Socket.IO handler subscribing to per-user Redis notification channels (`user:{userId}:notifications`) with DND bypass logic. Registered in `apps/realtime/src/handlers/notification-handler.ts`.
+- **ChatEventSubscriber** — Redis pub/sub subscriber that bridges chat events from the web app to Socket.IO rooms. Runs in `apps/realtime/src/subscribers/chat-event-subscriber.ts`.
+- **NotificationService** — Service class orchestrating notification creation and delivery routing. Inserts notification row, checks user preferences, routes to in-app (Redis pub/sub) and/or email (BullMQ enqueue). Located in `apps/web/src/lib/notifications/notification-service.ts`.
+- **NotificationType** — 8 notification categories: `mention`, `dm`, `thread_reply`, `approval_requested`, `approval_decided`, `automation_failed`, `sync_error`, `system`. Drives delivery routing and email template selection.
+- **ResendEmailService** — Wrapper around Resend SDK providing rate limiting, retry, and structured logging for transactional email. 3 React Email templates: invitation, system alert, client thread reply. Located in `apps/web/src/lib/email/resend-service.ts`.
+- **NotificationBell** — Header component showing real-time unread notification count with teal badge. Opens `NotificationTray` popover on click. Located in `apps/web/src/components/notifications/NotificationBell.tsx`.
+- **NotificationTray** — Popover UI displaying grouped notifications (by `group_key`) with mark-all-read action and load-more pagination. Located in `apps/web/src/components/notifications/NotificationTray.tsx`.
+- **ChatQuickPanel** — Sidebar panel showing recent conversations (threads + DMs) with unread indicators, infinite scroll, and real-time Socket.IO updates. Located in `apps/web/src/components/chat/ChatQuickPanel.tsx`.
+- **PresenceIndicator** — Colored dot component showing user online/away/dnd/offline state with size variants. Used in avatars, mention dropdown, and message items. Located in `apps/web/src/components/presence/PresenceIndicator.tsx`.
+- **CustomStatusEditor** — Popover UI for setting emoji + text custom status with auto-clear scheduling. Uses `EmojiPicker` for emoji selection. Located in `apps/web/src/components/presence/CustomStatusEditor.tsx`.
 
 ---
 
