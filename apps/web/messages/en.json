@@ -1022,6 +1022,43 @@
       "attachmentTooLarge": "File exceeds 25MB limit.",
       "rateLimited": "You're sending messages too quickly. Please slow down.",
       "threadNotFound": "This conversation is no longer available."
+    },
+    "quickPanel": {
+      "title": "Chat",
+      "empty": "No conversations yet",
+      "untitledConversation": "Untitled conversation",
+      "noMessagesYet": "No messages yet",
+      "openConversation": "Open conversation: {name}"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellLabel": "{count, plural, =0 {Notifications} one {1 unread notification} other {# unread notifications}}",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "openNotification": "Open: {title}",
+    "groupSummary": "{first} and {othersCount, plural, one {1 other} other {# others}}",
+    "groupCount": "{count, plural, one {1 notification} other {# notifications}}",
+    "expandGroup": "Expand notification group",
+    "collapseGroup": "Collapse notification group"
+  },
+  "presence": {
+    "online": "Online",
+    "away": "Away",
+    "dnd": "Do not disturb",
+    "offline": "Offline",
+    "statusEditor": {
+      "setStatus": "Set status",
+      "pickEmoji": "Pick an emoji",
+      "placeholder": "What's your status?",
+      "clearAfter": "Clear after",
+      "clearNone": "Don't clear",
+      "clear1h": "1 hour",
+      "clear4h": "4 hours",
+      "clearToday": "Today",
+      "clearThisWeek": "This week",
+      "clear": "Clear",
+      "save": "Save"
     }
   }
 }

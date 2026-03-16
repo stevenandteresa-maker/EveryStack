@@ -9,6 +9,8 @@ import {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { PresenceIndicator } from '@/components/presence/PresenceIndicator';
+import type { PresenceState } from '@/components/presence/use-presence';
 import type { MentionSuggestion, MentionDropdownState } from './types';
 
 export interface MentionDropdownRef {
@@ -20,6 +22,8 @@ interface MentionDropdownProps {
   command: MentionDropdownState['command'];
   clientRect?: MentionDropdownState['clientRect'];
   query: string;
+  /** Presence map for showing online status on mention avatars */
+  presenceMap?: Record<string, PresenceState>;
 }
 
 /**
@@ -72,7 +76,7 @@ export function createMentionSuggestion(opts: {
  * (@here, @channel). Arrow keys + Enter to select, Escape to dismiss.
  */
 export const MentionDropdown = forwardRef<MentionDropdownRef, MentionDropdownProps>(
-  function MentionDropdown({ items, command, clientRect, query }, ref) {
+  function MentionDropdown({ items, command, clientRect, query, presenceMap }, ref) {
     const t = useTranslations('chatEditor');
     const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -169,8 +173,8 @@ export const MentionDropdown = forwardRef<MentionDropdownRef, MentionDropdownPro
                   onClick={() => selectItem(idx)}
                   onMouseEnter={() => setSelectedIndex(idx)}
                 >
-                  {/* Avatar */}
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                  {/* Avatar + Presence */}
+                  <span className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
                     {item.avatar ? (
                       // eslint-disable-next-line @next/next/no-img-element -- dynamic avatar URL
                       <img
@@ -180,6 +184,13 @@ export const MentionDropdown = forwardRef<MentionDropdownRef, MentionDropdownPro
                       />
                     ) : (
                       item.label.charAt(0).toUpperCase()
+                    )}
+                    {presenceMap?.[item.id] && (
+                      <PresenceIndicator
+                        status={presenceMap[item.id]!}
+                        size="small"
+                        className="absolute -bottom-0.5 -right-0.5 ring-1 ring-popover"
+                      />
                     )}
                   </span>
 

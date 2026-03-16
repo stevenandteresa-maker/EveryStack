@@ -20,7 +20,7 @@ import {
 import { getAuthContext } from '@/lib/auth-context';
 import { ForbiddenError, NotFoundError, wrapUnknownError } from '@/lib/errors';
 import { createMessage, editMessage, deleteMessage, pinMessage, unpinMessage } from '@/data/thread-messages';
-import { getOrCreateDMThread, createGroupDM } from '@/data/threads';
+import { getOrCreateDMThread, createGroupDM, listThreadsForUser } from '@/data/threads';
 import { saveMessage as saveMessageData, unsaveMessage as unsaveMessageData } from '@/data/saved-messages';
 import { addParticipant } from '@/data/thread-participants';
 import { publishChatEvent } from '@/lib/realtime/chat-events';
@@ -283,6 +283,31 @@ export async function unsaveMessageAction(
 
   try {
     await unsaveMessageData(tenantId, userId, validated.messageId);
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// listThreadsForUserAction
+// ---------------------------------------------------------------------------
+
+const listThreadsSchema = z.object({
+  cursor: z.string().uuid().optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+}).optional();
+
+export async function listThreadsForUserAction(
+  input?: z.input<typeof listThreadsSchema>,
+) {
+  const { userId, tenantId } = await getAuthContext();
+  const validated = listThreadsSchema.parse(input);
+
+  try {
+    return await listThreadsForUser(tenantId, userId, {
+      cursor: validated?.cursor,
+      limit: validated?.limit,
+    });
   } catch (error) {
     throw wrapUnknownError(error);
   }

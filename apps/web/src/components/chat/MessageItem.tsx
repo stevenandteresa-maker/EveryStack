@@ -18,6 +18,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PresenceIndicator } from '@/components/presence/PresenceIndicator';
+import type { PresenceState } from '@/components/presence/use-presence';
 import { MessageRenderer } from './MessageRenderer';
 import { EmojiReactions, type ReactionsMap } from './EmojiReactions';
 import { ChatEditor } from './ChatEditor';
@@ -48,6 +50,8 @@ interface MessageItemProps {
   onSave?: (messageId: string) => void;
   onReply?: (messageId: string) => void;
   onReactionToggle?: (messageId: string, emoji: string) => void;
+  /** Presence map for showing online status on message avatars */
+  presenceMap?: Record<string, PresenceState>;
 }
 
 /**
@@ -65,6 +69,7 @@ export function MessageItem({
   onSave,
   onReply,
   onReactionToggle,
+  presenceMap,
 }: MessageItemProps) {
   const t = useTranslations('chat.messageItem');
   const [isEditing, setIsEditing] = useState(false);
@@ -106,7 +111,7 @@ export function MessageItem({
         className="flex items-start gap-3 px-4 py-2"
         data-testid="deleted-message"
       >
-        <MessageAvatar name={message.author_name} avatar={message.author_avatar} />
+        <MessageAvatar name={message.author_name} avatar={message.author_avatar} presenceStatus={presenceMap?.[message.author_id]} />
         <div className="min-w-0 flex-1">
           <MessageHeader
             name={message.author_name}
@@ -131,7 +136,7 @@ export function MessageItem({
       data-testid="message-item"
       data-message-id={message.id}
     >
-      <MessageAvatar name={message.author_name} avatar={message.author_avatar} />
+      <MessageAvatar name={message.author_name} avatar={message.author_avatar} presenceStatus={presenceMap?.[message.author_id]} />
 
       <div className="min-w-0 flex-1">
         <MessageHeader
@@ -253,9 +258,11 @@ export function MessageItem({
 function MessageAvatar({
   name,
   avatar,
+  presenceStatus,
 }: {
   name: string;
   avatar?: string;
+  presenceStatus?: PresenceState;
 }) {
   const initials = name
     .split(' ')
@@ -265,19 +272,27 @@ function MessageAvatar({
     .toUpperCase();
 
   return (
-    <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground"
-      data-testid="message-avatar"
-    >
-      {avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={avatar}
-          alt={name}
-          className="h-8 w-8 rounded-full object-cover"
+    <div className="relative shrink-0" data-testid="message-avatar">
+      <div
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground"
+      >
+        {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatar}
+            alt={name}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+        ) : (
+          initials
+        )}
+      </div>
+      {presenceStatus && (
+        <PresenceIndicator
+          status={presenceStatus}
+          size="small"
+          className="absolute -bottom-0.5 -right-0.5 ring-2 ring-background"
         />
-      ) : (
-        initials
       )}
     </div>
   );

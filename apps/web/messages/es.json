@@ -1022,6 +1022,43 @@
       "attachmentTooLarge": "El archivo excede el límite de 25MB.",
       "rateLimited": "Estás enviando mensajes muy rápido. Por favor, espera un momento.",
       "threadNotFound": "Esta conversación ya no está disponible."
+    },
+    "quickPanel": {
+      "title": "Chat",
+      "empty": "Aún no hay conversaciones",
+      "untitledConversation": "Conversación sin título",
+      "noMessagesYet": "Aún no hay mensajes",
+      "openConversation": "Abrir conversación: {name}"
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "bellLabel": "{count, plural, =0 {Notificaciones} one {1 notificación sin leer} other {# notificaciones sin leer}}",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "Aún no hay notificaciones",
+    "openNotification": "Abrir: {title}",
+    "groupSummary": "{first} y {othersCount, plural, one {1 más} other {# más}}",
+    "groupCount": "{count, plural, one {1 notificación} other {# notificaciones}}",
+    "expandGroup": "Expandir grupo de notificaciones",
+    "collapseGroup": "Contraer grupo de notificaciones"
+  },
+  "presence": {
+    "online": "En línea",
+    "away": "Ausente",
+    "dnd": "No molestar",
+    "offline": "Desconectado",
+    "statusEditor": {
+      "setStatus": "Establecer estado",
+      "pickEmoji": "Elegir un emoji",
+      "placeholder": "¿Cuál es tu estado?",
+      "clearAfter": "Borrar después de",
+      "clearNone": "No borrar",
+      "clear1h": "1 hora",
+      "clear4h": "4 horas",
+      "clearToday": "Hoy",
+      "clearThisWeek": "Esta semana",
+      "clear": "Borrar",
+      "save": "Guardar"
     }
   }
 }

@@ -19,6 +19,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { PresenceIndicator } from '@/components/presence/PresenceIndicator';
+import type { PresenceState } from '@/components/presence/use-presence';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +38,8 @@ interface GroupDMHeaderProps {
   onNameChange?: (name: string) => void;
   onAddParticipant?: () => void;
   onOpenSettings?: () => void;
+  /** Presence map for showing online status on participant avatars */
+  presenceMap?: Record<string, PresenceState>;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +58,7 @@ export function GroupDMHeader({
   onNameChange,
   onAddParticipant,
   onOpenSettings,
+  presenceMap,
 }: GroupDMHeaderProps) {
   const t = useTranslations('chat.groupDm');
   const [isEditing, setIsEditing] = useState(false);
@@ -124,18 +129,27 @@ export function GroupDMHeader({
             <Tooltip key={p.id}>
               <TooltipTrigger asChild>
                 <div
-                  className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium uppercase"
+                  className="relative h-6 w-6"
                   data-testid="participant-avatar"
                 >
-                  {p.avatar ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={p.avatar}
-                      alt={p.name}
-                      className="h-full w-full rounded-full object-cover"
+                  <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-medium uppercase">
+                    {p.avatar ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={p.avatar}
+                        alt={p.name}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span>{p.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  {presenceMap?.[p.id] && (
+                    <PresenceIndicator
+                      status={presenceMap[p.id]!}
+                      size="small"
+                      className="absolute -bottom-0.5 -right-0.5 ring-1 ring-background"
                     />
-                  ) : (
-                    <span>{p.name.charAt(0)}</span>
                   )}
                 </div>
               </TooltipTrigger>
