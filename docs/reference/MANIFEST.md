@@ -88,7 +88,7 @@ These docs define the user-facing workspace experience: views, records, cross-li
 
 | Document        | Lines | Scope   | Key Content                                                                                                                                                                                                                              | Cross-References                                                                          | Reconciled |
 | --------------- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------- |
-| `smart-docs.md` | 431   | **MVP** | TipTap editor architecture (2 environments: chat editor env 1, Smart Doc env 2), wiki mode + template mode, merge-tag document generation, PDF output via Gotenberg, AI draft option, Smart Doc field type, versioning, snapshot system. | `data-model.md`, `communications.md`, `automations.md`, `tables-and-views.md`, `email.md` | 2026-02-27 |
+| `smart-docs.md` | 431   | **MVP** | TipTap editor architecture (2 environments: chat editor env 1, Smart Doc env 2), wiki mode + template mode, merge-tag document generation, PDF output via Gotenberg, AI draft option, Smart Doc field type, versioning, snapshot system. | `data-model.md`, `communications.md`, `automations.md`, `tables-and-views.md`, `email.md` | 2026-03-16 |
 
 ---
 

@@ -3,8 +3,8 @@
 > **Reference doc.** TipTap editor environment 2 (full-featured), Smart Doc field type, Smart Doc views (wiki + template modes), document generation (both prongs), template mapper, wiki architecture, React component structure, JSONB schema, custom nodes, rendering pipelines.
 > **Filename note:** This file covers both MVP **Document Templates** (merge-tag TipTap templates → Gotenberg → PDF) and post-MVP **Smart Doc** wiki/template views. The GLOSSARY canonical term for the MVP concept is "Document Template" — not "Smart Doc." File retains `smart-docs.md` name for cross-reference stability (46+ inbound references).
 > See `GLOSSARY.md` for concept definitions and MVP scope.
-> Cross-references: `data-model.md` (smart_doc_content, smart_doc_versions, smart_doc_snapshots, smart_doc_backlinks schema), `communications.md` (TipTap env 1 — chat editor), `automations.md` (Generate Document action), `tables-and-views.md` (Smart Doc view type), `email.md` (Send in email action)
-> Last updated: 2026-02-27 — Aligned with GLOSSARY.md. Removed AI content blocks (post-MVP). Removed chart embeds, knowledge base, workspace map cross-refs. Preserved full TipTap architecture and both doc gen prongs.
+> Cross-references: `data-model.md` (document_templates, generated_documents, smart_doc_content, smart_doc_versions, smart_doc_snapshots, smart_doc_backlinks schema), `communications.md` (TipTap env 1 — chat editor), `automations.md` (Generate Document action), `tables-and-views.md` (Smart Doc view type), `email.md` (Send in email action)
+> Last updated: 2026-03-16 — Phase 3D doc prep. Updated Document Generation Data Model: `template_definitions` → `document_templates` (renamed in data-model.md; simpler merge-tag model for MVP). Aligned `generated_documents` columns with GLOSSARY (added `ai_drafted`). Fixed section index ranges for Document Generation and Post-MVP sections. Added `document_templates`, `generated_documents` to cross-reference header.
 
 ---
 
@@ -18,8 +18,8 @@
 | TipTap Editor Architecture       | 49–229  | Environment 2 (full-featured Smart Doc editor), React component structure, JSONB document schema, custom EveryStack node definitions, rendering pipelines (screen, PDF, portal)    |
 | Smart Doc as a Field Type        | 231–294 | Two sub-types (authored vs generated), field configuration, storage, data model (smart_doc_content, versions, snapshots, backlinks)                                                |
 | Smart Doc View (Table-Level)     | 296–329 | Wiki mode (two-panel page tree + editor), template mode, contextual access points                                                                                                  |
-| Document Generation — Two Prongs | 331–414 | Prong 1: TipTap merge-tag templates → Gotenberg → PDF (MVP), Prong 2: upload template generation (post-MVP), template mapper UI, backend requirements, generation flow, data model |
-| Post-MVP Smart Doc Features      | 416–421 | AI content blocks, chart embeds, knowledge base mode, export                                                                                                                       |
+| Document Generation — Two Prongs | 331–423 | Prong 1: TipTap merge-tag templates → Gotenberg → PDF (MVP), Prong 2: upload template generation (post-MVP), template mapper UI, backend requirements, generation flow, data model |
+| Post-MVP Smart Doc Features      | 426–432 | AI content blocks, chart embeds, knowledge base mode, export                                                                                                                       |
 
 ---
 
@@ -418,8 +418,8 @@ Interface for converting user-designed DOCX into Docxtemplater-ready template. *
 
 | Entity                 | Key Columns                                                                                                                         | Purpose           |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| `template_definitions` | id, tenant_id, name, template_type (tiptap \| docxtemplater), file_url, field_mappings (JSONB), source_tables, version, environment | Template registry |
-| `generated_documents`  | id, tenant_id, template_id, source_record_id, file_url, file_type, generated_by, generated_at, automation_run_id                    | Output tracking   |
+| `document_templates`   | id, tenant_id, table_id, name, content (JSONB — TipTap JSON with merge tags), settings (JSONB), version, created_by, environment, created_at, updated_at | Template registry |
+| `generated_documents`  | id, tenant_id, template_id, source_record_id, file_url (S3/R2), file_type (pdf), generated_by, generated_at, automation_run_id (nullable), ai_drafted (boolean) | Output tracking   |
 
 ---
 
