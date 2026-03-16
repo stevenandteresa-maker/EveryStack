@@ -99,11 +99,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3c-comms`
   - Notes: Prompts 8–10 complete. Verified 2026-03-15. All 8 contracts verified, 4585 tests pass.
 
-- [ ] **Unit 4: Chat Editor (TipTap Environment 1)** — `in-progress`
+- [x] **Unit 4: Chat Editor (TipTap Environment 1)** — `passed-review`
   - Produces: `ChatEditor` (3 input states, progressive disclosure); `ChatEditorToolbar`; `MentionDropdown`; `EmojiPicker`; `EmojiReactions`; `MessageRenderer`; `MessageItem`; `ChatAttachmentButton`; `useChatEditor()` hook; TipTap extension config
   - Consumes: None — no unit dependencies. Uses TipTap, emoji-mart, shadcn/ui libraries
-  - Branch:
-  - Notes: Parallel with all units (no unit deps)
+  - Branch: `build/3c-comms`
+  - Notes: Prompts 11–13 complete. Verified 2026-03-16. All 4 contracts verified, 2301 tests pass.
 
 - [ ] **Unit 5: Record Thread & DM UI** — `pending`
   - Produces: `RecordThreadPanel`; `ThreadTabBar` (Team Notes / Client Messages); `ThreadLensBar` (All/Notes/Activity/Files); `ThreadMessageList`; `ThreadReplyPanel`; `ThreadSearchBar`; `SharedNoteMessage`; `ClientVisibleBanner`; `PinnedMessagesPanel`; `ThreadNavDropdown`; `DMConversation`; `GroupDMHeader`; `useThread()`, `useThreadSearch()`, `useTypingIndicator()` hooks

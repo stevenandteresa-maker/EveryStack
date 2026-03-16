@@ -57,6 +57,53 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session D — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 11–13 (Unit 4: Chat Editor — TipTap Env 1)
+
+### Files Created
+- `apps/web/src/components/chat/types.ts` — ChatEditorConfig, ChatEditorInstance, MentionSuggestion, ChatEditorState types
+- `apps/web/src/components/chat/extensions.ts` — createChatEditorExtensions() factory, CHAT_EDITOR_EXTENSION_NAMES, CHAT_EDITOR_EXCLUDED_EXTENSIONS
+- `apps/web/src/components/chat/use-chat-editor.ts` — useChatEditor() hook with 3-state machine (Compact/Focused/Expanded)
+- `apps/web/src/components/chat/ChatEditor.tsx` — Main chat editor with progressive disclosure, drag-drop attachments, mention dropdown
+- `apps/web/src/components/chat/ChatEditorToolbar.tsx` — BubbleMenu toolbar with 6 formatting actions
+- `apps/web/src/components/chat/MentionDropdown.tsx` — @mention autocomplete with fuzzy filtering, person/group sections
+- `apps/web/src/components/chat/ChatAttachmentButton.tsx` — Paperclip attachment button with file picker and preview
+- `apps/web/src/components/chat/MessageRenderer.tsx` — Read-only TipTap JSON → styled HTML renderer (no editor instances)
+- `apps/web/src/components/chat/MessageItem.tsx` — Single message display with avatar, hover menu, inline edit mode
+- `apps/web/src/components/chat/EmojiReactions.tsx` — Reaction chips below messages with toggle and add button
+- `apps/web/src/components/chat/EmojiPicker.tsx` — emoji-mart wrapper in shadcn/ui Popover
+- `apps/web/src/components/chat/__tests__/extensions.test.ts` — 14 tests for TipTap extension config
+- `apps/web/src/components/chat/__tests__/use-chat-editor.test.ts` — 13 tests for useChatEditor hook
+- `apps/web/src/components/chat/__tests__/ChatEditor.test.tsx` — 28 tests for ChatEditor component
+- `apps/web/src/components/chat/__tests__/MessageRenderer.test.tsx` — 16 tests for MessageRenderer
+- `apps/web/src/components/chat/__tests__/MessageItem.test.tsx` — 15 tests for MessageItem
+- `apps/web/src/components/chat/__tests__/EmojiReactions.test.tsx` — 8 tests for EmojiReactions
+- `apps/web/src/components/chat/__tests__/EmojiPicker.test.tsx` — 4 tests for EmojiPicker
+
+### Files Modified
+- `apps/web/package.json` — Added @tiptap/react, @tiptap/starter-kit, @tiptap/core, @tiptap/extension-mention, @tiptap/extension-link, @tiptap/extension-placeholder, @tiptap/extension-underline, @tiptap/extension-bubble-menu, @tiptap/pm, emoji-mart, @emoji-mart/react, @emoji-mart/data
+- `apps/web/messages/en.json` — Added chatEditor, chat.messageItem, chat.emojiReactions, chat.emojiPicker i18n namespaces
+- `apps/web/messages/es.json` — Added chatEditor, chat.messageItem, chat.emojiReactions, chat.emojiPicker i18n namespaces (Spanish)
+- `pnpm-lock.yaml` — Updated lockfile with TipTap and emoji-mart dependencies
+- `scripts/check-i18n.ts` — Added `/lib/email/templates/` to EXCLUDED_PATHS (React Email templates are server-rendered outside next-intl)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `chatEditorExtensions` — TipTap Environment 1 extension configuration (chat, not docs). 12 named extensions
+- `ChatEditorState` — 3-state machine: compact (single-line), focused (active with actions), expanded (paragraph mode)
+- `ReactionsMap` — JSONB shape type: `Record<string, string[]>` mapping emoji → user IDs
+
+### Notes
+- Verification fixes: (1) Disabled link/underline in StarterKit (TipTap v3 bundles them, causing duplicates), (2) Fixed CHAT_EDITOR_EXTENSION_NAMES to use `undoRedo` (actual TipTap name, not `history`), (3) Excluded email templates from i18n check.
+- MessageRenderer avoids creating TipTap editor instances — uses pure recursive React element rendering for performance.
+
+---
+
 ## Session G — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-16
