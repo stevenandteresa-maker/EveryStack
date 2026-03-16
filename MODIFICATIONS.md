@@ -57,6 +57,40 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session H — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** built
+**Prompt(s):** Prompt 14 (Unit 5: RecordThreadPanel shell, tabs, lenses, useThread hook)
+
+### Files Created
+- `apps/web/src/components/thread/use-thread.ts` — useThread() hook: TanStack Query infinite query + Socket.IO subscriptions for message:new/edit/delete, mark-as-read, send/edit/delete actions
+- `apps/web/src/components/thread/RecordThreadPanel.tsx` — 25% width panel with ThreadTabBar, ThreadLensBar, message list, ChatEditor input; opens from RecordView header chat icon
+- `apps/web/src/components/thread/ThreadTabBar.tsx` — Two tabs: "Team Notes" (internal, always) + "Client Messages" (client, when enabled); teal underline active indicator
+- `apps/web/src/components/thread/ThreadLensBar.tsx` — Four lens filter buttons: All | Notes | Activity | Files
+- `apps/web/src/components/thread/ClientVisibleBanner.tsx` — Persistent amber warning banner above chat input in client thread tab
+- `apps/web/src/components/thread/SharedNoteMessage.tsx` — Visual wrapper: 📝 icon, 3px teal left border, muted bg, inset container
+- `apps/web/src/actions/thread-queries.ts` — Server actions: getMessagesAction, markThreadReadAction, getUnreadCountAction
+- `apps/web/src/components/thread/__tests__/thread-components.test.tsx` — 12 tests: ThreadTabBar, ThreadLensBar, ClientVisibleBanner, SharedNoteMessage
+- `apps/web/src/components/thread/__tests__/use-thread.test.ts` — 8 tests: message loading, null threadId, lensFilter, mark-read, socket subscribe/join, real-time append, own-message filter, hasMore
+
+### Files Modified
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Wired chat icon: added isThreadOpen, onToggleThread props; replaced disabled placeholder with functional toggle button with aria-pressed
+- `apps/web/messages/en.json` — Added `thread` i18n namespace (17 keys); updated `record_view.chat_placeholder` → `record_view.toggle_thread`
+- `apps/web/messages/es.json` — Added `thread` i18n namespace (17 keys, Spanish); updated `record_view.chat_placeholder` → `record_view.toggle_thread`
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None (all terms already in GLOSSARY.md)
+
+### Notes
+- RecordThreadPanel accepts pre-resolved thread IDs (internalThreadId, clientThreadId) — thread lookup via getThreadByScope is done by the parent (RecordView integration in Prompt 15).
+- useThread uses injectable fetchMessages/markRead for testability without server action mocking.
+
+---
+
 ## Session D — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-16

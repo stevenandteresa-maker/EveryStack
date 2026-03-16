@@ -721,7 +721,7 @@
     "close": "Close",
     "navigate_prev": "Previous record",
     "navigate_next": "Next record",
-    "chat_placeholder": "Record thread (coming soon)",
+    "toggle_thread": "Toggle record thread",
     "field_read_only": "Read-only",
     "no_fields": "No fields configured for this view.",
     "record_not_found": "Record not found.",
@@ -921,6 +921,24 @@
     "recentHeading": "Recent",
     "scopedLabel": "Current Table",
     "scopedHint": "Search is scoped to this table"
+  },
+  "thread": {
+    "title": "Thread",
+    "panelLabel": "Record thread panel",
+    "closePanel": "Close thread panel",
+    "tabBarLabel": "Thread tabs",
+    "teamNotes": "Team Notes",
+    "clientMessages": "Client Messages",
+    "lensBarLabel": "Message filters",
+    "lensAll": "All",
+    "lensNotes": "Notes",
+    "lensActivity": "Activity",
+    "lensFiles": "Files",
+    "clientVisibleWarning": "Messages here are visible to the portal client.",
+    "loadMore": "Load earlier messages",
+    "noMessages": "No messages yet. Start the conversation.",
+    "internalInputPlaceholder": "Write a team note\u2026",
+    "clientInputPlaceholder": "Reply to client\u2026"
   },
   "chatEditor": {
     "placeholder": "Type a message\u2026",

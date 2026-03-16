@@ -105,11 +105,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3c-comms`
   - Notes: Prompts 11–13 complete. Verified 2026-03-16. All 4 contracts verified, 2301 tests pass.
 
-- [ ] **Unit 5: Record Thread & DM UI** — `pending`
+- [ ] **Unit 5: Record Thread & DM UI** — `in-progress`
   - Produces: `RecordThreadPanel`; `ThreadTabBar` (Team Notes / Client Messages); `ThreadLensBar` (All/Notes/Activity/Files); `ThreadMessageList`; `ThreadReplyPanel`; `ThreadSearchBar`; `SharedNoteMessage`; `ClientVisibleBanner`; `PinnedMessagesPanel`; `ThreadNavDropdown`; `DMConversation`; `GroupDMHeader`; `useThread()`, `useThreadSearch()`, `useTypingIndicator()` hooks
   - Consumes: Unit 1 data functions + actions, Unit 3 real-time events + publish functions, Unit 4 ChatEditor + MessageItem + EmojiReactions
-  - Branch:
-  - Notes:
+  - Branch: `build/3c-comms`
+  - Notes: Prompt 14 complete (RecordThreadPanel shell, tabs, lenses, useThread hook). 20 tests pass. Prompt 15 next.
 
 - [ ] **Unit 6: Notification UI & Chat Quick Panel** — `pending`
   - Produces: `NotificationBell`; `NotificationTray`; `NotificationItem`; `NotificationGroup`; `useNotifications()` hook; `ChatQuickPanel`; `ChatQuickPanelItem`; `PresenceIndicator`; `CustomStatusDisplay`; `CustomStatusEditor`; `usePresence()` hook

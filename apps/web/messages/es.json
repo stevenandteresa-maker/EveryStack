@@ -721,7 +721,7 @@
     "close": "Cerrar",
     "navigate_prev": "Registro anterior",
     "navigate_next": "Siguiente registro",
-    "chat_placeholder": "Hilo del registro (próximamente)",
+    "toggle_thread": "Alternar hilo del registro",
     "field_read_only": "Solo lectura",
     "no_fields": "No hay campos configurados para esta vista.",
     "record_not_found": "Registro no encontrado.",
@@ -921,6 +921,24 @@
     "recentHeading": "Recientes",
     "scopedLabel": "Tabla actual",
     "scopedHint": "La búsqueda está limitada a esta tabla"
+  },
+  "thread": {
+    "title": "Hilo",
+    "panelLabel": "Panel de hilo del registro",
+    "closePanel": "Cerrar panel de hilo",
+    "tabBarLabel": "Pestañas del hilo",
+    "teamNotes": "Notas del equipo",
+    "clientMessages": "Mensajes del cliente",
+    "lensBarLabel": "Filtros de mensajes",
+    "lensAll": "Todos",
+    "lensNotes": "Notas",
+    "lensActivity": "Actividad",
+    "lensFiles": "Archivos",
+    "clientVisibleWarning": "Los mensajes aquí son visibles para el cliente del portal.",
+    "loadMore": "Cargar mensajes anteriores",
+    "noMessages": "Aún no hay mensajes. Inicia la conversación.",
+    "internalInputPlaceholder": "Escribe una nota del equipo\u2026",
+    "clientInputPlaceholder": "Responder al cliente\u2026"
   },
   "chatEditor": {
     "placeholder": "Escribe un mensaje\u2026",
