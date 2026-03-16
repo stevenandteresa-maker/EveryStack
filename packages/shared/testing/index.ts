@@ -16,6 +16,7 @@ export {
   createTestForm,
   createTestAutomation,
   createTestDocumentTemplate,
+  createTestGeneratedDocument,
   createTestThread,
   createTestApiKey,
   createTestTenantRelationship,

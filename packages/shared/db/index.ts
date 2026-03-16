@@ -133,6 +133,10 @@ export {
   notificationsRelations,
   userNotificationPreferences,
   userNotificationPreferencesRelations,
+  documentTemplates,
+  documentTemplatesRelations,
+  generatedDocuments,
+  generatedDocumentsRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -173,4 +177,6 @@ export type {
   UserSavedMessage, NewUserSavedMessage,
   Notification, NewNotification,
   UserNotificationPreference, NewUserNotificationPreference,
+  DocumentTemplate, NewDocumentTemplate,
+  GeneratedDocument, NewGeneratedDocument,
 } from './schema';

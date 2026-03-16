@@ -81,10 +81,10 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Document Template Data Layer** — `pending`
+- [ ] **Unit 1: Document Template Data Layer** — `in-progress`
   - Produces: `getDocumentTemplate()`, `listDocumentTemplates()`, `getGeneratedDocument()`, `listGeneratedDocuments()` data functions; `createDocumentTemplate`, `updateDocumentTemplate`, `duplicateDocumentTemplate`, `deleteDocumentTemplate` server actions; `DocumentTemplate`, `GeneratedDocument` types; Zod schemas; test factories
   - Consumes: None — first unit
-  - Branch:
+  - Branch: `build/3d-document-templates`
   - Notes:
 
 - [ ] **Unit 2: TipTap Environment 2 Editor Core** — `pending`

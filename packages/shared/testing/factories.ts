@@ -29,6 +29,7 @@ import {
   forms,
   automations,
   documentTemplates,
+  generatedDocuments,
   threads,
   apiKeys,
   recordViewConfigs,
@@ -70,6 +71,8 @@ import type {
   Automation,
   NewDocumentTemplate,
   DocumentTemplate,
+  NewGeneratedDocument,
+  GeneratedDocument,
   NewThread,
   Thread,
   NewApiKey,
@@ -733,6 +736,44 @@ export async function createTestDocumentTemplate(
   };
 
   return firstRow(await db.insert(documentTemplates).values(values).returning());
+}
+
+/**
+ * Creates a generated document with sensible defaults.
+ * Auto-creates a document template (and therefore table, workspace, tenant)
+ * when templateId is not provided. Auto-creates a user for generatedBy.
+ */
+export async function createTestGeneratedDocument(
+  overrides?: Partial<NewGeneratedDocument>,
+): Promise<GeneratedDocument> {
+  const db = getTestDb();
+
+  let tenantId = overrides?.tenantId;
+  let templateId = overrides?.templateId;
+
+  if (!templateId) {
+    const template = await createTestDocumentTemplate(
+      tenantId ? { tenantId } : undefined,
+    );
+    templateId = template.id;
+    tenantId = tenantId ?? template.tenantId;
+  }
+
+  const generatedBy = overrides?.generatedBy ?? (await createTestUser()).id;
+  const sourceRecordId = overrides?.sourceRecordId ?? generateUUIDv7();
+
+  const values: NewGeneratedDocument = {
+    id: generateUUIDv7(),
+    tenantId: tenantId!,
+    templateId,
+    sourceRecordId,
+    fileUrl: `https://r2.example.com/docs/${generateUUIDv7()}.pdf`,
+    fileType: 'pdf',
+    generatedBy,
+    ...overrides,
+  };
+
+  return firstRow(await db.insert(generatedDocuments).values(values).returning());
 }
 
 // ---------------------------------------------------------------------------
