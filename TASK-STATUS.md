@@ -74,7 +74,42 @@ When a unit moves to `failed-review`:
 
 ## Active Sub-Phases
 
-(No active sub-phases)
+### 3D — Document Templates & PDF Generation
+
+**Started:** 2026-03-16
+**Completed:** In progress
+
+#### Subdivision Units
+
+- [ ] **Unit 1: Document Template Data Layer** — `pending`
+  - Produces: `getDocumentTemplate()`, `listDocumentTemplates()`, `getGeneratedDocument()`, `listGeneratedDocuments()` data functions; `createDocumentTemplate`, `updateDocumentTemplate`, `duplicateDocumentTemplate`, `deleteDocumentTemplate` server actions; `DocumentTemplate`, `GeneratedDocument` types; Zod schemas; test factories
+  - Consumes: None — first unit
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 2: TipTap Environment 2 Editor Core** — `pending`
+  - Produces: `SmartDocEditor`, `useSmartDocEditor()` hook; `smartDocExtensions` bundle; custom nodes (`MergeTag`, `RecordRef`, `Callout`); `SlashCommand` extension + list; `EditorToolbar`, `BubbleToolbar`, `BlockHandle`
+  - Consumes: None — no unit dependencies (uses TipTap libraries + Env 1 patterns)
+  - Branch:
+  - Notes: Parallel with Unit 3 after Unit 1 completes
+
+- [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `pending`
+  - Produces: `resolveMergeTags()`, `resolveAndRenderHTML()` resolution functions; `MergeTagInserter` sidebar component; `useMergeTagFields()` hook; `PreviewToggle` component; `MergeTagField` type
+  - Consumes: Unit 1 `DocumentTemplate` type; 3B-i cross-link resolution; 3A-iii field permissions
+  - Branch:
+  - Notes: Parallel with Unit 2 after Unit 1 completes
+
+- [ ] **Unit 4: PDF Generation Pipeline** — `pending`
+  - Produces: `PDFRenderer`, `GotenbergClient`; `processDocumentGeneration` BullMQ processor; `enqueueDocumentGeneration()`, `generateDocument` server action; `document-generation` queue registration
+  - Consumes: Unit 1 types + factories, Unit 3 `resolveMergeTags()`, StorageClient from 1G
+  - Branch:
+  - Notes:
+
+- [ ] **Unit 5: Template Management & Document Generation UI** — `pending`
+  - Produces: `DocumentTemplateListPage`, `DocumentTemplateEditor`, `GenerateDocumentDialog`, `GenerateDocumentButton`, `GeneratedDocumentList` components; `useDocumentGeneration()` hook; document routes
+  - Consumes: Unit 1 data + actions, Unit 2 editor, Unit 3 inserter + preview, Unit 4 generation action
+  - Branch:
+  - Notes:
 
 ---
 
