@@ -77,7 +77,7 @@ When a unit moves to `failed-review`:
 ### 3C — Record Thread, DMs, Notifications & System Email
 
 **Started:** 2026-03-15
-**Completed:** In progress
+**Completed:** 2026-03-16
 
 #### Subdivision Units
 
@@ -111,11 +111,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3c-comms`
   - Notes: Prompts 14–16 complete. Verified 2026-03-16. All 5 contracts verified, 2385 tests pass.
 
-- [ ] **Unit 6: Notification UI & Chat Quick Panel** — `pending`
+- [x] **Unit 6: Notification UI & Chat Quick Panel** — `passed-review`
   - Produces: `NotificationBell`; `NotificationTray`; `NotificationItem`; `NotificationGroup`; `useNotifications()` hook; `ChatQuickPanel`; `ChatQuickPanelItem`; `PresenceIndicator`; `CustomStatusDisplay`; `CustomStatusEditor`; `usePresence()` hook
   - Consumes: Unit 2 notification data + actions, Unit 3 real-time events + presence, Unit 5 DM navigation target + thread list
-  - Branch:
-  - Notes:
+  - Branch: `build/3c-comms`
+  - Notes: Prompts 17–19 complete. Verified 2026-03-16. All 5 contracts verified, 2440 tests pass.
 
 ---
 
