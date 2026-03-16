@@ -57,10 +57,53 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
+## Session E — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 14–16 (Unit 5: Record Thread & DM UI)
+
+### Files Created
+- `apps/web/src/components/thread/ThreadMessageList.tsx` — Virtualized message list with date separators, scroll-to-bottom, infinite scroll for older messages
+- `apps/web/src/components/thread/ThreadReplyPanel.tsx` — Inline reply panel with quoted message preview, ChatEditor input, cancel/send actions
+- `apps/web/src/components/thread/ThreadSearchBar.tsx` — In-thread search with match highlighting, prev/next navigation, result count
+- `apps/web/src/components/thread/PinnedMessagesPanel.tsx` — Slide-over panel listing pinned messages with unpin action and jump-to-message
+- `apps/web/src/components/thread/ThreadNavDropdown.tsx` — Hierarchical dropdown for parent/current/sibling/child record navigation with unread indicators
+- `apps/web/src/components/thread/use-thread-search.ts` — useThreadSearch() hook: debounced query, match positions, active match cycling, scroll-to-match
+- `apps/web/src/components/thread/use-typing-indicator.ts` — useTypingIndicator() hook: Socket.IO typing events, debounced broadcast, typingUsers list
+- `apps/web/src/components/chat/DMConversation.tsx` — DM/group DM conversation view with message list, typing indicator, chat editor, failed message retry
+- `apps/web/src/components/chat/GroupDMHeader.tsx` — Editable group name, participant avatars (3–8 cap), add participant button, settings icon
+- `apps/web/src/components/chat/MessageErrorHandler.tsx` — Failed message error cards with retry (3 attempts with exponential delay) and dismiss
+- `apps/web/src/components/thread/__tests__/thread-prompt15.test.tsx` — Tests for ThreadMessageList, ThreadReplyPanel, ThreadSearchBar, PinnedMessagesPanel
+- `apps/web/src/components/thread/__tests__/thread-prompt16.test.tsx` — Tests for DMConversation, GroupDMHeader, ThreadNavDropdown, RecordView thread integration
+
+### Files Modified
+- `apps/web/src/components/record-view/RecordView.tsx` — Added thread panel slot (25% width right panel), main content shrinks to 75% when thread open
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Chat icon (MessageCircle) with teal unread badge (99+ cap), toggle thread open/close
+- `apps/web/src/components/record-view/__tests__/RecordView.test.tsx` — Updated stale test: old placeholder label → new i18n aria-label
+- `apps/web/src/components/thread/RecordThreadPanel.tsx` — Extended shell with ThreadMessageList, ThreadReplyPanel, ThreadSearchBar, PinnedMessagesPanel integration
+- `apps/web/src/actions/thread-queries.ts` — Added searchThreadMessagesAction, pinMessageAction, unpinMessageAction, getPinnedMessagesAction
+- `apps/web/messages/en.json` — Added thread search, pinned messages, DM, group DM, error handler i18n keys
+- `apps/web/messages/es.json` — Added thread search, pinned messages, DM, group DM, error handler i18n keys (Spanish)
+- `apps/web/package.json` — Added dependencies for Prompts 15–16 components
+- `pnpm-lock.yaml` — Updated lockfile
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None (all terms already in GLOSSARY.md)
+
+### Notes
+- Verification fixes: removed unused beforeEach import (lint), added eslint-disable for img element in GroupDMHeader avatars, updated stale RecordView test aria-label.
+- All 5 interface contracts verified: thread components, chat components, hooks, chat icon + badge, thread panel slot.
+
+---
+
 ## Session H — Phase 3C — build/3c-comms
 
 **Date:** 2026-03-16
-**Status:** built
+**Status:** passed-review
 **Prompt(s):** Prompt 14 (Unit 5: RecordThreadPanel shell, tabs, lenses, useThread hook)
 
 ### Files Created
