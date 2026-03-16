@@ -3,9 +3,9 @@ import { QUEUE_NAMES } from '../constants';
 import type { QueueName } from '../constants';
 
 describe('QUEUE_NAMES', () => {
-  it('exports exactly 8 queue names', () => {
+  it('exports exactly 9 queue names', () => {
     const names = Object.values(QUEUE_NAMES);
-    expect(names).toHaveLength(8);
+    expect(names).toHaveLength(9);
   });
 
   it('contains the expected queue names', () => {
@@ -18,6 +18,7 @@ describe('QUEUE_NAMES', () => {
       'document-gen': 'document-gen',
       cleanup: 'cleanup',
       'cross-link': 'cross-link',
+      notification: 'notification',
     });
   });
 
@@ -48,8 +49,9 @@ describe('QUEUE_NAMES', () => {
       'document-gen',
       'cleanup',
       'cross-link',
+      'notification',
     ];
-    expect(names).toHaveLength(8);
+    expect(names).toHaveLength(9);
   });
 
   it('queue names are frozen (immutable at runtime)', () => {

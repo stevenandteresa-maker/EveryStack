@@ -31,6 +31,7 @@ const EXCLUDED_PATHS = [
   '/components/ui/',
   '/design-test/',
   '/global-error.tsx',
+  '/lib/email/templates/',
 ];
 
 function isExcludedPath(filePath: string): boolean {

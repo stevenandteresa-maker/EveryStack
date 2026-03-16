@@ -27,6 +27,7 @@ import { generateUUIDv7 } from '@everystack/shared/db';
 import type { ConfigOption } from './RecordViewConfigPicker';
 import type { GridField, GridRecord } from '@/lib/types/grid';
 import type { RecordViewLayout, RecordViewTab } from '@/data/record-view-configs';
+import type { ReactNode } from 'react';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -66,6 +67,14 @@ export interface RecordViewProps {
    * Used inside GridRecordViewLayout for combined grid + record view.
    */
   inline?: boolean;
+  /** Whether the thread panel is currently open */
+  isThreadOpen?: boolean;
+  /** Unread count for the thread badge */
+  threadUnreadCount?: number;
+  /** Render prop for the thread panel content */
+  threadPanel?: ReactNode;
+  /** Toggle the Record Thread panel */
+  onToggleThread?: () => void;
   /** Navigate prev/next */
   onNavigate: (direction: 'prev' | 'next') => void;
   /** Go back in linked record stack */
@@ -102,6 +111,10 @@ export function RecordView({
   configs,
   activeConfigId,
   inline = false,
+  isThreadOpen = false,
+  threadUnreadCount = 0,
+  threadPanel,
+  onToggleThread,
   onNavigate,
   onGoBack,
   onNavigateToLinkedRecord,
@@ -240,11 +253,14 @@ export function RecordView({
           canGoBack={canGoBack}
           configs={configs}
           activeConfigId={activeConfigId}
+          isThreadOpen={isThreadOpen}
+          threadUnreadCount={threadUnreadCount}
           onNavigate={onNavigate}
           onGoBack={onGoBack}
           onSelectConfig={onSelectConfig}
           onSaveConfigAsNew={onSaveConfigAsNew}
           onClose={onClose}
+          onToggleThread={onToggleThread}
         />
         {hasTabs && (
           <RecordViewTabs
@@ -380,13 +396,31 @@ export function RecordView({
         ref={panelRef}
         className={cn(
           'absolute right-0 top-0 h-full bg-background shadow-xl',
-          'flex flex-col',
+          'flex flex-row',
           'transition-transform duration-200 ease-out',
           isOpen ? 'translate-x-0' : 'translate-x-full',
         )}
         style={{ width: '60%', minWidth: '400px', maxWidth: '1200px' }}
       >
-        {content}
+        {/* Main content area — shrinks when thread open */}
+        <div
+          className="flex flex-col min-w-0 overflow-auto"
+          style={{ width: isThreadOpen && threadPanel ? '75%' : '100%' }}
+          data-testid="record-view-content"
+        >
+          {content}
+        </div>
+
+        {/* Thread panel slot — 25% width */}
+        {isThreadOpen && threadPanel && (
+          <div
+            className="shrink-0 border-l"
+            style={{ width: '25%', minWidth: '280px' }}
+            data-testid="record-view-thread-slot"
+          >
+            {threadPanel}
+          </div>
+        )}
       </div>
     </div>
   );

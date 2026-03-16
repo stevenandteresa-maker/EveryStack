@@ -14,14 +14,20 @@
   },
   "dependencies": {
     "@everystack/shared": "workspace:*",
+    "@react-email/components": "1.0.9",
     "@sentry/node": "^10.42.0",
     "blurhash": "^2.0.5",
     "bullmq": "^5.70.4",
     "ioredis": "^5.10.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "resend": "^6.9.3",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
     "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",

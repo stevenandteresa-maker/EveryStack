@@ -721,7 +721,7 @@
     "close": "Close",
     "navigate_prev": "Previous record",
     "navigate_next": "Next record",
-    "chat_placeholder": "Record thread (coming soon)",
+    "toggle_thread": "Toggle record thread",
     "field_read_only": "Read-only",
     "no_fields": "No fields configured for this view.",
     "record_not_found": "Record not found.",
@@ -921,5 +921,144 @@
     "recentHeading": "Recent",
     "scopedLabel": "Current Table",
     "scopedHint": "Search is scoped to this table"
+  },
+  "thread": {
+    "title": "Thread",
+    "panelLabel": "Record thread panel",
+    "closePanel": "Close thread panel",
+    "tabBarLabel": "Thread tabs",
+    "teamNotes": "Team Notes",
+    "clientMessages": "Client Messages",
+    "lensBarLabel": "Message filters",
+    "lensAll": "All",
+    "lensNotes": "Notes",
+    "lensActivity": "Activity",
+    "lensFiles": "Files",
+    "clientVisibleWarning": "Messages here are visible to the portal client.",
+    "loadMore": "Load earlier messages",
+    "noMessages": "No messages yet. Start the conversation.",
+    "internalInputPlaceholder": "Write a team note\u2026",
+    "clientInputPlaceholder": "Reply to client\u2026",
+    "typingOne": "{name} is typing",
+    "typingTwo": "{name1} and {name2} are typing",
+    "typingMany": "{count} people are typing",
+    "replyPanelLabel": "Thread replies",
+    "replyPanelTitle": "Replies",
+    "replyPlaceholder": "Reply\u2026",
+    "replyChip": "{count, plural, one {1 reply} other {# replies}} \u00b7 last {time}",
+    "noReplies": "No replies yet.",
+    "searchPlaceholder": "Search in thread\u2026",
+    "searchCount": "{current} of {total}",
+    "searchNoResults": "No results",
+    "searchPrev": "Previous match",
+    "searchNext": "Next match",
+    "searchClose": "Close search",
+    "pinnedTitle": "Pinned Messages",
+    "noPinnedMessages": "No pinned messages.",
+    "pinnedButton": "Pinned messages",
+    "nav": {
+      "noRelated": "No related records"
+    }
+  },
+  "chatEditor": {
+    "placeholder": "Type a message\u2026",
+    "send": "Send",
+    "cancel": "Cancel",
+    "expand": "Expand editor",
+    "collapse": "Collapse editor",
+    "attach": "Attach file",
+    "removeAttachment": "Remove attachment",
+    "mentionSuggestions": "Mention suggestions",
+    "toolbar": {
+      "label": "Formatting toolbar",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "link": "Link",
+      "linkPrompt": "Enter URL",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list"
+    }
+  },
+  "chat": {
+    "messageItem": {
+      "deleted": "This message was deleted",
+      "edited": "(edited)",
+      "edit": "Edit",
+      "delete": "Delete",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "save": "Save",
+      "reply": "Reply",
+      "moreActions": "More actions",
+      "editPlaceholder": "Edit message\u2026",
+      "editHintSave": "Cmd+Enter to save",
+      "editHintCancel": "Escape to cancel"
+    },
+    "emojiReactions": {
+      "toggle": "{emoji} {count}",
+      "addReaction": "Add reaction"
+    },
+    "emojiPicker": {
+      "title": "Pick an emoji"
+    },
+    "dm": {
+      "noMessages": "No messages yet. Say hello!",
+      "inputPlaceholder": "Type a message\u2026"
+    },
+    "groupDm": {
+      "participantCount": "{count}/{max} members",
+      "addParticipant": "Add participant",
+      "settings": "Group settings",
+      "nameEdited": "Group name updated"
+    },
+    "errors": {
+      "sendFailed": "Message failed to send. Retrying\u2026",
+      "sendFailedManual": "Message could not be sent. Tap to retry.",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
+      "permissionDenied": "You no longer have access to this thread.",
+      "attachmentFailed": "Upload failed \u2014 tap to retry.",
+      "attachmentTooLarge": "File exceeds 25MB limit.",
+      "rateLimited": "You're sending messages too quickly. Please slow down.",
+      "threadNotFound": "This conversation is no longer available."
+    },
+    "quickPanel": {
+      "title": "Chat",
+      "empty": "No conversations yet",
+      "untitledConversation": "Untitled conversation",
+      "noMessagesYet": "No messages yet",
+      "openConversation": "Open conversation: {name}"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellLabel": "{count, plural, =0 {Notifications} one {1 unread notification} other {# unread notifications}}",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "openNotification": "Open: {title}",
+    "groupSummary": "{first} and {othersCount, plural, one {1 other} other {# others}}",
+    "groupCount": "{count, plural, one {1 notification} other {# notifications}}",
+    "expandGroup": "Expand notification group",
+    "collapseGroup": "Collapse notification group"
+  },
+  "presence": {
+    "online": "Online",
+    "away": "Away",
+    "dnd": "Do not disturb",
+    "offline": "Offline",
+    "statusEditor": {
+      "setStatus": "Set status",
+      "pickEmoji": "Pick an emoji",
+      "placeholder": "What's your status?",
+      "clearAfter": "Clear after",
+      "clearNone": "Don't clear",
+      "clear1h": "1 hour",
+      "clear4h": "4 hours",
+      "clearToday": "Today",
+      "clearThisWeek": "This week",
+      "clear": "Clear",
+      "save": "Save"
+    }
   }
 }

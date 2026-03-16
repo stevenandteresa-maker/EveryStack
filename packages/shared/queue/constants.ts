@@ -11,6 +11,7 @@ export const QUEUE_NAMES = {
   'document-gen': 'document-gen',
   cleanup: 'cleanup',
   'cross-link': 'cross-link',
+  notification: 'notification',
 } as const;
 
 /** Union type of all valid queue names. */

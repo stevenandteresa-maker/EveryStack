@@ -20,6 +20,9 @@ import { InboundSyncProcessor } from './processors/sync/sync-inbound';
 import { SyncScheduler } from './processors/sync/sync-scheduler';
 import { CrossLinkCascadeProcessor } from './processors/cross-link/cascade';
 import { CrossLinkIndexRebuildProcessor } from './processors/cross-link/index-rebuild';
+import { NotificationEmailSendProcessor } from './processors/notification/email-send';
+import { NotificationCleanupProcessor } from './processors/notification/cleanup';
+import { NotificationRouter } from './processors/notification/notification-router';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -64,6 +67,12 @@ cascadeProcessor.start();
 const indexRebuildProcessor = new CrossLinkIndexRebuildProcessor();
 indexRebuildProcessor.start();
 
+// Notification queue: routes email-send and cleanup jobs
+const emailSendProcessor = new NotificationEmailSendProcessor();
+const cleanupProcessor = new NotificationCleanupProcessor();
+const notificationRouter = new NotificationRouter(emailSendProcessor, cleanupProcessor);
+notificationRouter.start();
+
 // Sync scheduler: adaptive polling via BullMQ repeatable job
 const schedulerRedis = createRedisClient('sync-scheduler');
 const syncScheduler = new SyncScheduler(
@@ -81,6 +90,7 @@ registerShutdownHandler(async () => initialSyncProcessor.close());
 registerShutdownHandler(async () => inboundSyncProcessor.close());
 registerShutdownHandler(async () => cascadeProcessor.close());
 registerShutdownHandler(async () => indexRebuildProcessor.close());
+registerShutdownHandler(async () => notificationRouter.close());
 registerShutdownHandler(async () => syncScheduler.stop());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);

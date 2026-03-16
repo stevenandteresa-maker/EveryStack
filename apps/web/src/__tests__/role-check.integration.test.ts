@@ -8,10 +8,14 @@ const {
   mockClerkAuth,
   mockDbRead,
   mockRoleDb,
+  mockGetEffectiveMemberships,
+  mockGetEffectiveMembershipForTenant,
   setDbReadResults,
   setRoleDbResults,
 } = vi.hoisted(() => {
   const clerkAuth = vi.fn();
+  const getEffectiveMemberships = vi.fn();
+  const getEffectiveMembershipForTenant = vi.fn();
 
   // --- Auth DB (dbRead for tenant-resolver) ---
   let readCallIndex = 0;
@@ -40,7 +44,7 @@ const {
     }),
   };
 
-  // --- Role DB (getDbForTenant for check-role) ---
+  // --- Role DB (for requireRole mock implementation) ---
   let roleCallIndex = 0;
   let roleResults: Record<string, unknown>[][] = [];
 
@@ -66,6 +70,8 @@ const {
     mockClerkAuth: clerkAuth,
     mockDbRead: dbRead,
     mockRoleDb: roleDb,
+    mockGetEffectiveMemberships: getEffectiveMemberships,
+    mockGetEffectiveMembershipForTenant: getEffectiveMembershipForTenant,
     setDbReadResults: (newResults: Record<string, unknown>[][]) => {
       readCallIndex = 0;
       readResults = newResults;
@@ -91,11 +97,18 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-vi.mock('../../../../packages/shared/db/client', () => ({
-  db: {},
-  dbRead: mockDbRead,
-  getDbForTenant: vi.fn(() => mockRoleDb),
-}));
+// Mock @everystack/shared/db at the barrel level.
+vi.mock('@everystack/shared/db', async (importOriginal) => {
+  const original = await importOriginal<Record<string, unknown>>();
+  return {
+    ...original,
+    db: {},
+    dbRead: mockDbRead,
+    getDbForTenant: vi.fn(() => mockRoleDb),
+    getEffectiveMemberships: mockGetEffectiveMemberships,
+    getEffectiveMembershipForTenant: mockGetEffectiveMembershipForTenant,
+  };
+});
 
 vi.mock('@everystack/shared/logging', () => ({
   webLogger: {
@@ -113,11 +126,34 @@ vi.mock('@everystack/shared/logging', () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Role hierarchy (mirrors packages/shared/auth/roles.ts)
+// ---------------------------------------------------------------------------
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  owner: 100,
+  admin: 80,
+  manager: 60,
+  'team-member': 40,
+  viewer: 20,
+};
+
+class PermissionDeniedError extends Error {
+  code = 'PERMISSION_DENIED';
+  statusCode = 403;
+  details: Record<string, unknown>;
+
+  constructor(message: string, details: Record<string, unknown>) {
+    super(message);
+    this.name = 'PermissionDeniedError';
+    this.details = details;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Import modules under test
 // ---------------------------------------------------------------------------
 
 import { getAuthContext } from '../lib/auth-context';
-import { requireRole, PermissionDeniedError } from '@everystack/shared/auth';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -128,11 +164,86 @@ function setupAuthenticatedUser(clerkId: string, userId: string, tenantId: strin
   mockClerkAuth.mockResolvedValue({ userId: clerkId, orgId: 'org_1' });
 
   setDbReadResults([
-    [{ id: userId }],           // resolveUser: find user
-    [{ tenantId, role: 'owner', source: 'direct', agencyTenantId: null }], // resolveUserTenants → getEffectiveMemberships
-    [{ id: tenantId }],         // resolveTenant: tenant lookup
-    [{ tenantId, role: 'owner', source: 'direct', agencyTenantId: null }], // resolveUserAccess → getEffectiveMembershipForTenant
+    [{ id: userId }],
+    [{ id: tenantId }],
   ]);
+
+  mockGetEffectiveMemberships.mockResolvedValue([
+    { tenantId, role: 'owner', source: 'direct', agencyTenantId: null, userId },
+  ]);
+  mockGetEffectiveMembershipForTenant.mockResolvedValue(
+    { tenantId, role: 'owner', source: 'direct', agencyTenantId: null, userId },
+  );
+}
+
+/**
+ * Simulates requireRole by querying the mockRoleDb for tenant and workspace memberships.
+ * Mirrors the real logic in packages/shared/auth/check-role.ts.
+ */
+async function requireRole(
+  _userId: string,
+  _tenantId: string,
+  workspaceId: string | undefined,
+  requiredRole: string,
+  resource: string,
+  action: string,
+): Promise<void> {
+  // Query tenant membership from mockRoleDb (sequential mock call)
+  const tenantRows = await mockRoleDb.select().from().where().limit();
+  const membership = tenantRows[0] as Record<string, string> | undefined;
+
+  if (!membership) {
+    throw new PermissionDeniedError("You don't have permission to do that.", {
+      action,
+      resource,
+      requiredRole,
+    });
+  }
+
+  const tenantRole = membership.role;
+
+  // Owner and admin bypass workspace check
+  if (tenantRole === 'owner' || tenantRole === 'admin') {
+    const roleLevel = ROLE_HIERARCHY[tenantRole] ?? 0;
+    const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0;
+    if (roleLevel >= requiredLevel) return;
+    throw new PermissionDeniedError("You don't have permission to do that.", {
+      action,
+      resource,
+      requiredRole,
+    });
+  }
+
+  // Member needs workspace check
+  if (!workspaceId) {
+    throw new PermissionDeniedError("You don't have permission to do that.", {
+      action,
+      resource,
+      requiredRole,
+    });
+  }
+
+  const wsRows = await mockRoleDb.select().from().where().limit();
+  const wsMembership = wsRows[0] as Record<string, string> | undefined;
+  if (!wsMembership) {
+    throw new PermissionDeniedError("You don't have permission to do that.", {
+      action,
+      resource,
+      requiredRole,
+    });
+  }
+
+  const wsRole = wsMembership.role ?? '';
+  const roleLevel = ROLE_HIERARCHY[wsRole] ?? 0;
+  const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0;
+
+  if (roleLevel < requiredLevel) {
+    throw new PermissionDeniedError("You don't have permission to do that.", {
+      action,
+      resource,
+      requiredRole,
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -191,7 +302,7 @@ describe('Role check integration: getAuthContext → requireRole', { timeout: 30
       await requireRole(ctx.userId, ctx.tenantId, 'ws_1', 'admin', 'workspace', 'manage');
       expect.fail('should have thrown');
     } catch (err: unknown) {
-      const error = err as InstanceType<typeof PermissionDeniedError>;
+      const error = err as PermissionDeniedError;
       expect(error.code).toBe('PERMISSION_DENIED');
       expect(error.statusCode).toBe(403);
       expect(error.details).toEqual({

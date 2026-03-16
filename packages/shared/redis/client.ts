@@ -16,15 +16,24 @@ export interface RedisConfig {
 /**
  * Reads Redis connection config from environment variables.
  *
- * | Env var        | Default     |
- * |--------------- |------------ |
- * | REDIS_HOST     | localhost   |
- * | REDIS_PORT     | 6379        |
- * | REDIS_PASSWORD | (undefined) |
+ * Checks `REDIS_URL` first (e.g. `redis://localhost:6380`), then falls
+ * back to individual `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` vars.
  *
  * @param name - Connection name for monitoring (e.g. 'bullmq', 'realtime-pub')
  */
 export function getRedisConfig(name = 'default'): RedisConfig {
+  const redisUrl = process.env['REDIS_URL'];
+  if (redisUrl) {
+    const parsed = new URL(redisUrl);
+    return {
+      host: parsed.hostname || 'localhost',
+      port: Number(parsed.port) || 6379,
+      password: parsed.password || undefined,
+      maxRetriesPerRequest: null,
+      connectionName: name,
+    };
+  }
+
   return {
     host: process.env['REDIS_HOST'] ?? 'localhost',
     port: Number(process.env['REDIS_PORT'] ?? '6379'),

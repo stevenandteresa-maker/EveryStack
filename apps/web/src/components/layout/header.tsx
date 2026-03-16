@@ -3,8 +3,14 @@
 import { Search, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import type { UseNotificationsResult } from '@/components/notifications/use-notifications';
 
-export function Header() {
+interface HeaderProps {
+  notificationsHook?: UseNotificationsResult;
+}
+
+export function Header({ notificationsHook }: HeaderProps) {
   const t = useTranslations('shell.header');
 
   return (
@@ -52,8 +58,11 @@ export function Header() {
         <Search size={20} />
       </button>
 
-      {/* Right: Avatar placeholder */}
-      <div className="hidden tablet:flex items-center">
+      {/* Right: Bell + Avatar */}
+      <div className="hidden tablet:flex items-center gap-2">
+        {notificationsHook && (
+          <NotificationBell hook={notificationsHook} />
+        )}
         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
           <User size={16} className="text-white" />
         </div>

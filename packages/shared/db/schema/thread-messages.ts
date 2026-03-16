@@ -12,6 +12,7 @@ import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { generateUUIDv7 } from '../uuid';
 import { tenants } from './tenants';
 import { threads } from './threads';
+import { userNotes } from './user-notes';
 
 export const threadMessages = pgTable(
   'thread_messages',
@@ -33,6 +34,8 @@ export const threadMessages = pgTable(
     reactions: jsonb('reactions').$type<Record<string, string[]>>().default({}).notNull(),
     pinnedAt: timestamp('pinned_at', { withTimezone: true }),
     pinnedBy: uuid('pinned_by'),
+    sourceNoteId: uuid('source_note_id')
+      .references(() => userNotes.id, { onDelete: 'set null' }),
     editedAt: timestamp('edited_at', { withTimezone: true }),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -55,6 +58,10 @@ export const threadMessagesRelations = relations(threadMessages, ({ one }) => ({
   parentMessage: one(threadMessages, {
     fields: [threadMessages.parentMessageId],
     references: [threadMessages.id],
+  }),
+  sourceNote: one(userNotes, {
+    fields: [threadMessages.sourceNoteId],
+    references: [userNotes.id],
   }),
 }));
 

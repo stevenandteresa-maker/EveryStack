@@ -176,6 +176,20 @@
       "when": 1772660000000,
       "tag": "0024_jsonb_expression_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1772670000000,
+      "tag": "0025_add_user_notes_and_source_note_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1772680000000,
+      "tag": "0026_extend_notifications_schema",
+      "breakpoints": true
     }
   ]
 }

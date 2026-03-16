@@ -721,7 +721,7 @@
     "close": "Cerrar",
     "navigate_prev": "Registro anterior",
     "navigate_next": "Siguiente registro",
-    "chat_placeholder": "Hilo del registro (próximamente)",
+    "toggle_thread": "Alternar hilo del registro",
     "field_read_only": "Solo lectura",
     "no_fields": "No hay campos configurados para esta vista.",
     "record_not_found": "Registro no encontrado.",
@@ -921,5 +921,144 @@
     "recentHeading": "Recientes",
     "scopedLabel": "Tabla actual",
     "scopedHint": "La búsqueda está limitada a esta tabla"
+  },
+  "thread": {
+    "title": "Hilo",
+    "panelLabel": "Panel de hilo del registro",
+    "closePanel": "Cerrar panel de hilo",
+    "tabBarLabel": "Pestañas del hilo",
+    "teamNotes": "Notas del equipo",
+    "clientMessages": "Mensajes del cliente",
+    "lensBarLabel": "Filtros de mensajes",
+    "lensAll": "Todos",
+    "lensNotes": "Notas",
+    "lensActivity": "Actividad",
+    "lensFiles": "Archivos",
+    "clientVisibleWarning": "Los mensajes aquí son visibles para el cliente del portal.",
+    "loadMore": "Cargar mensajes anteriores",
+    "noMessages": "Aún no hay mensajes. Inicia la conversación.",
+    "internalInputPlaceholder": "Escribe una nota del equipo\u2026",
+    "clientInputPlaceholder": "Responder al cliente\u2026",
+    "typingOne": "{name} está escribiendo",
+    "typingTwo": "{name1} y {name2} están escribiendo",
+    "typingMany": "{count} personas están escribiendo",
+    "replyPanelLabel": "Respuestas del hilo",
+    "replyPanelTitle": "Respuestas",
+    "replyPlaceholder": "Responder\u2026",
+    "replyChip": "{count, plural, one {1 respuesta} other {# respuestas}} · hace {time}",
+    "noReplies": "Aún no hay respuestas.",
+    "searchPlaceholder": "Buscar en el hilo\u2026",
+    "searchCount": "{current} de {total}",
+    "searchNoResults": "Sin resultados",
+    "searchPrev": "Coincidencia anterior",
+    "searchNext": "Siguiente coincidencia",
+    "searchClose": "Cerrar búsqueda",
+    "pinnedTitle": "Mensajes fijados",
+    "noPinnedMessages": "No hay mensajes fijados.",
+    "pinnedButton": "Mensajes fijados",
+    "nav": {
+      "noRelated": "No hay registros relacionados"
+    }
+  },
+  "chatEditor": {
+    "placeholder": "Escribe un mensaje\u2026",
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "expand": "Expandir editor",
+    "collapse": "Contraer editor",
+    "attach": "Adjuntar archivo",
+    "removeAttachment": "Eliminar archivo adjunto",
+    "mentionSuggestions": "Sugerencias de mención",
+    "toolbar": {
+      "label": "Barra de formato",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado",
+      "link": "Enlace",
+      "linkPrompt": "Ingresa la URL",
+      "bulletList": "Lista con viñetas",
+      "orderedList": "Lista numerada"
+    }
+  },
+  "chat": {
+    "messageItem": {
+      "deleted": "Este mensaje fue eliminado",
+      "edited": "(editado)",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "pin": "Fijar",
+      "unpin": "Desfijar",
+      "save": "Guardar",
+      "reply": "Responder",
+      "moreActions": "Más acciones",
+      "editPlaceholder": "Editar mensaje\u2026",
+      "editHintSave": "Cmd+Enter para guardar",
+      "editHintCancel": "Escape para cancelar"
+    },
+    "emojiReactions": {
+      "toggle": "{emoji} {count}",
+      "addReaction": "Agregar reacción"
+    },
+    "emojiPicker": {
+      "title": "Elige un emoji"
+    },
+    "dm": {
+      "noMessages": "Aún no hay mensajes. ¡Di hola!",
+      "inputPlaceholder": "Escribe un mensaje\u2026"
+    },
+    "groupDm": {
+      "participantCount": "{count}/{max} miembros",
+      "addParticipant": "Agregar participante",
+      "settings": "Configuración del grupo",
+      "nameEdited": "Nombre del grupo actualizado"
+    },
+    "errors": {
+      "sendFailed": "No se pudo enviar el mensaje. Reintentando\u2026",
+      "sendFailedManual": "No se pudo enviar el mensaje. Toca para reintentar.",
+      "retry": "Reintentar",
+      "dismiss": "Descartar",
+      "permissionDenied": "Ya no tienes acceso a esta conversación.",
+      "attachmentFailed": "Error al subir \u2014 toca para reintentar.",
+      "attachmentTooLarge": "El archivo excede el límite de 25MB.",
+      "rateLimited": "Estás enviando mensajes muy rápido. Por favor, espera un momento.",
+      "threadNotFound": "Esta conversación ya no está disponible."
+    },
+    "quickPanel": {
+      "title": "Chat",
+      "empty": "Aún no hay conversaciones",
+      "untitledConversation": "Conversación sin título",
+      "noMessagesYet": "Aún no hay mensajes",
+      "openConversation": "Abrir conversación: {name}"
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "bellLabel": "{count, plural, =0 {Notificaciones} one {1 notificación sin leer} other {# notificaciones sin leer}}",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "Aún no hay notificaciones",
+    "openNotification": "Abrir: {title}",
+    "groupSummary": "{first} y {othersCount, plural, one {1 más} other {# más}}",
+    "groupCount": "{count, plural, one {1 notificación} other {# notificaciones}}",
+    "expandGroup": "Expandir grupo de notificaciones",
+    "collapseGroup": "Contraer grupo de notificaciones"
+  },
+  "presence": {
+    "online": "En línea",
+    "away": "Ausente",
+    "dnd": "No molestar",
+    "offline": "Desconectado",
+    "statusEditor": {
+      "setStatus": "Establecer estado",
+      "pickEmoji": "Elegir un emoji",
+      "placeholder": "¿Cuál es tu estado?",
+      "clearAfter": "Borrar después de",
+      "clearNone": "No borrar",
+      "clear1h": "1 hora",
+      "clear4h": "4 horas",
+      "clearToday": "Hoy",
+      "clearThisWeek": "Esta semana",
+      "clear": "Borrar",
+      "save": "Guardar"
+    }
   }
 }

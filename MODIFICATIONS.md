@@ -57,7 +57,431 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-(No active sessions)
+## Session E — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 14–16 (Unit 5: Record Thread & DM UI)
+
+### Files Created
+- `apps/web/src/components/thread/ThreadMessageList.tsx` — Virtualized message list with date separators, scroll-to-bottom, infinite scroll for older messages
+- `apps/web/src/components/thread/ThreadReplyPanel.tsx` — Inline reply panel with quoted message preview, ChatEditor input, cancel/send actions
+- `apps/web/src/components/thread/ThreadSearchBar.tsx` — In-thread search with match highlighting, prev/next navigation, result count
+- `apps/web/src/components/thread/PinnedMessagesPanel.tsx` — Slide-over panel listing pinned messages with unpin action and jump-to-message
+- `apps/web/src/components/thread/ThreadNavDropdown.tsx` — Hierarchical dropdown for parent/current/sibling/child record navigation with unread indicators
+- `apps/web/src/components/thread/use-thread-search.ts` — useThreadSearch() hook: debounced query, match positions, active match cycling, scroll-to-match
+- `apps/web/src/components/thread/use-typing-indicator.ts` — useTypingIndicator() hook: Socket.IO typing events, debounced broadcast, typingUsers list
+- `apps/web/src/components/chat/DMConversation.tsx` — DM/group DM conversation view with message list, typing indicator, chat editor, failed message retry
+- `apps/web/src/components/chat/GroupDMHeader.tsx` — Editable group name, participant avatars (3–8 cap), add participant button, settings icon
+- `apps/web/src/components/chat/MessageErrorHandler.tsx` — Failed message error cards with retry (3 attempts with exponential delay) and dismiss
+- `apps/web/src/components/thread/__tests__/thread-prompt15.test.tsx` — Tests for ThreadMessageList, ThreadReplyPanel, ThreadSearchBar, PinnedMessagesPanel
+- `apps/web/src/components/thread/__tests__/thread-prompt16.test.tsx` — Tests for DMConversation, GroupDMHeader, ThreadNavDropdown, RecordView thread integration
+
+### Files Modified
+- `apps/web/src/components/record-view/RecordView.tsx` — Added thread panel slot (25% width right panel), main content shrinks to 75% when thread open
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Chat icon (MessageCircle) with teal unread badge (99+ cap), toggle thread open/close
+- `apps/web/src/components/record-view/__tests__/RecordView.test.tsx` — Updated stale test: old placeholder label → new i18n aria-label
+- `apps/web/src/components/thread/RecordThreadPanel.tsx` — Extended shell with ThreadMessageList, ThreadReplyPanel, ThreadSearchBar, PinnedMessagesPanel integration
+- `apps/web/src/actions/thread-queries.ts` — Added searchThreadMessagesAction, pinMessageAction, unpinMessageAction, getPinnedMessagesAction
+- `apps/web/messages/en.json` — Added thread search, pinned messages, DM, group DM, error handler i18n keys
+- `apps/web/messages/es.json` — Added thread search, pinned messages, DM, group DM, error handler i18n keys (Spanish)
+- `apps/web/package.json` — Added dependencies for Prompts 15–16 components
+- `pnpm-lock.yaml` — Updated lockfile
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None (all terms already in GLOSSARY.md)
+
+### Notes
+- Verification fixes: removed unused beforeEach import (lint), added eslint-disable for img element in GroupDMHeader avatars, updated stale RecordView test aria-label.
+- All 5 interface contracts verified: thread components, chat components, hooks, chat icon + badge, thread panel slot.
+
+---
+
+## Session H — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompt 14 (Unit 5: RecordThreadPanel shell, tabs, lenses, useThread hook)
+
+### Files Created
+- `apps/web/src/components/thread/use-thread.ts` — useThread() hook: TanStack Query infinite query + Socket.IO subscriptions for message:new/edit/delete, mark-as-read, send/edit/delete actions
+- `apps/web/src/components/thread/RecordThreadPanel.tsx` — 25% width panel with ThreadTabBar, ThreadLensBar, message list, ChatEditor input; opens from RecordView header chat icon
+- `apps/web/src/components/thread/ThreadTabBar.tsx` — Two tabs: "Team Notes" (internal, always) + "Client Messages" (client, when enabled); teal underline active indicator
+- `apps/web/src/components/thread/ThreadLensBar.tsx` — Four lens filter buttons: All | Notes | Activity | Files
+- `apps/web/src/components/thread/ClientVisibleBanner.tsx` — Persistent amber warning banner above chat input in client thread tab
+- `apps/web/src/components/thread/SharedNoteMessage.tsx` — Visual wrapper: 📝 icon, 3px teal left border, muted bg, inset container
+- `apps/web/src/actions/thread-queries.ts` — Server actions: getMessagesAction, markThreadReadAction, getUnreadCountAction
+- `apps/web/src/components/thread/__tests__/thread-components.test.tsx` — 12 tests: ThreadTabBar, ThreadLensBar, ClientVisibleBanner, SharedNoteMessage
+- `apps/web/src/components/thread/__tests__/use-thread.test.ts` — 8 tests: message loading, null threadId, lensFilter, mark-read, socket subscribe/join, real-time append, own-message filter, hasMore
+
+### Files Modified
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Wired chat icon: added isThreadOpen, onToggleThread props; replaced disabled placeholder with functional toggle button with aria-pressed
+- `apps/web/messages/en.json` — Added `thread` i18n namespace (17 keys); updated `record_view.chat_placeholder` → `record_view.toggle_thread`
+- `apps/web/messages/es.json` — Added `thread` i18n namespace (17 keys, Spanish); updated `record_view.chat_placeholder` → `record_view.toggle_thread`
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- None (all terms already in GLOSSARY.md)
+
+### Notes
+- RecordThreadPanel accepts pre-resolved thread IDs (internalThreadId, clientThreadId) — thread lookup via getThreadByScope is done by the parent (RecordView integration in Prompt 15).
+- useThread uses injectable fetchMessages/markRead for testability without server action mocking.
+
+---
+
+## Session D — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 11–13 (Unit 4: Chat Editor — TipTap Env 1)
+
+### Files Created
+- `apps/web/src/components/chat/types.ts` — ChatEditorConfig, ChatEditorInstance, MentionSuggestion, ChatEditorState types
+- `apps/web/src/components/chat/extensions.ts` — createChatEditorExtensions() factory, CHAT_EDITOR_EXTENSION_NAMES, CHAT_EDITOR_EXCLUDED_EXTENSIONS
+- `apps/web/src/components/chat/use-chat-editor.ts` — useChatEditor() hook with 3-state machine (Compact/Focused/Expanded)
+- `apps/web/src/components/chat/ChatEditor.tsx` — Main chat editor with progressive disclosure, drag-drop attachments, mention dropdown
+- `apps/web/src/components/chat/ChatEditorToolbar.tsx` — BubbleMenu toolbar with 6 formatting actions
+- `apps/web/src/components/chat/MentionDropdown.tsx` — @mention autocomplete with fuzzy filtering, person/group sections
+- `apps/web/src/components/chat/ChatAttachmentButton.tsx` — Paperclip attachment button with file picker and preview
+- `apps/web/src/components/chat/MessageRenderer.tsx` — Read-only TipTap JSON → styled HTML renderer (no editor instances)
+- `apps/web/src/components/chat/MessageItem.tsx` — Single message display with avatar, hover menu, inline edit mode
+- `apps/web/src/components/chat/EmojiReactions.tsx` — Reaction chips below messages with toggle and add button
+- `apps/web/src/components/chat/EmojiPicker.tsx` — emoji-mart wrapper in shadcn/ui Popover
+- `apps/web/src/components/chat/__tests__/extensions.test.ts` — 14 tests for TipTap extension config
+- `apps/web/src/components/chat/__tests__/use-chat-editor.test.ts` — 13 tests for useChatEditor hook
+- `apps/web/src/components/chat/__tests__/ChatEditor.test.tsx` — 28 tests for ChatEditor component
+- `apps/web/src/components/chat/__tests__/MessageRenderer.test.tsx` — 16 tests for MessageRenderer
+- `apps/web/src/components/chat/__tests__/MessageItem.test.tsx` — 15 tests for MessageItem
+- `apps/web/src/components/chat/__tests__/EmojiReactions.test.tsx` — 8 tests for EmojiReactions
+- `apps/web/src/components/chat/__tests__/EmojiPicker.test.tsx` — 4 tests for EmojiPicker
+
+### Files Modified
+- `apps/web/package.json` — Added @tiptap/react, @tiptap/starter-kit, @tiptap/core, @tiptap/extension-mention, @tiptap/extension-link, @tiptap/extension-placeholder, @tiptap/extension-underline, @tiptap/extension-bubble-menu, @tiptap/pm, emoji-mart, @emoji-mart/react, @emoji-mart/data
+- `apps/web/messages/en.json` — Added chatEditor, chat.messageItem, chat.emojiReactions, chat.emojiPicker i18n namespaces
+- `apps/web/messages/es.json` — Added chatEditor, chat.messageItem, chat.emojiReactions, chat.emojiPicker i18n namespaces (Spanish)
+- `pnpm-lock.yaml` — Updated lockfile with TipTap and emoji-mart dependencies
+- `scripts/check-i18n.ts` — Added `/lib/email/templates/` to EXCLUDED_PATHS (React Email templates are server-rendered outside next-intl)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `chatEditorExtensions` — TipTap Environment 1 extension configuration (chat, not docs). 12 named extensions
+- `ChatEditorState` — 3-state machine: compact (single-line), focused (active with actions), expanded (paragraph mode)
+- `ReactionsMap` — JSONB shape type: `Record<string, string[]>` mapping emoji → user IDs
+
+### Notes
+- Verification fixes: (1) Disabled link/underline in StarterKit (TipTap v3 bundles them, causing duplicates), (2) Fixed CHAT_EDITOR_EXTENSION_NAMES to use `undoRedo` (actual TipTap name, not `history`), (3) Excluded email templates from i18n check.
+- MessageRenderer avoids creating TipTap editor instances — uses pure recursive React element rendering for performance.
+
+---
+
+## Session G — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** built
+**Prompt(s):** Prompt 13 (Unit 4: MessageRenderer, MessageItem, EmojiReactions, EmojiPicker)
+
+### Files Created
+- `apps/web/src/components/chat/MessageRenderer.tsx` — Read-only TipTap JSON → styled HTML renderer (no editor instances). Renders: bold, italic, underline, strike, code, link, bullet list, ordered list, blockquote, mention pill (teal @Name), hard break.
+- `apps/web/src/components/chat/MessageItem.tsx` — Single message display: avatar (initials fallback), author name, timestamp, content (via MessageRenderer), hover menu (Edit/Delete/Pin/Save/Reply), inline edit mode with ChatEditor, "(edited)" indicator, deleted placeholder, system message (centered, muted).
+- `apps/web/src/components/chat/EmojiReactions.tsx` — Reaction chips below message: emoji + count + active highlight, click to toggle, "+" button opens EmojiPicker.
+- `apps/web/src/components/chat/EmojiPicker.tsx` — emoji-mart wrapper in shadcn/ui Popover: categories, search, skin tone selector.
+- `apps/web/src/components/chat/__tests__/MessageRenderer.test.tsx` — 16 tests: all mark types, lists, blockquote, mention pill, combined marks, hard break, empty doc, no contenteditable.
+- `apps/web/src/components/chat/__tests__/MessageItem.test.tsx` — 15 tests: avatar/name/timestamp, hover menu visibility, edit mode toggle, "(edited)" indicator, deleted placeholder, system message, callback invocations, pin/unpin text.
+- `apps/web/src/components/chat/__tests__/EmojiReactions.test.tsx` — 8 tests: chip rendering, active state, toggle callback, add reaction button, empty reactions, filtered empty arrays.
+- `apps/web/src/components/chat/__tests__/EmojiPicker.test.tsx` — 4 tests: popover rendering, config pass-through, emoji selection callback, trigger rendering.
+
+### Files Modified
+- `apps/web/messages/en.json` — Added `chat.messageItem`, `chat.emojiReactions`, `chat.emojiPicker` i18n namespaces
+- `apps/web/messages/es.json` — Added `chat.messageItem`, `chat.emojiReactions`, `chat.emojiPicker` i18n namespaces (Spanish)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `ThreadMessage` — TypeScript interface for message data consumed by MessageItem (id, content, reactions, is_edited, is_deleted, message_type)
+- `ReactionsMap` — JSONB shape type: `Record<string, string[]>` mapping emoji → user IDs
+
+### Notes
+- MessageRenderer deliberately avoids creating TipTap editor instances — uses pure recursive React element rendering for performance (200 messages = 200 HTML renders, not 200 editors).
+- MessageItem hover menu uses Radix DropdownMenu. Edit/Delete only shown for own messages. System messages render as centered muted text with no interaction affordances.
+- EmojiPicker wraps emoji-mart with `searchPosition="sticky"`, `skinTonePosition="search"`, `previewPosition="none"`, native emoji set.
+
+---
+
+## Session F — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** built
+**Prompt(s):** Prompt 12 (Unit 4: ChatEditor Component with Toolbar, Mentions, Attachments)
+
+### Files Created
+- `apps/web/src/components/chat/ChatEditor.tsx` — Main chat editor component with 3-state progressive disclosure (Compact/Focused/Expanded), drag-drop attachment support, mention dropdown integration
+- `apps/web/src/components/chat/ChatEditorToolbar.tsx` — Bubble toolbar on text selection (BubbleMenu) with 6 formatting actions: B, I, U, Link, Bullets, Numbers
+- `apps/web/src/components/chat/MentionDropdown.tsx` — @mention autocomplete dropdown with fuzzy filtering, person/group sections, arrow key navigation, teal pill rendering via TipTap Mention extension
+- `apps/web/src/components/chat/ChatAttachmentButton.tsx` — Paperclip attachment button with file picker, image thumbnails, file icon + name + size preview, remove functionality
+- `apps/web/src/components/chat/__tests__/ChatEditor.test.tsx` — 28 tests: 3 editor states, toolbar buttons/labels, mention dropdown rendering/filtering/selection, attachment button/preview/removal, drag-drop
+
+### Files Modified
+- `apps/web/src/components/chat/types.ts` — Added MentionDropdownState, ChatMentionSuggestionConfig types; added `type` field to MentionSuggestion; added mentionSuggestion to ChatEditorConfig
+- `apps/web/src/components/chat/extensions.ts` — Fixed Link/Underline as separate imports (not bundled in StarterKit v3); added mentionSuggestion pass-through to Mention.configure; fixed extension names list
+- `apps/web/src/components/chat/use-chat-editor.ts` — Pass mentionSuggestion from config to createChatEditorExtensions
+- `apps/web/package.json` — Added @tiptap/extension-bubble-menu dependency
+- `pnpm-lock.yaml` — Updated lockfile
+- `apps/web/messages/en.json` — Added chatEditor i18n namespace (placeholder, send, cancel, expand, collapse, attach, toolbar labels)
+- `apps/web/messages/es.json` — Added chatEditor i18n namespace (Spanish translations)
+
+### Schema Changes
+- None
+
+### Notes
+- Fixed bug in extensions.ts from Prompt 11: Link and Underline were listed in extension names but not actually imported/registered (StarterKit v3 doesn't bundle them). Now imported from @tiptap/extension-link and @tiptap/extension-underline respectively.
+- BubbleMenu is in @tiptap/react/menus (not @tiptap/react) in TipTap v3. Uses Floating UI `options` prop instead of deprecated `tippyOptions`.
+- Mention suggestion uses ref-bridge pattern: TipTap's imperative suggestion callbacks update React state via refs, MentionDropdown exposes onKeyDown via useImperativeHandle.
+
+---
+
+## Session E — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** built
+**Prompt(s):** Prompt 11 (Unit 4: TipTap Extension Config + useChatEditor Hook)
+
+### Files Created
+- `apps/web/src/components/chat/types.ts` — ChatEditorConfig, ChatEditorInstance, MentionSuggestion, ChatEditorState types
+- `apps/web/src/components/chat/extensions.ts` — createChatEditorExtensions() factory, CHAT_EDITOR_EXTENSION_NAMES, CHAT_EDITOR_EXCLUDED_EXTENSIONS constants
+- `apps/web/src/components/chat/use-chat-editor.ts` — useChatEditor() hook with 3-state machine (Compact/Focused/Expanded), keyboard shortcuts, TipTap integration
+- `apps/web/src/components/chat/__tests__/extensions.test.ts` — 14 tests: extension list verification, excluded extensions, link/mention config, markdown shortcuts
+- `apps/web/src/components/chat/__tests__/use-chat-editor.test.ts` — 13 tests: state machine transitions, send behavior, keyboard extension, types shape
+
+### Files Modified
+- `apps/web/package.json` — Added @tiptap/react, @tiptap/starter-kit, @tiptap/core, @tiptap/extension-mention, @tiptap/extension-link, @tiptap/extension-placeholder, @tiptap/extension-underline, @tiptap/pm, emoji-mart, @emoji-mart/react, @emoji-mart/data
+- `pnpm-lock.yaml` — Updated lockfile with TipTap and emoji-mart dependencies
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `chatEditorExtensions` — TipTap Environment 1 extension configuration (chat, not docs). 12 named extensions: bold, italic, underline, strike, code, bulletList, orderedList, blockquote, link, mention, placeholder, undoRedo
+- `ChatEditorState` — 3-state machine: compact (single-line), focused (active with actions), expanded (paragraph mode)
+- `chatKeyboard` — Custom TipTap extension handling Enter/Shift+Enter/Cmd+Enter/Escape/ArrowUp per state
+
+---
+
+## Session D — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** passed-review
+**Prompt(s):** Prompts 8–10 (Unit 3: Presence & Real-Time Chat Infrastructure)
+
+### Files Created
+- `apps/realtime/src/handlers/chat-handler.ts` — ChatHandler: thread:join, thread:leave, typing:start, typing:stop listeners + message broadcast
+- `apps/realtime/src/handlers/presence-handler.ts` — PresenceHandler: presence:heartbeat, presence:update, presence:status listeners + disconnect cleanup
+- `apps/realtime/src/handlers/notification-handler.ts` — NotificationHandler: subscribes to user:{userId}:notifications Redis channel, DND suppression
+- `apps/realtime/src/subscribers/chat-event-subscriber.ts` — Redis pub/sub subscriber bridging chat events to Socket.IO rooms
+- `apps/web/src/lib/realtime/chat-events.ts` — publishChatEvent() for message:new/edit/delete via Redis pub/sub
+- `apps/web/src/lib/realtime/notification-events.ts` — publishNotificationEvent() to user:{userId}:notifications channel
+- `apps/realtime/src/handlers/__tests__/chat-handler.test.ts` — Unit tests for ChatHandler
+- `apps/realtime/src/handlers/__tests__/presence-handler.test.ts` — Unit tests for PresenceHandler
+- `apps/realtime/src/handlers/__tests__/notification-handler.test.ts` — Unit tests for NotificationHandler
+- `apps/realtime/src/subscribers/__tests__/chat-event-subscriber.test.ts` — Unit tests for chat event subscriber
+- `apps/web/src/lib/realtime/__tests__/chat-events.test.ts` — Unit tests for publishChatEvent (9 tests)
+- `apps/web/src/lib/realtime/__tests__/notification-events.test.ts` — Unit tests for publishNotificationEvent (6 tests)
+
+### Files Modified
+- `apps/realtime/src/server.ts` — Registered ChatHandler, PresenceHandler, NotificationHandler
+- `apps/web/src/actions/threads.ts` — Wired publishChatEvent into message create/edit/delete actions
+- `apps/web/src/lib/notifications/notification-service.ts` — Wired publishNotificationEvent into delivery routing
+- `packages/shared/realtime/events.ts` — Added MESSAGE_NEW, MESSAGE_EDIT, MESSAGE_DELETE, NOTIFICATION_NEW, TYPING_START, TYPING_STOP events
+- `packages/shared/realtime/__tests__/types.test.ts` — Updated tests for new event constants
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `ChatHandler` — Socket.IO handler for thread join/leave and typing events, with message broadcast via Redis pub/sub
+- `PresenceHandler` — Socket.IO handler for heartbeat, status updates, and disconnect cleanup
+- `NotificationHandler` — Socket.IO handler subscribing to per-user Redis notification channels with DND bypass logic
+- `ChatEventSubscriber` — Redis pub/sub subscriber that bridges chat events from the web app to Socket.IO rooms
+
+---
+
+## Session C — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** built
+**Prompt(s):** Prompt 8 (Unit 3: PresenceService — Redis Heartbeat + Custom Status)
+
+### Files Created
+- `apps/realtime/src/types/chat.ts` — Shared types for chat/presence/notification events (ChatPresenceState, PresenceEntry, ChatEvent, TypingEvent)
+- `apps/realtime/src/services/presence-service.ts` — PresenceService class with Redis-backed presence state (setPresence, getPresence, heartbeat, getUserStatus, removePresence)
+- `apps/web/src/data/presence.ts` — Custom status CRUD data functions (updateCustomStatus, getCustomStatus, clearExpiredStatuses)
+- `apps/realtime/src/services/__tests__/presence-service.test.ts` — 21 unit tests for PresenceService (TTL, heartbeat, DND, tenant isolation, SCAN pagination)
+- `apps/web/src/data/__tests__/presence.test.ts` — 9 integration tests for custom status CRUD (CRUD, expiry cleanup, tenant isolation)
+
+### Files Modified
+- None
+
+### Files Deleted
+- None
+
+### Schema Changes
+- None (custom status columns already exist on workspace_memberships: status_emoji, status_text, status_clear_at)
+
+### New Domain Terms
+- `ChatPresenceState` — string type for chat presence states (online, away, dnd, offline); distinct from existing `PresenceState` in `packages/shared/realtime/types.ts` which is for grid collaboration presence
+
+---
+
+## Session A — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** passed-review
+**Prompt(s):** Prompts 1–4 (Unit 1: Schema Migration & Thread/Message Data Layer)
+
+### Files Created
+- `packages/shared/db/migrations/0025_add_user_notes_and_source_note_id.sql` — Migration adding user_notes table and source_note_id FK column to thread_messages
+- `packages/shared/db/schema/user-notes.ts` — Drizzle schema for user_notes table
+- `apps/web/src/data/threads.ts` — Thread CRUD: createThread, getThread, getThreadByScope, listThreadsForUser, getOrCreateDMThread, createGroupDM
+- `apps/web/src/data/thread-messages.ts` — Message CRUD: createMessage, getMessage, listMessages, updateMessage, softDeleteMessage, pinMessage, unpinMessage, getPinnedMessages, searchThreadMessages
+- `apps/web/src/data/thread-participants.ts` — Participant CRUD: addParticipant, removeParticipant, getParticipants, updateLastRead
+- `apps/web/src/data/saved-messages.ts` — Saved message CRUD: saveMessage, unsaveMessage, getSavedMessages
+- `apps/web/src/actions/threads.ts` — Server actions for thread/message/participant/saved-message operations
+- `apps/web/src/data/__tests__/thread-comms.integration.test.ts` — Integration tests for all thread, message, participant, and saved-message data functions
+- `packages/shared/testing/factories/threads.ts` — Test factories: createTestThread, createTestThreadMessage, createTestThreadParticipant
+- `docs/Playbooks/Phase 3/prompting-roadmap-phase-3c.md` — Phase 3C prompting roadmap
+- `docs/Playbooks/Phase 3/prompting-roadmap-phase-3c.docx` — Phase 3C prompting roadmap (Word format)
+
+### Files Modified
+- `packages/shared/db/schema/thread-messages.ts` — Added source_note_id column (UUID, nullable, FK → user_notes)
+- `packages/shared/db/schema/index.ts` — Added user-notes schema export
+- `packages/shared/db/migrations/meta/_journal.json` — Added entry for migration 0025
+- `packages/shared/db/index.ts` — Added re-exports for user_notes, thread-related types
+- `packages/shared/testing/index.ts` — Added barrel export for thread factories
+- `TASK-STATUS.md` — Updated Unit 1 status
+
+### Schema Changes
+- Added table: `user_notes` — Stores shared notes that can be referenced by thread messages
+- Added column: `thread_messages.source_note_id` — UUID, nullable, FK → user_notes(id), links a message to its source note
+
+### New Domain Terms Introduced
+- None (thread, message, participant, saved message already in GLOSSARY)
+
+## Session B — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-15
+**Status:** passed-review
+**Prompt(s):** Prompts 5–7 (Unit 2: Notification Pipeline & System Email)
+
+### Files Created
+- `packages/shared/db/migrations/0026_extend_notifications_schema.sql` — Migration adding missing columns to notifications table (title, body, source_type, source_record_id, actor_id, group_key, read_at)
+- `apps/web/src/data/notifications.ts` — Notification CRUD: createNotification, getNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead (Redis-cached unread count)
+- `apps/web/src/lib/notifications/notification-service.ts` — NotificationService class with create() method: inserts notification, checks preferences, routes to in-app (Redis pub/sub) and/or email (BullMQ enqueue)
+- `apps/web/src/data/__tests__/notifications.integration.test.ts` — Integration tests: tenant isolation, CRUD, pagination, unread count, mark-read
+- `apps/web/src/lib/notifications/__tests__/notification-service.test.ts` — Unit tests: routing logic, 8 notification types, priority override, mute suppression, error handling
+- `apps/web/src/lib/email/resend-service.ts` — ResendEmailService wrapping Resend SDK with rate limiting, retry, and structured logging
+- `apps/web/src/lib/email/__tests__/resend-service.test.ts` — Unit tests for ResendEmailService
+- `apps/worker/src/processors/notification/notification-router.ts` — BullMQ notification router processor dispatching to email-send and cleanup sub-processors
+- `apps/worker/src/processors/notification/email-send.ts` — Email send processor using ResendEmailService with template resolution
+- `apps/worker/src/processors/notification/cleanup.ts` — Notification cleanup processor for purging old read notifications
+- `apps/worker/src/processors/notification/__tests__/notification-router.test.ts` — Unit tests for notification router
+- `apps/worker/src/processors/notification/__tests__/email-send.test.ts` — Unit tests for email send processor
+- `apps/worker/src/processors/notification/__tests__/cleanup.test.ts` — Unit tests for cleanup processor
+- `apps/web/src/data/notification-preferences.ts` — Notification preferences CRUD: getPreferences, updatePreferences, muteThread, unmuteThread
+- `apps/web/src/data/__tests__/notification-preferences.integration.test.ts` — Integration tests for notification preferences
+- `apps/web/src/actions/notifications.ts` — Server actions for notification operations (mark read, update preferences, mute/unmute)
+- `apps/web/src/actions/__tests__/notifications.test.ts` — Unit tests for notification server actions
+- `apps/web/src/lib/email/templates/invitation-email.tsx` — React Email invitation template
+- `apps/web/src/lib/email/templates/system-alert-email.tsx` — React Email system alert template
+- `apps/web/src/lib/email/templates/client-thread-reply-email.tsx` — React Email client thread reply template
+- `apps/web/src/lib/email/templates/index.ts` — Template barrel export
+- `apps/web/src/lib/email/__tests__/templates.test.tsx` — Snapshot tests for email templates
+- `apps/worker/src/processors/notification/email-templates.ts` — Email template resolver mapping notification types to React Email templates
+- `apps/worker/src/processors/notification/__tests__/email-templates.test.ts` — Unit tests for email template resolver
+
+### Files Modified
+- `packages/shared/db/schema/notifications.ts` — Added columns: title, body, sourceType, sourceRecordId, actorId, groupKey, readAt; added actor relation
+- `packages/shared/db/index.ts` — Added notifications, userNotificationPreferences table/type exports
+- `packages/shared/db/migrations/meta/_journal.json` — Added entry for migration 0026
+- `packages/shared/queue/constants.ts` — Added 'notification' queue name
+- `packages/shared/queue/types.ts` — Added NotificationEmailSendJobData, NotificationCleanupJobData interfaces and notification queue mapping; updated for template data
+- `packages/shared/queue/index.ts` — Added notification job type exports
+- `packages/shared/queue/__tests__/constants.test.ts` — Updated for new queue name
+- `apps/web/package.json` — Added @react-email/components, react-email dependencies
+- `apps/worker/package.json` — Added resend dependency
+- `apps/worker/src/index.ts` — Registered notification processors
+- `apps/web/src/__tests__/auth-flow.integration.test.ts` — Test fixes for verification pass
+- `apps/web/src/__tests__/role-check.integration.test.ts` — Test fixes for verification pass
+- `apps/web/src/__tests__/webhook-user-created.integration.test.ts` — Test fixes for verification pass
+- `pnpm-lock.yaml` — Updated lockfile
+
+### Schema Changes
+- Extended table: `notifications` — Added columns: title (VARCHAR 255), body (VARCHAR 500 nullable), source_type (VARCHAR 50), source_record_id (UUID), actor_id (UUID FK → users), group_key (VARCHAR 255), read_at (TIMESTAMPTZ)
+- Added index: `notifications_group_key_created_idx` on (group_key, created_at) WHERE group_key IS NOT NULL
+- Added index: `notifications_user_tenant_created_idx` on (user_id, tenant_id, created_at DESC)
+
+### New Domain Terms Introduced
+- `NotificationService` — Service class that orchestrates notification creation and delivery routing (in-app via Redis pub/sub, email via BullMQ)
+- `NotificationType` — 8 notification categories: mention, dm, thread_reply, approval_requested, approval_decided, automation_failed, sync_error, system
+- `ResendEmailService` — Wrapper around Resend SDK providing rate limiting, retry, and structured logging for transactional email
+
+---
+
+## Session F — Phase 3C — build/3c-comms
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 17–19 (Unit 6: Notification UI & Chat Quick Panel)
+
+### Files Created
+- `apps/web/src/components/notifications/NotificationBell.tsx` — Bell icon button with real-time unread badge, opens NotificationTray
+- `apps/web/src/components/notifications/NotificationTray.tsx` — Popover tray displaying grouped notifications with mark-all-read and load-more
+- `apps/web/src/components/notifications/NotificationItem.tsx` — Single notification row with click handler and relative timestamp
+- `apps/web/src/components/notifications/NotificationGroup.tsx` — Grouped notifications with expand/collapse
+- `apps/web/src/components/notifications/use-notifications.ts` — useNotifications hook: notifications array, unread count, loading state, mutation callbacks
+- `apps/web/src/components/notifications/notification-grouping.ts` — Notification grouping logic by group_key
+- `apps/web/src/components/notifications/index.ts` — Barrel export for notification components and hook
+- `apps/web/src/components/notifications/__tests__/NotificationBell.test.tsx` — 10 tests for NotificationBell
+- `apps/web/src/components/notifications/__tests__/use-notifications.test.ts` — 5 tests for useNotifications hook
+- `apps/web/src/components/notifications/__tests__/notification-grouping.test.ts` — 7 tests for notification grouping logic
+- `apps/web/src/components/chat/ChatQuickPanel.tsx` — Sidebar conversation list with infinite scroll and real-time Socket.IO updates
+- `apps/web/src/components/chat/ChatQuickPanelItem.tsx` — Conversation row with avatar, unread badge, last message preview, relative timestamp
+- `apps/web/src/components/chat/__tests__/ChatQuickPanel.test.tsx` — 13 tests for ChatQuickPanel
+- `apps/web/src/components/presence/PresenceIndicator.tsx` — Colored dot indicator (online/away/dnd/offline) with size variants
+- `apps/web/src/components/presence/CustomStatusDisplay.tsx` — Inline emoji + text display with truncation
+- `apps/web/src/components/presence/CustomStatusEditor.tsx` — Popover editor with EmojiPicker, auto-clear options
+- `apps/web/src/components/presence/use-presence.ts` — usePresence hook: presence map, idle detection, heartbeat, Socket.IO subscriptions
+- `apps/web/src/components/presence/index.ts` — Barrel export for presence components and hook
+- `apps/web/src/components/presence/__tests__/presence.test.tsx` — 20 tests for presence components and hook
+- `apps/web/src/actions/notification-queries.ts` — Server-side notification query actions
+- `apps/web/src/actions/presence.ts` — Server actions for presence and custom status operations
+
+### Files Modified
+- `apps/web/src/components/layout/header.tsx` — Integrated NotificationBell into workspace header
+- `apps/web/src/components/layout/sidebar.tsx` — Integrated ChatQuickPanel into sidebar content zone
+- `apps/web/src/stores/sidebar-store.ts` — Added chat panel visibility state
+- `apps/web/src/actions/threads.ts` — Extended with thread list query for ChatQuickPanel
+- `apps/web/src/components/chat/GroupDMHeader.tsx` — Updated with presence indicator integration
+- `apps/web/src/components/chat/MentionDropdown.tsx` — Updated with presence dots on user entries
+- `apps/web/src/components/chat/MessageItem.tsx` — Updated with presence-aware author avatars
+- `apps/web/messages/en.json` — Added notifications, presence, chatQuickPanel i18n namespaces
+- `apps/web/messages/es.json` — Added notifications, presence, chatQuickPanel i18n namespaces (Spanish)
+
+### Schema Changes
+- None
+
+### New Domain Terms Introduced
+- `NotificationBell` — Header component showing unread notification count with real-time badge updates
+- `NotificationTray` — Popover UI displaying grouped notifications with mark-all-read action
+- `ChatQuickPanel` — Sidebar panel showing recent conversations (threads + DMs) with unread indicators
+- `PresenceIndicator` — Visual dot component showing user online/away/dnd/offline state
+- `CustomStatusEditor` — Popover UI for setting emoji + text custom status with auto-clear scheduling
 
 ---
 

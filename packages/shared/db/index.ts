@@ -35,7 +35,7 @@ export type {
   GeneratedApiKey,
   ApiKeyCreateInput,
 } from './api-key-utils';
-export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc, count } from 'drizzle-orm';
+export { eq, and, or, sql, inArray, isNull, isNotNull, desc, asc, count, lt } from 'drizzle-orm';
 export type { SQL } from 'drizzle-orm';
 export { buildSearchVector, extractSearchableText } from './search';
 export type { SearchFieldDefinition } from './search';
@@ -86,6 +86,12 @@ export {
   crossLinkIndexRelations,
   threads,
   threadsRelations,
+  threadParticipants,
+  threadParticipantsRelations,
+  threadMessages,
+  threadMessagesRelations,
+  userSavedMessages,
+  userSavedMessagesRelations,
   files,
   filesRelations,
   apiKeys,
@@ -123,6 +129,10 @@ export {
   userRecentItemsRelations,
   commandBarSessions,
   commandBarSessionsRelations,
+  notifications,
+  notificationsRelations,
+  userNotificationPreferences,
+  userNotificationPreferencesRelations,
 } from './schema';
 export type {
   User, NewUser,
@@ -139,6 +149,8 @@ export type {
   CrossLink, NewCrossLink,
   CrossLinkIndex, NewCrossLinkIndex,
   Thread, NewThread,
+  ThreadParticipant, NewThreadParticipant,
+  ThreadMessage, NewThreadMessage,
   FileRecord, NewFileRecord,
   ApiKey, NewApiKey,
   AuditLog, NewAuditLog,
@@ -158,4 +170,7 @@ export type {
   Section, NewSection,
   UserRecentItem, NewUserRecentItem,
   CommandBarSession, NewCommandBarSession,
+  UserSavedMessage, NewUserSavedMessage,
+  Notification, NewNotification,
+  UserNotificationPreference, NewUserNotificationPreference,
 } from './schema';

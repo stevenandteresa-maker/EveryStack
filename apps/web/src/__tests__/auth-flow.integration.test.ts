@@ -4,14 +4,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Hoisted mock state — shared between vi.mock factories and tests
 // ---------------------------------------------------------------------------
 
-const { mockClerkAuth, mockDbRead, setDbReadResults } = vi.hoisted(() => {
+const {
+  mockClerkAuth,
+  mockGetEffectiveMemberships,
+  mockGetEffectiveMembershipForTenant,
+  mockDbRead,
+  setDbReadResults,
+} = vi.hoisted(() => {
   const clerkAuth = vi.fn();
+  const getEffectiveMemberships = vi.fn();
+  const getEffectiveMembershipForTenant = vi.fn();
 
   let callIndex = 0;
   let results: Record<string, unknown>[][] = [];
 
   function createSelectChain(queryResults: Record<string, unknown>[]) {
-    // Thenable + .limit() — handles both `await .where()` and `await .where().limit()`
     const thenable = {
       then: (
         onFulfilled: (v: unknown) => unknown,
@@ -36,6 +43,8 @@ const { mockClerkAuth, mockDbRead, setDbReadResults } = vi.hoisted(() => {
 
   return {
     mockClerkAuth: clerkAuth,
+    mockGetEffectiveMemberships: getEffectiveMemberships,
+    mockGetEffectiveMembershipForTenant: getEffectiveMembershipForTenant,
     mockDbRead: dbRead,
     setDbReadResults: (newResults: Record<string, unknown>[][]) => {
       callIndex = 0;
@@ -66,11 +75,20 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-vi.mock('../../../../packages/shared/db/client', () => ({
-  db: {},
-  dbRead: mockDbRead,
-  getDbForTenant: vi.fn(() => ({})),
-}));
+// Mock @everystack/shared/db at the barrel level — covers both
+// tenant-resolver.ts (uses dbRead) and effective-memberships.ts
+// (uses getEffectiveMemberships / getEffectiveMembershipForTenant).
+vi.mock('@everystack/shared/db', async (importOriginal) => {
+  const original = await importOriginal<Record<string, unknown>>();
+  return {
+    ...original,
+    db: {},
+    dbRead: mockDbRead,
+    getDbForTenant: vi.fn(() => ({})),
+    getEffectiveMemberships: mockGetEffectiveMemberships,
+    getEffectiveMembershipForTenant: mockGetEffectiveMembershipForTenant,
+  };
+});
 
 vi.mock('@everystack/shared/logging', () => ({
   webLogger: {
@@ -109,17 +127,23 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       orgId: 'org_xyz',
     });
 
-    // DB queries (4 sequential calls):
+    // DB queries (2 direct dbRead calls):
     // 1. resolveUser: find user by clerkId
-    // 2. resolveUserTenants → getEffectiveMemberships: all accessible tenants
-    // 3. resolveTenant: find tenant by clerkOrgId
-    // 4. resolveUserAccess → getEffectiveMembershipForTenant: verify access
+    // 2. resolveTenant: find tenant by clerkOrgId
     setDbReadResults([
       [{ id: 'int_user_001' }],
-      [{ tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null }],
       [{ id: 'int_tenant_001' }],
-      [{ tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null }],
     ]);
+
+    // Effective membership mocks:
+    // resolveUserTenants → getEffectiveMemberships
+    mockGetEffectiveMemberships.mockResolvedValue([
+      { tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_001' },
+    ]);
+    // resolveUserAccess → getEffectiveMembershipForTenant
+    mockGetEffectiveMembershipForTenant.mockResolvedValue(
+      { tenantId: 'int_tenant_001', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_001' },
+    );
 
     const context = await getAuthContext();
 
@@ -137,17 +161,19 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       orgId: undefined,
     });
 
-    // DB queries (4 sequential calls):
-    // 1. resolveUser: find user
-    // 2. resolveUserTenants → getEffectiveMemberships: all accessible tenants
-    // 3. resolveTenant fallback → resolveUserTenants again (getEffectiveMemberships)
-    // 4. resolveUserAccess → getEffectiveMembershipForTenant: get access details
+    // DB query: resolveUser only (fallback path doesn't query tenants table)
     setDbReadResults([
       [{ id: 'int_user_solo' }],
-      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
-      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
-      [{ tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null }],
     ]);
+
+    // resolveUserTenants → getEffectiveMemberships (called twice: once in resolveUser, once in resolveTenant fallback)
+    mockGetEffectiveMemberships.mockResolvedValue([
+      { tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_solo' },
+    ]);
+    // resolveUserAccess → getEffectiveMembershipForTenant
+    mockGetEffectiveMembershipForTenant.mockResolvedValue(
+      { tenantId: 'int_tenant_solo', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_solo' },
+    );
 
     const context = await getAuthContext();
 
@@ -179,10 +205,14 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
       orgId: 'org_missing',
     });
 
+    // resolveUser finds user, then resolveTenant finds no tenant by clerkOrgId
     setDbReadResults([
       [{ id: 'int_user_x' }],
-      [{ tenantId: 'some_tenant', role: 'owner', source: 'direct', agencyTenantId: null }],
       [], // tenant not found by clerkOrgId
+    ]);
+
+    mockGetEffectiveMemberships.mockResolvedValue([
+      { tenantId: 'some_tenant', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_x' },
     ]);
 
     await expect(getAuthContext()).rejects.toThrow('Tenant not found');
@@ -196,10 +226,14 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
 
     setDbReadResults([
       [{ id: 'int_user_a' }],
-      [{ tenantId: 'int_tenant_a', role: 'owner', source: 'direct', agencyTenantId: null }],
       [{ id: 'int_tenant_b' }], // tenant B exists
-      [], // but user has no effective membership in tenant B
     ]);
+
+    mockGetEffectiveMemberships.mockResolvedValue([
+      { tenantId: 'int_tenant_a', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_user_a' },
+    ]);
+    // User has no effective membership in tenant B
+    mockGetEffectiveMembershipForTenant.mockResolvedValue(null);
 
     // Returns 404 — not 403 — to prevent tenant enumeration
     await expect(getAuthContext()).rejects.toThrow('Tenant not found');
@@ -213,13 +247,16 @@ describe('Auth flow integration: requireAuth → resolveUser → resolveTenant �
 
     setDbReadResults([
       [{ id: 'int_agency_user' }],
-      [
-        { tenantId: 'agency_tenant', role: 'owner', source: 'direct', agencyTenantId: null },
-        { tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant' },
-      ],
       [{ id: 'client_tenant' }],
-      [{ tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant' }],
     ]);
+
+    mockGetEffectiveMemberships.mockResolvedValue([
+      { tenantId: 'agency_tenant', role: 'owner', source: 'direct', agencyTenantId: null, userId: 'int_agency_user' },
+      { tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant', userId: 'int_agency_user' },
+    ]);
+    mockGetEffectiveMembershipForTenant.mockResolvedValue(
+      { tenantId: 'client_tenant', role: 'admin', source: 'agency', agencyTenantId: 'agency_tenant', userId: 'int_agency_user' },
+    );
 
     const context = await getAuthContext();
 

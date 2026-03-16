@@ -60,3 +60,8 @@ export {
   createTestCommandRegistryEntry,
   resetCommandRegistryCounter,
 } from './factories/command-registry';
+
+export {
+  createTestMessage,
+  createTestParticipant,
+} from './factories/threads';

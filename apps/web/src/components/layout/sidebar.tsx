@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import {
   Building2,
   CheckSquare,
@@ -11,12 +12,17 @@ import {
   User,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { Socket } from 'socket.io-client';
 import { cn } from '@/lib/utils';
+import { PresenceIndicator } from '@/components/presence/PresenceIndicator';
+import type { PresenceState } from '@/components/presence/use-presence';
 import { useSidebarStore } from '@/stores/sidebar-store';
 import { SidebarHeader } from '@/components/shell/SidebarHeader';
 import { TenantSwitcher } from '@/components/shell/TenantSwitcher';
 import { PortalSection } from '@/components/shell/PortalSection';
+import { ChatQuickPanel } from '@/components/chat/ChatQuickPanel';
 import type { SidebarNavigation } from '@/data/sidebar-navigation';
+import type { ThreadWithLastMessage } from '@/data/threads';
 
 // ---------------------------------------------------------------------------
 // Icon Rail Items
@@ -35,17 +41,52 @@ const ICON_RAIL_TOP = [
 
 interface SidebarProps {
   navData?: SidebarNavigation | null;
+  tenantId?: string;
+  userId?: string;
+  socket?: Socket | null;
+  onOpenRecordThread?: (thread: ThreadWithLastMessage) => void;
+  onOpenDM?: (thread: ThreadWithLastMessage) => void;
+  /** Current user's presence status for the sidebar avatar */
+  myPresenceStatus?: PresenceState;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function Sidebar({ navData }: SidebarProps) {
-  const { collapsed, toggle } = useSidebarStore();
+export function Sidebar({
+  navData,
+  tenantId,
+  userId,
+  socket,
+  onOpenRecordThread,
+  onOpenDM,
+  myPresenceStatus,
+}: SidebarProps) {
+  const { collapsed, toggle, activePanel, setActivePanel } = useSidebarStore();
   const t = useTranslations('shell.sidebar');
 
   const activeTenant = navData?.tenants.find((tenant) => tenant.isActive) ?? null;
+
+  const handleIconClick = useCallback(
+    (labelKey: string) => {
+      if (labelKey === 'chat') {
+        // Toggle: if already showing chat and expanded, collapse; otherwise open chat
+        if (activePanel === 'chat' && !collapsed) {
+          setActivePanel('nav');
+        } else {
+          setActivePanel('chat');
+          if (collapsed) toggle();
+        }
+      } else {
+        // For other icons, switch back to nav panel
+        if (activePanel !== 'nav') {
+          setActivePanel('nav');
+        }
+      }
+    },
+    [activePanel, collapsed, setActivePanel, toggle],
+  );
 
   return (
     <aside
@@ -76,8 +117,11 @@ export function Sidebar({ navData }: SidebarProps) {
                 'touch-target-lg flex items-center justify-center rounded',
                 'text-[var(--sidebar-text)] hover:bg-[var(--sidebar-bg-hover)]',
                 'transition-colors duration-150',
+                labelKey === 'chat' && activePanel === 'chat' && 'bg-[var(--sidebar-bg-hover)]',
               )}
               aria-label={t(labelKey)}
+              aria-pressed={labelKey === 'chat' ? activePanel === 'chat' : undefined}
+              onClick={() => handleIconClick(labelKey)}
             >
               <Icon size={20} className="shrink-0" />
             </button>
@@ -121,10 +165,19 @@ export function Sidebar({ navData }: SidebarProps) {
             <HelpCircle size={20} className="shrink-0" />
           </button>
 
-          {/* Avatar */}
+          {/* Avatar + Presence */}
           <div className="flex items-center justify-center py-1">
-            <div className="w-8 h-8 rounded-full bg-[var(--sidebar-bg-hover)] flex items-center justify-center shrink-0">
-              <User size={16} className="text-[var(--sidebar-text-muted)]" />
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-[var(--sidebar-bg-hover)] flex items-center justify-center shrink-0">
+                <User size={16} className="text-[var(--sidebar-text-muted)]" />
+              </div>
+              {myPresenceStatus && (
+                <PresenceIndicator
+                  status={myPresenceStatus}
+                  size="small"
+                  className="absolute -bottom-0.5 -right-0.5 ring-2 ring-[var(--sidebar-bg)]"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -136,7 +189,15 @@ export function Sidebar({ navData }: SidebarProps) {
           data-testid="sidebar-content"
           className="flex-1 min-w-0 flex flex-col overflow-y-auto border-l border-white/5 pt-2 pb-2 px-1"
         >
-          {navData ? (
+          {activePanel === 'chat' && tenantId && userId ? (
+            <ChatQuickPanel
+              tenantId={tenantId}
+              userId={userId}
+              socket={socket ?? null}
+              onOpenRecordThread={onOpenRecordThread ?? noop}
+              onOpenDM={onOpenDM ?? noop}
+            />
+          ) : navData ? (
             <SidebarNavContent navData={navData} />
           ) : (
             <SidebarSkeleton />
@@ -146,6 +207,10 @@ export function Sidebar({ navData }: SidebarProps) {
       </div>
     </aside>
   );
+}
+
+function noop() {
+  // intentional no-op for optional callback defaults
 }
 
 // ---------------------------------------------------------------------------
