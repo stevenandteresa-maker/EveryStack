@@ -9,7 +9,7 @@
  * @see docs/reference/smart-docs.md § Document Generation — Two Prongs
  */
 
-import { z } from 'zod';
+import type { z } from 'zod';
 import {
   getDbForTenant,
   eq,

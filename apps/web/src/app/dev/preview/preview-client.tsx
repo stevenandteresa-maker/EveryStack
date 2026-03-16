@@ -1,14 +1,16 @@
 'use client';
 
 /**
- * DevPreviewClient — interactive preview of Grid, Card, and Record View.
+ * DevPreviewClient — interactive preview of all major UI components.
  *
+ * Tabs: Grid View, Card View, Record View, Chat & Threads, Notifications, Presence.
  * All callbacks are no-ops or local state. No database, no API calls.
  */
 
 import { useCallback, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
+import type { JSONContent } from '@tiptap/core';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryProvider } from '@/lib/query-provider';
 
@@ -17,22 +19,34 @@ import { QueryProvider } from '@/lib/query-provider';
 const DataGrid = dynamic(() => import('@/components/grid/DataGrid').then((m) => m.DataGrid), { ssr: false });
 const CardView = dynamic(() => import('@/components/card-view/CardView').then((m) => m.CardView), { ssr: false });
 const RecordView = dynamic(() => import('@/components/record-view/RecordView').then((m) => m.RecordView), { ssr: false });
+const MessageItem = dynamic(() => import('@/components/chat/MessageItem').then((m) => m.MessageItem), { ssr: false });
+const ChatEditor = dynamic(() => import('@/components/chat/ChatEditor').then((m) => m.ChatEditor), { ssr: false });
+const NotificationTray = dynamic(() => import('@/components/notifications/NotificationTray').then((m) => m.NotificationTray), { ssr: false });
+const PresenceIndicator = dynamic(() => import('@/components/presence/PresenceIndicator').then((m) => m.PresenceIndicator), { ssr: false });
+const CustomStatusDisplay = dynamic(() => import('@/components/presence/CustomStatusDisplay').then((m) => m.CustomStatusDisplay), { ssr: false });
+const CustomStatusEditor = dynamic(() => import('@/components/presence/CustomStatusEditor').then((m) => m.CustomStatusEditor), { ssr: false });
+
 import { cn } from '@/lib/utils';
 import type { CellPosition } from '@/components/grid/grid-types';
 import type { RowDensity, CardLayout, ViewConfig } from '@/lib/types/grid';
 import type { GridToolbarProps } from '@/components/grid/GridToolbar';
+import type { PresenceState } from '@/components/presence/use-presence';
 import {
   MOCK_FIELDS,
   MOCK_RECORDS,
   MOCK_VIEW_CONFIG,
   MOCK_RECORD_VIEW_LAYOUT,
+  MOCK_THREAD_MESSAGES,
+  MOCK_NOTIFICATIONS,
+  MOCK_MENTION_SUGGESTIONS,
+  CURRENT_USER_ID,
 } from './mock-data';
 
 // ---------------------------------------------------------------------------
 // Tab type
 // ---------------------------------------------------------------------------
 
-type PreviewTab = 'grid' | 'card' | 'record';
+type PreviewTab = 'grid' | 'card' | 'record' | 'chat' | 'notifications' | 'presence';
 
 // ---------------------------------------------------------------------------
 // No-op helpers
@@ -43,6 +57,8 @@ const noopStr = (_s: string) => {};
 const noopStrStr = (_a: string, _b: string) => {};
 const noopStrStrNull = (_a: string, _b: string | null) => {};
 const noopStrStrAny = (_a: string, _b: string, _c: unknown) => {};
+const noopAsync = async (_s: string) => {};
+const noopAsyncVoid = async () => {};
 
 // ---------------------------------------------------------------------------
 // Shared toolbar props (all no-op for preview)
@@ -127,6 +143,32 @@ function makeToolbarProps(
 }
 
 // ---------------------------------------------------------------------------
+// Presence mock data
+// ---------------------------------------------------------------------------
+
+const PRESENCE_USERS: Array<{
+  name: string;
+  status: PresenceState;
+  customEmoji?: string;
+  customText?: string;
+}> = [
+  { name: 'Sarah Chen', status: 'online', customEmoji: '🎯', customText: 'Closing deals' },
+  { name: 'Marcus Johnson', status: 'away', customEmoji: '☕', customText: 'Coffee break' },
+  { name: 'Priya Patel', status: 'dnd', customEmoji: '🔇', customText: 'Deep work until 3pm' },
+  { name: 'James Wright', status: 'online' },
+  { name: 'Yuki Tanaka', status: 'offline' },
+  { name: 'Elena Rodriguez', status: 'online', customEmoji: '📝', customText: 'Reviewing proposals' },
+];
+
+const PRESENCE_MAP: Record<string, PresenceState> = {
+  'user-1': 'online',
+  'user-2': 'away',
+  'user-3': 'dnd',
+  'user-4': 'online',
+  'user-5': 'offline',
+};
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -141,6 +183,7 @@ export function DevPreviewClient() {
   const [cardColumns, setCardColumns] = useState<2 | 3>(3);
   const [recordViewOpen, setRecordViewOpen] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState(MOCK_THREAD_MESSAGES);
 
   const columnWidths = useMemo(() => {
     const widths: Record<string, number> = {};
@@ -199,6 +242,24 @@ export function DevPreviewClient() {
     [selectedRecordId, recordIds],
   );
 
+  const handleChatSend = useCallback((content: unknown) => {
+    const newMsg = {
+      id: `msg-new-${Date.now()}`,
+      thread_id: '00000000-0000-0000-0004-000000000001',
+      author_id: CURRENT_USER_ID,
+      author_name: 'James Wright',
+      content: content as JSONContent,
+      message_type: 'user',
+      reactions: {},
+      is_edited: false,
+      is_deleted: false,
+      is_pinned: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    setChatMessages((prev) => [...prev, newMsg]);
+  }, []);
+
   const toolbarProps = useMemo(
     () => makeToolbarProps(MOCK_FIELDS, MOCK_VIEW_CONFIG),
     [],
@@ -208,6 +269,9 @@ export function DevPreviewClient() {
     { key: 'grid', label: 'Grid View' },
     { key: 'card', label: 'Card View' },
     { key: 'record', label: 'Record View' },
+    { key: 'chat', label: 'Chat & Threads' },
+    { key: 'notifications', label: 'Notifications' },
+    { key: 'presence', label: 'Presence' },
   ];
 
   return (
@@ -354,6 +418,160 @@ export function DevPreviewClient() {
               >
                 {t('openRecordViewFirstRecord')}
               </button>
+            </div>
+          )}
+
+          {/* ── Chat & Threads (Phase 3C) ── */}
+          {tab === 'chat' && (
+            <div className="p-6 max-w-3xl mx-auto">
+              <h2 className="text-h2 text-[var(--text-primary)] mb-2">Record Thread</h2>
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+                Thread on the TechNova Deal record — showing messages, reactions, mentions, and the chat editor.
+              </p>
+
+              {/* Thread message list */}
+              <div className="border border-[var(--border-default)] rounded-lg bg-white overflow-hidden">
+                {/* Thread header */}
+                <div className="px-4 py-3 border-b border-[var(--border-default)] bg-[var(--panel-bg)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-body font-semibold text-[var(--text-primary)]">TechNova Deal</h3>
+                      <p className="text-caption text-[var(--text-tertiary)]">
+                        {chatMessages.length} messages &middot; 4 participants
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-caption text-[var(--text-tertiary)] bg-[var(--surface-secondary)] px-2 py-0.5 rounded">Internal</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="divide-y divide-[var(--border-subtle)] max-h-[500px] overflow-y-auto">
+                  {chatMessages.map((msg) => (
+                    <div key={msg.id} className="px-2">
+                      <MessageItem
+                        message={msg}
+                        currentUserId={CURRENT_USER_ID}
+                        onReactionToggle={noop}
+                        presenceMap={PRESENCE_MAP}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Chat editor */}
+                <div className="border-t border-[var(--border-default)] p-3">
+                  <ChatEditor
+                    onSend={handleChatSend}
+                    mentionSuggestions={MOCK_MENTION_SUGGESTIONS}
+                    placeholder="Type a message... (try @mention or formatting)"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Notifications (Phase 3C) ── */}
+          {tab === 'notifications' && (
+            <div className="p-6 max-w-lg mx-auto">
+              <h2 className="text-h2 text-[var(--text-primary)] mb-2">Notification Tray</h2>
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+                Grouped notifications with read/unread states, type icons, and relative timestamps.
+              </p>
+
+              <div className="border border-[var(--border-default)] rounded-lg overflow-hidden shadow-lg">
+                <NotificationTray
+                  notifications={MOCK_NOTIFICATIONS as never[]}
+                  isLoading={false}
+                  hasMore={false}
+                  onMarkRead={noopAsync}
+                  onMarkAllRead={noopAsyncVoid}
+                  onLoadMore={noop}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── Presence (Phase 3C) ── */}
+          {tab === 'presence' && (
+            <div className="p-6 max-w-2xl mx-auto">
+              <h2 className="text-h2 text-[var(--text-primary)] mb-2">Presence & Custom Status</h2>
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+                Presence indicators (4 states, 3 sizes), custom status display, and custom status editor.
+              </p>
+
+              {/* Presence indicators — all states & sizes */}
+              <section className="mb-8">
+                <h3 className="text-h3 text-[var(--text-primary)] mb-4">Presence States</h3>
+                <div className="grid grid-cols-4 gap-6">
+                  {(['online', 'away', 'dnd', 'offline'] as PresenceState[]).map((status) => (
+                    <div key={status} className="flex flex-col items-center gap-3 p-4 bg-white border border-[var(--border-default)] rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <PresenceIndicator status={status} size="small" />
+                        <PresenceIndicator status={status} size="medium" />
+                        <PresenceIndicator status={status} size="large" />
+                      </div>
+                      <span className="text-caption text-[var(--text-secondary)] capitalize">{status}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* User list with presence + custom status */}
+              <section className="mb-8">
+                <h3 className="text-h3 text-[var(--text-primary)] mb-4">Team Members</h3>
+                <div className="bg-white border border-[var(--border-default)] rounded-lg divide-y divide-[var(--border-subtle)]">
+                  {PRESENCE_USERS.map((user) => (
+                    <div key={user.name} className="flex items-center gap-3 px-4 py-3">
+                      {/* Avatar placeholder with presence dot */}
+                      <div className="relative">
+                        <div className="w-9 h-9 rounded-full bg-[var(--surface-secondary)] flex items-center justify-center text-body-sm font-semibold text-[var(--text-secondary)]">
+                          {user.name.split(' ').map((n) => n[0]).join('')}
+                        </div>
+                        <span className="absolute -bottom-0.5 -right-0.5 ring-2 ring-white rounded-full">
+                          <PresenceIndicator status={user.status} size="small" />
+                        </span>
+                      </div>
+
+                      {/* Name + custom status */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body font-medium text-[var(--text-primary)]">{user.name}</p>
+                        {user.customEmoji && (
+                          <CustomStatusDisplay
+                            emoji={user.customEmoji}
+                            text={user.customText ?? ''}
+                          />
+                        )}
+                      </div>
+
+                      {/* Status label */}
+                      <span className={cn(
+                        'text-caption capitalize',
+                        user.status === 'online' && 'text-emerald-600',
+                        user.status === 'away' && 'text-yellow-600',
+                        user.status === 'dnd' && 'text-red-600',
+                        user.status === 'offline' && 'text-[var(--text-tertiary)]',
+                      )}>
+                        {user.status === 'dnd' ? 'Do not disturb' : user.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Custom status editor */}
+              <section>
+                <h3 className="text-h3 text-[var(--text-primary)] mb-4">Set Custom Status</h3>
+                <div className="bg-white border border-[var(--border-default)] rounded-lg p-4 max-w-sm">
+                  <CustomStatusEditor
+                    initialEmoji="🎯"
+                    initialText="Closing deals"
+                    onSave={noop}
+                    onClear={noop}
+                  />
+                </div>
+              </section>
             </div>
           )}
 
