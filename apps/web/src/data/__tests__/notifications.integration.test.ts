@@ -5,7 +5,7 @@
  * Redis-cached unread count, and mark-read operations.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import {
   createTestTenant,
   createTestUser,
@@ -18,6 +18,7 @@ import {
   getUnreadNotificationCount,
   markNotificationRead,
   markAllNotificationsRead,
+  _closeRedis,
 } from '../notifications';
 import type { CreateNotificationParams } from '../notifications';
 
@@ -39,6 +40,10 @@ function buildParams(overrides: Partial<CreateNotificationParams> & { userId: st
 // ---------------------------------------------------------------------------
 
 describe('Notification Data Functions', () => {
+  afterAll(async () => {
+    await _closeRedis();
+  });
+
   describe('createNotification — tenant isolation', () => {
     it('enforces tenant isolation', async () => {
       let notifUserId = '';

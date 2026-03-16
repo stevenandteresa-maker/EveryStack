@@ -70,6 +70,17 @@ function getRedis() {
   return _redis;
 }
 
+/**
+ * Close the Redis singleton. Call in test teardown to prevent connection leaks.
+ * @internal Exported for test cleanup only.
+ */
+export async function _closeRedis(): Promise<void> {
+  if (_redis) {
+    await _redis.quit();
+    _redis = null;
+  }
+}
+
 function unreadCacheKey(tenantId: string, userId: string): string {
   return `cache:notif:unread:t:${tenantId}:u:${userId}`;
 }
