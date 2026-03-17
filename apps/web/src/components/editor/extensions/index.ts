@@ -27,7 +27,9 @@ import { SlashCommand } from './slash-command/slash-command';
 export { MergeTag, type MergeTagAttributes } from './merge-tag/merge-tag';
 export { RecordRef, type RecordRefAttributes } from './record-ref/record-ref';
 export { Callout, CALLOUT_DEFAULTS, type CalloutVariant, type CalloutAttributes } from './callout/callout';
-export { SlashCommand, SLASH_COMMAND_PLUGIN_KEY } from './slash-command/slash-command';
+export { SlashCommand, SLASH_COMMAND_PLUGIN_KEY, type SlashCommandOptions } from './slash-command/slash-command';
+export { SLASH_COMMANDS, filterSlashCommands, type SlashCommandItem } from './slash-command/commands';
+export { SlashCommandList, type SlashCommandListRef } from './slash-command/slash-command-list';
 
 // Re-export NodeView components
 export { MergeTagView } from './merge-tag/merge-tag-view';
@@ -119,7 +121,7 @@ export function createSmartDocExtensions(options?: SmartDocExtensionOptions): An
     RecordRef,
     Callout,
 
-    // Slash command (shell — popup wired in Unit 5)
+    // Slash command — "/" trigger with suggestion popup
     SlashCommand,
   ];
 }

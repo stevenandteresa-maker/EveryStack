@@ -1042,6 +1042,37 @@
     "expandGroup": "Expandir grupo de notificaciones",
     "collapseGroup": "Contraer grupo de notificaciones"
   },
+  "smartDocEditor": {
+    "slashCommand": {
+      "noResults": "No se encontraron comandos",
+      "heading1": "Encabezado 1",
+      "heading1Desc": "Encabezado de sección grande",
+      "heading2": "Encabezado 2",
+      "heading2Desc": "Encabezado de sección mediano",
+      "heading3": "Encabezado 3",
+      "heading3Desc": "Encabezado de sección pequeño",
+      "heading4": "Encabezado 4",
+      "heading4Desc": "Encabezado de sección más pequeño",
+      "bulletList": "Lista con viñetas",
+      "bulletListDesc": "Lista desordenada con viñetas",
+      "orderedList": "Lista numerada",
+      "orderedListDesc": "Lista ordenada con números",
+      "taskList": "Lista de tareas",
+      "taskListDesc": "Lista con casillas de verificación",
+      "blockquote": "Cita",
+      "blockquoteDesc": "Bloque de cita con sangría",
+      "codeBlock": "Bloque de código",
+      "codeBlockDesc": "Código con resaltado de sintaxis",
+      "table": "Tabla",
+      "tableDesc": "Insertar tabla de 3×3",
+      "image": "Imagen",
+      "imageDesc": "Insertar imagen desde URL",
+      "callout": "Aviso",
+      "calloutDesc": "Bloque de información, advertencia o alerta",
+      "divider": "Divisor",
+      "dividerDesc": "Separador de línea horizontal"
+    }
+  },
   "presence": {
     "online": "En línea",
     "away": "Ausente",

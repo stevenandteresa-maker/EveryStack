@@ -273,6 +273,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: 3.20.2
         version: 3.20.2
+      '@tiptap/suggestion':
+        specifier: 3.20.2
+        version: 3.20.2(@tiptap/core@3.20.2(@tiptap/pm@3.20.2))(@tiptap/pm@3.20.2)
       ai:
         specifier: ^6.0.116
         version: 6.0.116(zod@4.3.6)

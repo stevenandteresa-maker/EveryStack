@@ -1,5 +1,8 @@
 import { Extension } from '@tiptap/core';
 import { PluginKey } from '@tiptap/pm/state';
+import Suggestion from '@tiptap/suggestion';
+import type { SuggestionOptions } from '@tiptap/suggestion';
+import { filterSlashCommands, type SlashCommandItem } from './commands';
 
 /**
  * SlashCommand plugin key — used by the suggestion utility
@@ -7,36 +10,42 @@ import { PluginKey } from '@tiptap/pm/state';
  */
 export const SLASH_COMMAND_PLUGIN_KEY = new PluginKey('slashCommand');
 
+export interface SlashCommandOptions {
+  suggestion: Omit<SuggestionOptions<SlashCommandItem>, 'editor'>;
+}
+
 /**
- * SlashCommand — TipTap Environment 2 extension shell.
+ * SlashCommand — TipTap Environment 2 extension.
  *
  * Registers the `/` trigger for the block insertion menu.
- * The actual suggestion popup, command list, and filtering
- * are wired in Unit 5 (Template Management UI). This shell
- * provides the extension identity and plugin key so the
- * extension bundle is complete.
+ * Uses @tiptap/suggestion to manage the popup lifecycle.
+ * The `render` option must be provided by the consumer (see
+ * useSmartDocEditor) to wire up the React popup component.
  */
-export const SlashCommand = Extension.create({
+export const SlashCommand = Extension.create<SlashCommandOptions>({
   name: 'slashCommand',
 
   addOptions() {
     return {
-      /** Suggestion config — injected when the popup component is ready (Unit 5). */
       suggestion: {
         char: '/',
         pluginKey: SLASH_COMMAND_PLUGIN_KEY,
-        command: ({
-          editor,
-          range,
-          props,
-        }: {
-          editor: { chain: () => { focus: () => { deleteRange: (r: unknown) => { run: () => void } } } };
-          range: unknown;
-          props: { command: (opts: { editor: unknown; range: unknown }) => void };
-        }) => {
-          props.command({ editor, range });
+        items: ({ query }: { query: string }) => filterSlashCommands(query),
+        command: ({ editor, range, props }) => {
+          // Delete the slash + query text, then execute the command
+          editor.chain().focus().deleteRange(range).run();
+          props.action(editor);
         },
       },
     };
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      Suggestion({
+        editor: this.editor,
+        ...this.options.suggestion,
+      }),
+    ];
   },
 });

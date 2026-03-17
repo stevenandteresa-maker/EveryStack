@@ -1042,6 +1042,37 @@
     "expandGroup": "Expand notification group",
     "collapseGroup": "Collapse notification group"
   },
+  "smartDocEditor": {
+    "slashCommand": {
+      "noResults": "No matching commands",
+      "heading1": "Heading 1",
+      "heading1Desc": "Large section heading",
+      "heading2": "Heading 2",
+      "heading2Desc": "Medium section heading",
+      "heading3": "Heading 3",
+      "heading3Desc": "Small section heading",
+      "heading4": "Heading 4",
+      "heading4Desc": "Smallest section heading",
+      "bulletList": "Bullet List",
+      "bulletListDesc": "Unordered list with bullet points",
+      "orderedList": "Numbered List",
+      "orderedListDesc": "Ordered list with numbers",
+      "taskList": "Task List",
+      "taskListDesc": "Checklist with checkboxes",
+      "blockquote": "Blockquote",
+      "blockquoteDesc": "Indented quote block",
+      "codeBlock": "Code Block",
+      "codeBlockDesc": "Syntax-highlighted code",
+      "table": "Table",
+      "tableDesc": "Insert a 3×3 table",
+      "image": "Image",
+      "imageDesc": "Insert an image from URL",
+      "callout": "Callout",
+      "calloutDesc": "Info, warning, or alert block",
+      "divider": "Divider",
+      "dividerDesc": "Horizontal rule separator"
+    }
+  },
   "presence": {
     "online": "Online",
     "away": "Away",
