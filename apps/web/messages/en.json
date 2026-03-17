@@ -1071,6 +1071,39 @@
       "calloutDesc": "Info, warning, or alert block",
       "divider": "Divider",
       "dividerDesc": "Horizontal rule separator"
+    },
+    "toolbar": {
+      "formatGroup": "Text formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "code": "Inline code",
+      "highlight": "Highlight",
+      "alignGroup": "Text alignment",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "alignJustify": "Justify",
+      "insertGroup": "Insert elements",
+      "link": "Link",
+      "linkPrompt": "Enter URL",
+      "image": "Image",
+      "imagePrompt": "Enter image URL",
+      "table": "Table",
+      "codeBlock": "Code block",
+      "callout": "Callout",
+      "historyGroup": "Undo and redo",
+      "undo": "Undo",
+      "redo": "Redo",
+      "bubbleToolbar": "Formatting"
+    },
+    "blockHandle": {
+      "dragHandle": "Drag to reorder block",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     }
   },
   "presence": {
