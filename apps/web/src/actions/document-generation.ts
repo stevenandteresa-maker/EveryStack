@@ -41,15 +41,66 @@ const getDocumentGenerationStatusSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// generateDocument
+// enqueueDocumentGeneration
 // ---------------------------------------------------------------------------
+
+export interface EnqueueDocumentGenerationInput {
+  tenantId: string;
+  templateId: string;
+  recordId: string;
+  triggeredBy: string;
+  html: string;
+  landscape: boolean;
+}
 
 export interface GenerateDocumentResult {
   jobId: string;
 }
 
 /**
- * Enqueue a document generation job.
+ * Enqueue a document generation BullMQ job.
+ *
+ * Standalone helper — used by the `generateDocument` server action and
+ * callable from automations or other server-side code that has already
+ * resolved merge tags and rendered HTML.
+ */
+export async function enqueueDocumentGeneration(
+  input: EnqueueDocumentGenerationInput,
+): Promise<GenerateDocumentResult> {
+  const queue = getQueue('document-gen');
+  const traceId = getTraceId() ?? generateTraceId();
+
+  const job = await queue.add(
+    'document.generate',
+    {
+      tenantId: input.tenantId,
+      templateId: input.templateId,
+      recordId: input.recordId,
+      traceId,
+      triggeredBy: input.triggeredBy,
+      html: input.html,
+      landscape: input.landscape,
+    } satisfies DocumentGenJobData,
+    {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 5_000,
+      },
+      removeOnComplete: { age: 24 * 60 * 60 }, // Keep completed jobs for 24h
+      removeOnFail: { age: 7 * 24 * 60 * 60 }, // Keep failed jobs for 7d
+    },
+  );
+
+  return { jobId: job.id! };
+}
+
+// ---------------------------------------------------------------------------
+// generateDocument
+// ---------------------------------------------------------------------------
+
+/**
+ * Server action: validate, verify template, resolve, render, enqueue.
  *
  * 1. Validates that the template exists and belongs to the tenant
  * 2. Resolves merge tags against the source record
@@ -82,33 +133,14 @@ export async function generateDocument(
     // Render to full HTML with print CSS
     const html = renderToHTML(resolvedContent, settings);
 
-    // Enqueue the generation job
-    const queue = getQueue('document-gen');
-    const traceId = getTraceId() ?? generateTraceId();
-
-    const job = await queue.add(
-      'document.generate',
-      {
-        tenantId,
-        templateId: validated.templateId,
-        recordId: validated.recordId,
-        traceId,
-        triggeredBy: userId,
-        html,
-        landscape: settings.orientation === 'landscape',
-      } satisfies DocumentGenJobData,
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 5_000,
-        },
-        removeOnComplete: { age: 24 * 60 * 60 }, // Keep completed jobs for 24h
-        removeOnFail: { age: 7 * 24 * 60 * 60 }, // Keep failed jobs for 7d
-      },
-    );
-
-    return { jobId: job.id! };
+    return enqueueDocumentGeneration({
+      tenantId,
+      templateId: validated.templateId,
+      recordId: validated.recordId,
+      triggeredBy: userId,
+      html,
+      landscape: settings.orientation === 'landscape',
+    });
   } catch (error) {
     throw wrapUnknownError(error);
   }
