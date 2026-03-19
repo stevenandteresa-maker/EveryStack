@@ -93,17 +93,17 @@ When a unit moves to `failed-review`:
   - Branch: `build/3d-document-templates`
   - Notes: Prompts 3–5 complete. Verified 2026-03-17. All 14 interface contracts confirmed. 2551 tests pass, zero lint/type errors.
 
-- [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `in-progress`
+- [x] **Unit 3: Merge-Tag Resolution & Field Inserter** — `passed-review`
   - Produces: `resolveMergeTags()`, `resolveAndRenderHTML()` resolution functions; `MergeTagInserter` sidebar component; `useMergeTagFields()` hook; `PreviewToggle` component; `MergeTagField` type
   - Consumes: Unit 1 `DocumentTemplate` type; 3B-i cross-link resolution; 3A-iii field permissions
   - Branch: `build/3d-document-templates`
-  - Notes: Started 2026-03-17
+  - Notes: Prompts 6–7 complete. Verified 2026-03-19. All 9 interface contracts confirmed. 123 editor tests pass, zero lint/type errors.
 
-- [ ] **Unit 4: PDF Generation Pipeline** — `pending`
+- [ ] **Unit 4: PDF Generation Pipeline** — `in-progress`
   - Produces: `PDFRenderer`, `GotenbergClient`; `processDocumentGeneration` BullMQ processor; `enqueueDocumentGeneration()`, `generateDocument` server action; `document-generation` queue registration
   - Consumes: Unit 1 types + factories, Unit 3 `resolveMergeTags()`, StorageClient from 1G
-  - Branch:
-  - Notes:
+  - Branch: `build/3d-document-templates`
+  - Notes: Started 2026-03-19
 
 - [ ] **Unit 5: Template Management & Document Generation UI** — `pending`
   - Produces: `DocumentTemplateListPage`, `DocumentTemplateEditor`, `GenerateDocumentDialog`, `GenerateDocumentButton`, `GeneratedDocumentList` components; `useDocumentGeneration()` hook; document routes

@@ -146,6 +146,81 @@ built → failed-review → built (retry after fixes)
 - Three typecheck fixes during verification: `noUncheckedIndexedAccess` requires fallback values for array index access; TipTap's `getJSON()` returns a union type that doesn't include `.attrs` on all branches.
 - All 14 interface contracts verified: SmartDocEditor, useSmartDocEditor, createSmartDocExtensions, MergeTag, MergeTagView, RecordRef, RecordRefView, Callout, CalloutView, SlashCommand, SlashCommandList, EditorToolbar, BubbleToolbar, BlockHandle.
 
+## Session C — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompts 6–7 (Unit 3: Merge-Tag Resolution & Field Inserter)
+
+### Files Created
+- `apps/web/src/lib/editor/merge-resolver.ts` — Merge-tag resolution service: `formatCanonicalValue()` (20+ field types), `resolveMergeTags()` (deep-clone, walk, resolve simple + cross-linked fields), `resolveAndRenderHTML()` (resolve → generateHTML pipeline for PDF/portal)
+- `apps/web/src/lib/types/document-templates.ts` — `MergeTagField` interface (fieldId, tableId, fieldName, fieldType, isLinked, crossLinkId)
+- `apps/web/src/lib/editor/__tests__/merge-resolver.test.ts` — 18 tests for formatCanonicalValue, resolveMergeTags, resolveAndRenderHTML (field types, linked fields, fallbacks, immutability)
+- `apps/web/src/components/editor/hooks/use-merge-tag-fields.ts` — `useMergeTagFields()` hook: fetches fields from source + cross-linked tables via API, filters excluded types (attachment/button/linked_record), returns `MergeTagFieldGroup[]`
+- `apps/web/src/components/editor/sidebar/MergeTagInserter.tsx` — Sidebar component: searchable field list grouped by table, collapsible groups, click inserts MergeTag node at cursor
+- `apps/web/src/components/editor/toolbar/PreviewToggle.tsx` — Edit/Preview/Raw mode toggle component + `usePreviewToggle()` hook managing content swapping (preview resolves merge tags, raw shows `{field_name}` text)
+- `apps/web/src/app/api/editor/merge-tag-fields/route.ts` — POST endpoint: loads fields + cross-links for source table, filters hidden fields via permissions when viewId provided
+- `apps/web/src/components/editor/__tests__/merge-tag-inserter.test.tsx` — 9 tests for MergeTagInserter (loading, groups, search, insert, collapse)
+- `apps/web/src/components/editor/__tests__/preview-toggle.test.tsx` — 10 tests for PreviewToggle component + usePreviewToggle hook (modes, resolve, raw conversion, restore)
+- `apps/web/src/components/editor/__tests__/use-merge-tag-fields.test.ts` — 6 tests for useMergeTagFields hook (fetch, filter, error, refetch)
+
+### Files Modified
+- `apps/web/messages/en.json` — Added `smartDocEditor.mergeTagInserter` and `smartDocEditor.previewToggle` i18n namespaces
+- `apps/web/messages/es.json` — Added `smartDocEditor.mergeTagInserter` and `smartDocEditor.previewToggle` i18n namespaces (Spanish)
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this session is resolution logic + UI components only)
+
+### New Domain Terms Introduced
+- `MergeTagField` — Interface describing a field available for merge-tag insertion (simple or cross-linked)
+- `MergeTagFieldGroup` — Interface grouping merge-tag fields by table (source vs linked)
+- `PreviewMode` — Union type for document view modes: `edit | preview | raw`
+
+### Notes
+- `resolveMergeTags()` uses deep-clone + walk pattern — never mutates original TipTap JSONB content
+- `formatCanonicalValue()` handles 20+ field types including currency (Intl.NumberFormat), date, checkbox (Yes/No), select/tag (label extraction), people (name extraction)
+- `usePreviewToggle` stores edit-mode content in a ref before mode switch, restores on return to edit
+- Raw mode replaces mergeTag nodes with `{fallback}` text nodes (no server round-trip)
+- All 9 interface contracts verified: resolveMergeTags, resolveAndRenderHTML, MergeTagInserter, useMergeTagFields, MergeTagField, MergeTagFieldGroup, PreviewToggle, usePreviewToggle, PreviewMode
+
+---
+
+## Session D — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** built
+**Prompt(s):** Prompt 8 (Unit 4: PDF Generation Pipeline — PDFRenderer & GotenbergClient)
+
+### Files Created
+- `apps/web/src/lib/editor/pdf-renderer.ts` — `renderToHTML()` function: converts TipTap JSONB → complete HTML document with print CSS (@page rule, DM Sans/JetBrains Mono fonts, page size/margins). Exports `DocumentTemplateSettings` type.
+- `packages/shared/pdf/gotenberg-client.ts` — `GotenbergClient` class: HTTP client for Gotenberg's Chromium HTML→PDF endpoint (`POST /forms/chromium/convert/html`). FormData upload, AbortController timeout, configurable paper/margin options.
+- `packages/shared/pdf/index.ts` — Package barrel export for `GotenbergClient` and `GotenbergConvertOptions`
+- `apps/web/src/lib/editor/__tests__/pdf-renderer.test.ts` — 15 tests: HTML structure, font inclusion, @page dimensions (A4/Letter/Legal/landscape), custom margins, print-color-adjust, heading/bold/italic/table/list rendering, empty doc
+- `packages/shared/pdf/__tests__/gotenberg-client.test.ts` — 18 tests: constructor (base URL, trailing slashes, env var fallback, missing env), convertHTMLToPDF (POST endpoint, FormData file upload, Buffer return, paper/margin/landscape options, HTTP errors, timeout, abort signal, network errors)
+
+### Files Modified
+- `packages/shared/package.json` — Added `"./pdf"` export mapping to `pdf/index.ts`
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this session is rendering/HTTP client code only)
+
+### New Domain Terms Introduced
+- `DocumentTemplateSettings` — Type defining page configuration (pageSize, orientation, margins) for PDF rendering
+- `GotenbergConvertOptions` — Type for optional Gotenberg Chromium conversion parameters (paper size, margins, landscape, timeout)
+
+### Notes
+- `renderToHTML()` uses `generateHTML()` from `@tiptap/html` with the full Smart Doc extension set, then wraps in a complete HTML page with embedded print CSS
+- Page size lookup supports A4/Letter/Legal with landscape dimension swap; unknown sizes fall back to A4
+- `GotenbergClient` sends HTML as a Blob file upload named `index.html` per Gotenberg's multipart API
+- Timeout uses `AbortController` with configurable ms (default 30s); distinguishes abort errors from network errors
+- All 33 tests pass. Zero lint/type errors.
+
 ---
 
 ## Archive

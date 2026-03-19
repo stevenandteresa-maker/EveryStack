@@ -17,7 +17,8 @@
     "./realtime": "./realtime/index.ts",
     "./queue": "./queue/index.ts",
     "./storage": "./storage/index.ts",
-    "./crypto": "./crypto/index.ts"
+    "./crypto": "./crypto/index.ts",
+    "./pdf": "./pdf/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
