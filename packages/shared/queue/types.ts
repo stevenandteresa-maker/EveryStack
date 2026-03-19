@@ -73,6 +73,10 @@ export interface AutomationJobData extends BaseJobData {
 export interface DocumentGenJobData extends BaseJobData {
   templateId: string;
   recordId: string;
+  /** Pre-rendered HTML (resolved merge tags + print CSS). Passed by server action. */
+  html: string;
+  /** Page orientation from template settings. */
+  landscape: boolean;
 }
 
 // ---------------------------------------------------------------------------

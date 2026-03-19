@@ -23,6 +23,7 @@ import { CrossLinkIndexRebuildProcessor } from './processors/cross-link/index-re
 import { NotificationEmailSendProcessor } from './processors/notification/email-send';
 import { NotificationCleanupProcessor } from './processors/notification/cleanup';
 import { NotificationRouter } from './processors/notification/notification-router';
+import { DocumentGenerationProcessor } from './processors/document-generation/generate';
 
 // Initialize OpenTelemetry before any processors are registered
 initWorkerTelemetry();
@@ -73,6 +74,10 @@ const cleanupProcessor = new NotificationCleanupProcessor();
 const notificationRouter = new NotificationRouter(emailSendProcessor, cleanupProcessor);
 notificationRouter.start();
 
+// Document generation queue
+const documentGenerationProcessor = new DocumentGenerationProcessor(storage);
+documentGenerationProcessor.start();
+
 // Sync scheduler: adaptive polling via BullMQ repeatable job
 const schedulerRedis = createRedisClient('sync-scheduler');
 const syncScheduler = new SyncScheduler(
@@ -91,6 +96,7 @@ registerShutdownHandler(async () => inboundSyncProcessor.close());
 registerShutdownHandler(async () => cascadeProcessor.close());
 registerShutdownHandler(async () => indexRebuildProcessor.close());
 registerShutdownHandler(async () => notificationRouter.close());
+registerShutdownHandler(async () => documentGenerationProcessor.close());
 registerShutdownHandler(async () => syncScheduler.stop());
 registerShutdownHandler(closeAllQueues);
 registerShutdownHandler(shutdownWorkerTelemetry);

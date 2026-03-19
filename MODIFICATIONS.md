@@ -223,6 +223,42 @@ built → failed-review → built (retry after fixes)
 
 ---
 
+## Session E — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** built
+**Prompt(s):** Prompt 9 (Unit 4: PDF Generation Pipeline — Processor, Queue, Server Action)
+
+### Files Created
+- `apps/worker/src/processors/document-generation/generate.ts` — `DocumentGenerationProcessor`: BullMQ processor that receives pre-rendered HTML, converts to PDF via GotenbergClient, uploads to R2 (`docGenOutputKey`), creates `generated_documents` row with presigned URL
+- `apps/web/src/actions/document-generation.ts` — `generateDocument` server action (Zod validate → verify template → resolveMergeTags → renderToHTML → enqueue BullMQ job with HTML + landscape flag); `getDocumentGenerationStatus` action (tenant-scoped job status polling)
+- `apps/worker/src/processors/document-generation/__tests__/generate.test.ts` — 8 tests: full pipeline, landscape flag, automation triggeredBy, buffer upload, logging, Gotenberg error propagation, storage error propagation
+- `apps/web/src/actions/__tests__/document-generation.test.ts` — 13 tests: Zod validation, template existence check, merge-tag resolution + HTML rendering before enqueue, retry config, landscape flag, job ID return, status polling (unknown/completed/failed/active/waiting/delayed, tenant isolation)
+
+### Files Modified
+- `packages/shared/queue/types.ts` — Extended `DocumentGenJobData` with `html: string` and `landscape: boolean` fields (server action pre-renders, worker receives ready HTML)
+- `apps/worker/src/index.ts` — Registered `DocumentGenerationProcessor` (start + shutdown handler)
+- `TASK-STATUS.md` — Unit 4 status → `in-progress`, branch set, start date
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — uses existing `generated_documents` table from Unit 1)
+
+### New Domain Terms Introduced
+- `GenerateDocumentResult` — Server action return type `{ jobId: string }`
+- `DocumentGenerationStatus` — Status polling return type `{ status, result?, error? }`
+
+### Notes
+- Architecture decision: server action resolves merge tags + renders HTML before enqueueing (web app has data layer access), worker receives pre-rendered HTML and handles Gotenberg → R2 → DB only. This avoids cross-app imports (worker can't import web app's `@/data/*` functions due to tsconfig rootDir).
+- Retry: 3 attempts, exponential backoff 5s base — configured at enqueue time in server action
+- Job retention: completed 24h, failed 7d
+- Tenant isolation enforced in `getDocumentGenerationStatus`: jobs from other tenants return `{ status: 'unknown' }`
+- All 21 new tests pass. All 54 total tests pass (prompt 8 + 9). Zero lint/type errors.
+
+---
+
 ## Archive
 
 <!-- Docs Agent moves completed (docs-synced) session blocks here
