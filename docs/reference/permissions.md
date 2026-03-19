@@ -460,7 +460,7 @@ Permission denials are written to `audit_log` with `action: 'permission_denied'`
 
 ## Tenant Isolation
 
-Permission checks operate **within** a tenant boundary that is enforced at a lower layer. Every database query includes `tenant_id` via RLS policies (see `data-model.md` § Row-Level Security). The permission system assumes tenant isolation is already guaranteed and focuses on intra-tenant role-based access.
+Permission checks operate **within** a tenant boundary that is enforced at a lower layer. Every database query includes `tenant_id` via RLS policies (see `CLAUDE.md` § Multi-Tenant Isolation). The permission system assumes tenant isolation is already guaranteed and focuses on intra-tenant role-based access.
 
 **Cross-tenant access attempts** — where a user with access to Tenant A tries to access a resource in Tenant B — are handled at the data layer, not the permission layer:
 
