@@ -1104,6 +1104,18 @@
       "duplicate": "Duplicar",
       "moveUp": "Mover arriba",
       "moveDown": "Mover abajo"
+    },
+    "mergeTagInserter": {
+      "title": "Etiquetas de combinación",
+      "searchPlaceholder": "Buscar campos…",
+      "noFields": "No hay campos disponibles",
+      "insert": "Insertar"
+    },
+    "previewToggle": {
+      "label": "Modo de vista del documento",
+      "edit": "Editar",
+      "preview": "Vista previa",
+      "raw": "Sin formato"
     }
   },
   "presence": {

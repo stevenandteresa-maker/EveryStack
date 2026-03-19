@@ -1104,6 +1104,18 @@
       "duplicate": "Duplicate",
       "moveUp": "Move up",
       "moveDown": "Move down"
+    },
+    "mergeTagInserter": {
+      "title": "Merge Tags",
+      "searchPlaceholder": "Search fields…",
+      "noFields": "No fields available",
+      "insert": "Insert"
+    },
+    "previewToggle": {
+      "label": "Document view mode",
+      "edit": "Edit",
+      "preview": "Preview",
+      "raw": "Raw"
     }
   },
   "presence": {
