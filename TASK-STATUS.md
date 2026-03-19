@@ -81,35 +81,35 @@ When a unit moves to `failed-review`:
 
 #### Subdivision Units
 
-- [ ] **Unit 1: Document Template Data Layer** — `pending`
+- [x] **Unit 1: Document Template Data Layer** — `passed-review`
   - Produces: `getDocumentTemplate()`, `listDocumentTemplates()`, `getGeneratedDocument()`, `listGeneratedDocuments()` data functions; `createDocumentTemplate`, `updateDocumentTemplate`, `duplicateDocumentTemplate`, `deleteDocumentTemplate` server actions; `DocumentTemplate`, `GeneratedDocument` types; Zod schemas; test factories
   - Consumes: None — first unit
-  - Branch:
-  - Notes:
+  - Branch: `build/3d-document-templates`
+  - Notes: Prompts 1–2 complete. Verified 2026-03-16. All 6 interface contracts confirmed. 2471 tests pass, zero lint/type errors.
 
-- [ ] **Unit 2: TipTap Environment 2 Editor Core** — `pending`
+- [x] **Unit 2: TipTap Environment 2 Editor Core** — `passed-review`
   - Produces: `SmartDocEditor`, `useSmartDocEditor()` hook; `smartDocExtensions` bundle; custom nodes (`MergeTag`, `RecordRef`, `Callout`); `SlashCommand` extension + list; `EditorToolbar`, `BubbleToolbar`, `BlockHandle`
   - Consumes: None — no unit dependencies (uses TipTap libraries + Env 1 patterns)
-  - Branch:
-  - Notes: Parallel with Unit 3 after Unit 1 completes
+  - Branch: `build/3d-document-templates`
+  - Notes: Prompts 3–5 complete. Verified 2026-03-17. All 14 interface contracts confirmed. 2551 tests pass, zero lint/type errors.
 
-- [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `pending`
+- [x] **Unit 3: Merge-Tag Resolution & Field Inserter** — `passed-review`
   - Produces: `resolveMergeTags()`, `resolveAndRenderHTML()` resolution functions; `MergeTagInserter` sidebar component; `useMergeTagFields()` hook; `PreviewToggle` component; `MergeTagField` type
   - Consumes: Unit 1 `DocumentTemplate` type; 3B-i cross-link resolution; 3A-iii field permissions
-  - Branch:
-  - Notes: Parallel with Unit 2 after Unit 1 completes
+  - Branch: `build/3d-document-templates`
+  - Notes: Prompts 6–7 complete. Verified 2026-03-19. All 9 interface contracts confirmed. 123 editor tests pass, zero lint/type errors.
 
-- [ ] **Unit 4: PDF Generation Pipeline** — `pending`
+- [x] **Unit 4: PDF Generation Pipeline** — `passed-review`
   - Produces: `PDFRenderer`, `GotenbergClient`; `processDocumentGeneration` BullMQ processor; `enqueueDocumentGeneration()`, `generateDocument` server action; `document-generation` queue registration
   - Consumes: Unit 1 types + factories, Unit 3 `resolveMergeTags()`, StorageClient from 1G
-  - Branch:
-  - Notes:
+  - Branch: `build/3d-document-templates`
+  - Notes: Started 2026-03-19. Verified 2026-03-19. All 7 interface contracts confirmed. 54 tests pass, zero lint/type errors.
 
-- [ ] **Unit 5: Template Management & Document Generation UI** — `pending`
+- [x] **Unit 5: Template Management & Document Generation UI** — `passed-review`
   - Produces: `DocumentTemplateListPage`, `DocumentTemplateEditor`, `GenerateDocumentDialog`, `GenerateDocumentButton`, `GeneratedDocumentList` components; `useDocumentGeneration()` hook; document routes
   - Consumes: Unit 1 data + actions, Unit 2 editor, Unit 3 inserter + preview, Unit 4 generation action
-  - Branch:
-  - Notes:
+  - Branch: `build/3d-document-templates`
+  - Notes: Started 2026-03-19. Verified 2026-03-19. All 12 interface contracts confirmed. 2622 tests pass, zero lint/type errors.
 
 ---
 

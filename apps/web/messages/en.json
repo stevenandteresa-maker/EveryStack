@@ -745,6 +745,7 @@
     "config_save_as_new": "Save as new config",
     "config_new_name_placeholder": "Config name",
     "config_new_name": "New config name",
+    "tab_documents": "Documents",
     "inline_sub_table": {
       "item_count": "{count, plural, one {1 item} other {# items}}",
       "search_placeholder": "Search linked records…",
@@ -1042,6 +1043,88 @@
     "expandGroup": "Expand notification group",
     "collapseGroup": "Collapse notification group"
   },
+  "smartDocEditor": {
+    "slashCommand": {
+      "noResults": "No matching commands",
+      "heading1": "Heading 1",
+      "heading1Desc": "Large section heading",
+      "heading2": "Heading 2",
+      "heading2Desc": "Medium section heading",
+      "heading3": "Heading 3",
+      "heading3Desc": "Small section heading",
+      "heading4": "Heading 4",
+      "heading4Desc": "Smallest section heading",
+      "bulletList": "Bullet List",
+      "bulletListDesc": "Unordered list with bullet points",
+      "orderedList": "Numbered List",
+      "orderedListDesc": "Ordered list with numbers",
+      "taskList": "Task List",
+      "taskListDesc": "Checklist with checkboxes",
+      "blockquote": "Blockquote",
+      "blockquoteDesc": "Indented quote block",
+      "codeBlock": "Code Block",
+      "codeBlockDesc": "Syntax-highlighted code",
+      "table": "Table",
+      "tableDesc": "Insert a 3×3 table",
+      "image": "Image",
+      "imageDesc": "Insert an image from URL",
+      "callout": "Callout",
+      "calloutDesc": "Info, warning, or alert block",
+      "divider": "Divider",
+      "dividerDesc": "Horizontal rule separator"
+    },
+    "toolbar": {
+      "formatGroup": "Text formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "code": "Inline code",
+      "highlight": "Highlight",
+      "alignGroup": "Text alignment",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "alignJustify": "Justify",
+      "insertGroup": "Insert elements",
+      "link": "Link",
+      "linkPrompt": "Enter URL",
+      "image": "Image",
+      "imagePrompt": "Enter image URL",
+      "table": "Table",
+      "codeBlock": "Code block",
+      "callout": "Callout",
+      "historyGroup": "Undo and redo",
+      "toolbarLabel": "Editor toolbar",
+      "undo": "Undo",
+      "undoShortcut": "⌘Z",
+      "redo": "Redo",
+      "redoShortcut": "⌘⇧Z",
+      "bubbleToolbar": "Formatting"
+    },
+    "callout": {
+      "changeType": "Change callout type"
+    },
+    "blockHandle": {
+      "dragHandle": "Drag to reorder block",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+    "mergeTagInserter": {
+      "title": "Merge Tags",
+      "searchPlaceholder": "Search fields…",
+      "noFields": "No fields available",
+      "insert": "Insert"
+    },
+    "previewToggle": {
+      "label": "Document view mode",
+      "edit": "Edit",
+      "preview": "Preview",
+      "raw": "Raw"
+    }
+  },
   "presence": {
     "online": "Online",
     "away": "Away",
@@ -1060,5 +1143,57 @@
       "clear": "Clear",
       "save": "Save"
     }
+  },
+  "documentTemplates": {
+    "title": "Document Templates",
+    "description": "Create and manage document templates for PDF generation.",
+    "newTemplate": "New Template",
+    "emptyTitle": "No document templates yet",
+    "emptyDescription": "Create your first template to start generating PDFs from record data.",
+    "emptyAction": "Create Template",
+    "cardUpdated": "Updated {date}",
+    "cardCreatedBy": "by {name}",
+    "cardVersion": "v{version}",
+    "duplicate": "Duplicate",
+    "deleteTitle": "Delete Template",
+    "deleteDescription": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "deleteBlocked": "Cannot delete template with existing generated documents. Delete generated documents first.",
+    "editor": {
+      "backToTemplates": "Templates",
+      "untitled": "Untitled Template",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "tableBadge": "Table: {name}"
+    },
+    "wizard": {
+      "title": "New Document Template",
+      "nameLabel": "Template name",
+      "namePlaceholder": "e.g. Invoice, Proposal, Receipt",
+      "tableLabel": "Select a table",
+      "tableDescription": "Choose which table this template will generate documents from.",
+      "tablePlaceholder": "Choose a table...",
+      "noTables": "No tables available in this workspace.",
+      "create": "Create Template",
+      "creating": "Creating..."
+    }
+  },
+  "documentGeneration": {
+    "buttonLabel": "Generate document",
+    "title": "Generate Document",
+    "description": "Select a template to generate a PDF from this record.",
+    "version": "v{version}",
+    "generatePdf": "Generate PDF",
+    "generating": "Generating your document...",
+    "completed": "Document generated successfully!",
+    "failed": "Document generation failed",
+    "unknownError": "An unexpected error occurred. Please try again.",
+    "download": "Download PDF",
+    "openInNewTab": "Open in new tab",
+    "retry": "Try Again",
+    "close": "Close",
+    "noDocuments": "No generated documents",
+    "noDocumentsHint": "Generate a PDF from a template to see it here.",
+    "aiDrafted": "AI"
   }
 }

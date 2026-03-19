@@ -745,6 +745,7 @@
     "config_save_as_new": "Guardar como nueva configuración",
     "config_new_name_placeholder": "Nombre de configuración",
     "config_new_name": "Nuevo nombre de configuración",
+    "tab_documents": "Documentos",
     "inline_sub_table": {
       "item_count": "{count, plural, one {1 elemento} other {# elementos}}",
       "search_placeholder": "Buscar registros vinculados…",
@@ -1042,6 +1043,88 @@
     "expandGroup": "Expandir grupo de notificaciones",
     "collapseGroup": "Contraer grupo de notificaciones"
   },
+  "smartDocEditor": {
+    "slashCommand": {
+      "noResults": "No se encontraron comandos",
+      "heading1": "Encabezado 1",
+      "heading1Desc": "Encabezado de sección grande",
+      "heading2": "Encabezado 2",
+      "heading2Desc": "Encabezado de sección mediano",
+      "heading3": "Encabezado 3",
+      "heading3Desc": "Encabezado de sección pequeño",
+      "heading4": "Encabezado 4",
+      "heading4Desc": "Encabezado de sección más pequeño",
+      "bulletList": "Lista con viñetas",
+      "bulletListDesc": "Lista desordenada con viñetas",
+      "orderedList": "Lista numerada",
+      "orderedListDesc": "Lista ordenada con números",
+      "taskList": "Lista de tareas",
+      "taskListDesc": "Lista con casillas de verificación",
+      "blockquote": "Cita",
+      "blockquoteDesc": "Bloque de cita con sangría",
+      "codeBlock": "Bloque de código",
+      "codeBlockDesc": "Código con resaltado de sintaxis",
+      "table": "Tabla",
+      "tableDesc": "Insertar tabla de 3×3",
+      "image": "Imagen",
+      "imageDesc": "Insertar imagen desde URL",
+      "callout": "Aviso",
+      "calloutDesc": "Bloque de información, advertencia o alerta",
+      "divider": "Divisor",
+      "dividerDesc": "Separador de línea horizontal"
+    },
+    "toolbar": {
+      "formatGroup": "Formato de texto",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado",
+      "strikethrough": "Tachado",
+      "code": "Código en línea",
+      "highlight": "Resaltar",
+      "alignGroup": "Alineación de texto",
+      "alignLeft": "Alinear a la izquierda",
+      "alignCenter": "Centrar",
+      "alignRight": "Alinear a la derecha",
+      "alignJustify": "Justificar",
+      "insertGroup": "Insertar elementos",
+      "link": "Enlace",
+      "linkPrompt": "Ingrese la URL",
+      "image": "Imagen",
+      "imagePrompt": "Ingrese la URL de la imagen",
+      "table": "Tabla",
+      "codeBlock": "Bloque de código",
+      "callout": "Aviso",
+      "historyGroup": "Deshacer y rehacer",
+      "toolbarLabel": "Barra de herramientas del editor",
+      "undo": "Deshacer",
+      "undoShortcut": "⌘Z",
+      "redo": "Rehacer",
+      "redoShortcut": "⌘⇧Z",
+      "bubbleToolbar": "Formato"
+    },
+    "callout": {
+      "changeType": "Cambiar tipo de aviso"
+    },
+    "blockHandle": {
+      "dragHandle": "Arrastrar para reordenar bloque",
+      "delete": "Eliminar",
+      "duplicate": "Duplicar",
+      "moveUp": "Mover arriba",
+      "moveDown": "Mover abajo"
+    },
+    "mergeTagInserter": {
+      "title": "Etiquetas de combinación",
+      "searchPlaceholder": "Buscar campos…",
+      "noFields": "No hay campos disponibles",
+      "insert": "Insertar"
+    },
+    "previewToggle": {
+      "label": "Modo de vista del documento",
+      "edit": "Editar",
+      "preview": "Vista previa",
+      "raw": "Sin formato"
+    }
+  },
   "presence": {
     "online": "En línea",
     "away": "Ausente",
@@ -1060,5 +1143,57 @@
       "clear": "Borrar",
       "save": "Guardar"
     }
+  },
+  "documentTemplates": {
+    "title": "Plantillas de documentos",
+    "description": "Crea y gestiona plantillas de documentos para generación de PDF.",
+    "newTemplate": "Nueva plantilla",
+    "emptyTitle": "Aún no hay plantillas de documentos",
+    "emptyDescription": "Crea tu primera plantilla para empezar a generar PDFs a partir de datos de registros.",
+    "emptyAction": "Crear plantilla",
+    "cardUpdated": "Actualizado {date}",
+    "cardCreatedBy": "por {name}",
+    "cardVersion": "v{version}",
+    "duplicate": "Duplicar",
+    "deleteTitle": "Eliminar plantilla",
+    "deleteDescription": "¿Estás seguro de que quieres eliminar \"{name}\"? Esta acción no se puede deshacer.",
+    "deleteBlocked": "No se puede eliminar una plantilla con documentos generados existentes. Elimina primero los documentos generados.",
+    "editor": {
+      "backToTemplates": "Plantillas",
+      "untitled": "Plantilla sin título",
+      "saving": "Guardando...",
+      "saved": "Guardado",
+      "unsaved": "Cambios sin guardar",
+      "tableBadge": "Tabla: {name}"
+    },
+    "wizard": {
+      "title": "Nueva plantilla de documento",
+      "nameLabel": "Nombre de la plantilla",
+      "namePlaceholder": "p. ej. Factura, Propuesta, Recibo",
+      "tableLabel": "Selecciona una tabla",
+      "tableDescription": "Elige de qué tabla esta plantilla generará documentos.",
+      "tablePlaceholder": "Elige una tabla...",
+      "noTables": "No hay tablas disponibles en este espacio de trabajo.",
+      "create": "Crear plantilla",
+      "creating": "Creando..."
+    }
+  },
+  "documentGeneration": {
+    "buttonLabel": "Generar documento",
+    "title": "Generar documento",
+    "description": "Selecciona una plantilla para generar un PDF a partir de este registro.",
+    "version": "v{version}",
+    "generatePdf": "Generar PDF",
+    "generating": "Generando tu documento...",
+    "completed": "Documento generado correctamente.",
+    "failed": "La generación del documento falló",
+    "unknownError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "download": "Descargar PDF",
+    "openInNewTab": "Abrir en nueva pestaña",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "noDocuments": "Sin documentos generados",
+    "noDocumentsHint": "Genera un PDF a partir de una plantilla para verlo aquí.",
+    "aiDrafted": "IA"
   }
 }

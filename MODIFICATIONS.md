@@ -57,7 +57,251 @@ built → failed-review → built (retry after fixes)
 
 ## Active Sessions
 
-(No active sessions)
+## Session A — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-16
+**Status:** passed-review
+**Prompt(s):** Prompts 1–2 (Unit 1: Document Template Data Layer)
+
+### Files Created
+- `packages/shared/db/schema/document-templates.ts` — Drizzle schema for `document_templates` table (UUIDv7 PK, tenant-scoped, JSONB content/settings, version tracking)
+- `packages/shared/db/schema/generated-documents.ts` — Drizzle schema for `generated_documents` table (UUIDv7 PK, tenant-scoped, template FK, file URL, AI-drafted flag)
+- `apps/web/src/data/document-templates.ts` — Tenant-scoped read queries: `getDocumentTemplate()`, `listDocumentTemplates()` with creator name join
+- `apps/web/src/data/generated-documents.ts` — Tenant-scoped read queries: `getGeneratedDocument()`, `listGeneratedDocuments()`
+- `apps/web/src/data/__tests__/document-templates.integration.test.ts` — Integration tests with tenant isolation for document template queries
+- `apps/web/src/data/__tests__/generated-documents.integration.test.ts` — Integration tests with tenant isolation for generated document queries
+- `apps/web/src/lib/schemas/document-templates.ts` — Zod schemas: `createDocumentTemplateSchema`, `updateDocumentTemplateSchema` (refine: at least one field), `duplicateDocumentTemplateSchema`, `deleteDocumentTemplateSchema`
+- `apps/web/src/actions/document-templates.ts` — Server actions: `createDocumentTemplate`, `updateDocumentTemplate` (version increment), `duplicateDocumentTemplate` ("(Copy)" suffix), `deleteDocumentTemplate` (blocks if generated docs exist)
+- `apps/web/src/actions/__tests__/document-template-actions.test.ts` — Unit tests for all 4 server actions (17 tests)
+
+### Files Modified
+- `packages/shared/db/index.ts` — Added exports for `documentTemplates`, `generatedDocuments` schemas and types
+- `packages/shared/testing/factories.ts` — Added `createTestDocumentTemplate()` and `createTestGeneratedDocument()` factories (Tier 8)
+- `packages/shared/testing/index.ts` — Re-exported both new test factories
+- `apps/web/src/components/chat/use-chat-editor.ts` — Fixed stale closure: `handleSend`/`handleCollapse` use `editorRef` instead of captured `editor` (compatibility with `immediatelyRender: false`)
+- `apps/web/src/app/dev/preview/preview-client.tsx` — Fixed lint: explicit `JSONContent` type import replacing inline `import()`
+
+### Files Deleted
+(None)
+
+### Schema Changes
+- Added table: `document_templates` — TipTap Smart Doc templates with JSONB content/settings, version tracking, per-table scoping
+- Added table: `generated_documents` — PDF output records with R2 file URLs, template FK, automation/AI metadata
+
+### New Domain Terms Introduced
+- `DocumentTemplate` — A TipTap Smart Doc template with merge tags, bound to a table, versioned
+- `GeneratedDocument` — A PDF (or other file type) generated from a template + record, stored in R2
+
+### Notes
+- Zod `createDocumentTemplateSchema` defaults: empty TipTap doc for content, A4/portrait/20mm margins for settings
+- `deleteDocumentTemplate` performs hard delete (not soft) but blocks if any `generated_documents` reference the template (ConflictError)
+- `updateDocumentTemplate` increments `version` on every update for change tracking
+
+## Session B — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-17
+**Status:** passed-review
+**Prompt(s):** Prompts 3–5 (Unit 2: TipTap Env 2 Editor Core — Extension Config, Custom Nodes, Editor Shell, Toolbar & Menus)
+
+### Files Created
+- `apps/web/src/components/editor/extensions/index.ts` — Smart Doc extension bundle: StarterKit, Underline, Highlight, Link, Image, Table, CodeBlockLowlight, TaskList/TaskItem, Placeholder, Typography, CharacterCount, TextAlign, Color/TextStyle, + custom nodes (MergeTag, RecordRef, Callout, SlashCommand)
+- `apps/web/src/components/editor/extensions/merge-tag/merge-tag.ts` — MergeTag custom inline atom node (attrs: tableId, fieldId, fallback)
+- `apps/web/src/components/editor/extensions/merge-tag/merge-tag-view.tsx` — MergeTag React NodeView (teal pill)
+- `apps/web/src/components/editor/extensions/record-ref/record-ref.ts` — RecordRef custom inline atom node (attrs: tableId, recordId, displayText)
+- `apps/web/src/components/editor/extensions/record-ref/record-ref-view.tsx` — RecordRef React NodeView (inline chip with record icon)
+- `apps/web/src/components/editor/extensions/callout/callout.ts` — Callout custom block node (attrs: emoji, color) with 4 variants (info/warning/success/error)
+- `apps/web/src/components/editor/extensions/callout/callout-view.tsx` — Callout React NodeView (colored admonition with clickable emoji to cycle variant)
+- `apps/web/src/components/editor/extensions/slash-command/slash-command.ts` — SlashCommand extension with suggestion plugin, popup positioning, keyboard navigation
+- `apps/web/src/components/editor/extensions/slash-command/slash-command-list.tsx` — SlashCommandList forwardRef component with command items, keyboard selection, category grouping
+- `apps/web/src/components/editor/extensions/block-handle/BlockHandle.tsx` — Block handle component for drag-to-reorder blocks
+- `apps/web/src/components/editor/SmartDocEditor.tsx` — SmartDocEditor shell component with EditorContent, toolbar, bubble menu, block handles
+- `apps/web/src/components/editor/use-smart-doc-editor.ts` — useSmartDocEditor() hook: editor instance management, content sync, destroy lifecycle
+- `apps/web/src/components/editor/toolbar/EditorToolbar.tsx` — Fixed toolbar with formatting buttons, block type selector, alignment, insert actions
+- `apps/web/src/components/editor/menus/BubbleToolbar.tsx` — Floating bubble menu for inline formatting on text selection
+- `apps/web/src/components/editor/__tests__/extensions.test.ts` — 25 unit tests: extension bundle composition, config verification, MergeTag/RecordRef/Callout commands + HTML round-trip, formatting commands
+- `apps/web/src/components/editor/__tests__/smart-doc-editor.test.tsx` — Tests for SmartDocEditor component rendering and integration
+- `apps/web/src/components/editor/__tests__/use-smart-doc-editor.test.ts` — Tests for useSmartDocEditor hook lifecycle
+- `apps/web/src/components/editor/__tests__/slash-command.test.ts` — Tests for SlashCommand extension and SlashCommandList
+
+### Files Modified
+- `package.json` — Added pnpm overrides pinning all @tiptap/* packages to 3.20.2 (3.20.3 ships source-only, no dist/ — breaks Vite resolution)
+- `apps/web/package.json` — Added Env 2 TipTap extensions: highlight, image, table (+row/cell/header), code-block-lowlight, task-list/task-item, typography, character-count, text-align, color, text-style, code-block; added lowlight
+- `pnpm-lock.yaml` — Updated lockfile
+- `apps/web/src/components/editor/extensions/callout/callout.ts` — Added `?? 'info'` fallback for `noUncheckedIndexedAccess` compliance on variant cycling
+- `apps/web/src/components/editor/extensions/callout/callout-view.tsx` — Added `?? 'info'` fallback for `noUncheckedIndexedAccess` compliance on variant cycling
+- `apps/web/src/components/editor/__tests__/extensions.test.ts` — Cast TipTap JSON node types to `Record<string, unknown>` to fix `.attrs` property access on union type
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this session is UI/editor-only)
+
+### New Domain Terms Introduced
+(None — MergeTag, RecordRef, Callout, SmartDocEditor already defined in smart-docs.md)
+
+### Notes
+- TipTap v3.20.3 ships raw TypeScript source without pre-built dist/ files, causing Vite/Vitest resolution failures. All TipTap packages pinned to 3.20.2 via pnpm overrides in root package.json.
+- StarterKit configured with `link: false, underline: false, codeBlock: false` to avoid duplicate extensions (Link, Underline configured separately with options; CodeBlock replaced by CodeBlockLowlight).
+- Three typecheck fixes during verification: `noUncheckedIndexedAccess` requires fallback values for array index access; TipTap's `getJSON()` returns a union type that doesn't include `.attrs` on all branches.
+- All 14 interface contracts verified: SmartDocEditor, useSmartDocEditor, createSmartDocExtensions, MergeTag, MergeTagView, RecordRef, RecordRefView, Callout, CalloutView, SlashCommand, SlashCommandList, EditorToolbar, BubbleToolbar, BlockHandle.
+
+## Session C — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompts 6–7 (Unit 3: Merge-Tag Resolution & Field Inserter)
+
+### Files Created
+- `apps/web/src/lib/editor/merge-resolver.ts` — Merge-tag resolution service: `formatCanonicalValue()` (20+ field types), `resolveMergeTags()` (deep-clone, walk, resolve simple + cross-linked fields), `resolveAndRenderHTML()` (resolve → generateHTML pipeline for PDF/portal)
+- `apps/web/src/lib/types/document-templates.ts` — `MergeTagField` interface (fieldId, tableId, fieldName, fieldType, isLinked, crossLinkId)
+- `apps/web/src/lib/editor/__tests__/merge-resolver.test.ts` — 18 tests for formatCanonicalValue, resolveMergeTags, resolveAndRenderHTML (field types, linked fields, fallbacks, immutability)
+- `apps/web/src/components/editor/hooks/use-merge-tag-fields.ts` — `useMergeTagFields()` hook: fetches fields from source + cross-linked tables via API, filters excluded types (attachment/button/linked_record), returns `MergeTagFieldGroup[]`
+- `apps/web/src/components/editor/sidebar/MergeTagInserter.tsx` — Sidebar component: searchable field list grouped by table, collapsible groups, click inserts MergeTag node at cursor
+- `apps/web/src/components/editor/toolbar/PreviewToggle.tsx` — Edit/Preview/Raw mode toggle component + `usePreviewToggle()` hook managing content swapping (preview resolves merge tags, raw shows `{field_name}` text)
+- `apps/web/src/app/api/editor/merge-tag-fields/route.ts` — POST endpoint: loads fields + cross-links for source table, filters hidden fields via permissions when viewId provided
+- `apps/web/src/components/editor/__tests__/merge-tag-inserter.test.tsx` — 9 tests for MergeTagInserter (loading, groups, search, insert, collapse)
+- `apps/web/src/components/editor/__tests__/preview-toggle.test.tsx` — 10 tests for PreviewToggle component + usePreviewToggle hook (modes, resolve, raw conversion, restore)
+- `apps/web/src/components/editor/__tests__/use-merge-tag-fields.test.ts` — 6 tests for useMergeTagFields hook (fetch, filter, error, refetch)
+
+### Files Modified
+- `apps/web/messages/en.json` — Added `smartDocEditor.mergeTagInserter` and `smartDocEditor.previewToggle` i18n namespaces
+- `apps/web/messages/es.json` — Added `smartDocEditor.mergeTagInserter` and `smartDocEditor.previewToggle` i18n namespaces (Spanish)
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this session is resolution logic + UI components only)
+
+### New Domain Terms Introduced
+- `MergeTagField` — Interface describing a field available for merge-tag insertion (simple or cross-linked)
+- `MergeTagFieldGroup` — Interface grouping merge-tag fields by table (source vs linked)
+- `PreviewMode` — Union type for document view modes: `edit | preview | raw`
+
+### Notes
+- `resolveMergeTags()` uses deep-clone + walk pattern — never mutates original TipTap JSONB content
+- `formatCanonicalValue()` handles 20+ field types including currency (Intl.NumberFormat), date, checkbox (Yes/No), select/tag (label extraction), people (name extraction)
+- `usePreviewToggle` stores edit-mode content in a ref before mode switch, restores on return to edit
+- Raw mode replaces mergeTag nodes with `{fallback}` text nodes (no server round-trip)
+- All 9 interface contracts verified: resolveMergeTags, resolveAndRenderHTML, MergeTagInserter, useMergeTagFields, MergeTagField, MergeTagFieldGroup, PreviewToggle, usePreviewToggle, PreviewMode
+
+---
+
+## Session D — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompt 8 (Unit 4: PDF Generation Pipeline — PDFRenderer & GotenbergClient)
+
+### Files Created
+- `apps/web/src/lib/editor/pdf-renderer.ts` — `renderToHTML()` function: converts TipTap JSONB → complete HTML document with print CSS (@page rule, DM Sans/JetBrains Mono fonts, page size/margins). Exports `DocumentTemplateSettings` type.
+- `packages/shared/pdf/gotenberg-client.ts` — `GotenbergClient` class: HTTP client for Gotenberg's Chromium HTML→PDF endpoint (`POST /forms/chromium/convert/html`). FormData upload, AbortController timeout, configurable paper/margin options.
+- `packages/shared/pdf/index.ts` — Package barrel export for `GotenbergClient` and `GotenbergConvertOptions`
+- `apps/web/src/lib/editor/__tests__/pdf-renderer.test.ts` — 15 tests: HTML structure, font inclusion, @page dimensions (A4/Letter/Legal/landscape), custom margins, print-color-adjust, heading/bold/italic/table/list rendering, empty doc
+- `packages/shared/pdf/__tests__/gotenberg-client.test.ts` — 18 tests: constructor (base URL, trailing slashes, env var fallback, missing env), convertHTMLToPDF (POST endpoint, FormData file upload, Buffer return, paper/margin/landscape options, HTTP errors, timeout, abort signal, network errors)
+
+### Files Modified
+- `packages/shared/package.json` — Added `"./pdf"` export mapping to `pdf/index.ts`
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — this session is rendering/HTTP client code only)
+
+### New Domain Terms Introduced
+- `DocumentTemplateSettings` — Type defining page configuration (pageSize, orientation, margins) for PDF rendering
+- `GotenbergConvertOptions` — Type for optional Gotenberg Chromium conversion parameters (paper size, margins, landscape, timeout)
+
+### Notes
+- `renderToHTML()` uses `generateHTML()` from `@tiptap/html` with the full Smart Doc extension set, then wraps in a complete HTML page with embedded print CSS
+- Page size lookup supports A4/Letter/Legal with landscape dimension swap; unknown sizes fall back to A4
+- `GotenbergClient` sends HTML as a Blob file upload named `index.html` per Gotenberg's multipart API
+- Timeout uses `AbortController` with configurable ms (default 30s); distinguishes abort errors from network errors
+- All 33 tests pass. Zero lint/type errors.
+
+---
+
+## Session E — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompt 9 (Unit 4: PDF Generation Pipeline — Processor, Queue, Server Action)
+
+### Files Created
+- `apps/worker/src/processors/document-generation/generate.ts` — `DocumentGenerationProcessor`: BullMQ processor that receives pre-rendered HTML, converts to PDF via GotenbergClient, uploads to R2 (`docGenOutputKey`), creates `generated_documents` row with presigned URL
+- `apps/web/src/actions/document-generation.ts` — `generateDocument` server action (Zod validate → verify template → resolveMergeTags → renderToHTML → enqueue BullMQ job with HTML + landscape flag); `getDocumentGenerationStatus` action (tenant-scoped job status polling)
+- `apps/worker/src/processors/document-generation/__tests__/generate.test.ts` — 8 tests: full pipeline, landscape flag, automation triggeredBy, buffer upload, logging, Gotenberg error propagation, storage error propagation
+- `apps/web/src/actions/__tests__/document-generation.test.ts` — 13 tests: Zod validation, template existence check, merge-tag resolution + HTML rendering before enqueue, retry config, landscape flag, job ID return, status polling (unknown/completed/failed/active/waiting/delayed, tenant isolation)
+
+### Files Modified
+- `packages/shared/queue/types.ts` — Extended `DocumentGenJobData` with `html: string` and `landscape: boolean` fields (server action pre-renders, worker receives ready HTML)
+- `apps/worker/src/index.ts` — Registered `DocumentGenerationProcessor` (start + shutdown handler)
+- `TASK-STATUS.md` — Unit 4 status → `in-progress`, branch set, start date
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — uses existing `generated_documents` table from Unit 1)
+
+### New Domain Terms Introduced
+- `GenerateDocumentResult` — Server action return type `{ jobId: string }`
+- `DocumentGenerationStatus` — Status polling return type `{ status, result?, error? }`
+
+### Notes
+- Architecture decision: server action resolves merge tags + renders HTML before enqueueing (web app has data layer access), worker receives pre-rendered HTML and handles Gotenberg → R2 → DB only. This avoids cross-app imports (worker can't import web app's `@/data/*` functions due to tsconfig rootDir).
+- Retry: 3 attempts, exponential backoff 5s base — configured at enqueue time in server action
+- Job retention: completed 24h, failed 7d
+- Tenant isolation enforced in `getDocumentGenerationStatus`: jobs from other tenants return `{ status: 'unknown' }`
+- All 21 new tests pass. All 54 total tests pass (prompt 8 + 9). Zero lint/type errors.
+
+---
+
+## Session F — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompts 10–11 (Unit 5: Template Management & Document Generation UI)
+
+### Files Created
+- `apps/web/src/app/(app)/[workspaceId]/documents/page.tsx` — Document templates list route page (Server Component, Suspense + skeleton, loads all templates via `listAllDocumentTemplates`)
+- `apps/web/src/app/(app)/[workspaceId]/documents/[templateId]/page.tsx` — Template editor route page (Server Component, loads template + table, 404 on missing)
+- `apps/web/src/app/(app)/[workspaceId]/documents/new/page.tsx` — New template wizard route page (Server Component, loads workspace tables)
+- `apps/web/src/components/documents/DocumentTemplateListPage.tsx` — Client component: grid of TemplateCards, empty state, "New Template" button, optimistic duplicate/delete
+- `apps/web/src/components/documents/TemplateCard.tsx` — Card component: name, table badge, date, creator, version, dropdown (Duplicate/Delete with confirmation dialog)
+- `apps/web/src/components/documents/DocumentTemplateEditorPage.tsx` — Page wrapper: back button, editable name (debounced 1s save), table badge
+- `apps/web/src/components/documents/DocumentTemplateEditor.tsx` — Editor: SmartDocEditor with EditorToolbar + PreviewToggle (top), MergeTagInserter (sidebar), 3s debounced auto-save with status indicator
+- `apps/web/src/components/documents/NewDocumentTemplateWizard.tsx` — Wizard Create: name input → table select → create & redirect to editor
+- `apps/web/src/components/documents/GenerateDocumentButton.tsx` — Record View header icon button, hidden when no templates, opens GenerateDocumentDialog
+- `apps/web/src/components/documents/GenerateDocumentDialog.tsx` — Modal: template selector → "Generate PDF" → progress spinner → success download / error retry
+- `apps/web/src/components/documents/GeneratedDocumentList.tsx` — Record's generated PDFs: template name, date, generator, AI badge, download link, empty state
+- `apps/web/src/components/documents/use-document-generation.ts` — `useDocumentGeneration()` hook: polls `getDocumentGenerationStatus` every 2s, stops on terminal state
+
+### Files Modified
+- `apps/web/src/data/document-templates.ts` — Added `DocumentTemplateListItem` type (extends with tableName), `listAllDocumentTemplates()` function (cross-table, joins tables + users)
+- `apps/web/src/actions/document-generation.ts` — Added `getGeneratedDocumentUrl()` server action (tenant-scoped URL fetch for generated docs)
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Added `documentTemplates`, `recordId`, `onDocumentGenerated` props; renders GenerateDocumentButton before chat icon
+- `apps/web/messages/en.json` — Added `documentTemplates` namespace (list, editor, wizard keys), `documentGeneration` namespace (dialog, progress, status keys), `record_view.tab_documents` key
+- `apps/web/messages/es.json` — Added `documentTemplates` namespace (Spanish), `documentGeneration` namespace (Spanish), `record_view.tab_documents` key
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — uses existing `document_templates` and `generated_documents` tables from Unit 1)
+
+### New Domain Terms Introduced
+- `DocumentTemplateListItem` — Extended type adding `tableName` for cross-table template listing
+- `GeneratedDocumentItem` — Client-side type for displaying generated PDFs in the list
+
+### Notes
+- Verification fix: hardcoded "AI" string in GeneratedDocumentList replaced with `t('aiDrafted')` i18n key
+- Auto-save uses two debounce timers: 3s for content (DocumentTemplateEditor), 1s for name (DocumentTemplateEditorPage)
+- GenerateDocumentDialog uses server actions exclusively (no direct data function imports from client components)
+- `useDocumentGeneration` stops polling on completed/failed/unknown states and cleans up interval on unmount
+- All 12 interface contracts verified. 2622 tests pass. Zero lint/type errors.
 
 ---
 

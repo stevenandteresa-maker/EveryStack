@@ -87,6 +87,7 @@ function createChatKeyboardExtension(handlers: {
 export function useChatEditor(config: ChatEditorConfig): ChatEditorInstance {
   const [state, setState] = useState<ChatEditorState>('compact');
   const stateRef = useRef<ChatEditorState>('compact');
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
 
   // Keep ref in sync for keyboard handler closure
   const updateState = useCallback((next: ChatEditorState) => {
@@ -95,12 +96,12 @@ export function useChatEditor(config: ChatEditorConfig): ChatEditorInstance {
   }, []);
 
   const handleSend = useCallback(() => {
-    if (!editor) return;
-    if (editor.isEmpty) return;
+    if (!editorRef.current) return;
+    if (editorRef.current.isEmpty) return;
 
-    const content = editor.getJSON();
+    const content = editorRef.current.getJSON();
     config.onSend(content);
-    editor.commands.clearContent(true);
+    editorRef.current.commands.clearContent(true);
     updateState('compact');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.onSend]);
@@ -110,8 +111,7 @@ export function useChatEditor(config: ChatEditorConfig): ChatEditorInstance {
   }, [updateState]);
 
   const handleCollapse = useCallback(() => {
-    updateState(editor?.isEmpty ? 'compact' : 'focused');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    updateState(editorRef.current?.isEmpty ? 'compact' : 'focused');
   }, [updateState]);
 
   const extensions = [
@@ -129,6 +129,7 @@ export function useChatEditor(config: ChatEditorConfig): ChatEditorInstance {
   ];
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions,
     editorProps: {
       attributes: {
@@ -156,6 +157,9 @@ export function useChatEditor(config: ChatEditorConfig): ChatEditorInstance {
       }
     },
   });
+
+  // Keep editor ref in sync for stable callbacks
+  editorRef.current = editor;
 
   const isEmpty = editor?.isEmpty ?? true;
 
