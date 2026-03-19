@@ -14,6 +14,7 @@ import {
   desc,
   documentTemplates,
   users,
+  tables,
 } from '@everystack/shared/db';
 import type { DocumentTemplate } from '@everystack/shared/db';
 
@@ -25,6 +26,10 @@ export type { DocumentTemplate } from '@everystack/shared/db';
 
 export interface DocumentTemplateWithCreator extends DocumentTemplate {
   creatorName: string;
+}
+
+export interface DocumentTemplateListItem extends DocumentTemplateWithCreator {
+  tableName: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,5 +142,57 @@ export async function listDocumentTemplates(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     creatorName: row.creatorName,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// listAllDocumentTemplates
+// ---------------------------------------------------------------------------
+
+/**
+ * List all document templates for a tenant (across all tables).
+ * Joins creator name and table name. Ordered by updatedAt descending.
+ */
+export async function listAllDocumentTemplates(
+  tenantId: string,
+): Promise<DocumentTemplateListItem[]> {
+  const db = getDbForTenant(tenantId, 'read');
+
+  const rows = await db
+    .select({
+      id: documentTemplates.id,
+      tenantId: documentTemplates.tenantId,
+      tableId: documentTemplates.tableId,
+      name: documentTemplates.name,
+      content: documentTemplates.content,
+      settings: documentTemplates.settings,
+      version: documentTemplates.version,
+      environment: documentTemplates.environment,
+      createdBy: documentTemplates.createdBy,
+      createdAt: documentTemplates.createdAt,
+      updatedAt: documentTemplates.updatedAt,
+      creatorName: users.name,
+      tableName: tables.name,
+    })
+    .from(documentTemplates)
+    .innerJoin(users, eq(documentTemplates.createdBy, users.id))
+    .innerJoin(tables, eq(documentTemplates.tableId, tables.id))
+    .where(eq(documentTemplates.tenantId, tenantId))
+    .orderBy(desc(documentTemplates.updatedAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    tenantId: row.tenantId,
+    tableId: row.tableId,
+    name: row.name,
+    content: row.content,
+    settings: row.settings,
+    version: row.version,
+    environment: row.environment,
+    createdBy: row.createdBy,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    creatorName: row.creatorName,
+    tableName: row.tableName,
   }));
 }

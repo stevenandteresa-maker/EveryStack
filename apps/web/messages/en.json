@@ -1136,5 +1136,39 @@
       "clear": "Clear",
       "save": "Save"
     }
+  },
+  "documentTemplates": {
+    "title": "Document Templates",
+    "description": "Create and manage document templates for PDF generation.",
+    "newTemplate": "New Template",
+    "emptyTitle": "No document templates yet",
+    "emptyDescription": "Create your first template to start generating PDFs from record data.",
+    "emptyAction": "Create Template",
+    "cardUpdated": "Updated {date}",
+    "cardCreatedBy": "by {name}",
+    "cardVersion": "v{version}",
+    "duplicate": "Duplicate",
+    "deleteTitle": "Delete Template",
+    "deleteDescription": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "deleteBlocked": "Cannot delete template with existing generated documents. Delete generated documents first.",
+    "editor": {
+      "backToTemplates": "Templates",
+      "untitled": "Untitled Template",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "tableBadge": "Table: {name}"
+    },
+    "wizard": {
+      "title": "New Document Template",
+      "nameLabel": "Template name",
+      "namePlaceholder": "e.g. Invoice, Proposal, Receipt",
+      "tableLabel": "Select a table",
+      "tableDescription": "Choose which table this template will generate documents from.",
+      "tablePlaceholder": "Choose a table...",
+      "noTables": "No tables available in this workspace.",
+      "create": "Create Template",
+      "creating": "Creating..."
+    }
   }
 }

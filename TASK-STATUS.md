@@ -99,17 +99,17 @@ When a unit moves to `failed-review`:
   - Branch: `build/3d-document-templates`
   - Notes: Prompts 6–7 complete. Verified 2026-03-19. All 9 interface contracts confirmed. 123 editor tests pass, zero lint/type errors.
 
-- [ ] **Unit 4: PDF Generation Pipeline** — `in-progress`
+- [x] **Unit 4: PDF Generation Pipeline** — `passed-review`
   - Produces: `PDFRenderer`, `GotenbergClient`; `processDocumentGeneration` BullMQ processor; `enqueueDocumentGeneration()`, `generateDocument` server action; `document-generation` queue registration
   - Consumes: Unit 1 types + factories, Unit 3 `resolveMergeTags()`, StorageClient from 1G
   - Branch: `build/3d-document-templates`
-  - Notes: Started 2026-03-19
+  - Notes: Started 2026-03-19. Verified 2026-03-19. All 7 interface contracts confirmed. 54 tests pass, zero lint/type errors.
 
-- [ ] **Unit 5: Template Management & Document Generation UI** — `pending`
+- [ ] **Unit 5: Template Management & Document Generation UI** — `in-progress`
   - Produces: `DocumentTemplateListPage`, `DocumentTemplateEditor`, `GenerateDocumentDialog`, `GenerateDocumentButton`, `GeneratedDocumentList` components; `useDocumentGeneration()` hook; document routes
   - Consumes: Unit 1 data + actions, Unit 2 editor, Unit 3 inserter + preview, Unit 4 generation action
-  - Branch:
-  - Notes:
+  - Branch: `build/3d-document-templates`
+  - Notes: Started 2026-03-19.
 
 ---
 
