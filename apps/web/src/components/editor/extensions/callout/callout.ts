@@ -116,7 +116,7 @@ export const Callout = Node.create({
 
           const variants: CalloutVariant[] = ['info', 'warning', 'success', 'error'];
           const currentIndex = variants.indexOf(node.attrs.color as CalloutVariant);
-          const nextVariant = variants[(currentIndex + 1) % variants.length];
+          const nextVariant: CalloutVariant = variants[(currentIndex + 1) % variants.length] ?? 'info';
           const defaults = CALLOUT_DEFAULTS[nextVariant];
 
           return commands.updateAttributes('callout', {

@@ -87,17 +87,17 @@ When a unit moves to `failed-review`:
   - Branch: `build/3d-document-templates`
   - Notes: Prompts 1–2 complete. Verified 2026-03-16. All 6 interface contracts confirmed. 2471 tests pass, zero lint/type errors.
 
-- [ ] **Unit 2: TipTap Environment 2 Editor Core** — `in-progress`
+- [x] **Unit 2: TipTap Environment 2 Editor Core** — `passed-review`
   - Produces: `SmartDocEditor`, `useSmartDocEditor()` hook; `smartDocExtensions` bundle; custom nodes (`MergeTag`, `RecordRef`, `Callout`); `SlashCommand` extension + list; `EditorToolbar`, `BubbleToolbar`, `BlockHandle`
   - Consumes: None — no unit dependencies (uses TipTap libraries + Env 1 patterns)
   - Branch: `build/3d-document-templates`
-  - Notes: Parallel with Unit 3 after Unit 1 completes
+  - Notes: Prompts 3–5 complete. Verified 2026-03-17. All 14 interface contracts confirmed. 2551 tests pass, zero lint/type errors.
 
-- [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `pending`
+- [ ] **Unit 3: Merge-Tag Resolution & Field Inserter** — `in-progress`
   - Produces: `resolveMergeTags()`, `resolveAndRenderHTML()` resolution functions; `MergeTagInserter` sidebar component; `useMergeTagFields()` hook; `PreviewToggle` component; `MergeTagField` type
   - Consumes: Unit 1 `DocumentTemplate` type; 3B-i cross-link resolution; 3A-iii field permissions
-  - Branch:
-  - Notes: Parallel with Unit 2 after Unit 1 completes
+  - Branch: `build/3d-document-templates`
+  - Notes: Started 2026-03-17
 
 - [ ] **Unit 4: PDF Generation Pipeline** — `pending`
   - Produces: `PDFRenderer`, `GotenbergClient`; `processDocumentGeneration` BullMQ processor; `enqueueDocumentGeneration()`, `generateDocument` server action; `document-generation` queue registration

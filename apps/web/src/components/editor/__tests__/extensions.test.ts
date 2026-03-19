@@ -177,12 +177,13 @@ describe('smartDocExtensions', () => {
       const json = editor.getJSON();
       const mergeTagNode = json.content?.flatMap(
         (block) => block.content ?? []
-      ).find((n) => n.type === 'mergeTag');
+      ).find((n) => n.type === 'mergeTag') as Record<string, unknown> | undefined;
 
       expect(mergeTagNode).toBeDefined();
-      expect(mergeTagNode?.attrs?.tableId).toBe('tbl-1');
-      expect(mergeTagNode?.attrs?.fieldId).toBe('fld-1');
-      expect(mergeTagNode?.attrs?.fallback).toBe('Company Name');
+      const mergeAttrs = mergeTagNode?.attrs as Record<string, unknown> | undefined;
+      expect(mergeAttrs?.tableId).toBe('tbl-1');
+      expect(mergeAttrs?.fieldId).toBe('fld-1');
+      expect(mergeAttrs?.fallback).toBe('Company Name');
 
       editor.destroy();
     });
@@ -236,12 +237,13 @@ describe('smartDocExtensions', () => {
       const json = editor.getJSON();
       const refNode = json.content?.flatMap(
         (block) => block.content ?? []
-      ).find((n) => n.type === 'recordRef');
+      ).find((n) => n.type === 'recordRef') as Record<string, unknown> | undefined;
 
       expect(refNode).toBeDefined();
-      expect(refNode?.attrs?.tableId).toBe('tbl-1');
-      expect(refNode?.attrs?.recordId).toBe('rec-1');
-      expect(refNode?.attrs?.displayText).toBe('Acme Corp');
+      const refAttrs = refNode?.attrs as Record<string, unknown> | undefined;
+      expect(refAttrs?.tableId).toBe('tbl-1');
+      expect(refAttrs?.recordId).toBe('rec-1');
+      expect(refAttrs?.displayText).toBe('Acme Corp');
 
       editor.destroy();
     });

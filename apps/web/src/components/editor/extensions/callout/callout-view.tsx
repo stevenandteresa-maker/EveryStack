@@ -19,7 +19,7 @@ export function CalloutView({ node, selected, updateAttributes }: NodeViewProps)
 
   function cycleVariant() {
     const nextIndex = (variants.indexOf(variant) + 1) % variants.length;
-    const next = variants[nextIndex];
+    const next: CalloutVariant = variants[nextIndex] ?? 'info';
     updateAttributes({
       color: next,
       emoji: CALLOUT_DEFAULTS[next].emoji,

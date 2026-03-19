@@ -100,8 +100,8 @@ built → failed-review → built (retry after fixes)
 ## Session B — Phase 3D — build/3d-document-templates
 
 **Date:** 2026-03-17
-**Status:** built
-**Prompt(s):** Prompt 3 (Unit 2: TipTap Env 2 Editor Core — Extension Config & Custom Nodes)
+**Status:** passed-review
+**Prompt(s):** Prompts 3–5 (Unit 2: TipTap Env 2 Editor Core — Extension Config, Custom Nodes, Editor Shell, Toolbar & Menus)
 
 ### Files Created
 - `apps/web/src/components/editor/extensions/index.ts` — Smart Doc extension bundle: StarterKit, Underline, Highlight, Link, Image, Table, CodeBlockLowlight, TaskList/TaskItem, Placeholder, Typography, CharacterCount, TextAlign, Color/TextStyle, + custom nodes (MergeTag, RecordRef, Callout, SlashCommand)
@@ -111,27 +111,40 @@ built → failed-review → built (retry after fixes)
 - `apps/web/src/components/editor/extensions/record-ref/record-ref-view.tsx` — RecordRef React NodeView (inline chip with record icon)
 - `apps/web/src/components/editor/extensions/callout/callout.ts` — Callout custom block node (attrs: emoji, color) with 4 variants (info/warning/success/error)
 - `apps/web/src/components/editor/extensions/callout/callout-view.tsx` — Callout React NodeView (colored admonition with clickable emoji to cycle variant)
-- `apps/web/src/components/editor/extensions/slash-command/slash-command.ts` — SlashCommand extension shell (plugin key + suggestion config placeholder for Unit 5)
+- `apps/web/src/components/editor/extensions/slash-command/slash-command.ts` — SlashCommand extension with suggestion plugin, popup positioning, keyboard navigation
+- `apps/web/src/components/editor/extensions/slash-command/slash-command-list.tsx` — SlashCommandList forwardRef component with command items, keyboard selection, category grouping
+- `apps/web/src/components/editor/extensions/block-handle/BlockHandle.tsx` — Block handle component for drag-to-reorder blocks
+- `apps/web/src/components/editor/SmartDocEditor.tsx` — SmartDocEditor shell component with EditorContent, toolbar, bubble menu, block handles
+- `apps/web/src/components/editor/use-smart-doc-editor.ts` — useSmartDocEditor() hook: editor instance management, content sync, destroy lifecycle
+- `apps/web/src/components/editor/toolbar/EditorToolbar.tsx` — Fixed toolbar with formatting buttons, block type selector, alignment, insert actions
+- `apps/web/src/components/editor/menus/BubbleToolbar.tsx` — Floating bubble menu for inline formatting on text selection
 - `apps/web/src/components/editor/__tests__/extensions.test.ts` — 25 unit tests: extension bundle composition, config verification, MergeTag/RecordRef/Callout commands + HTML round-trip, formatting commands
+- `apps/web/src/components/editor/__tests__/smart-doc-editor.test.tsx` — Tests for SmartDocEditor component rendering and integration
+- `apps/web/src/components/editor/__tests__/use-smart-doc-editor.test.ts` — Tests for useSmartDocEditor hook lifecycle
+- `apps/web/src/components/editor/__tests__/slash-command.test.ts` — Tests for SlashCommand extension and SlashCommandList
 
 ### Files Modified
 - `package.json` — Added pnpm overrides pinning all @tiptap/* packages to 3.20.2 (3.20.3 ships source-only, no dist/ — breaks Vite resolution)
 - `apps/web/package.json` — Added Env 2 TipTap extensions: highlight, image, table (+row/cell/header), code-block-lowlight, task-list/task-item, typography, character-count, text-align, color, text-style, code-block; added lowlight
 - `pnpm-lock.yaml` — Updated lockfile
+- `apps/web/src/components/editor/extensions/callout/callout.ts` — Added `?? 'info'` fallback for `noUncheckedIndexedAccess` compliance on variant cycling
+- `apps/web/src/components/editor/extensions/callout/callout-view.tsx` — Added `?? 'info'` fallback for `noUncheckedIndexedAccess` compliance on variant cycling
+- `apps/web/src/components/editor/__tests__/extensions.test.ts` — Cast TipTap JSON node types to `Record<string, unknown>` to fix `.attrs` property access on union type
 
 ### Files Deleted
 (None)
 
 ### Schema Changes
-(None — this prompt is UI/editor-only)
+(None — this session is UI/editor-only)
 
 ### New Domain Terms Introduced
-(None — MergeTag, RecordRef, Callout already defined in smart-docs.md)
+(None — MergeTag, RecordRef, Callout, SmartDocEditor already defined in smart-docs.md)
 
 ### Notes
 - TipTap v3.20.3 ships raw TypeScript source without pre-built dist/ files, causing Vite/Vitest resolution failures. All TipTap packages pinned to 3.20.2 via pnpm overrides in root package.json.
 - StarterKit configured with `link: false, underline: false, codeBlock: false` to avoid duplicate extensions (Link, Underline configured separately with options; CodeBlock replaced by CodeBlockLowlight).
-- SlashCommand is a shell extension — the suggestion popup and command list will be wired in Unit 5 (Template Management UI).
+- Three typecheck fixes during verification: `noUncheckedIndexedAccess` requires fallback values for array index access; TipTap's `getJSON()` returns a union type that doesn't include `.attrs` on all branches.
+- All 14 interface contracts verified: SmartDocEditor, useSmartDocEditor, createSmartDocExtensions, MergeTag, MergeTagView, RecordRef, RecordRefView, Callout, CalloutView, SlashCommand, SlashCommandList, EditorToolbar, BubbleToolbar, BlockHandle.
 
 ---
 
