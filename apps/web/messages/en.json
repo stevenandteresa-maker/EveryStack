@@ -745,6 +745,7 @@
     "config_save_as_new": "Save as new config",
     "config_new_name_placeholder": "Config name",
     "config_new_name": "New config name",
+    "tab_documents": "Documents",
     "inline_sub_table": {
       "item_count": "{count, plural, one {1 item} other {# items}}",
       "search_placeholder": "Search linked records…",
@@ -1170,5 +1171,22 @@
       "create": "Create Template",
       "creating": "Creating..."
     }
+  },
+  "documentGeneration": {
+    "buttonLabel": "Generate document",
+    "title": "Generate Document",
+    "description": "Select a template to generate a PDF from this record.",
+    "version": "v{version}",
+    "generatePdf": "Generate PDF",
+    "generating": "Generating your document...",
+    "completed": "Document generated successfully!",
+    "failed": "Document generation failed",
+    "unknownError": "An unexpected error occurred. Please try again.",
+    "download": "Download PDF",
+    "openInNewTab": "Open in new tab",
+    "retry": "Try Again",
+    "close": "Close",
+    "noDocuments": "No generated documents",
+    "noDocumentsHint": "Generate a PDF from a template to see it here."
   }
 }

@@ -23,6 +23,8 @@ import {
   RecordViewConfigPicker,
   type ConfigOption,
 } from './RecordViewConfigPicker';
+import { GenerateDocumentButton } from '@/components/documents/GenerateDocumentButton';
+import type { DocumentTemplateWithCreator } from '@/data/document-templates';
 import type { GridField, GridRecord } from '@/lib/types/grid';
 
 // ---------------------------------------------------------------------------
@@ -43,6 +45,12 @@ export interface RecordViewHeaderProps {
   isThreadOpen?: boolean;
   /** Unread message count for badge */
   threadUnreadCount?: number;
+  /** Document templates available for this record's table */
+  documentTemplates?: DocumentTemplateWithCreator[];
+  /** Record ID for document generation */
+  recordId?: string;
+  /** Called when a document is successfully generated */
+  onDocumentGenerated?: () => void;
   onNavigate: (direction: 'prev' | 'next') => void;
   onGoBack?: () => void;
   onSelectConfig?: (configId: string) => void;
@@ -68,6 +76,9 @@ export function RecordViewHeader({
   activeConfigId,
   isThreadOpen = false,
   threadUnreadCount = 0,
+  documentTemplates,
+  recordId,
+  onDocumentGenerated,
   onNavigate,
   onGoBack,
   onSelectConfig,
@@ -123,6 +134,15 @@ export function RecordViewHeader({
 
       {/* Right: controls */}
       <div className="flex items-center gap-1 shrink-0">
+        {/* Generate Document button */}
+        {documentTemplates && recordId && (
+          <GenerateDocumentButton
+            templates={documentTemplates}
+            recordId={recordId}
+            onGenerated={onDocumentGenerated}
+          />
+        )}
+
         {/* Chat icon — toggles Record Thread panel */}
         <div className="relative">
           <Button

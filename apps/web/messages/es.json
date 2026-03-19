@@ -745,6 +745,7 @@
     "config_save_as_new": "Guardar como nueva configuración",
     "config_new_name_placeholder": "Nombre de configuración",
     "config_new_name": "Nuevo nombre de configuración",
+    "tab_documents": "Documentos",
     "inline_sub_table": {
       "item_count": "{count, plural, one {1 elemento} other {# elementos}}",
       "search_placeholder": "Buscar registros vinculados…",
@@ -1170,5 +1171,22 @@
       "create": "Crear plantilla",
       "creating": "Creando..."
     }
+  },
+  "documentGeneration": {
+    "buttonLabel": "Generar documento",
+    "title": "Generar documento",
+    "description": "Selecciona una plantilla para generar un PDF a partir de este registro.",
+    "version": "v{version}",
+    "generatePdf": "Generar PDF",
+    "generating": "Generando tu documento...",
+    "completed": "Documento generado correctamente.",
+    "failed": "La generación del documento falló",
+    "unknownError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "download": "Descargar PDF",
+    "openInNewTab": "Abrir en nueva pestaña",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "noDocuments": "Sin documentos generados",
+    "noDocumentsHint": "Genera un PDF a partir de una plantilla para verlo aquí."
   }
 }

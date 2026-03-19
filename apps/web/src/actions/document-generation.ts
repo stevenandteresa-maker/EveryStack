@@ -22,6 +22,7 @@ import { getDocumentTemplate } from '@/data/document-templates';
 import { resolveMergeTags } from '@/lib/editor/merge-resolver';
 import { renderToHTML } from '@/lib/editor/pdf-renderer';
 import type { DocumentTemplateSettings } from '@/lib/editor/pdf-renderer';
+import { getGeneratedDocument } from '@/data/generated-documents';
 import { getTraceId, generateTraceId } from '@everystack/shared/logging';
 import { NotFoundError, wrapUnknownError } from '@/lib/errors';
 import type { Job } from 'bullmq';
@@ -200,6 +201,39 @@ export async function getDocumentGenerationStatus(
       default:
         return { status: 'unknown' };
     }
+  } catch (error) {
+    throw wrapUnknownError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getGeneratedDocumentUrl
+// ---------------------------------------------------------------------------
+
+const getGeneratedDocumentUrlSchema = z.object({
+  documentId: z.string().uuid(),
+});
+
+export interface GeneratedDocumentUrlResult {
+  fileUrl: string | null;
+}
+
+/**
+ * Server action: fetch the download URL for a generated document.
+ * Tenant-scoped — verifies the document belongs to the caller's tenant.
+ */
+export async function getGeneratedDocumentUrl(
+  input: z.input<typeof getGeneratedDocumentUrlSchema>,
+): Promise<GeneratedDocumentUrlResult> {
+  const { tenantId } = await getAuthContext();
+  const validated = getGeneratedDocumentUrlSchema.parse(input);
+
+  try {
+    const doc = await getGeneratedDocument(tenantId, validated.documentId);
+    if (!doc) {
+      throw new NotFoundError('Generated document not found');
+    }
+    return { fileUrl: doc.fileUrl };
   } catch (error) {
     throw wrapUnknownError(error);
   }
