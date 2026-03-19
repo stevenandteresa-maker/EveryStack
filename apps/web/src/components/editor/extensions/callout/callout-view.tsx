@@ -2,6 +2,7 @@
 
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
+import { useTranslations } from 'next-intl';
 import { CALLOUT_DEFAULTS, type CalloutVariant } from './callout';
 
 /**
@@ -11,6 +12,7 @@ import { CALLOUT_DEFAULTS, type CalloutVariant } from './callout';
  * and editable content area.
  */
 export function CalloutView({ node, selected, updateAttributes }: NodeViewProps) {
+  const t = useTranslations('smartDocEditor.callout');
   const variant = (node.attrs.color as CalloutVariant) || 'info';
   const emoji = node.attrs.emoji || CALLOUT_DEFAULTS[variant].emoji;
   const { bgClass, borderClass } = CALLOUT_DEFAULTS[variant];
@@ -41,7 +43,7 @@ export function CalloutView({ node, selected, updateAttributes }: NodeViewProps)
         contentEditable={false}
         className="shrink-0 text-base leading-none cursor-pointer select-none hover:scale-110 transition-transform"
         onClick={cycleVariant}
-        aria-label="Change callout type"
+        aria-label={t('changeType')}
       >
         {emoji}
       </button>

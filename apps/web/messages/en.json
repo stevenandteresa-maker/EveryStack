@@ -1095,9 +1095,15 @@
       "codeBlock": "Code block",
       "callout": "Callout",
       "historyGroup": "Undo and redo",
+      "toolbarLabel": "Editor toolbar",
       "undo": "Undo",
+      "undoShortcut": "⌘Z",
       "redo": "Redo",
+      "redoShortcut": "⌘⇧Z",
       "bubbleToolbar": "Formatting"
+    },
+    "callout": {
+      "changeType": "Change callout type"
     },
     "blockHandle": {
       "dragHandle": "Drag to reorder block",

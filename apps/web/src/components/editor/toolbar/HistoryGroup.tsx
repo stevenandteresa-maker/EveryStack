@@ -34,7 +34,7 @@ export function HistoryGroup({ editor }: HistoryGroupProps) {
         </TooltipTrigger>
         <TooltipContent>
           <p>
-            {t('undo')} <kbd className="ml-1 text-xs text-muted-foreground">⌘Z</kbd>
+            {t('undo')} <kbd className="ml-1 text-xs text-muted-foreground">{t('undoShortcut')}</kbd>
           </p>
         </TooltipContent>
       </Tooltip>
@@ -54,7 +54,7 @@ export function HistoryGroup({ editor }: HistoryGroupProps) {
         </TooltipTrigger>
         <TooltipContent>
           <p>
-            {t('redo')} <kbd className="ml-1 text-xs text-muted-foreground">⌘⇧Z</kbd>
+            {t('redo')} <kbd className="ml-1 text-xs text-muted-foreground">{t('redoShortcut')}</kbd>
           </p>
         </TooltipContent>
       </Tooltip>

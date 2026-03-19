@@ -6,6 +6,7 @@ import {
   useImperativeHandle,
   forwardRef,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Heading1,
   Heading2,
@@ -57,6 +58,7 @@ interface SlashCommandListProps {
  */
 export const SlashCommandList = forwardRef<SlashCommandListRef, SlashCommandListProps>(
   function SlashCommandList({ items, command }, ref) {
+    const t = useTranslations('smartDocEditor.slashCommand');
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     // Clamp selection when items shrink (e.g. during filtering)
@@ -99,7 +101,7 @@ export const SlashCommandList = forwardRef<SlashCommandListRef, SlashCommandList
       return (
         <div className="rounded-lg border border-border bg-white p-3 shadow-lg">
           <p className="text-[13px] leading-[18px] text-muted-foreground">
-            No matching commands
+            {t('noResults')}
           </p>
         </div>
       );

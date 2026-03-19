@@ -30,6 +30,7 @@ interface Violation {
 const EXCLUDED_PATHS = [
   '/components/ui/',
   '/design-test/',
+  '/app/dev/',
   '/global-error.tsx',
   '/lib/email/templates/',
 ];

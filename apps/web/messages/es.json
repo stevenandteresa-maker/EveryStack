@@ -1095,9 +1095,15 @@
       "codeBlock": "Bloque de código",
       "callout": "Aviso",
       "historyGroup": "Deshacer y rehacer",
+      "toolbarLabel": "Barra de herramientas del editor",
       "undo": "Deshacer",
+      "undoShortcut": "⌘Z",
       "redo": "Rehacer",
+      "redoShortcut": "⌘⇧Z",
       "bubbleToolbar": "Formato"
+    },
+    "callout": {
+      "changeType": "Cambiar tipo de aviso"
     },
     "blockHandle": {
       "dragHandle": "Arrastrar para reordenar bloque",

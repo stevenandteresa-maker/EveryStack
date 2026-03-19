@@ -1,6 +1,7 @@
 'use client';
 
 import type { Editor } from '@tiptap/core';
+import { useTranslations } from 'next-intl';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { FormatGroup } from './FormatGroup';
@@ -22,12 +23,14 @@ interface EditorToolbarProps {
  * 4. History (undo, redo)
  */
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const t = useTranslations('smartDocEditor.toolbar');
+
   return (
     <TooltipProvider delayDuration={300}>
       <div
         className="flex items-center gap-1 flex-wrap"
         role="toolbar"
-        aria-label="Editor toolbar"
+        aria-label={t('toolbarLabel')}
       >
         <FormatGroup editor={editor} />
         <Separator orientation="vertical" className="mx-1 h-6" />
