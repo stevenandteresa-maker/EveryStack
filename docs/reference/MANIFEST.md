@@ -1,6 +1,6 @@
 # docs/reference — Document Manifest
 
-> **Last full reconciliation: 2026-02-28** | **Last line count sync: 2026-03-19 (Phase 3D docs sync)** | **Last CP update: 2026-03-05 (CP-001 + CP-002)** | **Last doc addition: 2026-03-12** — Added `SUBDIVISION-STRATEGY.md` (492 lines), `CONVENTION-UPDATES.md` (108 lines), `DECISIONS.md` (45 lines), `MODIFICATIONS.md` (68 lines), `TASK-STATUS.md` (85 lines), `CONTRIBUTING.md` (64 lines). Updated `CLAUDE.md` with State Files, Agent Roster, Planning Gates sections, and Section Index. All 70 documents (66 main + 4 gap) audited against `GLOSSARY.md` (source of truth). Full architectural audit (Issues #1–16) resolved — hierarchy rewrite, permission model, schema fixes, terminology standardization, sidebar architecture, MVP scope corrections. Every doc has a reconciliation note. Added `platform-api.md` (1145 lines) and `vertical-architecture.md` (535 lines) — Platform API & Vertical Architecture section. Post-reconciliation fixes (2026-02-28): fixed 102 broken `docs/reference/` cross-reference prefixes across 21 files; updated audit-log.md to seven-source attribution model (added `api_key` actor_type + `actor_label` column); resolved `environment` semantic collision (introduced `publish_state` for draft/live authoring workflow across 7 files); added missing standard columns to `tables`, `portal_access`, `synced_field_mappings`, `base_connections`; defined `conflict_resolution` type on `base_connections`; clarified phase playbook file location.
+> **Last full reconciliation: 2026-03-19** | **Last line count sync: 2026-03-19 (R-2 audit hygiene)** | **Last CP update: 2026-03-05 (CP-001 + CP-002)** | **Last doc addition: 2026-03-19** — Registered 55 previously untracked files (10 audit findings, 2 historical build specs, 2 audits, 3 change proposals, 7 phase division docs, 20 playbooks/roadmaps, 14 agent skills, 2 AbleSpec scaffolding). Total tracked docs: 150. All line counts verified against `wc -l`. All 70 reference documents (66 main + 4 gap) audited against `GLOSSARY.md` (source of truth). Full architectural audit (Issues #1–16) resolved — hierarchy rewrite, permission model, schema fixes, terminology standardization, sidebar architecture, MVP scope corrections. Every doc has a reconciliation note.
 >
 > Status of all reference documents. These are Tier 3 — loaded on demand, never auto-loaded.
 > Each doc is a deep-dive spec for a specific domain. Phase build docs reference these.
@@ -17,11 +17,22 @@ When working on a feature, load the relevant reference doc(s) from `docs/referen
 
 | Metric                            | Count                                      |
 | --------------------------------- | ------------------------------------------ |
-| Total docs                        | 74 (70 main + 4 gap)                       |
-| MVP-relevant                      | 27                                         |
-| Post-MVP                          | 34                                         |
-| Historical                        | 1                                          |
-| Meta (Glossary + Manifest)        | 1 (GLOSSARY.md — MANIFEST.md is this file) |
+| Reference docs (main)             | 70                                         |
+| Reference docs (gap)              | 4                                          |
+| Audit findings                    | 10                                         |
+| Historical (incl. build specs)    | 3                                          |
+| Process & workflow                | 8                                          |
+| Subdivision docs                  | 5                                          |
+| Audits                            | 2                                          |
+| Change proposals                  | 3                                          |
+| Phase division docs               | 7                                          |
+| Playbooks & roadmaps              | 20                                         |
+| Agent skills                      | 14                                         |
+| AbleSpec scaffolding              | 2                                          |
+| Meta (Glossary + Manifest)        | 2                                          |
+| **Total tracked**                 | **150**                                    |
+| MVP-relevant (reference)          | 27                                         |
+| Post-MVP (reference)              | 34                                         |
 | Gap: Merged                       | 2                                          |
 | Gap: Superseded                   | 1                                          |
 | Gap: Active (standalone post-MVP) | 1                                          |
@@ -203,6 +214,27 @@ These docs define the user-facing workspace experience: views, records, cross-li
 | Document         | Lines | Scope          | Key Content                                                                                                                                                                                                                                                                            | Cross-References                                               | Reconciled |
 | ---------------- | ----- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------- |
 | `session-log.md` | 782   | **Historical** | All 74 open questions resolved (Feb 7–10, 2026). 8 session notes with decision rationale. Pre-dates some current naming — terminology updated to glossary-current terms (2026-02-27) but original decision context preserved. Role names: "Builder" = Manager in current 5-role model. | Referenced by: phase playbooks for historical decision context | 2026-02-27 |
+| `phase-1g-runtime-services.md` | 2104 | **Historical** | Phase 1G build spec — real-time scaffold (Socket.io), BullMQ worker, file upload pipeline, Redis pub/sub, presigned URLs | `realtime.md`, `files.md`, `operations.md` | 2026-02-27 |
+| `phase-1h-ai-service-layer-playbook.md` | 1195 | **Historical** | Phase 1H build spec — AIService abstraction, provider adapters, capability tier routing, metering pipeline, prompt registry | `ai-architecture.md`, `ai-metering.md`, `ai-data-contract.md` | 2026-02-27 |
+
+---
+
+### 🔍 AbleSpec Audit Findings (`docs/reference/`)
+
+Findings from the 10-step AbleSpec v0 audit pipeline run. Each file documents blocking/non-blocking issues found per audit step.
+
+| Document                     | Lines | Scope     | Key Content                                           | Cross-References | Reconciled |
+| ---------------------------- | ----- | --------- | ----------------------------------------------------- | ---------------- | ---------- |
+| `AUDIT-STEP-1-FINDINGS.md`  | 138   | **Audit** | GLOSSARY anchor verification findings                 | `GLOSSARY.md`    | 2026-03-19 |
+| `AUDIT-STEP-2-FINDINGS.md`  | 140   | **Audit** | MANIFEST consistency findings                         | `MANIFEST.md`    | 2026-03-19 |
+| `AUDIT-STEP-3-FINDINGS.md`  | 200   | **Audit** | Scope label correctness findings                      | `GLOSSARY.md`    | 2026-03-19 |
+| `AUDIT-STEP-4-FINDINGS.md`  | 168   | **Audit** | Section heading standard compliance findings          | —                | 2026-03-19 |
+| `AUDIT-STEP-5-FINDINGS.md`  | 195   | **Audit** | Schema–data-model alignment findings                  | `data-model.md`  | 2026-03-19 |
+| `AUDIT-STEP-6-FINDINGS.md`  | 186   | **Audit** | Cross-reference freshness findings                    | —                | 2026-03-19 |
+| `AUDIT-STEP-7-FINDINGS.md`  | 107   | **Audit** | Duplicate/contradictory content findings              | —                | 2026-03-19 |
+| `AUDIT-STEP-8-FINDINGS.md`  | 173   | **Audit** | Actionability & completeness findings                 | —                | 2026-03-19 |
+| `AUDIT-STEP-9-FINDINGS.md`  | 76    | **Audit** | Dependency graph validation findings                  | —                | 2026-03-19 |
+| `AUDIT-STEP-10-FINDINGS.md` | 141   | **Audit** | Build readiness scorecard summary                     | —                | 2026-03-19 |
 
 ---
 
@@ -230,6 +262,84 @@ These docs define the agent workflow, planning process, and build state tracking
 | `3b-ii-subdivision.md`       | 285   | **MVP — Core UX** | Subdivision: 4 units — SDS Types & Core Builders, SDS Permission Filter/Caching/Facade, Command Bar Search & Data Layer, Command Bar UI & AI Channel. Critical path 3 deep. Unit 3 parallel with Units 1–2. | `schema-descriptor-service.md`, `command-bar.md`, `permissions.md`, `TASK-STATUS.md` | 2026-03-14 |
 | `3c-subdivision.md`          | 518   | **MVP — Core UX** | Subdivision: 6 units — Schema Migration & Data Layer, Notification Pipeline & System Email, Presence & Real-Time Chat, Chat Editor (TipTap Env 1), Record Thread & DM UI, Notification UI & Quick Panel. Critical path 4 deep. Units 2+3+4 parallel. | `communications.md`, `email.md`, `realtime.md`, `data-model.md`, `TASK-STATUS.md` | 2026-03-15 |
 | `3d-subdivision.md`          | 443   | **MVP — Core UX** | Subdivision: 5 units — Document Template Data Layer, TipTap Env 2 Editor Core, Merge-Tag Resolution & Field Inserter, PDF Generation Pipeline, Template Management & Generation UI. Critical path 4 deep. Units 2+3 parallel. | `smart-docs.md`, `data-model.md`, `TASK-STATUS.md` | 2026-03-16 |
+
+### 📋 Audits (`docs/audits/`)
+
+| Document                          | Lines | Scope       | Key Content                                                   | Cross-References                      | Created    |
+| --------------------------------- | ----- | ----------- | ------------------------------------------------------------- | ------------------------------------- | ---------- |
+| `backend-conventions-audit.md`    | 156   | **Process** | Backend conventions compliance review (Phase 1E checkpoint)   | `CLAUDE.md`, `testing.md`             | 2026-02-27 |
+| `ux-ui-conventions-audit.md`      | 148   | **Process** | UI/design system conventions status (Phase 1E checkpoint)     | `design-system.md`, `CLAUDE.md`       | 2026-02-27 |
+
+### 🔀 Change Proposals (`docs/changes/`)
+
+| Document                                    | Lines | Scope       | Key Content                                                                        | Cross-References                                                  | Created    |
+| ------------------------------------------- | ----- | ----------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| `CP-001-portal-architecture.md`             | 244   | **Process** | Portal architecture refinement — tenant-scoped slugs, record deletion, two-thread model | `portals.md`, `data-model.md`, `communications.md`                | 2026-03-05 |
+| `CP-002-multi-tenant-identity-agency.md`    | 285   | **Process** | Multi-tenant identity & agency model — effective memberships, tenant switching      | `navigation.md`, `permissions.md`, `data-model.md`                | 2026-03-05 |
+| `CP-IMPACT-MAP.md`                          | 278   | **Process** | Change proposal impact mapping across phases and reference docs                    | `CP-001-portal-architecture.md`, `CP-002-multi-tenant-identity-agency.md` | 2026-03-05 |
+
+### 📅 Phase Division (`docs/phases/`)
+
+| Document                            | Lines | Scope       | Key Content                                                     | Cross-References           | Created    |
+| ----------------------------------- | ----- | ----------- | --------------------------------------------------------------- | -------------------------- | ---------- |
+| `dependency-graph-and-appendices.md` | 490  | **Process** | Master dependency graph across 35 sub-phases with appendices    | `dependency-map.md`        | 2026-02-27 |
+| `dependency-map.md`                 | 959   | **Process** | Schema creation order, full table inventory, dependency chains  | `data-model.md`            | 2026-02-27 |
+| `phase-division-phase1.md`          | 391   | **Process** | Phase 1 foundation subdivision into 10 sub-phases (1A–1J)      | `CLAUDE.md`                | 2026-02-27 |
+| `phase-division-phase2.md`          | 155   | **Process** | Phase 2 sync layer subdivision into 3 sub-phases (2A–2C)       | `sync-engine.md`           | 2026-02-27 |
+| `phase-division-phase3-part1.md`    | 304   | **Process** | Phase 3A–3D subdivision decisions for Core UX                   | `tables-and-views.md`      | 2026-02-27 |
+| `phase-division-phase3-part2.md`    | 380   | **Process** | Phase 3E–3H subdivision including portals, forms, AI            | `portals.md`, `forms.md`   | 2026-02-27 |
+| `phase-division-phases4-6.md`       | 337   | **Process** | Phases 4–6 scope decisions for post-MVP planning                | `GLOSSARY.md`              | 2026-02-27 |
+
+### 📘 Playbooks (`docs/Playbooks/`)
+
+| Document                                              | Lines | Scope       | Key Content                                                          | Cross-References                             | Created    |
+| ----------------------------------------------------- | ----- | ----------- | -------------------------------------------------------------------- | -------------------------------------------- | ---------- |
+| `Playbook Prompts.md` (docs root)                     | 2945  | **Process** | Opening prompts for all 35 sub-phase playbook sessions               | All playbooks                                | 2026-02-27 |
+| `Phase 1/playbook-phase-1i.md`                        | 762   | **Process** | Phase 1I playbook — audit log helper, platform API auth skeleton     | `audit-log.md`, `platform-api.md`            | 2026-02-27 |
+| `Phase 1/phase-1j-playbook.md`                        | 925   | **Process** | Phase 1J playbook — CP migration, navigation shell                   | `navigation.md`, `CP-001`, `CP-002`          | 2026-02-27 |
+| `Phase 1/phase-1j-operator-guide.md`                  | 1207  | **Process** | Phase 1J operator guide — CP migration, multi-tenant auth, nav shell | `navigation.md`, `permissions.md`            | 2026-02-27 |
+| `Phase 2/playbook-phase-2a.md`                        | 1306  | **Process** | Phase 2A playbook — FieldTypeRegistry, canonical layer, Airtable adapter | `sync-engine.md`                         | 2026-02-27 |
+| `Phase 2/playbook-phase-2b.md`                        | 1369  | **Process** | Phase 2B playbook — synced data performance, outbound sync, conflicts | `sync-engine.md`, `database-scaling.md`      | 2026-02-27 |
+| `Phase 2/playbook-phase-2c.md`                        | 1574  | **Process** | Phase 2C playbook — Notion adapter, error recovery, sync dashboard   | `sync-engine.md`                             | 2026-02-27 |
+| `Phase 3/playbook-phase-3a-i.md`                      | 1149  | **Process** | Phase 3A-i playbook — grid view core, cell renderers, inline editing | `tables-and-views.md`, `design-system.md`    | 2026-02-27 |
+| `Phase 3/playbook-phase-3a-ii.md`                     | 1686  | **Process** | Phase 3A-ii playbook — view features, record view, card view, import | `tables-and-views.md`                        | 2026-02-27 |
+| `3a-iii-playbook.md`                                  | 1270  | **Process** | Phase 3A-iii playbook — field-level permissions, resolution, config UI | `permissions.md`                           | 2026-03-12 |
+| `playbook-phase-3b-i.md`                              | 1214  | **Process** | Phase 3B-i playbook — cross-linking engine                           | `cross-linking.md`                           | 2026-03-13 |
+| `playbook-phase-3b-ii.md`                             | 1529  | **Process** | Phase 3B-ii playbook — schema descriptor service, command bar        | `schema-descriptor-service.md`, `command-bar.md` | 2026-03-14 |
+| `playbook-phase-3c.md`                                | 1538  | **Process** | Phase 3C playbook — record thread, DMs, notifications, email         | `communications.md`, `email.md`              | 2026-03-15 |
+| `playbook-phase-3d.md`                                | 1094  | **Process** | Phase 3D playbook — document templates, PDF generation               | `smart-docs.md`                              | 2026-03-16 |
+| `Phase 3/prompting-roadmap-phase-3a-i.md`             | 984   | **Process** | Phase 3A-i prompting roadmap — 6-step grid view build guide          | `playbook-phase-3a-i.md`                     | 2026-02-27 |
+| `Phase 3/prompting-roadmap-phase-3a-ii.md`            | 1320  | **Process** | Phase 3A-ii prompting roadmap — 6-step view features build guide     | `playbook-phase-3a-ii.md`                    | 2026-02-27 |
+| `Phase 3/prompting-roadmap-phase-3b-i.md`             | 1704  | **Process** | Phase 3B-i prompting roadmap — cross-linking engine build guide      | `playbook-phase-3b-i.md`                     | 2026-03-13 |
+| `Phase 3/prompting-roadmap-phase-3b-ii.md`            | 2084  | **Process** | Phase 3B-ii prompting roadmap — SDS & command bar build guide        | `playbook-phase-3b-ii.md`                    | 2026-03-14 |
+| `Phase 3/prompting-roadmap-phase-3c.md`               | 2313  | **Process** | Phase 3C prompting roadmap — thread, DMs, notifications build guide  | `playbook-phase-3c.md`                       | 2026-03-15 |
+| `Phase 3/prompting-roadmap-phase-3d.md`               | 1658  | **Process** | Phase 3D prompting roadmap — doc templates & PDF build guide         | `playbook-phase-3d.md`                       | 2026-03-16 |
+
+### 🛠️ Agent Skills (`docs/skills/`)
+
+| Document                      | Lines | Scope       | Key Content                                                    | Cross-References                         | Created    |
+| ----------------------------- | ----- | ----------- | -------------------------------------------------------------- | ---------------------------------------- | ---------- |
+| `ai-features/SKILL.md`       | 267   | **Process** | AI feature patterns, LLM providers, metering conventions       | `ai-architecture.md`, `ai-metering.md`   | 2026-02-27 |
+| `architect/SKILL.md`         | 529   | **Process** | Doc prep agent (Step 0) skill — reference doc update rules      | `CLAUDE.md`, `MANIFEST.md`               | 2026-03-12 |
+| `backend/SKILL.md`           | 363   | **Process** | Backend patterns, DB schema, sync, tenant isolation conventions | `data-model.md`, `testing.md`            | 2026-02-27 |
+| `builder/SKILL.md`           | 325   | **Process** | Build execution (Step 3) skill — static checks, commit rules    | `CLAUDE.md`, `CONTRIBUTING.md`           | 2026-03-12 |
+| `buildprep/SKILL.md`         | 443   | **Process** | Build prep prompt generator, lifecycle prompt templates         | `CLAUDE.md`, `SUBDIVISION-STRATEGY.md`   | 2026-03-12 |
+| `docs-sync/SKILL.md`         | 582   | **Process** | Post-build docs sync (Step 5) — MANIFEST/GLOSSARY updates       | `MANIFEST.md`, `GLOSSARY.md`             | 2026-03-12 |
+| `phase-context/SKILL.md`     | 1294  | **Process** | Current codebase state snapshot — what exists, what's built      | All reference docs                       | 2026-03-19 |
+| `planner/SKILL.md`           | 632   | **Process** | Subdivision planning skill — context manifests, gate checks     | `SUBDIVISION-STRATEGY.md`, `CLAUDE.md`   | 2026-03-12 |
+| `playbook-gen/SKILL.md`      | 560   | **Process** | Playbook generation (Step 1) — prompt sizing, skill operator model | `playbook-generation-strategy.md`     | 2026-03-12 |
+| `reviewer/SKILL.md`          | 587   | **Process** | Build review (Step 4) — acceptance criteria, RSA-calibrated depth | `CLAUDE.md`, `CONTRIBUTING.md`          | 2026-03-12 |
+| `roadmap-gen/SKILL.md`       | 537   | **Process** | Prompting roadmap (Step 2) — 6-step format, context manifests   | `playbook-generation-strategy.md`        | 2026-03-12 |
+| `test-runner/SKILL.md`       | 215   | **Process** | Test environment setup, Docker containers, coverage thresholds  | `testing.md`                             | 2026-02-27 |
+| `ux-ui/SKILL.md`             | 396   | **Process** | Frontend patterns, React components, design system conventions  | `design-system.md`                       | 2026-02-27 |
+| `verify/SKILL.md`            | 251   | **Process** | Test verification, coverage thresholds, test process rules      | `testing.md`                             | 2026-02-27 |
+
+### 📐 AbleSpec Scaffolding (`docs/`)
+
+| Document                  | Lines | Scope    | Key Content                                                    | Cross-References | Created    |
+| ------------------------- | ----- | -------- | -------------------------------------------------------------- | ---------------- | ---------- |
+| `GLOSSARY.md` (docs root) | 10   | **Meta** | AbleSpec v0 auto-generated terminology placeholder             | `GLOSSARY.md` (reference) | 2026-03-19 |
+| `MANIFEST.md` (docs root) | 154  | **Meta** | AbleSpec v0 auto-generated document registry (Layer 1 + Layer 2) | `MANIFEST.md` (reference) | 2026-03-19 |
 
 ---
 
