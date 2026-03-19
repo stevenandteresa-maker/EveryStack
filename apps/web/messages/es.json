@@ -1187,6 +1187,7 @@
     "retry": "Reintentar",
     "close": "Cerrar",
     "noDocuments": "Sin documentos generados",
-    "noDocumentsHint": "Genera un PDF a partir de una plantilla para verlo aquí."
+    "noDocumentsHint": "Genera un PDF a partir de una plantilla para verlo aquí.",
+    "aiDrafted": "IA"
   }
 }

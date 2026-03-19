@@ -1187,6 +1187,7 @@
     "retry": "Try Again",
     "close": "Close",
     "noDocuments": "No generated documents",
-    "noDocumentsHint": "Generate a PDF from a template to see it here."
+    "noDocumentsHint": "Generate a PDF from a template to see it here.",
+    "aiDrafted": "AI"
   }
 }

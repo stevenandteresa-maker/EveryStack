@@ -109,7 +109,7 @@ export function GeneratedDocumentList({
                   {doc.templateName}
                   {doc.aiDrafted && (
                     <span className="ml-1.5 text-[10px] text-teal-600 font-normal">
-                      AI
+                      {t('aiDrafted')}
                     </span>
                   )}
                 </p>
