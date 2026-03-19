@@ -259,6 +259,52 @@ built → failed-review → built (retry after fixes)
 
 ---
 
+## Session F — Phase 3D — build/3d-document-templates
+
+**Date:** 2026-03-19
+**Status:** passed-review
+**Prompt(s):** Prompts 10–11 (Unit 5: Template Management & Document Generation UI)
+
+### Files Created
+- `apps/web/src/app/(app)/[workspaceId]/documents/page.tsx` — Document templates list route page (Server Component, Suspense + skeleton, loads all templates via `listAllDocumentTemplates`)
+- `apps/web/src/app/(app)/[workspaceId]/documents/[templateId]/page.tsx` — Template editor route page (Server Component, loads template + table, 404 on missing)
+- `apps/web/src/app/(app)/[workspaceId]/documents/new/page.tsx` — New template wizard route page (Server Component, loads workspace tables)
+- `apps/web/src/components/documents/DocumentTemplateListPage.tsx` — Client component: grid of TemplateCards, empty state, "New Template" button, optimistic duplicate/delete
+- `apps/web/src/components/documents/TemplateCard.tsx` — Card component: name, table badge, date, creator, version, dropdown (Duplicate/Delete with confirmation dialog)
+- `apps/web/src/components/documents/DocumentTemplateEditorPage.tsx` — Page wrapper: back button, editable name (debounced 1s save), table badge
+- `apps/web/src/components/documents/DocumentTemplateEditor.tsx` — Editor: SmartDocEditor with EditorToolbar + PreviewToggle (top), MergeTagInserter (sidebar), 3s debounced auto-save with status indicator
+- `apps/web/src/components/documents/NewDocumentTemplateWizard.tsx` — Wizard Create: name input → table select → create & redirect to editor
+- `apps/web/src/components/documents/GenerateDocumentButton.tsx` — Record View header icon button, hidden when no templates, opens GenerateDocumentDialog
+- `apps/web/src/components/documents/GenerateDocumentDialog.tsx` — Modal: template selector → "Generate PDF" → progress spinner → success download / error retry
+- `apps/web/src/components/documents/GeneratedDocumentList.tsx` — Record's generated PDFs: template name, date, generator, AI badge, download link, empty state
+- `apps/web/src/components/documents/use-document-generation.ts` — `useDocumentGeneration()` hook: polls `getDocumentGenerationStatus` every 2s, stops on terminal state
+
+### Files Modified
+- `apps/web/src/data/document-templates.ts` — Added `DocumentTemplateListItem` type (extends with tableName), `listAllDocumentTemplates()` function (cross-table, joins tables + users)
+- `apps/web/src/actions/document-generation.ts` — Added `getGeneratedDocumentUrl()` server action (tenant-scoped URL fetch for generated docs)
+- `apps/web/src/components/record-view/RecordViewHeader.tsx` — Added `documentTemplates`, `recordId`, `onDocumentGenerated` props; renders GenerateDocumentButton before chat icon
+- `apps/web/messages/en.json` — Added `documentTemplates` namespace (list, editor, wizard keys), `documentGeneration` namespace (dialog, progress, status keys), `record_view.tab_documents` key
+- `apps/web/messages/es.json` — Added `documentTemplates` namespace (Spanish), `documentGeneration` namespace (Spanish), `record_view.tab_documents` key
+
+### Files Deleted
+(None)
+
+### Schema Changes
+(None — uses existing `document_templates` and `generated_documents` tables from Unit 1)
+
+### New Domain Terms Introduced
+- `DocumentTemplateListItem` — Extended type adding `tableName` for cross-table template listing
+- `GeneratedDocumentItem` — Client-side type for displaying generated PDFs in the list
+
+### Notes
+- Verification fix: hardcoded "AI" string in GeneratedDocumentList replaced with `t('aiDrafted')` i18n key
+- Auto-save uses two debounce timers: 3s for content (DocumentTemplateEditor), 1s for name (DocumentTemplateEditorPage)
+- GenerateDocumentDialog uses server actions exclusively (no direct data function imports from client components)
+- `useDocumentGeneration` stops polling on completed/failed/unknown states and cleans up interval on unmount
+- All 12 interface contracts verified. 2622 tests pass. Zero lint/type errors.
+
+---
+
 ## Archive
 
 <!-- Docs Agent moves completed (docs-synced) session blocks here

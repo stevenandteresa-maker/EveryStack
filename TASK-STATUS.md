@@ -105,11 +105,11 @@ When a unit moves to `failed-review`:
   - Branch: `build/3d-document-templates`
   - Notes: Started 2026-03-19. Verified 2026-03-19. All 7 interface contracts confirmed. 54 tests pass, zero lint/type errors.
 
-- [ ] **Unit 5: Template Management & Document Generation UI** — `in-progress`
+- [x] **Unit 5: Template Management & Document Generation UI** — `passed-review`
   - Produces: `DocumentTemplateListPage`, `DocumentTemplateEditor`, `GenerateDocumentDialog`, `GenerateDocumentButton`, `GeneratedDocumentList` components; `useDocumentGeneration()` hook; document routes
   - Consumes: Unit 1 data + actions, Unit 2 editor, Unit 3 inserter + preview, Unit 4 generation action
   - Branch: `build/3d-document-templates`
-  - Notes: Started 2026-03-19.
+  - Notes: Started 2026-03-19. Verified 2026-03-19. All 12 interface contracts confirmed. 2622 tests pass, zero lint/type errors.
 
 ---
 
