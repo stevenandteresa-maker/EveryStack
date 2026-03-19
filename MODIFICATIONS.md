@@ -191,7 +191,7 @@ built → failed-review → built (retry after fixes)
 ## Session D — Phase 3D — build/3d-document-templates
 
 **Date:** 2026-03-19
-**Status:** built
+**Status:** passed-review
 **Prompt(s):** Prompt 8 (Unit 4: PDF Generation Pipeline — PDFRenderer & GotenbergClient)
 
 ### Files Created
@@ -226,7 +226,7 @@ built → failed-review → built (retry after fixes)
 ## Session E — Phase 3D — build/3d-document-templates
 
 **Date:** 2026-03-19
-**Status:** built
+**Status:** passed-review
 **Prompt(s):** Prompt 9 (Unit 4: PDF Generation Pipeline — Processor, Queue, Server Action)
 
 ### Files Created
