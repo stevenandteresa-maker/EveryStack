@@ -15,15 +15,15 @@
   "dependencies": {
     "@everystack/shared": "workspace:*",
     "@socket.io/redis-adapter": "^8.3.0",
-    "ioredis": "^5.10.0",
+    "ioredis": "^5.10.1",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@clerk/backend": "^3.0.1",
+    "@clerk/backend": "^3.2.1",
     "@types/node": "^22.15.3",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }
