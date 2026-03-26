@@ -17,21 +17,21 @@
 
 | Section                                            | Lines   | Covers                                                                                  |
 | -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------- |
-| Core Design Principles                             | 38–51   | Progressive complexity, status field as foundation, non-blocking UX                     |
-| Status Field Operating Modes                       | 52–71   | 3 modes: simple select → gated transitions → approval chains                            |
-| Status Field Config Enhancement                    | 72–144  | TransitionPrecondition (5 types), allowed transitions, auto-advance                     |
-| Approval Rules                                     | 145–236 | 3 approver types, escalation, parallel/sequential approvals                             |
-| Approval Requests (Runtime)                        | 237–329 | Request lifecycle, assignment, notification, expiration                                 |
-| Approval Activity Log                              | 330–370 | Approval history, comments, audit trail                                                 |
-| Enforcement Layer                                  | 371–453 | <50ms enforcement, middleware integration, bypass rules                                 |
-| Real-Time Events                                   | 454–467 | Socket.io events for approval status changes                                            |
-| Redis Key Patterns                                 | 468–479 | Caching for transition rules, pending approvals                                         |
-| UI Surfaces                                        | 480–628 | 7 UI surfaces: field config, record view, sidebar badge, my tasks, grid, portal, mobile |
-| Override Policy                                    | 629–648 | Admin override rules, emergency bypass, audit logging                                   |
-| Relationship to Existing Domain-Specific Approvals | 649–664 | How this replaces ad-hoc approval patterns                                              |
-| Audit Log Integration                              | 665–680 | Approval events in audit log, actor attribution                                         |
-| Phase Implementation                               | 681–690 | Mode 1+2 MVP — Core UX, Mode 3 Post-MVP — Automations                                   |
-| Key Architectural Decisions                        | 691–706 | ADR-style decisions with rationale                                                      |
+| Core Design Principles                             | 38–50   | Progressive complexity, status field as foundation, non-blocking UX                     |
+| Status Field Operating Modes                       | 52–70   | 3 modes: simple select → gated transitions → approval chains                            |
+| Status Field Config Enhancement                    | 72–147  | TransitionPrecondition (5 types), allowed transitions, auto-advance                     |
+| Approval Rules                                     | 149–246 | 3 approver types, escalation, parallel/sequential approvals                             |
+| Approval Requests (Runtime)                        | 248–344 | Request lifecycle, assignment, notification, expiration                                 |
+| Approval Activity Log                              | 346–387 | Approval history, comments, audit trail                                                 |
+| Enforcement Layer                                  | 389–470 | <50ms enforcement, middleware integration, bypass rules                                 |
+| Real-Time Events                                   | 472–484 | Socket.io events for approval status changes                                            |
+| Redis Key Patterns                                 | 486–496 | Caching for transition rules, pending approvals                                         |
+| UI Surfaces                                        | 498–651 | 7 UI surfaces: field config, record view, sidebar badge, my tasks, grid, portal, mobile |
+| Override Policy                                    | 653–672 | Admin override rules, emergency bypass, audit logging                                   |
+| Relationship to Existing Domain-Specific Approvals | 674–688 | How this replaces ad-hoc approval patterns                                              |
+| Audit Log Integration                              | 690–704 | Approval events in audit log, actor attribution                                         |
+| Phase Implementation                               | 706–714 | Mode 1+2 MVP — Core UX, Mode 3 Post-MVP — Automations                                   |
+| Key Architectural Decisions                        | 716–731 | ADR-style decisions with rationale                                                      |
 
 ---
 
@@ -148,6 +148,9 @@ This piggybacks on the same `record.updated` event listener that powers automati
 
 ## Approval Rules
 
+Covers `approval_rules` Table, ApprovalStepDefinition (within `steps` JSONB array), On Completion Side Effects.
+Touches `approval_rules`, `pm_table_config`, `invoice_table_config`, `tenant_id`, `table_id` tables.
+
 ### `approval_rules` Table
 
 Config-overlay pattern, consistent with `pm_table_config`, `invoice_table_config`, and other EveryStack config tables. One rule per approval requirement, scoped to a table. Multiple rules per table allowed (different transitions can have different approval requirements).
@@ -244,6 +247,9 @@ interface ApprovalOnRejected {
 
 ## Approval Requests (Runtime)
 
+Covers `approval_requests` Table, `approval_step_instances` Table, Requirements State JSONB.
+Touches `approval_requests`, `tenant_id`, `approval_rule_id`, `record_id`, `table_id` tables.
+
 ### `approval_requests` Table
 
 One row per approval request per record. System-managed — not a user field. This is the runtime instance of an approval rule applied to a specific record.
@@ -338,6 +344,8 @@ interface RequirementState {
 ---
 
 ## Approval Activity Log
+
+Defines `approval_activity`, `audit_log`, `id`, `tenant_id`, `approval_request_id`, `step_instance_id`.
 
 ### `approval_activity` Table
 
@@ -488,6 +496,9 @@ The `approval.requirement_updated` event on the `record:{recordId}` channel powe
 ---
 
 ## UI Surfaces
+
+Covers Surface 1: Status Field Blocked State, Surface 2: Submission Experience, Surface 3: Approval Panel on Record, Surface 4: Approval Queue (Right Panel Tab), Surface 5: Notifications, Surface 6: Configuration UI.
+Touches `requirements_state`, `publish_state`, `approval_step_instances` tables. See `design-system.md`, `mobile.md`.
 
 ### Surface 1: Status Field Blocked State
 

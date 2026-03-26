@@ -15,20 +15,20 @@
 
 | Section                                  | Lines   | Covers                                                        |
 | ---------------------------------------- | ------- | ------------------------------------------------------------- |
-| Strategic Rationale                      | 35–44   | Why field groups, value proposition for data organization     |
-| Field Group Anatomy                      | 45–105  | Group definition, coloring (3 modes), member fields, ordering |
-| Per-Field Emphasis                       | 106–145 | Bold header, accent color, visual weight per field            |
-| Conditional Cell Coloring                | 146–177 | 4-level priority cascade for cell background colors           |
-| Enhanced Hide/Show Panel                 | 178–279 | Field visibility panel with group awareness, bulk toggle      |
-| Synced Table Tab Badges                  | 280–330 | Platform badge, sync status indicator, 6 health states        |
-| Board Collapse Behavior                  | 331–364 | Sidebar board/workspace collapse, saved state                 |
-| Sidebar Visual Hierarchy Summary         | 365–396 | Complete sidebar rendering rules                              |
-| Data Model                               | 397–466 | field_groups table, fields.group_id, group coloring config    |
-| Field Group Lifecycle                    | 467–492 | Create, edit, reorder, delete, merge groups                   |
-| Interaction with Existing Features       | 493–510 | How groups interact with views, permissions, export           |
-| Column Header Right-Click Menu (Updated) | 511–537 | Group assignment from column header context menu              |
-| Group Header Right-Click Menu (New)      | 538–554 | Context menu on group headers in grid view                    |
-| Phase Integration                        | 555–574 | MVP — Core UX delivery scope                                  |
+| Strategic Rationale                      | 35–43   | Why field groups, value proposition for data organization     |
+| Field Group Anatomy                      | 45–104  | Group definition, coloring (3 modes), member fields, ordering |
+| Per-Field Emphasis                       | 106–144 | Bold header, accent color, visual weight per field            |
+| Conditional Cell Coloring                | 146–176 | 4-level priority cascade for cell background colors           |
+| Enhanced Hide/Show Panel                 | 178–278 | Field visibility panel with group awareness, bulk toggle      |
+| Synced Table Tab Badges                  | 280–331 | Platform badge, sync status indicator, 6 health states        |
+| Board Collapse Behavior                  | 333–367 | Sidebar board/workspace collapse, saved state                 |
+| Sidebar Visual Hierarchy Summary         | 369–399 | Complete sidebar rendering rules                              |
+| Data Model                               | 401–472 | field_groups table, fields.group_id, group coloring config    |
+| Field Group Lifecycle                    | 474–498 | Create, edit, reorder, delete, merge groups                   |
+| Interaction with Existing Features       | 500–516 | How groups interact with views, permissions, export           |
+| Column Header Right-Click Menu (Updated) | 518–543 | Group assignment from column header context menu              |
+| Group Header Right-Click Menu (New)      | 545–560 | Context menu on group headers in grid view                    |
+| Phase Integration                        | 562–581 | MVP — Core UX delivery scope                                  |
 
 ---
 
@@ -279,6 +279,8 @@ Touch devices: emphasis controls (★ ●) are always visible (not hover-depende
 
 ## Synced Table Tab Badges
 
+Covers Platform Badge, Sync Status Indicator.
+
 > ⚠️ **Glossary alignment note:** This section references "base navigation bar" — the glossary does not define this concept. Per glossary, the Workspace is the top-level container; "base" as an intermediate UI layer is pending alignment.
 
 Tables synced from external platforms (Airtable, Notion, SmartSuite) need visual distinction from native EveryStack tables. The tab color system remains user-controllable for organizational grouping — synced status is communicated through an independent badge channel.
@@ -329,6 +331,8 @@ Adjacent to the platform badge (or standalone for tables where the badge is too 
 ---
 
 ## Board Collapse Behavior
+
+Defines `boards`, `bases`, `user_preferences.sidebar_state`, `color`.
 
 > ⚠️ **Glossary alignment note:** The glossary defines a flat Workspace → Table hierarchy with no intermediate "Board" or "Base" layers. The `boards` and `bases` DB tables referenced below do not appear in the glossary's DB Entity Quick Reference. This section is retained as-is pending architectural alignment review — the Board/Base organizational layer may be an internal concept not yet reconciled with the glossary's Workspace model.
 
@@ -395,6 +399,9 @@ Four independent color/badge channels, no conflicts:
 ---
 
 ## Data Model
+
+Covers Field Group Storage, User-Level Collapse Overrides, Sync Status Badge, Board Collapse.
+Touches `user_view_preferences` tables.
 
 ### Field Group Storage
 

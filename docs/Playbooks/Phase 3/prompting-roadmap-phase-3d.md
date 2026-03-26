@@ -9,6 +9,13 @@
 - **Estimated duration:** 2–3 days across all 6 steps
 - **Prior sub-phase:** Phase 3C — Record Thread, DMs, Notifications & System Email (complete, merged to main, tagged `v0.3.0-phase-3c`)
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, 5 units, 2-3 day estimate, Units 1 and 2 parallel |
+| Step 3 — Build Execution | 11 prompts in 5 units: template data layer, TipTap Env 2, merge-tag resolution, PDF pipeline, template/generation UI |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)

@@ -22,35 +22,35 @@
 
 | Section                                                                           | Lines     | Covers                                                                |
 | --------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------- |
-| Core Principle                                                                    | 58–67     | Desktop = Build, Tablet = Build & Operate, Mobile = Operate & Consume |
-| Device Tiers                                                                      | 68–99     | Phone/tablet/desktop breakpoints and capability tiers                 |
-| Mobile Navigation Model                                                           | 100–115   | Bottom tab bar, contextual tab swapping, navigation stack             |
-| Capability Gating                                                                 | 116–140   | Feature availability by device tier                                   |
-| Primary Mobile Surfaces                                                           | 141–191   | My Office, workspace views, Record View, Quick Panels on mobile       |
-| Mobile Chat & Messaging _(Post-MVP — MVP includes basic Record Thread tabs only)_ | 192–275   | Chat bubbles, input bar, threading on mobile                          |
-| Mobile View Types                                                                 | 276–384   | Card (primary), Kanban, Calendar, Form — mobile adaptations           |
-| Portal Mobile PWA (Paid Tiers)                                                    | 385–439   | PWA portal experience, mobile-first portal rendering                  |
-| Offline Architecture                                                              | 440–529   | Service worker caching, optimistic writes, sync queue                 |
-| Notification Routing                                                              | 530–607   | Push notification delivery, badge counts, deep link targets           |
-| Deep Linking                                                                      | 608–641   | URL scheme, universal links, deep link routing                        |
-| Camera, Scanning & OCR _(Post-MVP — Portals & Apps)_                              | 642–693   | Barcode scanning, document capture, OCR pipeline                      |
-| Maps & Geolocation _(Post-MVP)_                                                   | 694–723   | Location field, map view, geofencing                                  |
-| Voice Input & Dictation _(Post-MVP)_                                              | 724–738   | Voice-to-text, speech recognition                                     |
-| Mobile Input Optimization                                                         | 739–779   | Keyboard types, input modes, autocomplete attributes                  |
-| Ergonomic Design Constraints                                                      | 780–822   | Thumb zones, one-handed use, touch targets                            |
-| AI Personalization _(Post-MVP)_                                                   | 823–853   | AI-powered mobile suggestions                                         |
-| Mobile Payments _(Post-MVP)_                                                      | 854–875   | Tap to Pay, Stripe Terminal mobile                                    |
-| In-App Support _(Post-MVP)_                                                       | 876–900   | Help widget, contextual help                                          |
-| Additional Mobile Capabilities                                                    | 901–970   | Haptics, share sheet, clipboard, biometrics                           |
-| PWA Capabilities                                                                  | 971–995   | Manifest, install prompt, standalone mode                             |
-| Service Worker Caching                                                            | 996–1042  | Cache strategies, offline fallback, background sync                   |
-| Performance Budgets                                                               | 1043–1059 | Bundle size, FCP, TTI, LCP targets                                    |
-| Biometric Auth Readiness                                                          | 1060–1079 | Face ID / fingerprint unlock for portal sessions                      |
-| Capacitor Decision Framework                                                      | 1080–1104 | When to use Capacitor vs PWA                                          |
-| Mobile Navigation                                                                 | 1105–1128 | Navigation architecture and transitions                               |
-| Mobile Testing Strategy                                                           | 1129–1199 | Device matrix, viewport testing, touch simulation                     |
-| Phase Implementation                                                              | 1200–1213 | Mobile milestones per phase                                           |
-| Cross-References                                                                  | 1214–1231 | Links to related docs                                                 |
+| Core Principle                                                                    | 57–65     | Desktop = Build, Tablet = Build & Operate, Mobile = Operate & Consume |
+| Device Tiers                                                                      | 67–97     | Phone/tablet/desktop breakpoints and capability tiers                 |
+| Mobile Navigation Model                                                           | 99–113   | Bottom tab bar, contextual tab swapping, navigation stack             |
+| Capability Gating                                                                 | 115–140   | Feature availability by device tier                                   |
+| Primary Mobile Surfaces                                                           | 142–192   | My Office, workspace views, Record View, Quick Panels on mobile       |
+| Mobile Chat & Messaging _(Post-MVP — MVP includes basic Record Thread tabs only)_ | 194–276   | Chat bubbles, input bar, threading on mobile                          |
+| Mobile View Types                                                                 | 278–386   | Card (primary), Kanban, Calendar, Form — mobile adaptations           |
+| Portal Mobile PWA (Paid Tiers)                                                    | 388–443   | PWA portal experience, mobile-first portal rendering                  |
+| Offline Architecture                                                              | 445–539   | Service worker caching, optimistic writes, sync queue                 |
+| Notification Routing                                                              | 541–620   | Push notification delivery, badge counts, deep link targets           |
+| Deep Linking                                                                      | 622–656   | URL scheme, universal links, deep link routing                        |
+| Camera, Scanning & OCR _(Post-MVP — Portals & Apps)_                              | 658–711   | Barcode scanning, document capture, OCR pipeline                      |
+| Maps & Geolocation _(Post-MVP)_                                                   | 713–741   | Location field, map view, geofencing                                  |
+| Voice Input & Dictation _(Post-MVP)_                                              | 743–756   | Voice-to-text, speech recognition                                     |
+| Mobile Input Optimization                                                         | 758–797   | Keyboard types, input modes, autocomplete attributes                  |
+| Ergonomic Design Constraints                                                      | 799–841   | Thumb zones, one-handed use, touch targets                            |
+| AI Personalization _(Post-MVP)_                                                   | 843–872   | AI-powered mobile suggestions                                         |
+| Mobile Payments _(Post-MVP)_                                                      | 874–894   | Tap to Pay, Stripe Terminal mobile                                    |
+| In-App Support _(Post-MVP)_                                                       | 896–919   | Help widget, contextual help                                          |
+| Additional Mobile Capabilities                                                    | 921–992   | Haptics, share sheet, clipboard, biometrics                           |
+| PWA Capabilities                                                                  | 994–1018   | Manifest, install prompt, standalone mode                             |
+| Service Worker Caching                                                            | 1020–1067  | Cache strategies, offline fallback, background sync                   |
+| Performance Budgets                                                               | 1069–1084 | Bundle size, FCP, TTI, LCP targets                                    |
+| Biometric Auth Readiness                                                          | 1086–1105 | Face ID / fingerprint unlock for portal sessions                      |
+| Capacitor Decision Framework                                                      | 1107–1131 | When to use Capacitor vs PWA                                          |
+| Mobile Navigation                                                                 | 1133–1155 | Navigation architecture and transitions                               |
+| Mobile Testing Strategy                                                           | 1157–1226 | Device matrix, viewport testing, touch simulation                     |
+| Phase Implementation                                                              | 1228–1241 | Mobile milestones per phase                                           |
+| Cross-References                                                                  | 1243–1260 | Links to related docs                                                 |
 
 ---
 
@@ -444,6 +444,9 @@ Portal service workers:
 
 ## Offline Architecture
 
+Covers Table View Working Set Cache, What's Available Offline, Offline Action Queue.
+Touches `link_scope_filter`, `max_links_per_record`, `data_scope` tables.
+
 ### Table View Working Set Cache
 
 When a team member opens a Table View on mobile or tablet, the **full working set** is cached to IndexedDB — not just the records they scrolled past.
@@ -618,6 +621,8 @@ On mobile, ungrouped notifications are overwhelming. Rules:
 
 ## Deep Linking
 
+Covers URL Scheme, Link Resolution on Mobile, Capacitor Readiness.
+
 ### URL Scheme
 
 All EveryStack entities have stable, deep-linkable URLs:
@@ -651,6 +656,9 @@ To ensure deep links work when/if Capacitor ships:
 ---
 
 ## Camera, Scanning & OCR _(Post-MVP — Portals & Apps)_
+
+Covers Photo Capture, Document Scanning & OCR.
+Touches `extraction_templates` tables. See `document-intelligence.md`.
 
 ### Photo Capture
 
@@ -912,6 +920,8 @@ EveryStack's i18n infrastructure (`t('key')`, `resolveContent()`) extends to all
 
 ## Additional Mobile Capabilities
 
+Covers Quick Actions from App Icon, Share Sheet Integration (Inbound), Home Screen Widgets (Post-MVP, Capacitor Only), Wearable Notifications (Post-MVP, Capacitor Only), NFC Scanning (Post-MVP, Capacitor Only), Split Screen / Slide Over (Tablet).
+
 ### Quick Actions from App Icon
 
 PWA manifest `shortcuts` field (and Capacitor App Shortcuts) for direct actions from the home screen:
@@ -1008,6 +1018,8 @@ iPad Split View and Android Split Screen are supported — EveryStack works corr
 ---
 
 ## Service Worker Caching
+
+Covers Platform Service Worker, Portal Service Worker (Separate Scope).
 
 ### Platform Service Worker
 

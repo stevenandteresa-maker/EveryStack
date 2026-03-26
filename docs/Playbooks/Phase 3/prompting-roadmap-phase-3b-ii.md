@@ -11,6 +11,15 @@
 
 **Parallel opportunity:** Unit 3 can be built concurrently with Units 1–2. They don't depend on each other. Unit 4 depends on both Units 2 and 3.
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, 4 units, 6-8 session estimate, Unit 3 parallel with Units 1-2 |
+| Step 3 — Build Execution | 15 prompts in 4 units: SDS types/builders, permission filter/cache, Command Bar data layer, Command Bar UI + AI channel |
+| Step 4 — Review | Reviewer Agent verification with security focus on permission filtering |
+| Step 5 — Docs Sync | MODIFICATIONS.md template for created/modified files |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
@@ -1923,6 +1932,8 @@ Your task: Review the build diff against the playbook's acceptance criteria and 
 
 ## Review Checklist
 
+Covers Unit 1: SDS Types & Core Builders, Unit 2: SDS Permission Filter, Caching & Service Facade, Unit 3: Command Bar Search & Navigation Data Layer, Unit 4: Command Bar UI & AI Search Channel, Cross-Cutting.
+
 ### Unit 1: SDS Types & Core Builders
 - [ ] All 5 types exported with JSDoc
 - [ ] mapFieldToDescriptor() maps all MVP field types correctly
@@ -1987,6 +1998,8 @@ If FAIL: → Open Claude Code. Paste the specific failure items. Fix. Re-run rev
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the fix branch, 5.2 — Run the Docs Agent, 5.3 — Review and merge, 5.4 — Tag if milestone.
 
 ### What This Step Does
 Bring docs back into alignment after the build. The Docs Agent reads MODIFICATIONS.md to know exactly what changed.

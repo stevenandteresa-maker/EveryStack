@@ -17,6 +17,17 @@ description: >
 
 # EveryStack Build Prep Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 32–40 | Trigger: "buildprep", "prepare prompts for subphase X", planning pipeline setup |
+| Required Input | 41–57 | Sub-phase identifier and variable derivation rules |
+| Procedure | 58–92 | 3-step: resolve sub-phase from phase-division doc, generate markdown, present file |
+| Output Template | 93–411 | Full copy-paste-ready markdown: Steps 0, Gate 1, Steps 1--2 with branch/merge instructions |
+| Variable Resolution Rules | 413–441 | Variable substitution table and phase-division doc lookup matrix |
+| Quality Checks Before Delivering | 442–449 | 7-item verification checklist before presenting output |
+
 This skill generates the complete pre-build prompt sequence for any
 EveryStack sub-phase. It produces a single markdown document containing
 four discrete, copy-paste-ready prompts — one for each planning step —
@@ -50,6 +61,9 @@ From that identifier, derive:
 ---
 
 ## Procedure
+
+Covers 1. Resolve the Sub-Phase, 2. Generate the Markdown File, 3. Present the File.
+Touches `present_files` tables. See `phase-division-phase3-part1.md`.
 
 ### 1. Resolve the Sub-Phase
 

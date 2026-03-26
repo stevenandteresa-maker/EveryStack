@@ -5,6 +5,15 @@ description: Current build state for EveryStack. Load this skill at the start of
 
 # EveryStack — Phase Context
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| What Exists Now | 24–1082 | Per-phase inventory of completed work: 1A infrastructure, 1B database (59 tables), 1C auth, 1D observability, 1E testing, 1F design system, 1G runtime services, 1H AI service, 1I audit/API auth, 1J CP migration + nav shell, 2A sync + Airtable adapter, 3A-i grid core, 3A-ii view features, 3A-iii field permissions, 3B-i cross-linking, 3B-ii SDS + Command Bar, 3C communications |
+| What Does NOT Exist Yet | 1084–1124 | Unbuilt features listed by phase: remaining Phase 3 (portals, forms, field groups, bulk ops, templates, settings, My Office, mobile), Phases 4--6 (automations, AI, API) |
+| Active Conventions | 1126–1296 | Import patterns, file naming, testing patterns, error handling, Drizzle query patterns, real-time patterns, AI service patterns established in built phases |
+| How to Update This File | 1298–1308 | Update rules: append after each build, move to What Exists when complete |
+
 **Last updated:** 2026-03-16
 **Branch:** `main`
 **Latest tag:** `v0.2.0-phase-2a`
@@ -13,6 +22,9 @@ description: Current build state for EveryStack. Load this skill at the start of
 ---
 
 ## What Exists Now
+
+Covers Phase 1A — Infrastructure (Complete), Phase 1B — Database (Complete), Phase 1C — Auth & Tenant Isolation (Complete), Phase 1D — Observability & Security (Complete), Phase 1E — Testing Infrastructure (Complete), Phase 1F — Design System Foundation & i18n (Complete).
+Touches `tenant_relationships`, `tenant_id`, `audit_log`, `ai_usage_log`, `api_request_log` tables. See `tenant-resolver.ts`, `index.ts`, `server.ts`.
 
 ### Phase 1A — Infrastructure (Complete)
 
@@ -1112,6 +1124,8 @@ Full communications stack: Record Thread with tabs/lenses, DMs/group DMs, notifi
 ---
 
 ## Active Conventions
+
+Defines `generateUUIDv7()`, `getDbForTenant(tenantId, intent)`, `setTenantContext(db, tenantId)`, `tenant_relationships`, `RLS_EXCLUDED_COLUMNS`, `rls.ts`. See `rls.ts`, `filter-types.ts`, `aggregation-utils.ts`.
 
 | Convention | Implementation |
 |---|---|

@@ -17,22 +17,25 @@
 
 | Section                                                   | Lines   | Covers                                                          |
 | --------------------------------------------------------- | ------- | --------------------------------------------------------------- |
-| 1. Integration Architecture & Platform Coverage           | 35–100  | Apideck/Merge unified API, QuickBooks/Xero/1C support           |
-| 2. Accounting Data Model — Finance Tables                 | 101–273 | invoice_table_config, expense_table_config, financial snapshots |
-| 3. Accounting Sync Engine — Adapter Specification         | 274–395 | UnifiedAccountingAdapter, transactional sync, reconciliation    |
-| 4. Automation Actions — Accounting                        | 396–449 | 7 automation actions (#31–37) for invoicing and expenses        |
-| 5. Invoice Lifecycle — End-to-End Workflow                | 450–517 | Draft → sent → paid flow, payment tracking, reminders           |
-| 6. Expense Lifecycle & Budget Tracking                    | 518–582 | Expense capture, approval, budget monitoring                    |
-| 7. Financial Command Center — Dashboard & Apps (Post-MVP) | 583–663 | 4-tab financial dashboard app                                   |
-| 8. AI Financial Intelligence                              | 664–734 | AI briefings, anomaly detection, cash flow forecasting          |
-| 9. Chart of Accounts & Tax Rate — Remote Reference Fields | 735–769 | Accounting reference data, field mapping                        |
-| 10. Multi-Currency Handling                               | 770–787 | Exchange rates, currency conversion, multi-currency invoices    |
-| 11. Retainer Management                                   | 788–809 | Retainer tracking, drawdown, top-up workflows                   |
-| Phase Integration                                         | 810–838 | Post-MVP — Accounting Integration delivery scope                |
+| 1. Integration Architecture & Platform Coverage           | 35–102  | Apideck/Merge unified API, QuickBooks/Xero/1C support           |
+| 2. Accounting Data Model — Finance Tables                 | 104–280 | invoice_table_config, expense_table_config, financial snapshots |
+| 3. Accounting Sync Engine — Adapter Specification         | 282–406 | UnifiedAccountingAdapter, transactional sync, reconciliation    |
+| 4. Automation Actions — Accounting                        | 408–469 | 7 automation actions (#31–37) for invoicing and expenses        |
+| 5. Invoice Lifecycle — End-to-End Workflow                | 471–540 | Draft → sent → paid flow, payment tracking, reminders           |
+| 6. Expense Lifecycle & Budget Tracking                    | 542–608 | Expense capture, approval, budget monitoring                    |
+| 7. Financial Command Center — Dashboard & Apps (Post-MVP) | 610–696 | 4-tab financial dashboard app                                   |
+| 8. AI Financial Intelligence                              | 698–772 | AI briefings, anomaly detection, cash flow forecasting          |
+| 9. Chart of Accounts & Tax Rate — Remote Reference Fields | 774–809 | Accounting reference data, field mapping                        |
+| 10. Multi-Currency Handling                               | 811–827 | Exchange rates, currency conversion, multi-currency invoices    |
+| 11. Retainer Management                                   | 829–850 | Retainer tracking, drawdown, top-up workflows                   |
+| Phase Integration                                         | 852–880 | Post-MVP — Accounting Integration delivery scope                |
 
 ---
 
 ## 1. Integration Architecture & Platform Coverage
+
+Covers Design Philosophy, Supported Platforms, Architectural Decision: Unified Accounting API, Connection Model.
+Touches `base_connections` tables.
 
 ### Design Philosophy
 
@@ -99,6 +102,9 @@ OAuth flow follows the existing base_connections pattern: Settings > Connections
 ---
 
 ## 2. Accounting Data Model — Finance Tables
+
+Covers Architectural Decision: Config Overlay, Not Table Type, `invoice_table_config`, `expense_table_config`, `financial_snapshots`, `financial_summary`.
+Touches `table_type`, `time_tracking_config`, `pm_table_config`, `calendar_table_config`, `invoice_table_config` tables.
 
 ### Architectural Decision: Config Overlay, Not Table Type
 
@@ -275,6 +281,9 @@ One row per month per tenant. The materialization automation creates/updates the
 
 ## 3. Accounting Sync Engine — Adapter Specification
 
+Covers Transactional vs. Tabular Sync, UnifiedAccountingAdapter Interface, Inbound Sync: Chart of Accounts, Inbound Sync: Financial Reports, Outbound Sync: Invoice Push, Outbound Sync: Payment Push (Stripe → Accounting).
+Touches `financial_snapshots`, `invoice_table_config`, `line_items_field_id` tables. See `sync-engine.md`.
+
 ### Transactional vs. Tabular Sync
 
 Existing sync adapters (Airtable, Notion, SmartSuite) handle **tabular sync**: external platform has tables/databases with rows mapping 1:1 to EveryStack records. The adapter maps field-to-field, row-to-record.
@@ -398,6 +407,8 @@ Platform rate limit registry entries (extends existing `sync-engine.md` registry
 
 ## 4. Automation Actions — Accounting
 
+Covers New Actions (added to Full Action Catalog), New Triggers, Pre-Built Automation Recipes.
+
 ### New Actions (added to Full Action Catalog)
 
 | #   | Action                                  | Config Fields                                                                                                                   | Output                               |
@@ -458,6 +469,9 @@ Platform rate limit registry entries (extends existing `sync-engine.md` registry
 ---
 
 ## 5. Invoice Lifecycle — End-to-End Workflow
+
+Covers Table Structure (Template: "Finance — Invoicing"), Invoice Creation: Three Trigger Patterns, Rate Resolution for Line Items, Invoice Sent → Push to Accounting, Payment Reconciliation.
+See `tables-and-views.md`, `agency-features.md`.
 
 ### Table Structure (Template: "Finance — Invoicing")
 
@@ -527,6 +541,9 @@ When PM changes status Draft → Sent (or clicks "Send Invoice" button):
 
 ## 6. Expense Lifecycle & Budget Tracking
 
+Covers Expense Table Structure (Template: "Finance — Expenses"), Expense Workflow, Project Profitability (Extends `agency-features.md`), Budget Tracking, Purchase Orders.
+Touches `financial_snapshots` tables. See `approval-workflows.md`, `agency-features.md`.
+
 ### Expense Table Structure (Template: "Finance — Expenses")
 
 **Expenses table** (type: table, config: expense_table_config applied)
@@ -591,6 +608,9 @@ PO-to-Bill matching: When a bill arrives from accounting (inbound sync), automat
 ---
 
 ## 7. Financial Command Center — Dashboard & Apps (Post-MVP)
+
+Covers Architecture, Tab 1: "This Month" — Operating Dashboard, Tab 2: "Profitability" — Project & Client Economics, Tab 3: "Forecast" — Forward-Looking Projections, Tab 4: "Trends" — Historical Analysis, Portal Variants.
+Touches `financial_summary` tables. See `chart-blocks.md`.
 
 ### Architecture
 
@@ -677,6 +697,9 @@ Year-over-year comparison where data exists: current month vs. same month prior 
 
 ## 8. AI Financial Intelligence
 
+Covers Weekly Financial Briefing (Automated), Monthly Strategy Session (Agent-Powered), Scenario Calculators (Interface-Powered).
+Touches `financial_summary`, `report_builder`, `financial_snapshots` tables. See `agent-architecture.md`.
+
 ### Weekly Financial Briefing (Automated)
 
 **Implementation:** Scheduled automation (Recipe 7 variant, running weekly — Sunday evening or Monday morning).
@@ -749,6 +772,8 @@ Implementation: Either as a dedicated App page tab with input fields (using Form
 ---
 
 ## 9. Chart of Accounts & Tax Rate — Remote Reference Fields
+
+Defines `max_links: 1`, `display.style: "select_dropdown"`, `tables-and-views.md`, `data-model.md`. See `tables-and-views.md`, `data-model.md`.
 
 ### UX Pattern: Linked Record with Select Dropdown Display
 

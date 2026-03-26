@@ -14,20 +14,20 @@
 
 | Section                          | Lines     | Covers                                                                 |
 | -------------------------------- | --------- | ---------------------------------------------------------------------- |
-| Test Framework                   | 34–47     | Tool selection per test layer (Vitest, Playwright, axe-core)           |
-| Test File Conventions            | 48–120    | Naming patterns, directory structure, 6 test writing rules             |
-| Test Utilities                   | 121–279   | Tenant isolation helper, data factories, MSW mocks, Clerk test helpers |
-| Test Priority Tiers              | 280–324   | 3-tier priority system for test coverage decisions                     |
-| Coverage Targets                 | 325–343   | Per-package line/branch targets, enforcement rules                     |
-| Vitest Configuration             | 344–427   | Monorepo workspace setup, per-app config, test setup file              |
-| Playwright Configuration         | 428–524   | E2E config, 3 viewport projects, auth setup                            |
-| Docker Compose for Test Services | 525–588   | Postgres (pgvector), PgBouncer, Redis — all tmpfs-backed               |
-| Accessibility Testing            | 589–630   | axe-core + Playwright WCAG 2.1 AA, mandatory a11y test pages           |
-| Performance Regression Testing   | 631–692   | Query timing guards, thresholds by operation, CI behavior              |
-| CI Pipeline (GitHub Actions)     | 693–886   | Workflow YAML, 9 pre-merge gates, post-merge pipeline                  |
-| Staging Database Management      | 887–943   | Synthetic data seeding, staging volumes, migration testing             |
-| Local Development Testing        | 944–1002  | Local dev workflow and quick-run commands                              |
-| Phase Implementation             | 1003–1011 | Testing milestones per phase                                           |
+| Test Framework                   | 34–46     | Tool selection per test layer (Vitest, Playwright, axe-core)           |
+| Test File Conventions            | 48–122    | Naming patterns, directory structure, 6 test writing rules             |
+| Test Utilities                   | 124–281   | Tenant isolation helper, data factories, MSW mocks, Clerk test helpers |
+| Test Priority Tiers              | 283–330   | 3-tier priority system for test coverage decisions                     |
+| Coverage Targets                 | 332–349   | Per-package line/branch targets, enforcement rules                     |
+| Vitest Configuration             | 351–435   | Monorepo workspace setup, per-app config, test setup file              |
+| Playwright Configuration         | 437–532   | E2E config, 3 viewport projects, auth setup                            |
+| Docker Compose for Test Services | 534–596   | Postgres (pgvector), PgBouncer, Redis — all tmpfs-backed               |
+| Accessibility Testing            | 598–639   | axe-core + Playwright WCAG 2.1 AA, mandatory a11y test pages           |
+| Performance Regression Testing   | 641–700   | Query timing guards, thresholds by operation, CI behavior              |
+| CI Pipeline (GitHub Actions)     | 702–896   | Workflow YAML, 9 pre-merge gates, post-merge pipeline                  |
+| Staging Database Management      | 898–953   | Synthetic data seeding, staging volumes, migration testing             |
+| Local Development Testing        | 955–1014  | Local dev workflow and quick-run commands                              |
+| Phase Implementation             | 1016–1024 | Testing milestones per phase                                           |
 
 ---
 
@@ -46,6 +46,9 @@
 ---
 
 ## Test File Conventions
+
+Covers File Naming, Directory Structure, Test Writing Rules.
+See `records.ts`.
 
 ### File Naming
 
@@ -119,6 +122,8 @@ apps/worker/
 ---
 
 ## Test Utilities
+
+Covers Tenant Isolation Helper, Test Data Factories, Mock Clerk Session, Mock External APIs.
 
 ### Tenant Isolation Helper
 
@@ -277,6 +282,9 @@ export const mockApiServer = setupServer(...airtableHandlers);
 
 ## Test Priority Tiers
 
+Covers Tier 1 — Mandatory (blocks merge), Tier 2 — Required (blocks merge if touching related code), Tier 3 — Recommended (run in CI, don't block merge).
+Touches `data_scope` tables.
+
 ### Tier 1 — Mandatory (blocks merge)
 
 These must pass before any PR merges. They protect the invariants that, if broken, cause data corruption or security breaches.
@@ -341,6 +349,8 @@ These must pass before any PR merges. They protect the invariants that, if broke
 ---
 
 ## Vitest Configuration
+
+Covers Monorepo Workspace Setup, Per-App Config, Test Setup File.
 
 ### Monorepo Workspace Setup
 
@@ -691,6 +701,8 @@ describe('getRecordsByTable performance', () => {
 
 ## CI Pipeline (GitHub Actions)
 
+Covers Concrete Workflow, Pre-Merge Gates (Must Pass), Post-Merge (Main Branch).
+
 ### Concrete Workflow
 
 ```yaml
@@ -941,6 +953,8 @@ async function seedStaging() {
 ---
 
 ## Local Development Testing
+
+Covers Commands, Turborepo Test Tasks.
 
 ### Commands
 

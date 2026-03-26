@@ -16,17 +16,17 @@
 
 | Section                                | Lines   | Covers                                                           |
 | -------------------------------------- | ------- | ---------------------------------------------------------------- |
-| Design Philosophy                      | 33–46   | Evernote competitor positioning, capture-first approach          |
-| 1. My Notes — Personal Notebook System | 47–185  | TipTap-based notes, workspace-scoped personal tables, note types |
-| 2. Quick Capture System                | 186–265 | Rapid capture UI, inbox model, triage workflow                   |
-| 3. Web Clipper                         | 266–457 | Browser extension, content extraction, page archiving            |
-| 4. File-First Notes ("Save Anything")  | 458–581 | File capture, drag-and-drop, auto-extraction                     |
-| 5. Evernote Import (ENEX Parser)       | 582–705 | ENEX file parsing, content migration, tag mapping                |
-| 6. Note Triage & Organization          | 706–758 | Inbox → organized flow, tagging, notebook assignment             |
-| 7. Search Across Notes                 | 759–800 | Full-text + embedding search, filters, saved searches            |
-| 8. Cross-Reference Updates Required    | 801–821 | Docs that need updating when this ships                          |
-| 9. Phase Implementation                | 822–851 | Delivery timeline and dependencies                               |
-| 10. Competitive Positioning            | 852–875 | Feature comparison vs Evernote, Notion, Apple Notes              |
+| Design Philosophy                      | 33–45   | Evernote competitor positioning, capture-first approach          |
+| 1. My Notes — Personal Notebook System | 47–192  | TipTap-based notes, workspace-scoped personal tables, note types |
+| 2. Quick Capture System                | 194–276 | Rapid capture UI, inbox model, triage workflow                   |
+| 3. Web Clipper                         | 278–474 | Browser extension, content extraction, page archiving            |
+| 4. File-First Notes ("Save Anything")  | 476–599 | File capture, drag-and-drop, auto-extraction                     |
+| 5. Evernote Import (ENEX Parser)       | 601–726 | ENEX file parsing, content migration, tag mapping                |
+| 6. Note Triage & Organization          | 728–782 | Inbox → organized flow, tagging, notebook assignment             |
+| 7. Search Across Notes                 | 784–829 | Full-text + embedding search, filters, saved searches            |
+| 8. Cross-Reference Updates Required    | 831–850 | Docs that need updating when this ships                          |
+| 9. Phase Implementation                | 852–880 | Delivery timeline and dependencies                               |
+| 10. Competitive Positioning            | 882–905 | Feature comparison vs Evernote, Notion, Apple Notes              |
 
 ---
 
@@ -45,6 +45,9 @@ Three principles:
 ---
 
 ## 1. My Notes — Personal Notebook System
+
+Covers Architecture: Personal Notebooks as Private Wiki Tables, Data Model, Inbox Notebook, User-Created Notebooks, Navigation: "My Notes" Sidebar Section, My Notes Widget (My Office Integration).
+Touches `wiki_table_config`, `is_personal`, `owner_user_id`, `updated_at`, `smart_doc` tables. See `compliance.md`.
 
 ### Architecture: Personal Notebooks as Private Wiki Tables
 
@@ -190,6 +193,9 @@ Added to the My Office widget catalog under Platform Widgets. Not in the default
 
 ## 2. Quick Capture System
 
+Covers The Capture Paradigm, Command Bar Integration, Mobile Quick Capture.
+See `mobile.md`, `smart-docs.md`.
+
 ### The Capture Paradigm
 
 Quick Capture is the zero-friction entry point. It creates a note in the user's Inbox with as little interaction as possible. Four capture modes, all producing the same output — a wiki record in the Inbox notebook:
@@ -270,6 +276,9 @@ On mobile, Quick Capture is triggered by:
 ---
 
 ## 3. Web Clipper
+
+Covers Why This Matters, Browser Extension Architecture, Clip Modes, HTML-to-TipTap Conversion Pipeline, Clip Popup UI, Authentication.
+Touches `content_markdown`, `content_html`, `web_clip`, `clip_metadata`, `canonical_data` tables. See `content-script.ts`, `background.ts`, `document-intelligence.md`.
 
 ### Why This Matters
 
@@ -466,6 +475,9 @@ When a user clips a URL that's already been clipped:
 
 ## 4. File-First Notes ("Save Anything")
 
+Covers Concept, Flow, Content Injection, Multi-File Notes, Image Notes, Audio Notes.
+See `mobile.md`.
+
 ### Concept
 
 Drop a file → get a note. No forms, no field mapping, no decisions. The file becomes the note, with everything extractable made searchable.
@@ -587,6 +599,9 @@ Voice recordings (from `/voice-note` or mobile voice capture):
 ---
 
 ## 5. Evernote Import (ENEX Parser)
+
+Covers Why, ENEX Format, Import Pipeline, Google Keep & Apple Notes Import (Future).
+Touches `clip_metadata` tables.
 
 ### Why
 
@@ -712,6 +727,9 @@ Architecture supports additional importers by adding new parsers to the `package
 
 ## 6. Note Triage & Organization
 
+Covers The Inbox Workflow, Moving Notes Between Scopes, Smart Triage Suggestions (AI-Powered).
+Touches `is_personal`, `canonical_data` tables.
+
 ### The Inbox Workflow
 
 The Inbox is a staging area, not a permanent home. Notes captured quickly need a path to organization.
@@ -764,6 +782,9 @@ For Inbox notes that have been sitting untriaged for 3+ days, the system can sug
 ---
 
 ## 7. Search Across Notes
+
+Covers Extending Existing Search, My Notes Search (Dedicated Search Surface), Full-Content Embedding for Personal Notes.
+Touches `record_embeddings`, `knowledge_embeddings`, `table_id`, `owner_user_id` tables.
 
 ### Extending Existing Search
 

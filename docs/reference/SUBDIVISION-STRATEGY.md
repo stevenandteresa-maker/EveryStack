@@ -1,5 +1,20 @@
 # Subdivision Strategy
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Core Principle | 29–38 | Quality-in-planning thesis: better input context beats better reasoning |
+| What a Subdivision Doc Is | 40–65 | Definition, hierarchy position, what it is and is not |
+| Finding Natural Seams | 67–152 | 10 seam heuristics in priority order, anti-patterns, seam validation rules |
+| Writing Interface Contracts | 154–231 | Produces/Consumes/Side Effects format, contract rules, examples |
+| Curating Context Manifests | 233–311 | Budget calculation, doc section references, source file references, manifests for UI vs backend |
+| Dependency Ordering | 313–334 | Within-sub-phase unit ordering, DAG rules, integration checkpoints |
+| Subdivision Doc Template | 355–361 | Full markdown template with big-picture anchor, interface contracts, context budgets |
+| Context Budget Verification | 422–433 | Token budget formula, when to subdivide further, when NOT to subdivide |
+| Reasoning Surface Audit (RSA) | 473–579 | D/SH/PJ classification rules, rationale format, PJ escalation procedure, L1 training data |
+| Worked Example | 581–636 | Concrete example applying all heuristics to a sample sub-phase |
+
 How to decompose a sub-phase into tightly scoped build units. This
 document is to the Planner Agent what PLAYBOOK-GENERATION-STRATEGY.md
 is to playbook generation — it defines the principles, heuristics, and
@@ -50,6 +65,8 @@ It IS:
 ---
 
 ## Finding Natural Seams
+
+Ten heuristics for identifying unit boundaries, ordered by priority: data layer first, service layer, UI layer, CRUD boundaries, tenant isolation, cross-cutting concerns. Includes anti-patterns and seam validation rules.
 
 Seams are the boundaries where one unit ends and another begins. Good
 seams produce units that are internally cohesive and externally
@@ -136,6 +153,8 @@ useful.
 
 ## Writing Interface Contracts
 
+Produces/Consumes/Side Effects format for defining what each unit exports to and imports from other units. Includes contract rules, specificity requirements, and worked examples for schema, service, and UI contracts.
+
 An interface contract defines what a unit produces that downstream units
 consume. It is the single most important element of the subdivision doc
 because it converts the Reviewer's job from "does the diff look right?"
@@ -212,6 +231,8 @@ Use this consistent format in every subdivision doc:
 ---
 
 ## Curating Context Manifests
+
+Token budget calculation methodology, doc-section and source-file reference formats, and guidance for backend vs. UI context manifests. The context budget test (40% of Claude Code context window) is the hard constraint.
 
 Each unit in the subdivision doc carries a context manifest — the exact
 doc sections and source files the Build Agent needs to execute the
@@ -450,6 +471,8 @@ into an adjacent unit.
 ---
 
 ## Reasoning Surface Audit (RSA)
+
+Three-tier classification system (D/SH/PJ) for unit and prompt reasoning complexity. Covers classification rules, rationale format requirements, PJ escalation to Steven, and capture as L1 training data for AbleSpec. See `CLAUDE.md` Build Lifecycle for lifecycle integration.
 
 Every unit in a subdivision doc carries an RSA classification. This
 classification tells the Planner, Playbook Author, Reviewer, and

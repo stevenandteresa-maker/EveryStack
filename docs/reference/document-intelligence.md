@@ -18,20 +18,20 @@
 
 | Section                                                                                             | Lines   | Covers                                               |
 | --------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------- |
-| Problem Statement                                                                                   | 38–49   | Why document intelligence matters for the platform   |
-| Architecture Overview                                                                               | 50–74   | Pipeline architecture, integration points            |
-| 1. File Metadata Extraction _(MVP — Core UX)_                                                       | 75–145  | EXIF, file properties, auto-tagging                  |
-| 2. File Content Extraction _(MVP — Core UX)_                                                        | 146–188 | PDF/DOCX/XLSX text extraction, OCR for scanned docs  |
-| 3. Vision Analysis & Labeling _(Post-MVP — Comms & Polish)_                                         | 189–233 | Image analysis, auto-labeling, scene detection       |
-| 4. Document-to-Record Extraction _(Post-MVP — Portals & Apps)_                                      | 234–380 | Structured data extraction from documents to records |
-| 5. Asset Version Comparison _(Post-MVP — Verticals & Advanced)_                                     | 381–421 | 4 comparison modes, diff visualization               |
-| 6. Content Search Integration _(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)_ | 422–545 | Full-text + embedding search over file content       |
-| 7. Extended File Detail Panel _(Post-MVP — Comms & Polish)_                                         | 546–589 | Rich file preview, metadata display, AI analysis     |
-| 8. Data Model Additions                                                                             | 590–654 | file_embeddings, extraction_jobs tables              |
-| 9. AI Credit Costs                                                                                  | 655–670 | Credit costs per extraction/analysis operation       |
-| 10. Permissions                                                                                     | 671–687 | File access respects table and field permissions     |
-| 11. Phase Implementation                                                                            | 688–714 | MVP — Core UX–8 delivery across capabilities         |
-| Reconciliation with Existing Docs                                                                   | 715–727 | Cross-reference alignment notes                      |
+| Problem Statement                                                                                   | 38–48   | Why document intelligence matters for the platform   |
+| Architecture Overview                                                                               | 50–73   | Pipeline architecture, integration points            |
+| 1. File Metadata Extraction _(MVP — Core UX)_                                                       | 75–147  | EXIF, file properties, auto-tagging                  |
+| 2. File Content Extraction _(MVP — Core UX)_                                                        | 149–193 | PDF/DOCX/XLSX text extraction, OCR for scanned docs  |
+| 3. Vision Analysis & Labeling _(Post-MVP — Comms & Polish)_                                         | 195–242 | Image analysis, auto-labeling, scene detection       |
+| 4. Document-to-Record Extraction _(Post-MVP — Portals & Apps)_                                      | 244–391 | Structured data extraction from documents to records |
+| 5. Asset Version Comparison _(Post-MVP — Verticals & Advanced)_                                     | 393–435 | 4 comparison modes, diff visualization               |
+| 6. Content Search Integration _(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)_ | 437–563 | Full-text + embedding search over file content       |
+| 7. Extended File Detail Panel _(Post-MVP — Comms & Polish)_                                         | 565–607 | Rich file preview, metadata display, AI analysis     |
+| 8. Data Model Additions                                                                             | 609–674 | file_embeddings, extraction_jobs tables              |
+| 9. AI Credit Costs                                                                                  | 676–690 | Credit costs per extraction/analysis operation       |
+| 10. Permissions                                                                                     | 692–707 | File access respects table and field permissions     |
+| 11. Phase Implementation                                                                            | 709–734 | MVP — Core UX–8 delivery across capabilities         |
+| Reconciliation with Existing Docs                                                                   | 736–748 | Cross-reference alignment notes                      |
 
 ---
 
@@ -73,6 +73,8 @@ User triggers document extraction (manual action, not automatic):
 ---
 
 ## 1. File Metadata Extraction _(MVP — Core UX)_
+
+Covers Extended `files.metadata` JSONB, BullMQ Job: `file.extract_metadata`.
 
 ### Extended `files.metadata` JSONB
 
@@ -146,6 +148,9 @@ interface FileMetadata {
 
 ## 2. File Content Extraction _(MVP — Core UX)_
 
+Covers New Column: `files.extracted_text`, BullMQ Job: `file.extract_content`.
+Touches `note_file_capture` tables. See `mobile.md`, `personal-notes-capture.md`.
+
 ### New Column: `files.extracted_text`
 
 ```sql
@@ -188,6 +193,9 @@ CREATE INDEX idx_files_extracted_text_search
 ---
 
 ## 3. Vision Analysis & Labeling _(Post-MVP — Comms & Polish)_
+
+Covers BullMQ Job: `file.vision_analyze`, Manual Vision Analysis Trigger.
+Touches `record_attachment`, `ai_description`, `ai_tags`, `ai_text_content`, `ai_dominant_colors` tables.
 
 ### BullMQ Job: `file.vision_analyze`
 
@@ -384,6 +392,9 @@ The extraction pipeline, field mapping UI, and template system are shared across
 
 ## 5. Asset Version Comparison _(Post-MVP — Verticals & Advanced)_
 
+Covers Visual Diff for Image Versions, Version Metadata.
+Touches `asset_versions`, `ai_change_summary` tables.
+
 ### Visual Diff for Image Versions
 
 When a documents-type table (asset library) has versioned files via `asset_versions`, the version history panel gains comparison tools:
@@ -424,6 +435,9 @@ This means version history shows not just "Version 3 — uploaded by Sarah, Feb 
 ---
 
 ## 6. Content Search Integration _(MVP — Core UX–7; semantic search explicitly post-MVP per glossary)_
+
+Covers Extending the Search Pipeline, Search Result Presentation, Date-Based Search.
+Touches `record_embeddings`, `file_embeddings`, `captured_at` tables. See `vector-embeddings.md`, `command-bar.md`.
 
 ### Extending the Search Pipeline
 
@@ -593,6 +607,8 @@ The file detail panel (lightbox / attachment detail view) gains new sections fro
 ---
 
 ## 8. Data Model Additions
+
+Covers New Tables, Modified Tables.
 
 ### New Tables
 

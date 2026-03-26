@@ -53,6 +53,9 @@ Platform sends emails on behalf of the system. No compose UI. No user-authored c
 
 ## Post-MVP: Outbound CRM Email (Post-MVP — Documents)
 
+Covers Email Compose UI, Email Templates, Sent Email → Record Timeline, Open/Click Tracking, Resend Webhook Endpoint, Sending Limits.
+Touches `thread_messages`, `email_metadata`, `email_events` tables.
+
 ### Email Compose UI
 
 **Record-context modal** — email always sent in context of a record.
@@ -198,6 +201,9 @@ estrk_{nanoid(16)}
 
 ## Post-MVP: Connected Inbox (Post-MVP — Comms & Polish)
 
+Covers OAuth Connected Accounts, Inbound Sync — Dual Path, Auto-Matching Inbound Emails to Records, Reply from EveryStack, Connected Mailbox Sync Rules.
+Touches `connected_mailboxes`, `connected_calendars`, `resend_message_id` tables.
+
 ### OAuth Connected Accounts
 
 - Settings > Email > Connected Accounts: "Connect Gmail" / "Connect Outlook"
@@ -241,6 +247,9 @@ Record email thread → "Reply" → compose modal pre-filled. Sent via user's co
 ---
 
 ## Data Model
+
+Covers `email_templates`, `email_events`, `connected_mailboxes`, `email_suppression_list`, thread_messages Extensions.
+Touches `email_templates`, `email_events`, `connected_mailboxes`, `email_suppression_list`, `message_type` tables. See `communications.md`.
 
 ### `email_templates`
 

@@ -12,17 +12,17 @@
 
 | Section                          | Lines   | Covers                                                                     |
 | -------------------------------- | ------- | -------------------------------------------------------------------------- |
-| Strategic Overview               | 29–76   | Product family model, horizontal platform + branded verticals              |
-| Three-Layer Architecture         | 77–130  | Vertical Application → Domain Data → EveryStack Engine                     |
-| B2B Branded Verticals            | 131–202 | Auth via service API keys, provisioning flow, industry templates           |
-| B2C Direct Products              | 203–271 | Single-tenant model, heavy domain services, consumer UX                    |
-| Separation Boundaries            | 272–335 | Code, data, integration — 3 separation layers                              |
-| Platform Reuse Matrix            | 336–364 | Capability → reference doc mapping with MVP status                         |
-| What Verticals Must Build        | 365–388 | Domain logic, custom UI, onboarding — what the platform does not provide   |
-| Data Flow Patterns               | 389–472 | 3 patterns: vertical creates record, EveryStack notifies, B2B provisioning |
-| Vertical Evaluation Criteria     | 473–517 | Leverage scoring, checklist, ranked candidates by tier                     |
-| Build Sequence                   | 518–544 | 4-phase vertical development plan                                          |
-| Architectural Decisions — Record | 545–555 | ADR-style decisions with rationale                                         |
+| Strategic Overview               | 29–75   | Product family model, horizontal platform + branded verticals              |
+| Three-Layer Architecture         | 77–129  | Vertical Application → Domain Data → EveryStack Engine                     |
+| B2B Branded Verticals            | 131–204 | Auth via service API keys, provisioning flow, industry templates           |
+| B2C Direct Products              | 206–275 | Single-tenant model, heavy domain services, consumer UX                    |
+| Separation Boundaries            | 277–340 | Code, data, integration — 3 separation layers                              |
+| Platform Reuse Matrix            | 342–369 | Capability → reference doc mapping with MVP status                         |
+| What Verticals Must Build        | 371–393 | Domain logic, custom UI, onboarding — what the platform does not provide   |
+| Data Flow Patterns               | 395–479 | 3 patterns: vertical creates record, EveryStack notifies, B2B provisioning |
+| Vertical Evaluation Criteria     | 481–527 | Leverage scoring, checklist, ranked candidates by tier                     |
+| Build Sequence                   | 529–554 | 4-phase vertical development plan                                          |
+| Architectural Decisions — Record | 556–566 | ADR-style decisions with rationale                                         |
 
 ---
 
@@ -130,6 +130,9 @@ Shared infrastructure available to all products through the Platform API. See §
 
 ## B2B Branded Verticals
 
+Covers Architecture, Auth (B2B), Provisioning (B2B), Industry Templates.
+Touches `tenant_id` tables. See `audit-log.md`, `platform-api.md`.
+
 ### Architecture
 
 ```
@@ -201,6 +204,8 @@ All templates run on the same vertical frontend and backend — only the EverySt
 ---
 
 ## B2C Direct Products
+
+Covers Architecture, How B2C Differs from B2B, Auth (B2C), Data Architecture (B2C).
 
 ### Architecture
 
@@ -388,6 +393,8 @@ What EveryStack already provides, mapped to common vertical needs. Vertical-agno
 ---
 
 ## Data Flow Patterns
+
+Covers Pattern 1: Vertical Creates a Record, Pattern 2: EveryStack Notifies a Vertical Service, Pattern 3: B2B Provisioning.
 
 ### Pattern 1: Vertical Creates a Record
 

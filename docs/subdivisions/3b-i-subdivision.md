@@ -13,6 +13,19 @@ links. It sits atop the grid, views, and field-level permissions built in
 Service and Command Bar in 3B-ii, Record Thread in 3C, and document
 merge-tag traversal in 3D.
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Big-Picture Anchor | Cross-linking as core differentiator; upstream/downstream dependencies |
+| Seam Analysis | 5-layer decomposition: types, CRUD, reads, worker, UI |
+| Dependency Graph | Unit 1 -> Unit 2 -> Units 3, 4, 5 in parallel |
+| Unit 1: Types, Validation & Registry | RelationshipType, CrossLinkFieldValue, Zod schemas, linked_record FieldTypeRegistry entry |
+| Unit 2: Cross-Link CRUD & Record Linking | Definition CRUD, linkRecords/unlinkRecords, bidirectional index maintenance |
+| Unit 3: Query-Time Resolution & Permissions | L0/L1/L2 resolution levels, card_fields x permission intersection |
+| Unit 4: Display Value Cascade | BullMQ cascade processor, content hash skip, backpressure, single-hop rule |
+| Unit 5: Link Picker UI | LinkPicker search/recent/selection, inline create, LinkedRecordChip |
+
 ### Seam Analysis
 
 The sub-phase touches three layers plus a background worker concern:
@@ -44,6 +57,9 @@ from this subdivision despite appearing in the phase division doc's
 Includes list. See DECISIONS.md entry 2026-03-13 for rationale.
 
 ## Dependency Graph
+
+Covers Unit 1: Cross-Link Types, Validation Schemas & Registry, Unit 2: Cross-Link Definition CRUD & Record Linking, Unit 3: Query-Time Resolution & Permission Intersection, Unit 4: Display Value Cascade & Scalability Infrastructure, Unit 5: Link Picker UI.
+Touches `linked_record`, `cross_link_index`, `update_cross_link_display_values`, `max_links_per_record`, `display_value` tables. See `cross-linking.md`.
 
 ```
 Unit 1: Types, Validation & Registry

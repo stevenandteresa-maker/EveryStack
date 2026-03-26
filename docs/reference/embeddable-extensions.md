@@ -24,14 +24,14 @@
 
 | Section                                    | Lines   | Covers                                                                        |
 | ------------------------------------------ | ------- | ----------------------------------------------------------------------------- |
-| Strategic Overview                         | 37–52   | Three extension products, relationship to App Designer                        |
-| Extension 1: Website Mode (Post-MVP)       | 53–209  | App Designer as website builder, 6 block types, AI generation, SEO            |
-| Extension 2: Live Chat Widget (Post-MVP)   | 210–494 | Embeddable JS widget, shadow DOM, WebSocket, pre-chat form, CRM linking       |
-| Extension 3: Commerce Embed (Post-MVP)     | 495–803 | 3 modes (single product, catalog, custom amount), Stripe Elements, line items |
-| Cross-Extension Synergies                  | 804–819 | How extensions compose together                                               |
-| Implementation Priority & Effort Estimates | 820–834 | Build order and effort sizing                                                 |
-| Key Architectural Decisions                | 835–849 | ADR-style decisions with rationale                                            |
-| MVP Feature Split                          | 850–882 | What ships when across extensions                                             |
+| Strategic Overview                         | 38–52   | Three extension products, relationship to App Designer                        |
+| Extension 1: Website Mode (Post-MVP)       | 54–215  | App Designer as website builder, 6 block types, AI generation, SEO            |
+| Extension 2: Live Chat Widget (Post-MVP)   | 217–507 | Embeddable JS widget, shadow DOM, WebSocket, pre-chat form, CRM linking       |
+| Extension 3: Commerce Embed (Post-MVP)     | 509–827 | 3 modes (single product, catalog, custom amount), Stripe Elements, line items |
+| Cross-Extension Synergies                  | 829–843 | How extensions compose together                                               |
+| Implementation Priority & Effort Estimates | 845–859 | Build order and effort sizing                                                 |
+| Key Architectural Decisions                | 861–874 | ADR-style decisions with rationale                                            |
+| MVP Feature Split                          | 876–916 | What ships when across extensions                                             |
 
 ---
 
@@ -52,6 +52,9 @@ EveryStack's App Designer, communications infrastructure, and payment infrastruc
 ---
 
 ## Extension 1: Website Mode (Post-MVP)
+
+Covers What It Is, What Already Exists (Zero New Work), What's New (Website-Specific Additions), Website Mode Use Cases, Website Mode Competitive Positioning, Phase Mapping.
+Touches `app_pages`, `app_blocks`, `portal_mode`, `block_type`, `portal_blocks` tables.
 
 ### What It Is
 
@@ -212,6 +215,9 @@ Implementation: CSS `@keyframes` + `IntersectionObserver` in the portal renderer
 ---
 
 ## Extension 2: Live Chat Widget (Post-MVP)
+
+Covers What It Is, Architecture, Embed Protocol, Widget UI, Visitor Identity & Session, Widget Configuration (Workspace Settings).
+Touches `external_contacts`, `channel_connections`, `thread_messages`, `chat_visitors`, `es_chat_visitor` tables. See `communications.md`, `realtime.md`, `files.md`.
 
 ### What It Is
 
@@ -501,6 +507,9 @@ When a visitor provides an email (via pre-chat form or during conversation):
 ---
 
 ## Extension 3: Commerce Embed (Post-MVP)
+
+Covers What It Is, Architecture, Embed Protocol, Commerce Embed Types, Commerce Embed Steps (Visitor Flow), Record Creation on Payment Success.
+Touches `field_mapping`, `commerce_embeds`, `tenant_id`, `target_table_id`, `line_items_table_id` tables. See `app-designer.md`.
 
 ### What It Is
 
@@ -865,6 +874,8 @@ The three extensions are most powerful in combination:
 ---
 
 ## MVP Feature Split
+
+Defines `portal_mode`, `portals`, `record_scope`, `portal_mode = 'website'`, `commerce_embeds`, `commerce_transactions`.
 
 > **⚠️ Important:** Per the glossary, **none of the features in this document are MVP**. The phase references below indicate the post-MVP phase in which each feature is planned, not MVP inclusion. The glossary MVP Scope Summary explicitly excludes: "Commerce embeds, live chat widget", "Custom Apps (POS, websites, internal apps)", and "Full communications hub."
 

@@ -7,9 +7,20 @@
 - **Estimated duration:** ~8–12 hours across all 6 steps
 - **Prior sub-phase:** Phase 2C — Notion Adapter, Error Recovery, Sync Dashboard (merged to main)
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, duration estimate, prior sub-phase |
+| Step 0 — Doc Prep | Line range verification for tables-and-views.md, data-model.md, design-system.md |
+| Step 3 — Build Execution | 10 BUILD prompts across 3 checkpoints: data layer, grid shell, cell renderers, editing, keyboard nav, column/row behaviors |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
+
+Covers What This Step Does, 0.1 — Check Whether Doc Prep Is Needed, 0.2 — Create the Docs Branch (only if mismatches found), 0.3 — Run the Architect Agent (only if mismatches found), 0.4 — Review and Merge (only if changes were made).
+See `tables-and-views.md`, `data-model.md`, `design-system.md`.
 
 ### What This Step Does
 
@@ -127,6 +138,8 @@ This step produced the document you're reading. Proceed to Step 3.
 ---
 
 ## STEP 3 — BUILD EXECUTION (Builder Agent)
+
+Covers Setup, PROMPT 1: Grid Data Layer, PROMPT 2: Grid Shell with Virtualization, PROMPT 3: Cell Renderers — Text, Number, Date, Checkbox, Rating, Currency, Percent, PROMPT 4: Cell Renderers — Select, Multi-Select, People, Linked Record, Attachment, INTEGRATION CHECKPOINT 1 (after Prompts 1–4).
 
 ### Setup
 
@@ -798,6 +811,8 @@ If something looks wrong:
 
 ## STEP 4 — REVIEW (Reviewer Agent)
 
+Covers What This Step Does, 4.1 — Generate the Build Diff, 4.2 — Run the Reviewer Agent.
+
 ### What This Step Does
 
 An independent Claude session reviews the build output against the playbook's acceptance criteria. It catches anything that was missed — wrong naming, missing tests, conventions not followed, acceptance criteria not met.
@@ -889,6 +904,8 @@ If FAIL:
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the Fix Branch, 5.2 — Run the Docs Agent, 5.3 — Review and Merge, 5.4 — Tag If Milestone.
 
 ### What This Step Does
 

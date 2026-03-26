@@ -3,9 +3,23 @@
 > Generated: 2026-03-02; Updated: 2026-03-05 (CP-001/CP-002: +tenant_relationships table, +effective_memberships view, column count updates, navigation.md added)
 > Input: `phase-extraction-notes.json`, `data-model.md`, `GLOSSARY.md`, `CLAUDE.md`, `MANIFEST.md`, `docs/changes/CP-IMPACT-MAP.md`
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| 1. Schema Creation Order | 20–165 | 52-table MVP inventory with FK graphs, 7-tier creation DAG, phase-grouped table summary |
+| 2. Doc-Level Dependency Graph | 167–547 | Per-reference-doc provides/requires/ships-in analysis for Foundation through Post-MVP docs |
+| 3. Cross-Cutting Concerns | 549–632 | Eleven concerns (tenant isolation, JSONB pattern, FieldTypeRegistry, etc.) with origin phases and consumers |
+| 4. Phase Boundary Analysis | 634–739 | MANIFEST vs. doc-scope conflicts, CP-001/CP-002 retroactive changes, shared Phase 1 dependencies, phase-internal ordering |
+| 5. MVP Scope Boundaries | 741–830 | MVP feature inclusion list (75 items) and post-MVP exclusion list (27 items) with common-trap flags |
+| 6. Phase-Internal Doc Order | 832–949 | Recommended build order per phase (Foundation, Sync, Core UX, and four post-MVP phases) |
+| Validation Report | 951–985 | Completeness, circular-dependency, post-MVP guard checks, and known ambiguities |
+
 ---
 
 ## 1. Schema Creation Order
+
+Full inventory of 52 MVP tables and 1 database view with foreign key relationships, a 7-tier creation DAG, and phase-grouped summary. Sourced from `data-model.md` schema definitions and updated for CP-001/CP-002 column additions.
 
 ### 1.1 MVP Table Inventory (43 tables + 1 view)
 
@@ -151,6 +165,8 @@ Tables must be created in this order. Each tier can be created in parallel withi
 ---
 
 ## 2. Doc-Level Dependency Graph
+
+Per-reference-doc analysis of what each doc provides, requires, which tables it needs, and when it ships. Covers all 63+ reference docs from Foundation infrastructure through Post-MVP domains. Used by the Planner Agent to curate context manifests.
 
 ### Foundation & Infrastructure
 
@@ -532,6 +548,8 @@ Tables must be created in this order. Each tier can be created in parallel withi
 
 ## 3. Cross-Cutting Concerns
 
+Eleven architectural concerns established once and inherited by all downstream phases. Each entry names the originating docs, phase of origin, consuming phases, and evolution path. Relates to `CLAUDE.md` Architecture Fundamentals and `dependency-graph-and-appendices.md` Appendix C.
+
 ### 3.1 Tenant Isolation
 
 - **First established:** data-model.md (every table has `tenant_id`), compliance.md (RLS specs), database-scaling.md (`getDbForTenant()`)
@@ -614,6 +632,8 @@ Tables must be created in this order. Each tier can be created in parallel withi
 ---
 
 ## 4. Phase Boundary Analysis
+
+Resolves conflicts between doc-internal phase notes and MANIFEST classifications, documents CP-001/CP-002 retroactive changes to already-shipped phases, catalogues shared dependencies from Phase 1, and defines phase-internal build ordering for Foundation, Sync, and Core UX.
 
 ### 4.1 Conflicts (Doc vs. MANIFEST)
 
@@ -720,6 +740,8 @@ Must be sequenced internally due to component dependencies:
 
 ## 5. MVP Scope Boundaries
 
+Definitive inclusion and exclusion lists for MVP scope. The inclusion list maps every MVP feature to its phase and source doc. The exclusion list flags common-trap features that are frequently assumed to be MVP. See `GLOSSARY.md` for authoritative scope definitions.
+
 ### 5.1 MVP Features (must be in a phase)
 
 | Feature | Phase | Source |
@@ -808,6 +830,8 @@ Must be sequenced internally due to component dependencies:
 ---
 
 ## 6. Phase-Internal Doc Order
+
+Recommended build order of reference doc deliverables within each phase. Foundation lists 17 docs, Sync lists 9, Core UX lists 24, and four post-MVP phases list their respective doc sequences. Order reflects prerequisite chains from the dependency graph.
 
 ### Phase: MVP — Foundation
 
@@ -925,6 +949,8 @@ Recommended build order (each doc's Foundation-phase deliverables):
 ---
 
 ## Validation Report
+
+Covers Completeness Check, Circular Dependency Check, Post-MVP Feature Guard, Ambiguities.
 
 ### Completeness Check
 

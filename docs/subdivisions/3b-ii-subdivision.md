@@ -6,6 +6,9 @@ Phase 3B-ii delivers two complementary systems: the Schema Descriptor Service (S
 
 ## Dependency Graph
 
+Covers Unit 1: SDS Types & Core Builders, Unit 2: SDS Permission Filter, Caching & Service Facade, Unit 3: Command Bar Search & Navigation Data Layer, Unit 4: Command Bar UI & AI Search Channel.
+Touches `base_connections`, `cross_links`, `cross_link_index`, `currency_code`, `linked_base` tables. See `schema-descriptor-service.md`, `data-model.md`, `permissions.md`.
+
 ```
 Unit 1: SDS Types & Core Builders
   ↓

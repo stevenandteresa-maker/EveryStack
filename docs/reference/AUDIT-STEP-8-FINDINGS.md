@@ -38,6 +38,9 @@
 
 ## Fix Details
 
+Covers Finding 1: Abbreviated provisioning paths — **Fixed**, Finding 2: Webhook sync event name — **Fixed**, Finding 3: AI Field Agent event naming — **Fixed**, Finding 4: Calendar feed source_type naming — **Fixed**, Finding 5: X-Actor-Label header casing — **Fixed**, Findings 6–8: URL parameter format standardization — **Fixed**.
+Touches `record_created`, `record_updated`, `template_id`, `canonical_data`, `context_record_id` tables. See `vertical-architecture.md`, `automations.md`, `realtime.md`.
+
 ### Finding 1: Abbreviated provisioning paths — **Fixed**
 
 **File:** `vertical-architecture.md` §Provisioning (B2B)
@@ -114,6 +117,9 @@ Added note documenting the `template_id`, `canonical_data`, and `context_record_
 ---
 
 ## Items Noted (Not Fixed — Require Design Decisions)
+
+Covers Finding 10: Bulk event dual naming, Finding 11: Missing webhook events for forms/buttons, Finding 12: Internal vs external upload paths, Finding 13: Notes clip endpoints using /api/v1/ prefix, Finding 14: execution_id vs runId naming, Finding 15: ai_agent_runs phantom table.
+Touches `execution_id`, `ai_agent_runs` tables. See `bulk-operations.md`, `automations.md`, `files.md`.
 
 ### Finding 10: Bulk event dual naming
 

@@ -41,6 +41,9 @@
 
 ## Detailed Findings
 
+Covers Finding 1 — `document-designer.md:463, 504` — Missing file (pending creation), Findings 2–7 — `GLOSSARY.md` quota dimension table — Six stale § references, Finding 8 — `data-model.md:99` + Finding 11 — `platform-api.md:819` — §mergeTag node, Finding 9 — `data-model.md:165` — Two stale § references on one line, Finding 10 — `platform-api.md:801` — §Portal Access.
+Touches `portal_access` tables. See `docx-template-engine-prompts.md`, `sync-engine.md`, `ai-metering.md`.
+
 ### Finding 1 — `document-designer.md:463, 504` — Missing file (pending creation)
 
 **Status:** Informational — no fix applied.

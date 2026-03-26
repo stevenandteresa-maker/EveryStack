@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Skills for This Phase.
+Touches `workspace_memberships` tables.
+
 ### What Has Been Built
 See `docs/skills/phase-context/SKILL.md` for the current build state. Key outputs from prior phases that this phase directly depends on:
 - Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` scaffolds (Phase 1A)

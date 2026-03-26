@@ -118,6 +118,9 @@ RTX 5090 ($2,000 one-time) can run Qwen3-32B quantized for development and testi
 
 ## Enterprise Air-Gapped Deployment
 
+Covers Architecture, Three Deployment Modes, Target Customers, Why Competitors Can't Match.
+See `self-hosted.ts`.
+
 ### Architecture
 
 All components run inside the customer's infrastructure. No API calls to external providers.
@@ -173,6 +176,8 @@ Airtable and SmartSuite are pure cloud SaaS with AI tightly coupled to third-par
 ---
 
 ## Security Model for Open-Weight LLMs
+
+Covers Risk Assessment, Enterprise Security Documentation, Key Insight: Self-Hosted Is More Auditable.
 
 ### Risk Assessment
 

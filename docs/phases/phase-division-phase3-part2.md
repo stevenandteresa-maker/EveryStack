@@ -1,5 +1,15 @@
 # Phase 3 (Second Half): MVP — Core UX — Sub-Phase Division (3E–3H)
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Summary | 13–31 | Sub-phase count (9), prompt total (86), dependencies on Phase 3 first half and Phases 1--2 |
+| Key Subdivision Decisions | 19–31 | Portal/Form split, 3F consolidation rationale, 3G split, 3H mobile split, exclusion verification |
+| Sub-Phases (3E-i -- 3H-ii) | 33–324 | Nine sub-phase definitions: portals, forms, field groups, bulk ops, record templates, settings, My Office, mobile features, mobile infrastructure |
+| Dependency Graph | 326–371 | ASCII DAG of 3E--3H with parallel execution potential and critical path |
+| Validation Checklist | 373–393 | 15-item verification of scope, exclusions, CP-001 ceiling warnings, and reference doc assignments |
+
 ## Summary
 - Sub-phases: 9 (including second-level splits for 3E, 3G, and 3H)
 - Estimated total prompts: 86
@@ -21,6 +31,9 @@
 ---
 
 ## Sub-Phases
+
+Covers 3E-i — Quick Portals: Auth, Record Scoping & Client Management, 3E-ii — Quick Forms: Builder, Submission Pipeline & Embed, 3F-i — Field Groups, Per-Field Emphasis & Enhanced Hide/Show Panel, 3F-ii — Bulk Operations: Selection, Actions, Batch Server Pattern & Undo, 3F-iii — Record Templates: CRUD, Template Picker & View Scoping, 3G-i — Settings Page & Audit Log UI.
+Touches `portal_client`, `portal_access`, `portal_sessions`, `auth_hash`, `canonical_data` tables. See `personal-notes-capture.md`.
 
 ### 3E-i — Quick Portals: Auth, Record Scoping & Client Management
 

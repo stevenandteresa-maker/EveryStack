@@ -31,6 +31,9 @@ A formula field computes a value from other fields in the same record, or from f
 
 ## Evaluation Model
 
+Covers Where Formulas Are Evaluated, When Formulas Are Evaluated, Evaluation Execution.
+See `approval-workflows.md`.
+
 ### Where Formulas Are Evaluated
 
 **Server-side only.** Formulas are evaluated in the web app (Server Actions on record mutation) and the worker service (on sync completion, bulk recalculation). Never in the browser.
@@ -103,6 +106,8 @@ Fields referenced by name in curly braces: `{Field Name}`. Resolved against the 
 ---
 
 ## Expression Parser & AST
+
+Covers Parser Architecture, Grammar (Simplified), AST Node Types, Validation at Save Time, Evaluation Sandbox.
 
 ### Parser Architecture
 
@@ -193,6 +198,9 @@ function evaluateNode(node: FormulaAST, ctx: EvaluationContext): CanonicalValue 
 
 ## Dependency Graph
 
+Covers What It Tracks, Storage, Recalculation Cascade.
+Touches `formula_dependencies`, `tenant_id`, `formula_field_id`, `depends_on_field_id`, `depends_on_table_id` tables.
+
 ### What It Tracks
 
 A directed acyclic graph (DAG) mapping each formula field to the fields it reads:
@@ -278,6 +286,9 @@ Errors are stored in the canonical JSONB as `{ "type": "formula", "value": { "er
 ---
 
 ## Performance
+
+Covers Single Record Evaluation, ROLLUP Performance at Scale, Formula Result Caching, Bulk Recalculation, Real-Time Behavior, Interaction with Cross-Link Scope Filters.
+Touches `canonical_data`, `updated_at`, `link_scope_filter` tables.
 
 ### Single Record Evaluation
 

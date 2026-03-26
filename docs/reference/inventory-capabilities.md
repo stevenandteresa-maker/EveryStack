@@ -374,6 +374,9 @@ Explicit boundaries to prevent overengineering for the SMB audience:
 
 ## Claude Code Prompt Roadmap
 
+Covers Prompt 1: Atomic Quantity Operations, Prompt 2: Barcode Field Type, Prompt 3: Adjust Field Action + Snapshot Action, Prompt 4: Threshold Trigger, Prompt 5: Quick Entry App, Prompt 6: Inventory Starter Template.
+Touches `field_value_changed` tables. See `data-model.md`, `inventory-capabilities.md`, `tables-and-views.md`.
+
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 
 ### Prompt 1: Atomic Quantity Operations

@@ -8,9 +8,20 @@
 - **Total building prompts:** 15 (plus 4 integration checkpoints)
 - **Estimated duration:** 3–4 sessions across all 6 lifecycle steps
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, 15 building prompts, 4 checkpoints, 3-4 session estimate |
+| Step 0 — Doc Prep | Verify tables-and-views.md, design-system.md, glossary terms |
+| Step 3 — Build Execution | 15 prompts: selection, sort, filter, group, color, toolbar, views, collaboration, Record View, Card View, sections, sub-table, CSV, deletion |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
+
+Covers What This Step Does, 0.1 — Create the docs branch, 0.2 — Run the Architect Agent, 0.3 — Review and merge.
+See `tables-and-views.md`, `design-system.md`.
 
 ### What This Step Does
 
@@ -102,6 +113,9 @@ You're reading the output of Step 2. Proceed to Step 3.
 ---
 
 ## STEP 3 — BUILD EXECUTION (Builder Agent)
+
+Covers Setup, PROMPT 1: Selection & Bulk Actions Toolbar, PROMPT 2: Multi-Level Sorting with Sort Panel, PROMPT 3: Filtering — Quick Filters + Full Filter Builder, PROMPT 4: Multi-Level Grouping with Collapsible Groups, INTEGRATION CHECKPOINT 1 (after Prompts 1–4).
+Touches `inline_table` tables. See `use-row-selection.ts`, `use-grid-store.ts`, `record-actions.ts`.
 
 ### Setup
 
@@ -1143,6 +1157,8 @@ If something looks wrong:
 
 ## STEP 4 — REVIEW (Reviewer Agent)
 
+Covers What This Step Does, 4.1 — Generate the build diff, 4.2 — Run the Reviewer Agent.
+
 ### What This Step Does
 
 An independent Claude session reviews the build output against the playbook's acceptance criteria. It catches anything that was missed — naming inconsistencies, unmet criteria, convention violations.
@@ -1228,6 +1244,8 @@ If FAIL:
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the fix branch, 5.2 — Run the Docs Agent, 5.3 — Review and merge, 5.4 — Tag if milestone.
 
 ### What This Step Does
 

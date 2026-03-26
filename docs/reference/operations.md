@@ -14,20 +14,23 @@
 
 | Section                       | Lines   | Covers                                                                                                                                                                                                                     |
 | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backup Strategy               | 30–106  | PostgreSQL WAL/daily/weekly backups, Redis RDB+AOF, R2/S3 versioning, backup testing drills (monthly/quarterly/annual), tenant-level PITR recovery, soft-delete implementation, per-plan retention                         |
-| RTO/RPO Targets               | 110–121 | 4-tier recovery targets: Database (<1h/<1min), Cache (<5min), Services (<15min), Files (<1h/0)                                                                                                                             |
-| Redis Failover Plan           | 125–142 | Per-environment failover: dev (restart), Railway/Render (managed), AWS ElastiCache (Multi-AZ, <30s failover, ioredis sentinel)                                                                                             |
-| Monitoring Dashboards         | 146–178 | 3 dashboards: Platform Health (p95 latency, pool, replication, memory, errors), Sync Engine (rate limits, staleness, retries), AI Economics (credit burn, cost per call, cache hit, fallback, eval pass rate)              |
-| Incident Response Runbook     | 182–206 | SEV-1 through SEV-4 definitions + response times, SEV-1 playbook (8 steps), data breach cross-reference to compliance.md                                                                                                   |
-| BullMQ Queue Durability       | 210–236 | Redis AOF `everysec` persistence, RDB snapshots, what survives/doesn't survive crash, worker reconnection behavior                                                                                                         |
-| Redis Multi-Tenancy Isolation | 240–395 | `volatile-lru` eviction (protects queues/rate limiters), per-tenant cache budgeting with code, pub/sub rate limiting (200 evt/s), connection management (21 total), memory sizing (100–50K tenants), Docker Compose config |
-| Deployment Strategy           | 399–439 | Zero-downtime deploys for web/worker/real-time, rollback procedures, deploy order with migrations, reverse migration rule                                                                                                  |
-| Secrets Management            | 443–479 | Secret storage per environment (dev/.env, Railway/Render, AWS Secrets Manager), full secret inventory with rotation schedules, 4 rules                                                                                     |
-| Phase Implementation          | 483–491 | Operations work by phase — Foundation through Scale                                                                                                                                                                        |
+| Backup Strategy               | 30–113  | PostgreSQL WAL/daily/weekly backups, Redis RDB+AOF, R2/S3 versioning, backup testing drills (monthly/quarterly/annual), tenant-level PITR recovery, soft-delete implementation, per-plan retention                         |
+| RTO/RPO Targets               | 115–128 | 4-tier recovery targets: Database (<1h/<1min), Cache (<5min), Services (<15min), Files (<1h/0)                                                                                                                             |
+| Redis Failover Plan           | 130–150 | Per-environment failover: dev (restart), Railway/Render (managed), AWS ElastiCache (Multi-AZ, <30s failover, ioredis sentinel)                                                                                             |
+| Monitoring Dashboards         | 152–188 | 3 dashboards: Platform Health (p95 latency, pool, replication, memory, errors), Sync Engine (rate limits, staleness, retries), AI Economics (credit burn, cost per call, cache hit, fallback, eval pass rate)              |
+| Incident Response Runbook     | 190–216 | SEV-1 through SEV-4 definitions + response times, SEV-1 playbook (8 steps), data breach cross-reference to compliance.md                                                                                                   |
+| BullMQ Queue Durability       | 218–248 | Redis AOF `everysec` persistence, RDB snapshots, what survives/doesn't survive crash, worker reconnection behavior                                                                                                         |
+| Redis Multi-Tenancy Isolation | 250–409 | `volatile-lru` eviction (protects queues/rate limiters), per-tenant cache budgeting with code, pub/sub rate limiting (200 evt/s), connection management (21 total), memory sizing (100–50K tenants), Docker Compose config |
+| Deployment Strategy           | 411–458 | Zero-downtime deploys for web/worker/real-time, rollback procedures, deploy order with migrations, reverse migration rule                                                                                                  |
+| Secrets Management            | 460–501 | Secret storage per environment (dev/.env, Railway/Render, AWS Secrets Manager), full secret inventory with rotation schedules, 4 rules                                                                                     |
+| Phase Implementation          | 503–511 | Operations work by phase — Foundation through Scale                                                                                                                                                                        |
 
 ---
 
 ## Backup Strategy
+
+Covers PostgreSQL, Redis, Object Storage (R2/S3), Backup Testing, Tenant-Level Recovery.
+Touches `pg_dump`, `tenant_id`, `entity_id`, `deleted_at` tables.
 
 ### PostgreSQL
 
@@ -148,6 +151,8 @@ ElastiCache with Multi-AZ replication:
 
 ## Monitoring Dashboards
 
+Covers Dashboard 1: Platform Health, Dashboard 2: Sync Engine, Dashboard 3: AI Economics.
+
 ### Dashboard 1: Platform Health
 
 | Metric                               | Source                           | Alert Threshold               |
@@ -243,6 +248,8 @@ save 60 10000                     # RDB snapshot if 10000+ writes in 60 seconds
 ---
 
 ## Redis Multi-Tenancy Isolation
+
+Covers The Problem, Eviction Policy: `volatile-lru`, Per-Tenant Cache Budgeting, Pub/Sub Noisy Neighbor Protection, Connection Management, Memory Sizing Guidelines.
 
 ### The Problem
 
@@ -403,6 +410,8 @@ redis:
 
 ## Deployment Strategy
 
+Covers Zero-Downtime Deploys, Rollback Procedure, Deploy Order (When Migrations Are Involved).
+
 ### Zero-Downtime Deploys
 
 All three services (web, worker, real-time) must deploy without user-visible downtime.
@@ -449,6 +458,9 @@ All three services (web, worker, real-time) must deploy without user-visible dow
 ---
 
 ## Secrets Management
+
+Covers Where Secrets Live, Secret Inventory, Rules.
+Touches `api_key` tables.
 
 ### Where Secrets Live
 

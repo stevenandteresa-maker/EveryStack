@@ -161,6 +161,8 @@ interface InterfacePermissions {
 
 ## Hierarchy and Data Flow
 
+Covers Current Architecture (per Glossary), ~~Original Architecture (Superseded)~~ — POST-MVP / HISTORICAL.
+
 ### Current Architecture (per Glossary)
 
 ```
@@ -212,6 +214,9 @@ Workspace (was "Base")
 ---
 
 ## Database Schema
+
+Covers `views` Table (Current — per Glossary), `ViewConfig` JSONB Shape, ~~`interfaces` Table~~ — POST-MVP / SUPERSEDED, ~~`interface_views` Table~~ — POST-MVP / SUPERSEDED, My View Storage (per Glossary).
+Touches `tenant_id`, `table_id`, `view_type`, `publish_state`, `created_by` tables. See `data-model.md`.
 
 ### `views` Table (Current — per Glossary)
 
@@ -354,6 +359,8 @@ Per `GLOSSARY.md`, My Views are user-level customizations. Consult `data-model.m
 ---
 
 ## Permission Enforcement
+
+Covers Role Visibility Matrix (per Glossary), Data Layer Enforcement, Record-Level Filtering via Table View, Write Permission Enforcement.
 
 ### Role Visibility Matrix (per Glossary)
 

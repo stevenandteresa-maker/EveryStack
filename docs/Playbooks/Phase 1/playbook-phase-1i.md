@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts.
+Touches `audit_log`, `api_keys`, `api_request_log`, `workspace_memberships`, `ai_usage_log` tables.
+
 ### What Has Been Built
 
 **Phase 1A (Monorepo, CI Pipeline, Dev Environment):** Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` scaffolds. Docker Compose with PostgreSQL 16, PgBouncer, Redis. GitHub Actions CI (lint → typecheck → test). ESLint + Prettier config. tsconfig strict mode. `.env.example`.
@@ -72,20 +75,22 @@ When complete, EveryStack has:
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Est. Lines |
-|--------|-------------|------------|------------|
-| 1 | writeAuditLog() helper with seven-source attribution | None | ~200 |
-| 2 | API key generation and SHA-256 hashing utilities | None | ~180 |
-| 3 | API key CRUD data functions and Server Actions | 2 | ~250 |
-| CP-1 | Integration Checkpoint 1 | 1–3 | — |
-| 4 | Platform API auth middleware | 2, 3 | ~220 |
-| 5 | Redis token-bucket rate limiter | None | ~200 |
-| 6 | Platform API error format, versioning setup, and request logging | 4, 5 | ~250 |
-| CP-2 | Final Integration Checkpoint | 4–6 | — |
+| Prompt | Deliverable | Summary | Depends On | Est. Lines |
+|--------|-------------|---------|------------|------------|
+| 1 | writeAuditLog() helper with seven-source attribution | Transactional audit insert with AuditEntry Zod schema, 7 actor types, batch condensation, plan-based retention constants | None | ~200 |
+| 2 | API key generation and SHA-256 hashing utilities | generateApiKey() with esk_live_/esk_test_ prefixes, SHA-256 hashing, constant-time verification, 4-tier rate limit config | None | ~180 |
+| 3 | API key CRUD data functions and Server Actions | createApiKey(), listApiKeys(), revokeApiKey(), getApiKeyByHash(); Owner/Admin-gated server actions with audit logging | 2 | ~250 |
+| CP-1 | Integration Checkpoint 1 | Verify audit helper exports, API key utilities, CRUD functions, and tenant isolation | 1–3 | — |
+| 4 | Platform API auth middleware | authenticateApiKey() from Bearer header, requireScope() with admin override, withApiAuth() HOF, fire-and-forget last_used_at | 2, 3 | ~220 |
+| 5 | Redis token-bucket rate limiter | Atomic Lua token-bucket per API key, per-tenant ceiling (3x highest tier), rate limit response headers | None | ~200 |
+| 6 | Platform API error format, versioning setup, and request logging | Structured API error shape, /api/v1/ route scaffolding, request logging to api_request_log | 4, 5 | ~250 |
+| CP-2 | Final Integration Checkpoint | End-to-end auth + rate limit + error format verification | 4–6 | — |
 
 ---
 
 ## Prompt 1: Build the writeAuditLog() Helper with Seven-Source Attribution
+
+Creates `packages/shared/db/audit.ts` with writeAuditLog() and writeAuditLogBatch() functions, AuditEntry interface, auditEntrySchema Zod validation, and AUDIT_RETENTION_DAYS config. The helper inserts into the existing audit_log table within the caller's transaction, with fail-safe try/catch. Relates to `audit-log.md` Seven-Source Attribution and Audit Write Mechanism sections.
 
 **Depends on:** None
 **Load context:** `audit-log.md` lines 49–75 (Seven-Source Attribution), lines 76–137 (Schema), lines 138–151 (Retention Policy), lines 181–330 (Audit Write Mechanism), lines 331–341 (Implementation Rules), lines 342–351 (Phase Implementation)
@@ -219,6 +224,8 @@ Create `packages/shared/db/audit.ts` with:
 
 ## Prompt 2: Build API Key Generation and SHA-256 Hashing Utilities
 
+Creates `packages/shared/db/api-key-utils.ts` with generateApiKey() (crypto-random with esk_live_/esk_test_ prefixes), hashApiKey(), verifyApiKeyHash() (constant-time via timingSafeEqual), ApiKeyScope type, apiKeyCreateSchema Zod, and RATE_LIMIT_TIERS config for 4 tiers. Relates to `platform-api.md` Authentication section.
+
 **Depends on:** None
 **Load context:** `platform-api.md` lines 56–169 (Authentication — key format, prefixes, scoping, management, database schema)
 **Target files:** `packages/shared/db/api-key-utils.ts`, `packages/shared/db/api-key-utils.test.ts`
@@ -336,6 +343,8 @@ Create `packages/shared/db/api-key-utils.ts` with:
 
 ## Prompt 3: Build API Key CRUD Data Functions and Server Actions
 
+Creates `apps/web/src/data/api-keys.ts` with createApiKey(), listApiKeys(), revokeApiKey(), and getApiKeyByHash() (cross-tenant lookup). Creates `apps/web/src/actions/api-keys.ts` with Owner/Admin-gated server actions. All mutations write to audit_log within the same transaction. Relates to `platform-api.md` Authentication section.
+
 **Depends on:** Prompt 2 (key generation and hashing utilities)
 **Load context:** `platform-api.md` lines 56–169 (Authentication — key management, creation, revocation, listing)
 **Target files:** `apps/web/src/data/api-keys.ts`, `apps/web/src/actions/api-keys.ts`, `apps/web/src/data/__tests__/api-keys.integration.test.ts`
@@ -440,6 +449,8 @@ Fix any failures before proceeding to Prompt 4.
 
 ## Prompt 4: Build Platform API Authentication Middleware
 
+Creates `apps/web/src/lib/api/auth-middleware.ts` with authenticateApiKey() (Bearer header extraction, hash lookup, status/expiry checks), requireScope() with admin override, and withApiAuth() higher-order function for Next.js Route Handlers. Injects ApiRequestContext with tenantId, scopes, actorLabel, and requestId. Relates to `platform-api.md` Authentication and Audit Integration sections.
+
 **Depends on:** Prompt 2 (hashing utilities), Prompt 3 (`getApiKeyByHash()`)
 **Load context:** `platform-api.md` lines 56–169 (Authentication), lines 257–272 (Audit Integration)
 **Target files:** `apps/web/src/lib/api/auth-middleware.ts`, `apps/web/src/lib/api/auth-middleware.test.ts`
@@ -535,6 +546,8 @@ Create `apps/web/src/lib/api/auth-middleware.ts` with:
 
 ## Prompt 5: Build Redis Token-Bucket Rate Limiter
 
+Creates `apps/web/src/lib/api/rate-limiter.ts` with atomic Lua-scripted token-bucket per API key, checkRateLimit() returning RateLimitResult, setRateLimitHeaders(), and checkTenantCeiling() (3x highest key tier). Uses Redis ZSET scored by timestamp. Relates to `platform-api.md` Rate Limiting section.
+
 **Depends on:** None (self-contained, composed with auth middleware in Prompt 6)
 **Load context:** `platform-api.md` lines 170–196 (Rate Limiting — tiers, token bucket, headers, per-tenant ceiling)
 **Target files:** `apps/web/src/lib/api/rate-limiter.ts`, `apps/web/src/lib/api/rate-limiter.test.ts`
@@ -612,6 +625,8 @@ Create `apps/web/src/lib/api/rate-limiter.ts` with:
 ---
 
 ## Prompt 6: Build Platform API Error Format, Versioning Setup, and Request Logging
+
+Creates `apps/web/src/lib/api/errors.ts` with typed ApiErrorBody shape and helpers (apiBadRequest, apiUnauthorized, etc.), scaffolds `apps/web/src/app/api/v1/route.ts` as a health/version endpoint, and builds request logging middleware that writes to api_request_log (fire-and-forget). Composes auth + rate limiter + error handling into a unified middleware pipeline. Relates to `platform-api.md` Overview, API Versioning, and Error Format sections.
 
 **Depends on:** Prompt 4 (auth middleware), Prompt 5 (rate limiter)
 **Load context:** `platform-api.md` lines 36–55 (Overview), lines 197–213 (API Versioning), lines 214–256 (Error Format)

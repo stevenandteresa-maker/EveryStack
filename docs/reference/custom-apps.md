@@ -18,23 +18,23 @@
 
 | Section                                          | Lines   | Covers                                                          |
 | ------------------------------------------------ | ------- | --------------------------------------------------------------- |
-| Strategic Rationale                              | 41–68   | Internal apps on App Designer engine, POS hero use case         |
-| Architecture: Post-MVP App Types                 | 69–92   | 7 app types, type-specific capabilities                         |
-| Data Model Additions                             | 93–176  | apps, app_pages, app_blocks tables, cart_sessions               |
-| Route Architecture                               | 177–210 | App routes, nested page routing, URL structure                  |
-| Cart / Transaction Block                         | 211–363 | Session-scoped Zustand state, 9-step atomic completion          |
-| Stripe Terminal Integration                      | 364–530 | 3 paths (external reader, Tap to Pay, Smart Reader)             |
-| Kiosk Mode                                       | 531–578 | Full-screen locked mode, session auto-reset, inactivity timeout |
-| App Creation Flow                                | 579–605 | Wizard, starter templates, type selection                       |
-| App Navigation in Workspace                      | 606–615 | Sidebar placement, app switching                                |
-| App-Specific Block Enhancements                  | 616–653 | Blocks added for internal app use cases                         |
-| Audit Trail for App Actions                      | 654–681 | App-specific audit events, actor_type tracking                  |
-| Caching & Performance                            | 682–702 | App page caching, block-level updates                           |
-| Redis Key Patterns (New)                         | 703–712 | Redis keys for cart sessions, app state                         |
-| Plan Limits                                      | 713–728 | App count and page limits per plan tier                         |
-| MVP Feature Split (All Post-MVP per GLOSSARY.md) | 729–764 | Scope boundaries                                                |
-| Phase Implementation Summary (All Post-MVP)      | 765–776 | Post-MVP — Custom Apps+ delivery scope                          |
-| Starter Templates                                | 777–821 | POS Terminal, Front Desk Kiosk, Warehouse Station templates     |
+| Strategic Rationale                              | 41–67   | Internal apps on App Designer engine, POS hero use case         |
+| Architecture: Post-MVP App Types                 | 69–91   | 7 app types, type-specific capabilities                         |
+| Data Model Additions                             | 93–180  | apps, app_pages, app_blocks tables, cart_sessions               |
+| Route Architecture                               | 182–214 | App routes, nested page routing, URL structure                  |
+| Cart / Transaction Block                         | 216–375 | Session-scoped Zustand state, 9-step atomic completion          |
+| Stripe Terminal Integration                      | 377–547 | 3 paths (external reader, Tap to Pay, Smart Reader)             |
+| Kiosk Mode                                       | 549–596 | Full-screen locked mode, session auto-reset, inactivity timeout |
+| App Creation Flow                                | 598–623 | Wizard, starter templates, type selection                       |
+| App Navigation in Workspace                      | 625–633 | Sidebar placement, app switching                                |
+| App-Specific Block Enhancements                  | 635–673 | Blocks added for internal app use cases                         |
+| Audit Trail for App Actions                      | 675–701 | App-specific audit events, actor_type tracking                  |
+| Caching & Performance                            | 703–722 | App page caching, block-level updates                           |
+| Redis Key Patterns (New)                         | 724–732 | Redis keys for cart sessions, app state                         |
+| Plan Limits                                      | 734–748 | App count and page limits per plan tier                         |
+| MVP Feature Split (All Post-MVP per GLOSSARY.md) | 750–789 | Scope boundaries                                                |
+| Phase Implementation Summary (All Post-MVP)      | 791–801 | Post-MVP — Custom Apps+ delivery scope                          |
+| Starter Templates                                | 803–852 | POS Terminal, Front Desk Kiosk, Warehouse Station templates     |
 
 ---
 
@@ -91,6 +91,9 @@ The App Designer produces multiple app types across two categories. All share th
 ---
 
 ## Data Model Additions
+
+Covers `apps` Table — Key Columns for Internal Apps, App Config JSONB Shape, App Scoping Configuration.
+Touches `app_pages`, `app_blocks`, `tenant_id`, `app_config`, `linked_record_id` tables.
 
 > **GLOSSARY.md alignment note:** Per the glossary, post-MVP App Designer outputs use the `apps` table (with `app_pages` and `app_blocks`), not the `portals` table. The data model below uses `apps` to align with the glossary's DB Entity Quick Reference. During implementation, the migration path from the old `portals`-based schema to the `apps`-based schema should follow the glossary's guidance.
 
@@ -746,6 +749,8 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 
 ## MVP Feature Split (All Post-MVP per GLOSSARY.md)
 
+Defines `apps.type`, `'app'`, `apps.app_config`, `/app/{appSlug}/*`, `PageBuilderRenderer`, `$me`.
+
 > **⚠️ POST-MVP.** All phases below are post-MVP per GLOSSARY.md. The "MVP" label in Post-MVP — Custom Apps refers to the MVP of custom apps specifically, not the platform MVP.
 
 **Post-MVP — Custom Apps (Custom Apps MVP — post-platform-MVP):**
@@ -796,6 +801,9 @@ Page view tracking applies equally to app page loads. Apps in kiosk mode may gen
 ---
 
 ## Starter Templates
+
+Covers POS Terminal Template, Front Desk Kiosk Template, Warehouse Station Template.
+See `inventory-capabilities.md`.
 
 ### POS Terminal Template
 

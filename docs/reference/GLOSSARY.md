@@ -1,5 +1,33 @@
 # EveryStack — Glossary & Source of Truth
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Platform Overview | 37–45 | One-paragraph product description, target user, core value proposition |
+| Concept Map | 47–94 | ASCII entity hierarchy from platform root through AI layer |
+| Definitions -- Platform Level | 96–180 | Tenant, Board, Workspace, My Office, Quick Panels, sidebar navigation, Command Bar, Settings |
+| Definitions -- Workspace Level | 96–180 | Table, Field, Record, Table View (Grid/Card), Record View, Sections, field types (~25 MVP) |
+| Definitions -- External-Facing (MVP) | 331–394 | Quick Portal, Quick Form, portal auth, portal_access, portal_sessions |
+| Definitions -- Cross-Linking | 396–433 | Cross-Link, cross_link_index, query-time resolution, Convert to Native Table |
+| Definitions -- Documents | 435–454 | Document Template, Generated Document, TipTap environments, Gotenberg |
+| Definitions -- Automations | 456–490 | Automation, triggers (6 MVP), actions (7 MVP), automation_runs, status field governance |
+| Definitions -- AI Layer | 492–570 | AIService, capability tiers, AI features (5 MVP), SDS, AI data contract, credit system |
+| Definitions -- AI Skills & Platform Agents (Post-MVP) | 96–180 | Platform skills, skill tiers, skill maintenance agent, workspace usage descriptor |
+| Definitions -- Platform API | 96–180 | Data API, Schema API, api_keys, rate limiting, SDS endpoint |
+| Definitions -- App Designer & Apps (Post-MVP) | 572–641 | App Designer, Apps, app_pages, app_blocks, portal_clients |
+| Definitions -- Sync & Data | 572–641 | Sync Engine, FieldTypeRegistry, canonical JSONB, Airtable/Notion/SmartSuite adapters, conflict resolution |
+| Definitions -- Communications | 809–848 | Record Thread (two-thread model), DMs, Chat Editor, notifications, presence |
+| Definitions -- Permissions | 850–898 | 5-role RBAC, field-level permissions, Table View access boundary, effective_memberships |
+| Definitions -- Infrastructure | 900–1000 | Database (Drizzle, RLS, PgBouncer), CockroachDB safeguards, Redis, Socket.io, BullMQ, Clerk, R2, audit log |
+| Definitions -- Process & Workflow | 572–641 | Build lifecycle, agent roster, RSA classifications, state files, scope labels |
+| Plan Tiers | 1088–1120 | Freelancer, Team, Business, Enterprise plan definitions with limits |
+| MVP Scope Summary | 1122–1173 | MVP includes/excludes checklists with common-trap flags |
+| Naming Discipline | 1175–1189 | Deprecated term corrections (e.g. "connection" not "integration") |
+| Database Entity Quick Reference | 1191–1252 | All 52 MVP tables with column counts and phase labels |
+| Layout & Dimension Reference | 1254–1352 | Application shell dimensions, grid anatomy, touch targets, responsive breakpoints |
+| How to Use This Document | 1354–1362 | Rules for agents: check before naming, never invent synonyms, update on build |
+
 > **This is the authoritative definition of every concept in EveryStack.** If a reference doc, phase playbook, or CLAUDE.md contradicts this document, this document wins. Every concept is defined once. Every name is final. No synonyms, no aliases, no "formerly known as."
 >
 > Last updated: 2026-03-16 — Phase 3C docs sync: expanded Communications section with 16 implementation terms (ChatEditorState, ChatEditorExtensions, ReactionsMap, ChatPresenceState, ChatHandler, PresenceHandler, NotificationHandler, ChatEventSubscriber, NotificationService, NotificationType, ResendEmailService, NotificationBell, NotificationTray, ChatQuickPanel, PresenceIndicator, CustomStatusEditor); expanded Record Thread, Chat/DMs, and Notifications definitions with MVP implementation details. Prior: 2026-03-15 — Phase 3B-ii docs sync: expanded SDS definition with 5 descriptor types, cache/invalidation terms, and service facade; expanded Command Bar definition with search channels, intent routing, scoped mode, CommandBarProvider, and Command Registry. Prior: 2026-03-14 — Phase 3B-i docs sync: added LinkedRecordTree implementation term. Prior: 2026-03-13 — Phase 3B-i doc prep: added Link Picker UI component term. Prior: 2026-03-13 — Phase 3A-iii docs sync: expanded Field Permissions definition, added 7 implementation terms and 4 UI component terms. Prior: 2026-03-12 — Added Process & Workflow section (7 terms). Prior: 2026-03-09 — Phase 3A-ii prep: added 6 terms; broadened Section definition.
@@ -66,6 +94,11 @@ EveryStack Platform
 ---
 
 ## Definitions — Platform Level
+
+Top-level entities visible to all users: Tenant, Board, Workspace, My Office, Quick Panels, sidebar navigation, Command Bar, and Settings. These form the navigation and organizational shell for the platform.
+
+Covers My Office, Quick Panels, Sidebar, Help Panel, Platform Owner Console, Support Agent.
+Touches `support_requests`, `is_platform_admin` tables. See `support-system.md`, `platform-owner-console.md`.
 
 ### My Office
 
@@ -147,6 +180,11 @@ A per-tenant setting (`tenants.support_tier`) that determines support routing an
 ---
 
 ## Definitions — Workspace Level
+
+Entities scoped to a workspace: Table, Field (~25 MVP types), Record, Table View (Grid/Card MVP), Record View overlay, Sections, and the canonical JSONB storage pattern. These are the core data model concepts every feature consumes.
+
+Covers Workspace, Table, Field, Record, Table View, Grid View.
+Touches `table_type`, `canonical_data`, `field_type`, `thread_type`, `field_config` tables. See `tables-and-views.md`, `field-groups.md`.
 
 ### Workspace
 
@@ -292,6 +330,9 @@ A real-time collaboration mechanism that prevents concurrent editing of the same
 
 ## Definitions — External-Facing (MVP)
 
+Covers Portal, Form.
+Touches `portal_access`, `portal_clients`, `linked_record_id`, `portal_sessions`, `auth_type` tables. See `forms.md`, `app-designer.md`.
+
 ### Portal
 
 A client-facing view of workspace data, shared externally with its own auth and no workspace chrome. Two types coexist:
@@ -353,6 +394,9 @@ See `forms.md` for Quick Form specification. For App Forms, see `app-designer.md
 ---
 
 ## Definitions — Cross-Linking
+
+Covers Cross-Link, Link Picker, LinkedRecordTree.
+Touches `card_fields` tables. See `cross-linking.md`.
 
 ### Cross-Link
 
@@ -447,6 +491,9 @@ A trigger → action flow that executes automatically when conditions are met. M
 
 ## Definitions — AI Layer
 
+Covers AIService, Schema Descriptor Service (SDS), AI Credit System, Natural Language Search, Smart Fill, Record Summarization.
+Touches `link_graph`, `pg_stat_user_tables`, `card_fields`, `linked_table`, `linked_base` tables.
+
 ### AIService
 
 The abstraction layer through which all AI features operate. Feature code never references providers or models directly. Instead, features request a capability tier:
@@ -524,6 +571,9 @@ Example: "You have a Clients table and an Invoices table. Want to link them by t
 
 ## Definitions — AI Skills & Platform Agents (Post-MVP)
 
+Covers Runtime AI Skill, Feature Skill Registry, Skill Condensation Level, Integration Skill, Workspace Usage Descriptor, Token Budget Allocator.
+Touches `ai_usage_log` tables. See `ai-skills-architecture.md`, `platform-maintenance-agents.md`, `agent-architecture.md`.
+
 ### Runtime AI Skill
 
 A curated knowledge document that the AI Context Builder loads alongside schema context to eliminate orientation cost. Skills encode how features work, how integrations behave, and how a specific workspace uses them — so the AI spends its token budget on productive work instead of rediscovering the platform every session.
@@ -592,6 +642,9 @@ The execution infrastructure for platform maintenance agents. Extends the user-f
 
 ## Definitions — Platform API
 
+Covers Platform API, API Key.
+See `vertical-architecture.md`, `platform-api.md`.
+
 ### Platform API
 
 The external programmatic interface to EveryStack. A versioned, authenticated, rate-limited REST API that exposes the same operations the web application uses internally. Every operation — Record CRUD, Table queries, Automation triggers, Document Generation, AI calls — is available to external consumers through the Platform API.
@@ -641,6 +694,8 @@ A service-level credential for authenticating Platform API requests. API keys id
 
 ## Definitions — App Designer & Apps (Post-MVP)
 
+Covers App Designer, App.
+
 ### App Designer
 
 A full-screen visual page builder for creating custom applications. Produces spatial layouts using a 12-column grid canvas with drag-and-drop blocks, themes, data binding, and a property panel. The App Designer is its own tool — separate from the workspace experience.
@@ -672,6 +727,11 @@ A custom application built in the App Designer. Apps can be internal-facing (tea
 ---
 
 ## Definitions — Sync & Data
+
+Sync engine concepts: FieldTypeRegistry, canonical JSONB pattern, platform adapters (Airtable, Notion, SmartSuite), sync setup wizard, conflict resolution, progressive initial sync, and outbound sync. See `sync-engine.md` for full specification.
+
+Covers Sync Engine, Canonical JSONB, Base Connection, Smart Polling, Converted Table, NotionAdapter.
+Touches `converted_finalized`, `last_success_at`, `last_error`, `consecutive_failures`, `next_retry_at` tables. See `sync-engine.md`, `cross-linking.md`, `field-groups.md`.
 
 ### Sync Engine
 
@@ -789,6 +849,9 @@ In-app notifications surfaced via the `NotificationBell` in the workspace header
 
 ## Definitions — Permissions
 
+Covers Roles, Field Permissions.
+Touches `read_write`, `read_only` tables.
+
 ### Roles
 
 Five roles across two levels. Presented as a single flat hierarchy in the UI — users don't need to know about the table split.
@@ -835,6 +898,11 @@ Every field resolves to one of three states per user: **read-write**, **read-onl
 ---
 
 ## Definitions — Infrastructure
+
+Technical infrastructure terms: database layer (Drizzle ORM, RLS, PgBouncer, getDbForTenant), CockroachDB safeguards, Redis/Socket.io/BullMQ services, Clerk auth, R2 file storage, audit log, and observability stack. See `CLAUDE.md` Architecture Fundamentals.
+
+Covers Tenant (Technical), Board, Workspace (Technical), Section, Command Bar, Tech Stack.
+Touches `tenant_id`, `tenant_relationships`, `tenant_memberships`, `effective_memberships`, `command_key` tables. See `permissions.md`, `tables-and-views.md`.
 
 ### Tenant (Technical)
 
@@ -1019,6 +1087,8 @@ Summary table in a playbook preamble listing all PJ-classified prompts for Steve
 
 ## Plan Tiers (Canonical Reference)
 
+Defines `tenants.plan`, `sync-engine.md`, `ai-metering.md`, `portals.md`, `automations.md`, `platform-api.md`. See `sync-engine.md`, `ai-metering.md`, `portals.md`.
+
 > **⚠️ PROVISIONAL.** Plan names are canonical; all quota numbers are provisional and will evolve. When they do, update this table first — domain docs reference it.
 
 Five plan tiers, stored as `tenants.plan`:
@@ -1050,6 +1120,11 @@ When pricing is finalized, consolidate all quota numbers into this table and hav
 ---
 
 ## MVP Scope Summary
+
+Definitive inclusion and exclusion checklists for MVP scope. Common-trap features (Kanban, formula engine, AI Agents, App Designer) flagged. This section is the final arbiter when scope is ambiguous -- if it's not listed here, check the Definitions sections above.
+
+Covers MVP Includes, MVP Explicitly Excludes.
+See `agent-architecture.md`.
 
 ### MVP Includes
 
@@ -1115,6 +1190,8 @@ When pricing is finalized, consolidate all quota numbers into this table and hav
 
 ## Database Entity Quick Reference
 
+All 52 MVP tables with approximate column counts, phase labels, and key relationships. Used by agents to verify table names and column counts without loading `data-model.md`.
+
 This maps user-facing concepts to their database tables. Full schema in `data-model.md`.
 
 | Concept                    | Primary DB Table(s)                           | Key Columns                                                                                                                                                                      |
@@ -1175,6 +1252,10 @@ This maps user-facing concepts to their database tables. Full schema in `data-mo
 ---
 
 ## Layout & Dimension Reference
+
+Canonical pixel dimensions for application shell, grid anatomy, Record View, sidebar, touch targets, and responsive breakpoints. Used by UX/UI skill and design-system.md consumers to ensure consistent sizing.
+
+Covers Workspace Layout, My Office Layout, Mobile Layout.
 
 ### Workspace Layout
 

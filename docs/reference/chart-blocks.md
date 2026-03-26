@@ -21,22 +21,22 @@
 
 | Section                                                         | Lines     | Covers                                                                                           |
 | --------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------ |
-| Purpose — Why Charts Are a Shared Primitive                     | 43–58     | Charts as reusable blocks across views, apps, docs                                               |
-| Progressive Disclosure Mapping                                  | 59–68     | 3-level progressive disclosure for chart creation                                                |
-| Chart Type System                                               | 69–352    | 8 chart types (NumberCard, ProgressChart, Bar, Line, Pie, Scatter, Area, Combo)                  |
-| Data Binding — Two Modes                                        | 353–465   | Mode A: Table Aggregate (MVP-adjacent), Mode B: DuckDB Analytical (post-MVP)                     |
-| The `summary` Table View Type (Post-MVP)                        | 466–573   | Dashboard-style view composed of chart blocks                                                    |
-| Chart Rendering in Apps _(Post-MVP — App Designer Required)_    | 574–622   | Chart blocks in App Designer pages                                                               |
-| Chart Rendering in Smart Docs                                   | 623–642   | Embedded charts in documents, snapshot rendering                                                 |
-| Chart Component Library — Implementation                        | 643–758   | Recharts components, config-to-props mapping, responsive rendering                               |
-| Data Model Additions                                            | 759–818   | chart_configs, metric_snapshots tables                                                           |
-| Aggregate Query Engine                                          | 819–898   | SQL aggregation builder, grouping, time bucketing, cross-link aggregation                        |
-| Kanban View Pipeline Rollup Integration                         | 899–915   | NumberCard/ProgressChart in Kanban column headers                                                |
-| Permissions                                                     | 916–938   | Chart data access respects Table View permissions                                                |
-| Phase Integration                                               | 939–976   | MVP — Core UX (NumberCard + ProgressChart) through Post-MVP — Verticals & Advanced (full system) |
-| Claude Code Prompt Roadmap                                      | 977–1367  | 10-prompt implementation roadmap                                                                 |
-| Appendix: Existing Specs That Reference Charts (Reconciliation) | 1368–1430 | Cross-reference audit for chart mentions across all docs                                         |
-| Appendix: Future Extensions (Do Not Build Yet)                  | 1431–1445 | Deferred chart features                                                                          |
+| Purpose — Why Charts Are a Shared Primitive                     | 43–57     | Charts as reusable blocks across views, apps, docs                                               |
+| Progressive Disclosure Mapping                                  | 59–67     | 3-level progressive disclosure for chart creation                                                |
+| Chart Type System                                               | 69–354    | 8 chart types (NumberCard, ProgressChart, Bar, Line, Pie, Scatter, Area, Combo)                  |
+| Data Binding — Two Modes                                        | 356–468   | Mode A: Table Aggregate (MVP-adjacent), Mode B: DuckDB Analytical (post-MVP)                     |
+| The `summary` Table View Type (Post-MVP)                        | 470–580   | Dashboard-style view composed of chart blocks                                                    |
+| Chart Rendering in Apps _(Post-MVP — App Designer Required)_    | 582–629   | Chart blocks in App Designer pages                                                               |
+| Chart Rendering in Smart Docs                                   | 631–649   | Embedded charts in documents, snapshot rendering                                                 |
+| Chart Component Library — Implementation                        | 651–771   | Recharts components, config-to-props mapping, responsive rendering                               |
+| Data Model Additions                                            | 773–835   | chart_configs, metric_snapshots tables                                                           |
+| Aggregate Query Engine                                          | 837–915   | SQL aggregation builder, grouping, time bucketing, cross-link aggregation                        |
+| Kanban View Pipeline Rollup Integration                         | 917–932   | NumberCard/ProgressChart in Kanban column headers                                                |
+| Permissions                                                     | 934–955   | Chart data access respects Table View permissions                                                |
+| Phase Integration                                               | 957–994   | MVP — Core UX (NumberCard + ProgressChart) through Post-MVP — Verticals & Advanced (full system) |
+| Claude Code Prompt Roadmap                                      | 996–1390  | 10-prompt implementation roadmap                                                                 |
+| Appendix: Existing Specs That Reference Charts (Reconciliation) | 1392–1453 | Cross-reference audit for chart mentions across all docs                                         |
+| Appendix: Future Extensions (Do Not Build Yet)                  | 1455–1469 | Deferred chart features                                                                          |
 
 ---
 
@@ -469,6 +469,9 @@ This mode ships in Post-MVP — Verticals & Advanced alongside ad platform conne
 
 ## The `summary` Table View Type (Post-MVP)
 
+Covers The Gap, The Solution: `summary` View Type, Layout Behavior, Summary Tab in the Financial Command Center, Summary Tab for PM Dashboards.
+Touches `view_config`, `number_card`, `stacked_bar` tables. See `tables-and-views.md`, `accounting-integration.md`.
+
 ### The Gap
 
 The current `views.view_type` enum supports: `record | table | kanban | list | timeline | gantt | calendar | smart_doc`. All of these display **individual records** in different layouts. None display **aggregate data visualizations**.
@@ -647,6 +650,9 @@ Smart Doc chart embed details are specified in `smart-docs.md` when that documen
 
 ## Chart Component Library — Implementation
 
+Covers Library Choice: Recharts, Component Architecture, `ChartRenderer` — Universal Entry Point, Color Palette, Interaction Behaviors, Loading, Empty, and Error States.
+See `tables-and-views.md`.
+
 ### Library Choice: Recharts
 
 **Decision: Use Recharts as the charting library.**
@@ -765,6 +771,9 @@ These match the design system's existing status colors used in conditional row c
 ---
 
 ## Data Model Additions
+
+Covers `views` — View Type Expansion, App `app_blocks` — Chart Block Types _(Post-MVP)_, Aggregate Query Cache.
+Touches `view_config`, `app_blocks` tables. See `realtime.md`.
 
 ### `views` — View Type Expansion
 
@@ -947,6 +956,9 @@ Charts inherit the same permission model as the view they're in:
 
 ## Phase Integration
 
+Covers MVP — Core UX Scope (Minimal — ProgressChart Only), Post-MVP — Portals & Apps Scope (Full Chart System).
+Touches `financial_summary`, `metric_snapshots` tables. See `tables-and-views.md`.
+
 | Phase                                               | Chart Deliverables                                                                                                                                                                                                                                                                                                               | Depends On                                                                            |
 | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **MVP — Core UX**                                   | `ProgressChart.tsx` component (used for percent/progress field cells — already specced in `tables-and-views.md`). Chart color palette definition. `ChartRenderer.tsx` shell (renders progress only).                                                                                                                             | Design system                                                                         |
@@ -982,6 +994,9 @@ This is the main chart delivery phase. Everything needed for App Chart blocks _(
 ---
 
 ## Claude Code Prompt Roadmap
+
+Covers Prompt 1: Chart Type Definitions and Shared Types, Prompt 2: NumberCard Component, Prompt 3: ProgressChart Component, Prompt 4: ChartRenderer Shell and Kanban View Integration, Prompt 5: Recharts Chart Renderers, Prompt 6: Aggregate Query Builder.
+See `chart-blocks.md`, `design-system.md`, `tables-and-views.md`.
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 

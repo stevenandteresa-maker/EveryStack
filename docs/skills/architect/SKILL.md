@@ -15,6 +15,21 @@ description: >
 
 # EveryStack Architect Agent Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 38–46 | Trigger conditions for Step 0, docs/ branches, ADR writing |
+| Mandate | 48–59 | Scope boundary: doc preparation only, docs/ branch ownership |
+| Authority Chain | 61–71 | Resolution order: GLOSSARY > CLAUDE.md > CONTRIBUTING > this skill > prompt |
+| Context Loading Rules | 73–105 | Tier 0 always-load, Tier 1 per-session, never-load categories |
+| Procedure -- Step by Step | 107–237 | 7-step doc prep procedure: read phase division, load reference sections, audit, update, ADR, commit |
+| Section Index (ADR Template) | 276–428 | ADR markdown template and section-index-update procedure |
+| Forbidden Actions | 430–450 | Actions the Architect Agent must never take |
+| Decision Patterns | 452–497 | When to write ADRs vs DECISIONS.md entries |
+| Output Format | 499–502 | Step 0 completion report template |
+| Checklist Before Every Merge | 534–548 | 8-item pre-merge verification checklist |
+
 This skill encodes the conventions and procedures for the Architect Agent —
 the Step 0 operator in EveryStack's six-step build lifecycle. The Architect
 Agent ensures all reference docs are stable, consistent, and complete before
@@ -56,6 +71,8 @@ When conventions conflict, resolve in this order:
 ---
 
 ## Context Loading Rules
+
+Covers Always Load (Tier 0), Load per Session (Tier 1), Never Load.
 
 ### Always Load (Tier 0)
 
@@ -257,11 +274,11 @@ its section index at the top of the file.
 **Section index format:**
 ```markdown
 ## Section Index
-| Section                    | Lines     |
-|----------------------------|-----------|
-| Core Tables                | 12–145    |
-| Relationship Tables        | 146–310   |
-| Enum Definitions           | 311–380   |
+| Section                    | Lines | Summary |
+|----------------------------|----------- | ------- |
+| Core Tables                | 12–145 | |
+| Relationship Tables        | 146–310 | |
+| Enum Definitions           | 311–380 | |
 ```
 
 **Rules:**
@@ -433,6 +450,8 @@ hard failure — stop and reassess.
 ---
 
 ## Decision Patterns
+
+Covers ADR vs. Simple Doc Update, Dependency Graph Change vs. Proceeding, New Doc vs. Extending Existing Doc.
 
 ### ADR vs. Simple Doc Update
 

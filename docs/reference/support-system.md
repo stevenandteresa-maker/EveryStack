@@ -13,16 +13,16 @@
 
 | Section | Lines | Covers |
 |---------|-------|--------|
-| Design Philosophy | 35–55 | AI-first model, three-tier escalation, human access guarantee |
-| Help Button & Panel | 56–130 | Sidebar placement, three-state panel UX, mobile behavior |
-| Three-Tier Support Model | 131–175 | Tier 1 (AI), Tier 2 (support agent), Tier 3 (Steven/escalation) |
-| AI Support Agent — Confirmation Flow | 176–245 | Rephrase-and-confirm pattern, confidence scoring, auto-send threshold |
-| AI Support Agent — Capabilities | 246–305 | What the AI can do: KB retrieval, account context, billing queries, triage |
-| Support Staff Console | 306–380 | Scoped /admin access, ticket view, draft approval, tenant context |
-| Support Staff EveryStack Workspace | 381–410 | Deep case management, SLA tracking, internal knowledge |
-| Plan-Based Support Tiers | 411–460 | What each plan gets, routing rules, enterprise contract model |
-| Schema | 461–545 | New columns/tables: support_agents, ai_support_sessions, confidence tracking |
-| Phase Implementation | 546–590 | MVP vs post-MVP build sequence |
+| Design Philosophy | 29–41 | AI-first model, three-tier escalation, human access guarantee |
+| Help Button & Panel | 43–151 | Sidebar placement, three-state panel UX, mobile behavior |
+| Three-Tier Support Model | 153–207 | Tier 1 (AI), Tier 2 (support agent), Tier 3 (Steven/escalation) |
+| AI Support Agent — Confirmation Flow | 209–274 | Rephrase-and-confirm pattern, confidence scoring, auto-send threshold |
+| AI Support Agent — Capabilities | 276–368 | What the AI can do: KB retrieval, account context, billing queries, triage |
+| Support Staff Console | 370–446 | Scoped /admin access, ticket view, draft approval, tenant context |
+| Support Staff EveryStack Workspace | 448–471 | Deep case management, SLA tracking, internal knowledge |
+| Plan-Based Support Tiers | 473–520 | What each plan gets, routing rules, enterprise contract model |
+| Schema | 522–636 | New columns/tables: support_agents, ai_support_sessions, confidence tracking |
+| Phase Implementation | 638–675 | MVP vs post-MVP build sequence |
 
 ---
 
@@ -41,6 +41,9 @@
 ---
 
 ## Help Button & Panel
+
+Covers Placement, The Help Panel, Tab 1: Ask AI, Tab 2: Browse Help, Tab 3: Contact Support, Mobile Behavior.
+Touches `tenant_id`, `user_id`, `support_requests` tables. See `my-office.md`, `design-system.md`.
 
 ### Placement
 
@@ -205,6 +208,9 @@ All inbound support requests flow through a structured three-tier pipeline. Tier
 
 ## AI Support Agent — Confirmation Flow
 
+Covers The Rephrase-and-Confirm Pattern, Confidence Scoring, Auto-Send Behavior.
+Touches `support_request_messages`, `ai_support_sessions` tables.
+
 ### The Rephrase-and-Confirm Pattern
 
 Every AI interaction follows this exact sequence before attempting resolution:
@@ -268,6 +274,9 @@ Auto-sent replies are **always auditable.** The `ai_support_sessions` table (see
 ---
 
 ## AI Support Agent — Capabilities
+
+Covers What the AI Has Access To (Per-Request Context), Billing Query Handling, Triage Classification.
+Touches `how_to`, `sync_error`, `billing_info`, `billing_action`, `bug_report` tables.
 
 ### What the AI Has Access To (Per-Request Context)
 
@@ -359,6 +368,9 @@ Every incoming request is classified before the confirmation step:
 ---
 
 ## Support Staff Console
+
+Covers Access Model, Support Console UI (`/admin/support`), Email Notifications.
+Touches `is_platform_admin`, `is_support_agent`, `support_request_messages` tables.
 
 ### Access Model
 
@@ -460,6 +472,9 @@ This workspace grows in capability as EveryStack features mature.
 
 ## Plan-Based Support Tiers
 
+Covers Routing Rules by Plan, Urgency Scoring, Enterprise Support Model.
+Touches `tenant_enterprise_config` tables.
+
 ### Routing Rules by Plan
 
 All non-enterprise plans go through the same AI-first pipeline. The difference is in urgency weighting and human response commitment.
@@ -505,6 +520,9 @@ Enterprise support terms are defined per contract. The platform supports the fol
 ---
 
 ## Schema
+
+Covers Additions to Existing Tables, New Tables.
+Touches `support_request_messages`, `author_type`, `support_requests`, `ai_support_sessions`, `feature_requests` tables.
 
 ### Additions to Existing Tables
 
@@ -618,6 +636,9 @@ CREATE TABLE tenant_enterprise_config (
 ---
 
 ## Phase Implementation
+
+Covers What Can Be Built Now (MVP Phase), What Is Post-MVP, MVP Interim: Tab 1 Without Full AI.
+Touches `support_requests` tables.
 
 ### What Can Be Built Now (MVP Phase)
 

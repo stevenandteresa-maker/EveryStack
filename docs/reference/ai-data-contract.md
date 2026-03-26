@@ -62,6 +62,9 @@ Converts raw LLM text output into a canonical JSONB value. This is the **write p
 
 ## Per-Field-Type Mapping
 
+Covers Category 1: Text, Category 2: Number, Category 3: Selection, Category 4: Date & Time, Category 5: People & Contact, Category 6: Boolean & Interactive.
+Touches `max_length`, `thousands_separator`, `currency_code`, `symbol_position`, `display_format` tables.
+
 ### Category 1: Text
 
 | Field Type                   | `canonicalToAIContext()`                             | `aiToCanonical()`                                                 |

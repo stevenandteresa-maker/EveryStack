@@ -1,5 +1,17 @@
 # Phases 4, 5, 6 — Sub-Phase Division
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Summary | 15–45 | Sub-phase counts and prompt totals for Automations (2/22), AI (3/31), API (2/15) |
+| Key Scope Decisions | 22–45 | Approval modes 1+2 bundled, Automation Building AI deferred, AI feature exclusions, API phase implementation rules |
+| Phase 4: MVP -- Automations (4A--4B) | 47–113 | Trigger system + execution engine (4A), action implementations + webhooks + status governance (4B) |
+| Phase 5: MVP -- AI (5A--5C) | 47–113 | AI data contract + context builder (5A), user-facing features + metering (5B), runtime skills architecture (5C) |
+| Phase 6: MVP -- API (6A--6B) | 47–113 | Data API record CRUD (6A), schema API + file upload + SDS endpoint (6B) |
+| Dependency Graph | 284–339 | ASCII DAG of Phases 4--6 with parallel execution potential and critical path |
+| Validation Checklist | 341–358 | 12-item verification of scope, exclusions, and reference doc section splits |
+
 ## Summary
 - Phase 4 sub-phases: 2 (estimated 22 prompts)
 - Phase 5 sub-phases: 3 (estimated 31 prompts)
@@ -33,6 +45,9 @@
 ---
 
 ## Phase 4: MVP — Automations
+
+Covers 4A — Trigger System, Execution Engine & Builder UI, 4B — Action Implementations, Webhooks, Testing & Status Field Governance.
+Touches `automation_runs`, `step_log`, `jsonb_set`, `webhook_endpoints` tables.
 
 ### 4A — Trigger System, Execution Engine & Builder UI
 
@@ -98,6 +113,9 @@
 ---
 
 ## Phase 5: MVP — AI
+
+Covers 5A — AI Data Contract Implementations & Context Builder, 5B — User-Facing AI Features & Metering Dashboards, 5C — Runtime Skills Architecture.
+Touches `cell_renderer`, `schema_version_hash`, `search_records`, `query_tables`, `resolve_cross_links` tables. See `ai-skills-architecture.md`, `agent-architecture.md`.
 
 ### 5A — AI Data Contract Implementations & Context Builder
 
@@ -197,6 +215,9 @@
 ---
 
 ## Phase 6: MVP — API
+
+Covers 6A — Data API: Record CRUD, Filtering & Batch Operations, 6B — Schema API, File Upload API & SDS Endpoint.
+Touches `total_count`, `include_cross_links`, `template_id`, `actor_label`, `api_request_log` tables.
 
 ### 6A — Data API: Record CRUD, Filtering & Batch Operations
 

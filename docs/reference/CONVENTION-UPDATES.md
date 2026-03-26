@@ -7,6 +7,8 @@
 
 ## CONTRIBUTING.md Additions
 
+Covers Branch Prefix Table (add `plan/` row), Branch Naming Examples (add to existing examples), Commit Message Format (add `plan:` prefix).
+
 ### Branch Prefix Table (add `plan/` row)
 
 Add a new row to the branch prefix ownership table:
@@ -37,6 +39,8 @@ plan: 2b subdivision (3 units)
 ---
 
 ## CLAUDE.md Additions
+
+Covers Monorepo Structure (add docs/subdivisions/), Agent Roster (add Planner), Updated Lifecycle Sequence.
 
 ### Monorepo Structure (add docs/subdivisions/)
 

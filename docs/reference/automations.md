@@ -13,16 +13,16 @@
 
 | Section                    | Lines   | Covers                                                                             |
 | -------------------------- | ------- | ---------------------------------------------------------------------------------- |
-| MVP Scope                  | 29–57   | 6 triggers, 7 actions, linear flows only, no branching                             |
-| Builder Interface          | 58–115  | Step-by-step list builder UI, trigger/action configuration                         |
-| Triggers (6 MVP Types)     | 116–178 | Record Created, Updated, Field Changed, Form Submitted, Button Clicked, Scheduled  |
-| Actions (7 MVP Types)      | 179–208 | Send Email, Create/Update Record, Generate Document, Notify, Adjust Field, Webhook |
-| Execution Model            | 209–293 | Sequential pipeline, BullMQ jobs, error handling, retry logic                      |
-| Template Resolution Engine | 294–318 | Merge tag resolution in automation actions, dynamic values                         |
-| Webhook Architecture       | 319–422 | Inbound/outbound webhooks, signature verification, delivery retry                  |
-| Testing & Debugging        | 423–447 | Automation test mode, execution log, step-by-step replay                           |
-| Data Model                 | 448–511 | automations, automation_runs tables, trigger/steps JSONB schemas                   |
-| Post-MVP Expansion Path    | 512–526 | Visual canvas, branching, conditions, loops, 22+ triggers, 42+ actions             |
+| MVP Scope                  | 29–58   | 6 triggers, 7 actions, linear flows only, no branching                             |
+| Builder Interface          | 60–117  | Step-by-step list builder UI, trigger/action configuration                         |
+| Triggers (6 MVP Types)     | 119–182 | Record Created, Updated, Field Changed, Form Submitted, Button Clicked, Scheduled  |
+| Actions (7 MVP Types)      | 184–212 | Send Email, Create/Update Record, Generate Document, Notify, Adjust Field, Webhook |
+| Execution Model            | 214–301 | Sequential pipeline, BullMQ jobs, error handling, retry logic                      |
+| Template Resolution Engine | 303–326 | Merge tag resolution in automation actions, dynamic values                         |
+| Webhook Architecture       | 328–433 | Inbound/outbound webhooks, signature verification, delivery retry                  |
+| Testing & Debugging        | 435–458 | Automation test mode, execution log, step-by-step replay                           |
+| Data Model                 | 460–526 | automations, automation_runs tables, trigger/steps JSONB schemas                   |
+| Post-MVP Expansion Path    | 528–542 | Visual canvas, branching, conditions, loops, 22+ triggers, 42+ actions             |
 
 ---
 
@@ -118,6 +118,8 @@ Full-screen, two zones:
 
 ## Triggers (6 MVP Types)
 
+Covers Trigger Detection, Trigger Registry, Event Flow: Trigger → Execution, Deduplication.
+
 | #   | Trigger                 | Config                                                                                                    | Context Provided                                 |
 | --- | ----------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | 1   | **Record Created**      | `tableId`, optional filter on initial field values                                                        | `{ record, table, createdBy }`                   |
@@ -210,6 +212,8 @@ Domain event (e.g., record.updated)
 ---
 
 ## Execution Model
+
+Covers Linear Sequential Pipeline, Execution Context, Error Handling, Timeout Policy, Checkpointing, Execution Concurrency.
 
 ### Linear Sequential Pipeline
 
@@ -454,6 +458,9 @@ Name/description, status (active/paused/draft), error handling strategy, executi
 ---
 
 ## Data Model
+
+Covers `automations` Table, Step Schema, `automation_runs` Table, Webhook Tables, Plan Limits, Redis Key Patterns.
+Touches `workspace_id`, `run_count`, `error_count`, `automation_runs`, `webhook_endpoints` tables. See `data-model.md`.
 
 ### `automations` Table
 

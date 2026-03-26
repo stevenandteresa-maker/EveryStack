@@ -23,22 +23,22 @@
 
 | Section                                        | Lines     | Covers                                                                           |
 | ---------------------------------------------- | --------- | -------------------------------------------------------------------------------- |
-| Purpose of This Document                       | 44–53     | Document scope and audience                                                      |
-| What AI Field Agents Are                       | 54–75     | LLM-powered computed fields, cross-base awareness, how they differ from formulas |
-| Where This Module Sits in the Architecture     | 76–106    | Dependency diagram, relationship to SDS/DuckDB/AIService                         |
-| Agent Configuration Model                      | 107–368   | 10 output types, 3 field reference source types, config schema, examples         |
-| Prompt Assembly Pipeline                       | 369–544   | 7-step pipeline, context building, token budgeting                               |
-| LLM Router                                     | 545–609   | Tier selection, model routing, fallback chains                                   |
-| Output Validation                              | 610–686   | aiToCanonical mapping, type coercion, error handling                             |
-| Execution Engine                               | 687–783   | Caching, batch execution, concurrency, retry logic                               |
-| Trigger System Integration                     | 784–816   | 4 trigger modes (on-demand, on-change, scheduled, cascade)                       |
-| Storage Model                                  | 817–889   | Result caching in canonical_data, staleness tracking                             |
-| Cost Management                                | 890–926   | Credit estimation, budget caps, cost optimization                                |
-| Security Considerations                        | 927–971   | Prompt injection mitigations, data isolation, output sanitization                |
-| Claude Code Prompt Roadmap                     | 972–1340  | 8-prompt implementation roadmap                                                  |
-| Implementation Order                           | 1341–1360 | Dependency-ordered build sequence                                                |
-| Appendix: Example Agent Configurations         | 1361–1510 | Concrete agent config examples for common use cases                              |
-| Appendix: Future Extensions (Do Not Build Yet) | 1511–1523 | Deferred features                                                                |
+| Purpose of This Document                       | 45–54     | Document scope and audience                                                      |
+| What AI Field Agents Are                       | 56–76     | LLM-powered computed fields, cross-base awareness, how they differ from formulas |
+| Where This Module Sits in the Architecture     | 78–107    | Dependency diagram, relationship to SDS/DuckDB/AIService                         |
+| Agent Configuration Model                      | 109–369   | 10 output types, 3 field reference source types, config schema, examples         |
+| Prompt Assembly Pipeline                       | 371–552   | 7-step pipeline, context building, token budgeting                               |
+| LLM Router                                     | 554–617   | Tier selection, model routing, fallback chains                                   |
+| Output Validation                              | 619–705   | aiToCanonical mapping, type coercion, error handling                             |
+| Execution Engine                               | 707–803   | Caching, batch execution, concurrency, retry logic                               |
+| Trigger System Integration                     | 805–839   | 4 trigger modes (on-demand, on-change, scheduled, cascade)                       |
+| Storage Model                                  | 841–915   | Result caching in canonical_data, staleness tracking                             |
+| Cost Management                                | 917–957   | Credit estimation, budget caps, cost optimization                                |
+| Security Considerations                        | 959–1004   | Prompt injection mitigations, data isolation, output sanitization                |
+| Claude Code Prompt Roadmap                     | 1006–1376  | 8-prompt implementation roadmap                                                  |
+| Implementation Order                           | 1378–1396 | Dependency-ordered build sequence                                                |
+| Appendix: Example Agent Configurations         | 1398–1615 | Concrete agent config examples for common use cases                              |
+| Appendix: Future Extensions (Do Not Build Yet) | 1617–1629 | Deferred features                                                                |
 
 ---
 
@@ -840,6 +840,9 @@ For agents that should re-run periodically (e.g., to pick up changes in aggregat
 
 ## Storage Model
 
+Covers Field Value Storage, Agent Metadata Storage, Agent Execution Log.
+Touches `canonical_data`, `ai_agent_meta`, `ai_agent_runs` tables. See `data-model.md`.
+
 ### Field Value Storage
 
 The AI agent's output is stored in the record's `canonical_data` JSONB column, just like any other field value (see `data-model.md` > Canonical JSONB Storage). The field_id key holds the validated output value. There is nothing special about how the value is stored — downstream features (views, filters, sorts, exports) treat it like any other field of the same base type.
@@ -912,6 +915,9 @@ CREATE INDEX idx_agent_runs_field ON ai_agent_runs(agent_field_id, created_at);
 ---
 
 ## Cost Management
+
+Covers Token Tracking, Credit System Design, Runaway Protection.
+See `ai-metering.md`.
 
 ### Token Tracking
 
@@ -998,6 +1004,9 @@ A compromised prompt could try to exfiltrate data by embedding it in the output.
 ---
 
 ## Claude Code Prompt Roadmap
+
+Covers Prompt 1: Core Types and Configuration Schema, Prompt 2: Output Validator, Prompt 3: Prompt Assembler — Local and Linked Field Resolution, Prompt 4: Prompt Assembler — Multi-Hop and Aggregate Context, Prompt 5: LLM Router, Prompt 6: Execution Engine.
+Touches `canonical_data` tables. See `ai-data-contract.md`, `data-model.md`.
 
 ### Prompt 1: Core Types and Configuration Schema
 
@@ -1387,6 +1396,8 @@ Prompts 7 and 8 are the final integration with EveryStack's existing systems.
 ---
 
 ## Appendix: Example Agent Configurations
+
+Covers Example 1: Simple Summary (Comparable to Airtable), Example 2: Cross-Base Classification (EveryStack Advantage), Example 3: Aggregate-Aware Health Score (Only Possible on EveryStack).
 
 ### Example 1: Simple Summary (Comparable to Airtable)
 

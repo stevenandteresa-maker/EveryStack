@@ -31,21 +31,21 @@
 
 | Section                                             | Lines   | Covers                                                       |
 | --------------------------------------------------- | ------- | ------------------------------------------------------------ |
-| Design Philosophy                                   | 51–62   | Fixed-page canvas, PDF-first, merge tags over code           |
-| Progressive Disclosure Mapping                      | 63–74   | 3-level disclosure for document creation                     |
-| App Creation — Entry Points                         | 75–105  | Document app creation from workspace, table, template        |
-| Document Creation Wizard                            | 106–144 | Step-by-step wizard for new document apps                    |
-| Canvas Behavior (Fixed-Size Page)                   | 145–217 | A4/Letter/Legal canvas, page breaks, margins, rulers         |
-| Block Model — Document-Specific Additions           | 218–252 | Page break, header/footer, merge tag, table blocks           |
-| Data Binding                                        | 253–287 | Merge tag resolution, linked record traversal, image binding |
-| Render Pipeline                                     | 288–345 | TipTap → HTML → Gotenberg → PDF/DOCX output                  |
-| Automation Integration — "Set Up Automation" Wizard | 346–414 | Auto-generate on record change, batch generation             |
-| Preview and Publish                                 | 415–437 | Preview rendering, template versioning, publish flow         |
-| Relationship to Other Document Paths                | 438–485 | How Document Designer relates to Smart Docs and merge tags   |
-| Homegrown DOCX Template Engine                      | 486–520 | Custom DOCX engine (no Docxtemplater), template compilation  |
-| Data Model                                          | 521–577 | document_templates enhancements, generated_documents table   |
-| Page Sizes Reference                                | 578–591 | Standard page dimensions and margins                         |
-| Phase Implementation                                | 592–629 | Post-MVP delivery scope                                      |
+| Design Philosophy                                   | 52–62   | Fixed-page canvas, PDF-first, merge tags over code           |
+| Progressive Disclosure Mapping                      | 64–74   | 3-level disclosure for document creation                     |
+| App Creation — Entry Points                         | 76–108  | Document app creation from workspace, table, template        |
+| Document Creation Wizard                            | 110–149 | Step-by-step wizard for new document apps                    |
+| Canvas Behavior (Fixed-Size Page)                   | 151–227 | A4/Letter/Legal canvas, page breaks, margins, rulers         |
+| Block Model — Document-Specific Additions           | 229–265 | Page break, header/footer, merge tag, table blocks           |
+| Data Binding                                        | 267–303 | Merge tag resolution, linked record traversal, image binding |
+| Render Pipeline                                     | 305–364 | TipTap → HTML → Gotenberg → PDF/DOCX output                  |
+| Automation Integration — "Set Up Automation" Wizard | 366–439 | Auto-generate on record change, batch generation             |
+| Preview and Publish                                 | 441–462 | Preview rendering, template versioning, publish flow         |
+| Relationship to Other Document Paths                | 464–511 | How Document Designer relates to Smart Docs and merge tags   |
+| Homegrown DOCX Template Engine                      | 513–547 | Custom DOCX engine (no Docxtemplater), template compilation  |
+| Data Model                                          | 549–607 | document_templates enhancements, generated_documents table   |
+| Page Sizes Reference                                | 609–621 | Standard page dimensions and margins                         |
+| Phase Implementation                                | 623–663 | Post-MVP delivery scope                                      |
 
 ---
 
@@ -74,6 +74,8 @@ This means a Manager who has learned to build a client portal App already knows 
 ---
 
 ## App Creation — Entry Points
+
+Covers From the Apps Page (Workspace Level), From a Table (Contextual Shortcut), Table-Level App Visibility.
 
 > **⚠️ Post-MVP.** These entry points are for creating Document Apps in the App Designer.
 
@@ -106,6 +108,8 @@ The workspace-level Apps page remains the canonical home for all Apps across all
 ---
 
 ## Document Creation Wizard
+
+Covers Step 1: Choose a Starting Point, Step 2: Connect to Data, Step 3: Name, Theme, and Page Setup.
 
 > **⚠️ Post-MVP.** This wizard is for creating Document Apps in the App Designer. MVP document generation uses Document Templates created via a simpler flow — see GLOSSARY.md § Definitions — Documents.
 
@@ -145,6 +149,8 @@ Hit **Create** → land directly in designer with template pre-built and themed.
 ---
 
 ## Canvas Behavior (Fixed-Size Page)
+
+Covers Page Simulation, Page Size Selector (Replaces Viewport Toggle), Multi-Page Design, Header and Footer Zones.
 
 > **⚠️ Post-MVP.** Canvas behavior for the Document App type in the App Designer.
 
@@ -222,6 +228,9 @@ Header and footer zones are optional — a document can have neither, one, or bo
 
 ## Block Model — Document-Specific Additions
 
+Covers New Blocks, Modified Blocks, Blocks Not Available in Document App Type.
+See `app-designer.md`, `chart-blocks.md`.
+
 > **⚠️ Post-MVP.** Block model extensions for the Document App type in the App Designer.
 
 The Document App type uses the same block categories as the standard App Designer (see `app-designer.md` > Block Model) with the following additions and modifications:
@@ -256,6 +265,8 @@ The Document App type uses the same block categories as the standard App Designe
 ---
 
 ## Data Binding
+
+Defines `app-designer.md`, `mergeTag`, `smart-docs.md`. See `app-designer.md`, `smart-docs.md`.
 
 > **⚠️ Post-MVP.** Data binding for Document Apps. MVP Document Templates use simpler merge-tag field resolution from the record's table and Cross-Linked tables.
 
@@ -292,6 +303,9 @@ When entering from a table context, "This Table" is pre-populated with that tabl
 ---
 
 ## Render Pipeline
+
+Covers Pipeline Details, Gotenberg Configuration for Documents.
+Touches `generated_documents` tables. See `merge-resolver.ts`, `smart-docs.md`.
 
 > **⚠️ Post-MVP.** Render pipeline for Document Apps built in the App Designer. MVP Document Templates use a simpler path: TipTap content → merge tag resolution → Gotenberg → PDF.
 
@@ -350,6 +364,9 @@ Gotenberg natively supports repeating headers/footers and page number tokens (`<
 ---
 
 ## Automation Integration — "Set Up Automation" Wizard
+
+Covers Quick Setup Wizard, Full Automation Builder (Alternative Path), Generate Document Automation Action.
+Touches `automation_definition` tables. See `automations.md`.
 
 > **⚠️ Post-MVP.** Automation integration for Document Apps. MVP document generation uses a manual "Generate Document" button on Record View, plus the MVP automation action "Generate Document" which produces a PDF from a Document Template (see `automations.md`).
 
@@ -531,6 +548,9 @@ The Template Mapper is the field mapping interface for uploaded DOCX templates. 
 
 ## Data Model
 
+Covers `apps` Table (Post-MVP), `template_definitions` Table Updates, `generated_documents` Table (Unchanged).
+Touches `document_templates`, `app_pages`, `app_blocks`, `template_definitions`, `generated_documents` tables.
+
 > **⚠️ Post-MVP DB architecture for Document Apps.** MVP document generation uses the `document_templates` table (see GLOSSARY.md § Database Entity Quick Reference: `document_templates` — id, tenant_id, table_id, content (TipTap JSON), name). The `apps` / `app_pages` / `app_blocks` tables below are post-MVP and store App Designer outputs.
 
 ### `apps` Table (Post-MVP)
@@ -601,6 +621,9 @@ Default page size is inferred from workspace locale (US Letter for US workspaces
 ---
 
 ## Phase Implementation
+
+Covers Post-MVP — Document Designer — Document Designer (Post-MVP. Depends on: Post-MVP — Portals & Apps App Designer complete, Post-MVP — Documents Gotenberg pipeline ready), Dependencies.
+Touches `layout_config` tables.
 
 ### Post-MVP — Document Designer — Document Designer (Post-MVP. Depends on: Post-MVP — Portals & Apps App Designer complete, Post-MVP — Documents Gotenberg pipeline ready)
 

@@ -65,6 +65,9 @@ The three surfaces:
 
 ## Knowledge Base Designation
 
+Covers Configuration, Admin UX (Settings > Channels > Live Chat > AI Responses).
+Touches `kb_sources`, `chat_widgets` tables.
+
 > **⚠️ POST-MVP**
 
 Not every wiki table is a Live Chat AI source. An admin explicitly designates which wiki table(s) feed the Live Chat AI.
@@ -108,6 +111,9 @@ The configuration lives in the existing Live Chat widget settings panel. A new "
 ---
 
 ## Smart Doc Content Embedding (The New Piece)
+
+Covers Why Record Embeddings Are Insufficient, Chunking Strategy, Schema, Embedding Triggers, TipTap JSON Flattening.
+Touches `record_embeddings`, `file_embeddings`, `content_hash`, `model_id`, `knowledge_embeddings` tables. See `personal-notes-capture.md`.
 
 > **⚠️ POST-MVP:** Both vector embeddings / semantic search and Wiki / Knowledge Base are post-MVP per `GLOSSARY.md`.
 
@@ -224,6 +230,9 @@ function flattenTipTapToSections(doc: TipTapDocument): FlattenedSection[] {
 ---
 
 ## Live Chat AI Retrieval Pipeline
+
+Covers Flow: Visitor Message → AI Response (or Human Routing), LLM Prompt Template, AI Credit Cost, Thread Message Integration, Agent-Assist Mode.
+Touches `thread_messages`, `external_contact`, `author_type`, `scope_type` tables. See `ai-metering.md`.
 
 > **⚠️ POST-MVP:** Live Chat widget and AI auto-responses are post-MVP per `GLOSSARY.md`.
 
@@ -364,6 +373,8 @@ Agent-assist uses the same retrieval flow and LLM generation, but routes the out
 ---
 
 ## Keyword Search Extension
+
+Defines `tsvector`, `records.search_vector`, `display_fields`, `search_vector`, `knowledge_embeddings`, `knowledge_search`.
 
 > **⚠️ POST-MVP**
 

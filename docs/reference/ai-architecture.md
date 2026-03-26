@@ -20,21 +20,21 @@
 
 | Section                               | Lines   | Covers                                                                                       |
 | ------------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| Core Principle                        | 40–47   | Provider independence, Context Assembly → Prompt → AI Call → Output → Review → Apply pattern |
-| AI Capabilities                       | 48–60   | Feature matrix with MVP status: Command Bar AI, App Gen, Doc Drafting, Automation Building   |
-| Provider Adapter Interface            | 61–93   | AIProviderAdapter TypeScript interface, capabilities, config, auth, provider registration    |
-| Capability-Based Model Routing        | 94–143  | 4 capability tiers (basic→specialized), model mapping, fallback chains, routing config       |
-| Prompt Registry & Versioning          | 144–181 | Provider-agnostic templates, version-controlled, PromptTemplate interface, compiler pattern  |
-| Tool Definition Abstraction           | 182–203 | ToolDefinition interface, parameter schemas, provider-specific compilation                   |
-| Provider Evaluation Framework         | 204–233 | EvaluationCase interface, scoring, regression detection, provider comparison                 |
-| Streaming Support                     | 234–241 | Vercel AI SDK SSE for interactive features, BullMQ worker for heavy tasks                    |
-| Technical Architecture                | 242–250 | Context Builder, Structured Output, User Review Loop, Audit Trail                            |
-| Agent Integration                     | 251–265 | Post-MVP agent hooks: schema, session tables, delegation model, nullable FKs                 |
-| Self-Hosted LLM Deployment            | 266–296 | Post-MVP OpenAI-compatible adapter, vLLM/SGLang/Ollama, hybrid routing                       |
-| MCP (Model Context Protocol)          | 297–326 | EveryStack as MCP Server and Client (post-MVP)                                               |
-| External Consumption via Platform API | 327–348 | AI API endpoints, prompt template registration, credit metering for external consumers       |
-| Self-Hosted LLM Readiness (Summary)   | 349–365 | Deployment requirements summary, reference to self-hosted-ai.md                              |
-| Phase Implementation                  | 366–376 | Phase breakdown: MVP — Foundation through Post-MVP — Intelligence                            |
+| Core Principle                        | 41–47   | Provider independence, Context Assembly → Prompt → AI Call → Output → Review → Apply pattern |
+| AI Capabilities                       | 49–60   | Feature matrix with MVP status: Command Bar AI, App Gen, Doc Drafting, Automation Building   |
+| Provider Adapter Interface            | 62–95   | AIProviderAdapter TypeScript interface, capabilities, config, auth, provider registration    |
+| Capability-Based Model Routing        | 97–153  | 4 capability tiers (basic→specialized), model mapping, fallback chains, routing config       |
+| Prompt Registry & Versioning          | 155–192 | Provider-agnostic templates, version-controlled, PromptTemplate interface, compiler pattern  |
+| Tool Definition Abstraction           | 194–215 | ToolDefinition interface, parameter schemas, provider-specific compilation                   |
+| Provider Evaluation Framework         | 217–245 | EvaluationCase interface, scoring, regression detection, provider comparison                 |
+| Streaming Support                     | 247–253 | Vercel AI SDK SSE for interactive features, BullMQ worker for heavy tasks                    |
+| Technical Architecture                | 255–262 | Context Builder, Structured Output, User Review Loop, Audit Trail                            |
+| Agent Integration                     | 264–277 | Post-MVP agent hooks: schema, session tables, delegation model, nullable FKs                 |
+| Self-Hosted LLM Deployment            | 279–311 | Post-MVP OpenAI-compatible adapter, vLLM/SGLang/Ollama, hybrid routing                       |
+| MCP (Model Context Protocol)          | 313–341 | EveryStack as MCP Server and Client (post-MVP)                                               |
+| External Consumption via Platform API | 343–363 | AI API endpoints, prompt template registration, credit metering for external consumers       |
+| Self-Hosted LLM Readiness (Summary)   | 365–381 | Deployment requirements summary, reference to self-hosted-ai.md                              |
+| Phase Implementation                  | 383–393 | Phase breakdown: MVP — Foundation through Post-MVP — Intelligence                            |
 
 ---
 
@@ -60,6 +60,8 @@
 ---
 
 ## Provider Adapter Interface
+
+Defines `supportsVision`, `supportsVision: true`, `document_extraction`, `vision_analysis`, `version_comparison`, `document-intelligence.md`. See `document-intelligence.md`.
 
 ```typescript
 // packages/shared/ai/providers/adapter.ts
@@ -275,6 +277,9 @@ Full specification: `agent-architecture.md`.
 ---
 
 ## Self-Hosted LLM Deployment
+
+Covers Enterprise Air-Gapped Mode, Hybrid Routing, Prompt Template Compilation for Self-Hosted Models.
+See `self-hosted.ts`, `self-hosted-ai.md`.
 
 > **Post-MVP.** Self-hosted AI and data residency are explicitly post-MVP per glossary. The adapter interface and `providerId: 'self-hosted'` union type ship in MVP — Foundation as extension points.
 

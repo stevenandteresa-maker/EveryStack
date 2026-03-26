@@ -14,15 +14,15 @@
 
 | Section                                            | Lines   | Covers                                                                                                                                                                                                                                                                |
 | -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Connection Pooling (MVP — Foundation — Day One)    | 29–39   | PgBouncer transaction mode, per-environment config (Docker/Railway/AWS), connection strings                                                                                                                                                                           |
-| Read/Write Connection Routing & `getDbForTenant()` | 43–171  | `getDbForTenant()` full implementation, read/write intent routing, usage patterns, multi-region routing (post-MVP), tenant region cache, migration path                                                                                                               |
-| Table Partitioning                                 | 175–185 | Hash-partitioned `records` by `tenant_id` (16 partitions), other partitioned tables, autovacuum benefits                                                                                                                                                              |
-| Tenant-Aware Resource Protection                   | 189–198 | 30s/5min statement timeouts, per-tenant query budgeting, expensive query guardrails (50K+ limits, cross-link depth cap)                                                                                                                                               |
-| Row-Level Security at Scale                        | 202–210 | RLS as defense-in-depth at 100M+ rows, partition pruning mitigation, monitoring strategy, never relaxed on write primary                                                                                                                                              |
-| Zero-Downtime Migration Rules                      | 214–222 | 7 safe migration patterns: ADD COLUMN, renames, CONCURRENTLY indexes, type changes, table drops, partition ops, validation                                                                                                                                            |
-| tsvector Indexing Strategy                         | 226–482 | 4-weight search vectors (A–D), `extractSearchableText()` full impl, `buildSearchVector()` full impl, `simple` dictionary rationale, prefix matching, update triggers, GIN schema, table-scoped + workspace-scoped search queries, entity search, performance at scale |
-| JSONB Expression Indexes                           | 486–498 | Expression indexes on JSONB paths, btree on `canonical_data` fields, `record_cells` decision point                                                                                                                                                                    |
-| Scaling Decision Points                            | 502–513 | Trigger → action table: connection count, query latency, record thresholds, tenant count, CockroachDB tier                                                                                                                                                            |
+| Connection Pooling (MVP — Foundation — Day One)    | 29–42   | PgBouncer transaction mode, per-environment config (Docker/Railway/AWS), connection strings                                                                                                                                                                           |
+| Read/Write Connection Routing & `getDbForTenant()` | 44–185  | `getDbForTenant()` full implementation, read/write intent routing, usage patterns, multi-region routing (post-MVP), tenant region cache, migration path                                                                                                               |
+| Table Partitioning                                 | 187–199 | Hash-partitioned `records` by `tenant_id` (16 partitions), other partitioned tables, autovacuum benefits                                                                                                                                                              |
+| Tenant-Aware Resource Protection                   | 201–213 | 30s/5min statement timeouts, per-tenant query budgeting, expensive query guardrails (50K+ limits, cross-link depth cap)                                                                                                                                               |
+| Row-Level Security at Scale                        | 215–226 | RLS as defense-in-depth at 100M+ rows, partition pruning mitigation, monitoring strategy, never relaxed on write primary                                                                                                                                              |
+| Zero-Downtime Migration Rules                      | 228–238 | 7 safe migration patterns: ADD COLUMN, renames, CONCURRENTLY indexes, type changes, table drops, partition ops, validation                                                                                                                                            |
+| tsvector Indexing Strategy                         | 240–497 | 4-weight search vectors (A–D), `extractSearchableText()` full impl, `buildSearchVector()` full impl, `simple` dictionary rationale, prefix matching, update triggers, GIN schema, table-scoped + workspace-scoped search queries, entity search, performance at scale |
+| JSONB Expression Indexes                           | 499–513 | Expression indexes on JSONB paths, btree on `canonical_data` fields, `record_cells` decision point                                                                                                                                                                    |
+| Scaling Decision Points                            | 515–526 | Trigger → action table: connection count, query latency, record thresholds, tenant count, CockroachDB tier                                                                                                                                                            |
 
 ---
 
@@ -42,6 +42,9 @@ Both the Next.js web app and the Node.js worker service connect to PostgreSQL th
 ---
 
 ## Read/Write Connection Routing & `getDbForTenant()`
+
+Covers Connection Instances, The `getDbForTenant()` Abstraction, Multi-Region Routing (Post-MVP).
+Touches `pg_dump`, `data_region` tables.
 
 ### Connection Instances
 

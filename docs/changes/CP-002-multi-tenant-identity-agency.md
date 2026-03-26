@@ -41,7 +41,12 @@ Three interrelated architectural changes that must be implemented as a coordinat
 
 ## 3. Changes
 
+Covers 3.1 Identity Model, 3.2 Schema Changes, 3.3 Ownership Transfer Rules, 3.4 Agency Model, 3.5 Session & Auth Middleware.
+Touches `cross_links`, `tenant_id`, `tenant_relationships`, `effective_memberships`, `tenant_memberships` tables. See `data-model.md`.
+
 ### 3.1 Identity Model
+
+Replaces single-tenant-per-user with multi-tenant identity: personal tenant auto-provisioning, cross-tenant linking prohibition (3-layer enforcement). Affects `users.personal_tenant_id`, Clerk webhook handler, and `cross_links` FK constraints.
 
 The correct model replaces single-tenant-per-user with multi-tenant identity:
 
@@ -80,6 +85,8 @@ Cross-workspace record linking is only permitted between workspaces sharing the 
 ---
 
 ### 3.2 Schema Changes
+
+Schema additions to `users`, `workspaces`, and the new `tenant_relationships` table plus `effective_memberships` database view. These ship as a migration in sub-phase 1J, not retrofitted into 1B. See `data-model.md` for full table definitions.
 
 #### `users` table — additions
 
@@ -190,6 +197,9 @@ This is a small, contained surgical change that prevents all 1G and later work f
 ---
 
 ## 4. Downstream UX/UI Effects
+
+Covers 4.1 Sidebar Navigation Tree, 4.2 Contextual Clarity — Three Mandatory Layers, 4.3 Portal Display in Sidebar, 4.4 Agency Console (`/agency` route).
+Touches `access_level` tables.
 
 ### 4.1 Sidebar Navigation Tree
 

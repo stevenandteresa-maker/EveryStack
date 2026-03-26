@@ -16,6 +16,20 @@ description: >
 
 # EveryStack Backend Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 37–44 | Trigger conditions: Phases 1A--2, Drizzle schema, data access, migrations |
+| Authority Chain | 46–54 | Resolution order: GLOSSARY > CLAUDE.md > this skill > playbook prompt |
+| Core Conventions | 56–174 | Drizzle ORM patterns, UUIDv7 PKs, tenant_id column, canonical JSONB, getDbForTenant(), RLS, migration rules |
+| CockroachDB Safeguards | 176–197 | 5 non-negotiable safeguards with safe alternatives table |
+| Testing Conventions | 199–261 | File locations, testTenantIsolation() pattern, factory usage, coverage targets |
+| Error Handling | 263–312 | AppError + Zod validation patterns, domain-specific overrides |
+| Sync Engine Patterns | 314–351 | Adapter architecture, FieldTypeRegistry, sync conventions (Phase 2 specific) |
+| File Path Quick Reference | 353–369 | Directory map for schema, sync, AI, testing, data, actions, workers |
+| Checklist Before Every Commit | 371–386 | 12-item verification checklist for backend code |
+
 This skill encodes the backend engineering conventions for EveryStack.
 It is the source of truth for how Claude Code should write server-side code
 across all phases. Load this skill before writing any backend code.
@@ -40,6 +54,9 @@ When conventions conflict, resolve in this order:
 ---
 
 ## Core Conventions
+
+Covers Database: Drizzle ORM on PostgreSQL, Tenant-Scoped Data Access: getDbForTenant(), RLS Policies, Migration Rules.
+Touches `tenant_id`, `archived_at`, `deleted_at` tables.
 
 ### Database: Drizzle ORM on PostgreSQL
 
@@ -181,6 +198,8 @@ These 5 safeguards apply to ALL code in ALL phases. They are non-negotiable:
 
 ## Testing Conventions
 
+Covers Test File Location and Naming, Tenant Isolation Test (Required for Every Data Access Function), Test Factories, Coverage Targets.
+
 ### Test File Location and Naming
 
 Tests live next to the code they test:
@@ -243,6 +262,8 @@ From `CLAUDE.md`:
 
 ## Error Handling
 
+Covers Default Pattern (from CLAUDE.md), Zod Validation (Input Boundaries), Domain-Specific Overrides.
+
 ### Default Pattern (from CLAUDE.md)
 
 ```typescript
@@ -291,6 +312,8 @@ specify when this applies. Common overrides:
 ---
 
 ## Sync Engine Patterns (Phase 2 Specific)
+
+Covers Adapter Architecture, Sync Conventions.
 
 > Read `references/sync-patterns.md` for the full adapter specification.
 > This section covers the conventions Claude Code must follow.

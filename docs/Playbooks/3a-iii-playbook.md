@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Subdivision Summary.
+Touches `field_overrides`, `read_write` tables.
+
 ### What Has Been Built
 
 **Phase 1 (Foundation):** Monorepo (Turborepo + pnpm), 52-table Drizzle schema with RLS, Clerk auth with tenant resolution, `EffectiveRole` type (`owner|admin|manager|team_member|viewer`), `roleAtLeast()`, `resolveEffectiveRole()`, `checkRole()`, `requireRole()`, `PermissionDeniedError`, `getDbForTenant()`, `testTenantIsolation()`, 20+ test factories, design system (shadcn/ui, Tailwind tokens, DM Sans), Socket.io real-time with `EventPublisher` + Redis pub/sub, BullMQ worker, `writeAuditLog()`, Pino logging, i18n (next-intl).
@@ -88,24 +91,24 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
-|--------|------|-------------|------------|--------------|
-| 1 | 1 | Permission types, Zod schemas & barrel exports | None | ~250 |
-| 2 | 1 | 7-step resolution engine (pure functions) | 1 | ~300 |
-| VP-1 | — | VERIFY — Completes Unit 1 | 1–2 | — |
-| 3 | 2 | Data layer: getFieldPermissions() + Redis cache | Unit 1 complete | ~300 |
-| 4 | 2 | Test factory extension + integration tests | 3 | ~200 |
-| VP-2 | — | VERIFY — Completes Unit 2 | 3–4 | — |
-| 5 | 3 | Permission enforcement guards + audit logging | Unit 2 complete | ~250 |
-| 6 | 3 | Integrate guards into record/bulk actions | 5 | ~200 |
-| 7 | 4 | Real-time permission invalidation | Unit 2 complete | ~200 |
-| VP-3 | — | VERIFY — Completes Units 3 + 4 | 5–7 | — |
-| 8 | 5 | Permission context provider + hooks | Units 1, 2, 4 complete | ~250 |
-| 9 | 5 | Permission-aware Grid, Record View & Card View | 8 | ~350 |
-| VP-4 | — | VERIFY — Completes Unit 5 | 8–9 | — |
-| 10 | 6 | Permission config panel + server actions | Unit 5 complete | ~400 |
-| 11 | 6 | Individual override view + i18n completion | 10 | ~300 |
-| VP-5 | — | VERIFY — Completes Unit 6 (phase complete) | 10–11 | — |
+| Prompt | Unit | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|------|-------------|---------|------------|--------------|
+| 1 | 1 | Permission types, Zod schemas & barrel exports | FieldPermissionState, ViewPermissions, ViewFieldPermissions types and Zod validation schemas in packages/shared/auth/permissions/ | None | ~250 |
+| 2 | 1 | 7-step resolution engine (pure functions) | resolveFieldPermission() and resolveAllFieldPermissions() — deterministic cascade with no I/O | 1 | ~300 |
+| VP-1 | — | VERIFY — Completes Unit 1 | Contract verification for all Unit 1 exports; typecheck, lint, coverage gates | 1–2 | — |
+| 3 | 2 | Data layer: getFieldPermissions() + Redis cache | I/O wrapper that loads views/fields/role, calls resolution engine, caches in Redis with 300s TTL | Unit 1 complete | ~300 |
+| 4 | 2 | Test factory extension + integration tests | createTestViewWithPermissions() factory; round-trip, ceiling, tenant isolation, and cache integration tests | 3 | ~200 |
+| VP-2 | — | VERIFY — Completes Unit 2 | Contract verification for getFieldPermissions(), invalidatePermissionCache(), factory | 3–4 | — |
+| 5 | 3 | Permission enforcement guards + audit logging | checkFieldPermission(), filterHiddenFields(), logPermissionDenial() with 5-min Redis dedup | Unit 2 complete | ~250 |
+| 6 | 3 | Integrate guards into record/bulk actions | Wire permission checks into updateRecordField, bulkUpdateRecords; strip hidden fields from query responses | 5 | ~200 |
+| 7 | 4 | Real-time permission invalidation | PERMISSION_UPDATED event, publishPermissionUpdate() with cache-then-publish ordering, client handler | Unit 2 complete | ~200 |
+| VP-3 | — | VERIFY — Completes Units 3 + 4 | Contract verification for enforcement guards, audit logging, and real-time events | 5–7 | — |
+| 8 | 5 | Permission context provider + hooks | useFieldPermissions() TanStack Query hook, PermissionProvider context, usePermission() convenience hook | Units 1, 2, 4 complete | ~250 |
+| 9 | 5 | Permission-aware Grid, Record View & Card View | Hidden fields produce no DOM; read-only cells block edit; bulk toolbar disables per permissions; i18n keys | 8 | ~350 |
+| VP-4 | — | VERIFY — Completes Unit 5 | Contract verification for hooks, provider, and permission-aware rendering across all view types | 8–9 | — |
+| 10 | 6 | Permission config panel + server actions | RoleLevelPermissionGrid, PermissionStateBadge, updateViewPermissions/updateFieldGlobalPermissions actions | Unit 5 complete | ~400 |
+| 11 | 6 | Individual override view + i18n completion | IndividualOverrideView with person selector, effective state display, override toggles; full i18n (en + es) | 10 | ~300 |
+| VP-5 | — | VERIFY — Completes Unit 6 (phase complete) | End-to-end pipeline verification: config change through cache invalidation to real-time grid re-render | 10–11 | — |
 
 ---
 
@@ -122,6 +125,8 @@ Defines the TypeScript types, Zod schemas, and pure resolution functions that ev
 ---
 
 ## Prompt 1: Permission Types, Zod Schemas & Barrel Exports
+
+Builds the FieldPermissionState, ViewPermissions, ViewFieldPermissions, RoleRestriction, IndividualOverride, and ResolvedPermissionContext types plus Zod schemas in `packages/shared/auth/permissions/`. Creates types.ts, schemas.ts, and index.ts barrel. Relates to `permissions.md` Field-Level Permissions and Permission Storage sections.
 
 **Unit:** 1
 **Depends on:** None
@@ -249,6 +254,8 @@ Create the `packages/shared/auth/permissions/` directory with the type and schem
 ---
 
 ## Prompt 2: 7-Step Resolution Engine (Pure Functions)
+
+Implements resolveFieldPermission() and resolveAllFieldPermissions() as zero-I/O pure functions in `packages/shared/auth/permissions/resolve.ts`. Covers the full 7-step cascade: structural filter, owner/admin bypass, base role default, field ceiling, role restriction, individual override, final state. Comprehensive unit tests in resolve.test.ts.
 
 **Unit:** 1
 **Depends on:** Prompt 1 (types and schemas)
@@ -392,6 +399,8 @@ The I/O layer that loads permission data from Postgres, calls the pure resolutio
 
 ## Prompt 3: Data Layer — getFieldPermissions() + Redis Cache
 
+Creates `apps/web/src/data/permissions.ts` with the I/O wrapper that loads view, fields, and role from Postgres, calls the Unit 1 resolution engine, and caches resolved FieldPermissionMap in Redis at `cache:t:{tenantId}:perm:{viewId}:{userId}` with 300s TTL. Also provides invalidatePermissionCache() using Redis SCAN. Relates to `permissions.md` Permission Caching Strategy section.
+
 **Unit:** 2
 **Depends on:** Unit 1 complete (produces `resolveAllFieldPermissions()`, `ResolvedPermissionContext`, `ViewPermissions`, Zod schemas)
 **Load context:** `permissions.md` lines 343–350 (Permission Caching Strategy — Redis key pattern, TTL, invalidation triggers), `permissions.md` lines 278–339 (Permission Resolution at Runtime — full context for resolution flow)
@@ -467,6 +476,8 @@ export const PERMISSION_CACHE_TTL = 300; // seconds
 ---
 
 ## Prompt 4: Test Factory Extension + Integration Tests
+
+Extends `packages/shared/testing/factories.ts` with createTestViewWithPermissions() and writes integration tests in `apps/web/src/data/permissions.integration.test.ts`. Tests cover full resolution round-trips, individual override ceiling clamping, tenant isolation, and Redis cache behavior.
 
 **Unit:** 2
 **Depends on:** Prompt 3 (data layer)
@@ -562,6 +573,8 @@ Adds field-level permission checks to server actions that mutate records. When a
 
 ## Prompt 5: Permission Enforcement Guards + Audit Logging
 
+Creates `apps/web/src/lib/auth/field-permissions.ts` with checkFieldPermission(), checkFieldPermissions() (batch all-or-nothing), filterHiddenFields(), and logPermissionDenial() with Redis-based 5-minute dedup. Guards throw PermissionDeniedError and write to audit_log via writeAuditLog(). Relates to `permissions.md` Permission Denial Behavior section.
+
 **Unit:** 3
 **Depends on:** Unit 2 complete (produces `getFieldPermissions()`)
 **Load context:** `permissions.md` lines 409–457 (Permission Denial Behavior — error shape, UI behavior, audit logging with dedup), `permissions.md` lines 354–369 (Permission Management Hierarchy — who can do what)
@@ -637,6 +650,8 @@ Write to `audit_log` via `writeAuditLog()` with:
 ---
 
 ## Prompt 6: Integrate Permission Guards into Record & Bulk Actions
+
+Wires permission checks into existing updateRecordField, updateRecord, and bulkUpdateRecords server actions in `apps/web/src/actions/record-actions.ts`. Adds filterHiddenFields() to record query responses in `apps/web/src/data/records.ts`. Adds viewId as a required parameter to actions needing permission context.
 
 **Unit:** 3
 **Depends on:** Prompt 5 (permission guards)
@@ -716,6 +731,8 @@ When an Admin or Manager changes field permissions on a Table View, connected cl
 ---
 
 ## Prompt 7: Real-Time Permission Invalidation
+
+Registers PERMISSION_UPDATED in REALTIME_EVENTS, defines PermissionUpdatedPayload, and creates publishPermissionUpdate() in `apps/web/src/lib/realtime/permission-events.ts`. Cache invalidation completes before event publish (ordering guarantee). Client handler in permission-handlers.ts triggers TanStack Query invalidation for affected users. Relates to `permissions.md` Permission Caching Strategy and `realtime.md` room model.
 
 **Unit:** 4
 **Depends on:** Unit 2 complete (produces `invalidatePermissionCache()`)
@@ -839,6 +856,8 @@ Makes Grid View, Record View, and Card View respect the resolved permission map.
 
 ## Prompt 8: Permission Context Provider + Hooks
 
+Creates useFieldPermissions() TanStack Query hook and PermissionProvider React context in `apps/web/src/hooks/use-field-permissions.ts` and `apps/web/src/components/permissions/PermissionProvider.tsx`. Provider subscribes to PERMISSION_UPDATED Socket.io events for live re-fetch. usePermission() convenience hook returns hidden as safe default while loading.
+
 **Unit:** 5
 **Depends on:** Units 1, 2, 4 complete
 **Load context:** `permissions.md` lines 121–179 (Field-Level Permissions — what each state means for rendering), `design-system.md` lines 224–237 (Component Specifications — shadcn/ui patterns)
@@ -903,6 +922,8 @@ The provider internally calls `useFieldPermissions(viewId)` and passes the resul
 ---
 
 ## Prompt 9: Permission-Aware Grid, Record View & Card View
+
+Updates DataGrid.tsx, GridCell.tsx, GridHeader.tsx, BulkActionsToolbar.tsx, RecordView, and CardView to consume PermissionProvider. Hidden fields produce no DOM output; read-only fields block edit mode with lock icon. Adds i18n keys for permission-related strings (en + es). Relates to `permissions.md` Permission Denial Behavior and `design-system.md` component patterns.
 
 **Unit:** 5
 **Depends on:** Prompt 8 (PermissionProvider + hooks)
@@ -1036,6 +1057,8 @@ The admin-facing UI where Admins and Managers configure field permissions per Ta
 
 ## Prompt 10: Permission Config Panel + Role-Level Grid + Server Actions
 
+Builds PermissionConfigPanel (tabbed container), RoleLevelPermissionGrid (field x role click-to-cycle matrix), and PermissionStateBadge in `apps/web/src/components/permissions/`. Creates updateViewPermissions() and updateFieldGlobalPermissions() server actions with role hierarchy enforcement, cache invalidation, and real-time event publish. Relates to `permissions.md` Permission Configuration UI and Permission Management Hierarchy sections.
+
 **Unit:** 6
 **Depends on:** Unit 5 complete
 **Load context:** `permissions.md` lines 183–199 (Permission Configuration UI — role-level grid, individual override view, UX principle), `permissions.md` lines 354–369 (Permission Management Hierarchy — who can configure what), `permissions.md` lines 203–274 (Permission Storage — JSONB shape for mutations), `design-system.md` lines 296–307 (Progressive Disclosure — complexity levels)
@@ -1137,6 +1160,8 @@ Use shadcn/ui `Tabs` component. The panel should be accessible from the Table Vi
 ---
 
 ## Prompt 11: Individual Override View + i18n Completion
+
+Creates IndividualOverrideView in `apps/web/src/components/permissions/IndividualOverrideView.tsx` with person selector combobox, per-field effective permission display, and override toggle that enforces field ceiling clamping. Completes all permission-related i18n keys for config panel, state labels, override indicators, and person selector in en.json and es.json. Relates to `permissions.md` Two-Layer Restriction Model.
 
 **Unit:** 6
 **Depends on:** Prompt 10 (PermissionConfigPanel, server actions, PermissionStateBadge)

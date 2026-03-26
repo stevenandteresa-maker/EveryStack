@@ -1,5 +1,15 @@
 # Phase 3 (First Half): MVP — Core UX — Sub-Phase Division (3A–3D)
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Summary | 13–33 | Sub-phase count (7), prompt total (82), Phase 1/2 dependencies |
+| Key Subdivision Decisions | 19–33 | Workspace Map exclusion, SDS+Command Bar bundling, doc-intelligence deferral, email.md consolidation |
+| Sub-Phases (3A-i -- 3D) | 35–258 | Seven sub-phase definitions: grid core, view features, field permissions, cross-linking, SDS+Command Bar, communications, documents |
+| Dependency Graph | 260–296 | ASCII DAG of 3A-i through 3D with parallel execution potential |
+| Validation Checklist | 298–317 | 14-item verification of scope, exclusions, and reference doc section splits |
+
 ## Summary
 - Sub-phases: 7 (including second-level splits for 3A and 3B)
 - Estimated total prompts: 82
@@ -23,6 +33,9 @@
 ---
 
 ## Sub-Phases
+
+Covers 3A-i — Grid View Core: Layout, Cell Renderers & Inline Editing, 3A-ii — View Features, Record View, Card View & Data Import, 3A-iii — Field-Level Permissions: Model, Resolution & Config UI, 3B-i — Cross-Linking Engine, 3B-ii — Schema Descriptor Service & Command Bar, 3C — Record Thread, DMs, Notifications & System Email.
+Touches `cross_links`, `cross_link_index`, `card_fields`, `link_scope_filter`, `target_table_id` tables.
 
 ### 3A-i — Grid View Core: Layout, Cell Renderers & Inline Editing
 

@@ -13,18 +13,18 @@
 
 | Section                                        | Lines   | Covers                                                                          |
 | ---------------------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| What Cross-Linking Is                          | 31–46     | Core concept, platform-agnostic relationships, differentiator                   |
-| Data Model                                     | 47–130    | cross_links table, cross_link_index, field type, card_fields, link_scope_filter |
-| Query-Time Resolution                          | 132–235   | Level 0–2 resolution, JOIN patterns, depth limits                               |
-| Link Picker UX                                 | 237–266   | Record search, create-new, multi-select, recent links                           |
-| Display Value Maintenance                      | 268–287   | Cached display values, staleness detection, refresh triggers                    |
-| Cross-Link + Sync Interaction                  | 289–296   | How cross-links interact with synced tables                                     |
-| Scalability *(MVP infrastructure)*             | 298–442   | Cascade plumbing, concurrency, single-hop rule, job dedup, backpressure         |
-| Creation Constraints                           | 444–456   | Link limits, depth limits, cycle detection                                      |
-| Cross-Link Creation & Modification Permissions | 458–494   | Who can create/edit/delete cross-links                                          |
-| Impact Analysis *(Post-MVP)*                   | 496–531   | 3-tier consequence model, cascade visualization                                 |
-| "Convert to Native Table" Migration *(Post-MVP)* | 533–582 | Converting linked external data to native EveryStack table                      |
-| Post-MVP Cross-Link Features                   | 584–595   | Rollups, lookups, impact analysis, convert-to-native, cascade engineering       |
+| What Cross-Linking Is                          | 31–45     | Core concept, platform-agnostic relationships, differentiator                   |
+| Data Model                                     | 47–133    | cross_links table, cross_link_index, field type, card_fields, link_scope_filter |
+| Query-Time Resolution                          | 135–241   | Level 0–2 resolution, JOIN patterns, depth limits                               |
+| Link Picker UX                                 | 243–275   | Record search, create-new, multi-select, recent links                           |
+| Display Value Maintenance                      | 277–296   | Cached display values, staleness detection, refresh triggers                    |
+| Cross-Link + Sync Interaction                  | 298–305   | How cross-links interact with synced tables                                     |
+| Scalability *(MVP infrastructure)*             | 307–454   | Cascade plumbing, concurrency, single-hop rule, job dedup, backpressure         |
+| Creation Constraints                           | 456–468   | Link limits, depth limits, cycle detection                                      |
+| Cross-Link Creation & Modification Permissions | 470–506   | Who can create/edit/delete cross-links                                          |
+| Impact Analysis *(Post-MVP)*                   | 508–545   | 3-tier consequence model, cascade visualization                                 |
+| "Convert to Native Table" Migration *(Post-MVP)* | 547–598 | Converting linked external data to native EveryStack table                      |
+| Post-MVP Cross-Link Features                   | 600–611   | Rollups, lookups, impact analysis, convert-to-native, cascade engineering       |
 
 ---
 
@@ -45,6 +45,9 @@ A cross-link connects a field in one table to records in another table — poten
 ---
 
 ## Data Model
+
+Covers `cross_links` Table, Link Scope Filters, Cross-Link Field Value (in canonical JSONB), `cross_link_index` Table (Bidirectional Lookup).
+Touches `cross_links`, `tenant_id`, `source_table_id`, `source_field_id`, `target_table_id` tables.
 
 ### `cross_links` Table
 
@@ -130,6 +133,9 @@ This is a **derived index** — rebuildable from `canonical_data`. Exists for qu
 ---
 
 ## Query-Time Resolution
+
+Covers Level 0 — Grid View (No Join), Level 1 — Record View (Single Join), Level 2 — Cross-Link Traversal (Bounded), Depth Limiting, Cross-Link Permission Resolution, Performance at Scale.
+Touches `display_value`, `canonical_data` tables. See `permissions.md`.
 
 ### Level 0 — Grid View (No Join)
 
@@ -236,6 +242,9 @@ User's field permissions on the **target table** govern what they see — not so
 
 ## Link Picker UX
 
+Covers Search, Recent Section, Inline Create, Single vs Multi-Link, Mobile, `card_fields` Configuration.
+Touches `card_fields`, `many_to_one`, `one_to_many` tables.
+
 ### Search
 
 tsvector prefix matching on target table's display field. Results paginated to 100 with scroll-to-load.
@@ -296,6 +305,9 @@ Cross-links work identically for synced and native tables — they operate on ca
 ---
 
 ## Scalability
+
+Covers Display Value Cascade Fan-Out, Cascade Concurrency Controls, Single-Hop Cascade Rule, Cascade Job Deduplication, Sync Backpressure, Bulk Deletion Cascade.
+Touches `link_scope_filter`, `user_edit`, `sync_inbound`, `record_ids`, `triggered_by` tables.
 
 > **Scope: MVP — Core UX.** The cascade plumbing below (display value updates, concurrency controls, single-hop rule, job dedup, backpressure) is foundational infrastructure required for cross-links to function at any scale. GLOSSARY.md's "cascade engineering" post-MVP label refers to advanced multi-hop cascades and cascade visualization, not this baseline infrastructure.
 
@@ -495,6 +507,8 @@ When Manager lacks authority over both tables:
 
 ## Impact Analysis
 
+Covers Three Tiers, Impact Computation, UX by Tier.
+
 > **Scope: Post-MVP — Core UX.** Per GLOSSARY.md, impact analysis is post-MVP. The basic cascade plumbing in the Scalability section above is MVP infrastructure; this section covers the user-facing impact analysis UI and computation.
 
 ### Three Tiers
@@ -531,6 +545,8 @@ interface CrossLinkImpactAnalysis {
 ---
 
 ## "Convert to Native Table" Migration
+
+Covers Pre-Conversion Impact, Worker Job Sequence, Performance, Dual-Write Verification (Optional), UI Flow.
 
 > **Scope: Post-MVP — Core UX.** Per GLOSSARY.md, convert-to-native-table is post-MVP. Documented here for architectural context and extension point planning.
 

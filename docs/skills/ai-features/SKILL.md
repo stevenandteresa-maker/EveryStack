@@ -30,6 +30,8 @@ meter credits, and present AI outputs to users.
 
 ## AIService Architecture
 
+Covers Provider Abstraction, Canonical Data Contract, Schema Descriptor Service (SDS).
+
 ### Provider Abstraction
 
 ```
@@ -103,6 +105,9 @@ invalidate the cache. The SDS output is included in `AIContext.workspace.schema`
 
 ## Credit System
 
+Covers Metering Model, Credit Enforcement, Usage Logging.
+Touches `ai_usage_log` tables.
+
 ### Metering Model
 
 Every AI operation costs credits. Credit costs are defined per operation type:
@@ -144,6 +149,8 @@ ai_usage_log: id, tenant_id, user_id, operation_type, credits_used,
 ---
 
 ## AI Affordance UI Patterns
+
+Covers Inline AI Buttons, Loading / Streaming States, Confidence Indicators.
 
 ### Inline AI Buttons
 

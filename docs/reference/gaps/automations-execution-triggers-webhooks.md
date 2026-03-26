@@ -21,18 +21,21 @@
 
 | Section                                      | Lines   | Covers                                                                    |
 | -------------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| Execution Model                              | 32–139  | Sequential pipeline, parallel execution, error handling, retry, timeout   |
-| Automation Data Model                        | 140–195 | Full automations schema, trigger/step JSONB shapes                        |
-| Action Types (22 Total — 7 MVP, 15 post-MVP) | 196–232 | Complete action catalog with parameters                                   |
-| Condition Types (5 Total — all post-MVP)     | 233–248 | If/else, switch, filter, exists, compare conditions                       |
-| Template Resolution Engine                   | 249–316 | Merge tag resolution, nested field access, formatting                     |
-| Trigger Detection                            | 317–387 | Event-driven detection, polling triggers, webhook triggers, deduplication |
-| Webhook Architecture                         | 388–679 | Inbound/outbound, signature verification, retry logic, dead letter queue  |
-| Phase Implementation                         | 680–687 | Delivery timeline across phases                                           |
+| Execution Model                              | 35–146  | Sequential pipeline, parallel execution, error handling, retry, timeout   |
+| Automation Data Model                        | 148–205 | Full automations schema, trigger/step JSONB shapes                        |
+| Action Types (22 Total — 7 MVP, 15 post-MVP) | 207–244 | Complete action catalog with parameters                                   |
+| Condition Types (5 Total — all post-MVP)     | 246–260 | If/else, switch, filter, exists, compare conditions                       |
+| Template Resolution Engine                   | 262–329 | Merge tag resolution, nested field access, formatting                     |
+| Trigger Detection                            | 331–403 | Event-driven detection, polling triggers, webhook triggers, deduplication |
+| Webhook Architecture                         | 405–702 | Inbound/outbound, signature verification, retry logic, dead letter queue  |
+| Phase Implementation                         | 704–711 | Delivery timeline across phases                                           |
 
 ---
 
 ## Execution Model
+
+Covers Sequential with Conditional Branching (post-MVP — MVP is linear only), Execution Context, Error Handling, Timeout Policy, Checkpointing, Execution Concurrency.
+Touches `timed_out` tables.
 
 ### Sequential with Conditional Branching (post-MVP — MVP is linear only)
 
@@ -144,6 +147,9 @@ if (event.sourceExecutionId) {
 
 ## Automation Data Model
 
+Covers `automations` Table, Step Schema (within `steps` JSONB array), Plan Limits.
+Touches `tenant_id`, `table_id`, `trigger_config`, `rate_limit`, `debounce_ms` tables. See `data-model.md`.
+
 ### `automations` Table
 
 | Column                  | Type                   | Purpose                                                                                                                                                                                                              |
@@ -199,6 +205,8 @@ interface AutomationStep {
 ---
 
 ## Action Types (22 Total — 7 MVP, 15 post-MVP)
+
+Defines `tableId`, `fieldValues: { fieldId: template }`, `recordSelector`, `fieldUpdates`, `filters`, `sortBy`.
 
 > **MVP actions (per glossary):** Send Email, Create Record, Update Record, Generate Document, Send Notification, Adjust Field Value, Send Webhook. All other actions below are **post-MVP**.
 
@@ -322,6 +330,8 @@ Dry run results are shown in the builder UI inline, with each step annotated "Wo
 
 ## Trigger Detection
 
+Covers How the System Detects Triggers, Trigger Sources, Automation Trigger Registry, Event Flow: Trigger → Execution, Deduplication.
+
 > **MVP scope:** Per glossary, MVP includes 6 triggers: Record Created, Record Updated, Field Value Changed, Form Submitted, Button Clicked, Scheduled. The additional triggers below (Record Deleted, Record Enters View, Webhook Received, Manual Trigger, Date Condition Met, Status Changed, Chat Keyword) are **post-MVP**.
 
 ### How the System Detects Triggers
@@ -393,6 +403,9 @@ Rapid-fire events (e.g., bulk record import creating 500 records in 10 seconds) 
 ---
 
 ## Webhook Architecture
+
+Covers Feature 1: Workspace-Level Event Webhooks, Feature 2: Automation Action "Send Webhook", Inbound Webhook Receiving, Webhook Endpoint Management, `webhook_endpoints` Table, Delivery Pipeline.
+Touches `api_version`, `webhook_endpoints`, `tenant_id`, `signing_secret`, `subscribed_events` tables.
 
 > **MVP scope:** The "Send Webhook" automation action (outbound POST to a URL) is MVP. The full workspace-level event webhook subscription system (endpoint registration, event catalog, delivery pipeline) and inbound webhook triggers are **post-MVP** infrastructure that supports the MVP action and extends it.
 

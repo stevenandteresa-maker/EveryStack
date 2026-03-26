@@ -1,11 +1,23 @@
 # Phase 1: MVP — Foundation — Sub-Phase Division
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Summary | 12–15 | Sub-phase count, prompt total, cross-cutting concerns established in Phase 1 |
+| Sub-Phases (1A--1J) | 17–365 | Ten sub-phase definitions with scope, reference docs, dependencies, sizing, and existing roadmaps |
+| Dependency Graph | 367–387 | ASCII DAG of 1A--1J with parallel execution notes |
+| Validation Checklist | 389–403 | 12-item verification of one-sentence test, prompt ceilings, table coverage, and CP retroactive handling |
+
 ## Summary
 - Sub-phases: 10
 - Estimated total prompts: 86
 - Key cross-cutting concerns established: tenant isolation (`tenant_id` on every query), environment column (`'live'` only, enforced), design system tokens (Obsidian Teal), workspace role model (5 roles), FieldTypeRegistry pattern, canonical JSONB pattern, error handling (typed errors), i18n (`t('key')` everywhere), AIService abstraction (capability tiers), audit trail (seven-source attribution), real-time event bus (Redis pub/sub + Socket.io)
 
 ## Sub-Phases
+
+Covers 1A — Monorepo, CI Pipeline, Dev Environment, 1B — Database Schema, Connection Pooling, Tenant Routing, 1C — Authentication, Tenant Isolation, Workspace Roles, 1D — Observability, Security Hardening, 1E — Testing Infrastructure, 1F — Design System Foundation.
+Touches `tenant_relationships`, `effective_memberships`, `personal_tenant_id`, `portal_access`, `revoked_at` tables. See `middleware.ts`, `tenant-resolver.ts`.
 
 ### 1A — Monorepo, CI Pipeline, Dev Environment
 

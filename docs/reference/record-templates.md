@@ -32,20 +32,20 @@
 
 | Section                             | Lines   | Covers                                                                                |
 | ----------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| Strategic Rationale                 | 50–59   | Why record templates exist, value proposition                                         |
-| Data Model                          | 60–166  | record_templates table, canonical_data shape, dynamic tokens, linked_records, scoping |
-| Automation Integration              | 167–305 | Templates in automation actions, record_creation_source, contextual creation          |
-| Table View & Permission Layer       | 306–452 | Template visibility per view, role access, view-contextual overrides                  |
-| UX Flow                             | 453–619 | Template picker UI, split button, dropdown, mobile bottom sheet                       |
-| Template Manager (Configuration UI) | 620–703 | Admin template CRUD, field mapping, default templates, categories                     |
-| Record Creation Flow (End-to-End)   | 704–726 | 7-step creation flow with template resolution                                         |
-| API Surface                         | 727–765 | REST endpoints for template CRUD and application                                      |
-| Deletion Cascades & Edge Cases      | 766–778 | Orphan handling, field deletion impact, table deletion                                |
-| Real-Time Behavior                  | 779–788 | Template updates broadcast, cache invalidation                                        |
-| What to Defer                       | 789–802 | Explicitly deferred features                                                          |
-| Phase Implementation                | 803–817 | MVP — Core UX + Post-MVP — Automations delivery scope                                 |
-| Claude Code Prompt Roadmap          | 818–845 | 6-prompt implementation roadmap                                                       |
-| Key Architectural Decisions         | 846–860 | ADR-style decisions with rationale                                                    |
+| Strategic Rationale                 | 52–60   | Why record templates exist, value proposition                                         |
+| Data Model                          | 62–171  | record_templates table, canonical_data shape, dynamic tokens, linked_records, scoping |
+| Automation Integration              | 173–312 | Templates in automation actions, record_creation_source, contextual creation          |
+| Table View & Permission Layer       | 314–466 | Template visibility per view, role access, view-contextual overrides                  |
+| UX Flow                             | 468–633 | Template picker UI, split button, dropdown, mobile bottom sheet                       |
+| Template Manager (Configuration UI) | 635–717 | Admin template CRUD, field mapping, default templates, categories                     |
+| Record Creation Flow (End-to-End)   | 719–740 | 7-step creation flow with template resolution                                         |
+| API Surface                         | 742–783 | REST endpoints for template CRUD and application                                      |
+| Deletion Cascades & Edge Cases      | 785–796 | Orphan handling, field deletion impact, table deletion                                |
+| Real-Time Behavior                  | 798–806 | Template updates broadcast, cache invalidation                                        |
+| What to Defer                       | 808–820 | Explicitly deferred features                                                          |
+| Phase Implementation                | 822–835 | MVP — Core UX + Post-MVP — Automations delivery scope                                 |
+| Claude Code Prompt Roadmap          | 837–865 | 6-prompt implementation roadmap                                                       |
+| Key Architectural Decisions         | 867–881 | ADR-style decisions with rationale                                                    |
 
 ---
 
@@ -60,6 +60,9 @@ Record templates are trivially implementable — a template is a JSONB blob of d
 ---
 
 ## Data Model
+
+Covers `record_templates` Table, `canonical_data` JSONB Shape, Dynamic Tokens, `linked_records` JSONB Shape, Value Resolution Order.
+Touches `record_templates`, `tenant_id`, `table_id`, `canonical_data`, `linked_records` tables. See `tables-and-views.md`.
 
 ### `record_templates` Table
 
@@ -309,6 +312,9 @@ The `source` enum is set at the application layer. Every record creation code pa
 ---
 
 ## Table View & Permission Layer
+
+Covers Who Creates Templates, Table View Template Scoping, Template Config Modes, `require_template` Flag, `default_template_id`, Hidden Field Interaction.
+Touches `publish_state`, `allow_create`, `template_config`, `view_config`, `available_in` tables.
 
 ### Who Creates Templates
 
@@ -734,6 +740,9 @@ This is the right tradeoff — a stale template value shouldn't block record cre
 ---
 
 ## API Surface
+
+Covers `POST /api/v1/tables/{tableId}/records`, `GET /api/v1/tables/{tableId}/templates`, Template CRUD.
+Touches `template_id`, `canonical_data` tables.
 
 ### `POST /api/v1/tables/{tableId}/records`
 

@@ -15,20 +15,20 @@
 
 | Section                                        | Lines   | Covers                                                             |
 | ---------------------------------------------- | ------- | ------------------------------------------------------------------ |
-| Purpose of This Document                       | 35–40   | Document scope and audience                                        |
-| What This Module Does                          | 41–58   | Read-only ephemeral analytical queries, when to use vs Postgres    |
-| Where This Module Sits in the Architecture     | 59–98   | Dependency diagram, relationship to SDS/AI Field Agents            |
-| Core Design Principles                         | 99–132  | Ephemeral, read-only, tenant-isolated, SQL-safe                    |
-| Data Flow: Step by Step                        | 133–374 | QueryPlan → Postgres fetch → DuckDB load → execute → ContextResult |
-| Handling Cross-Base JOINs                      | 375–422 | ANY/UNNEST patterns, multi-table analytical queries                |
-| JSONB to DuckDB Type Coercion                  | 423–457 | Type mapping from canonical JSONB to DuckDB columns                |
-| Performance Considerations                     | 458–492 | DuckDBPoolConfig, memory limits, concurrency, <2s target           |
-| Security Considerations                        | 493–527 | SQL safety scanner, query allow-listing, injection prevention      |
-| Error Handling Strategy                        | 528–550 | Error categories, fallback behavior, user-facing messages          |
-| Node.js Implementation Notes                   | 551–640 | duckdb-node bindings, connection pooling, memory management        |
-| Testing Strategy                               | 641–670 | Unit tests, integration tests, performance benchmarks              |
-| Claude Code Prompt Roadmap                     | 671–922 | 8-prompt implementation roadmap                                    |
-| Appendix: Future Extensions (Do Not Build Yet) | 923–935 | Deferred features                                                  |
+| Purpose of This Document                       | 35–39   | Document scope and audience                                        |
+| What This Module Does                          | 41–57   | Read-only ephemeral analytical queries, when to use vs Postgres    |
+| Where This Module Sits in the Architecture     | 59–100   | Dependency diagram, relationship to SDS/AI Field Agents            |
+| Core Design Principles                         | 102–138  | Ephemeral, read-only, tenant-isolated, SQL-safe                    |
+| Data Flow: Step by Step                        | 140–396 | QueryPlan → Postgres fetch → DuckDB load → execute → ContextResult |
+| Handling Cross-Base JOINs                      | 398–447 | ANY/UNNEST patterns, multi-table analytical queries                |
+| JSONB to DuckDB Type Coercion                  | 449–483 | Type mapping from canonical JSONB to DuckDB columns                |
+| Performance Considerations                     | 485–522 | DuckDBPoolConfig, memory limits, concurrency, <2s target           |
+| Security Considerations                        | 524–560 | SQL safety scanner, query allow-listing, injection prevention      |
+| Error Handling Strategy                        | 562–583 | Error categories, fallback behavior, user-facing messages          |
+| Node.js Implementation Notes                   | 585–677 | duckdb-node bindings, connection pooling, memory management        |
+| Testing Strategy                               | 679–711 | Unit tests, integration tests, performance benchmarks              |
+| Claude Code Prompt Roadmap                     | 713–966 | 8-prompt implementation roadmap                                    |
+| Appendix: Future Extensions (Do Not Build Yet) | 968–980 | Deferred features                                                  |
 
 ---
 
@@ -57,6 +57,8 @@ DuckDB solves both: it runs analytical workloads in-process (no separate server)
 ---
 
 ## Where This Module Sits in the Architecture
+
+Defines `schema-descriptor-service.md`, `ai-field-agents-ref.md`, `summary`, `chart-blocks.md`. See `schema-descriptor-service.md`, `ai-field-agents-ref.md`, `chart-blocks.md`.
 
 ```
 User asks a natural language question
@@ -99,6 +101,9 @@ User asks a natural language question
 
 ## Core Design Principles
 
+Covers 1. Ephemeral — No State, No Persistence, 2. Read-Only — Never Writes to Postgres, 3. Permission-Scoped — The User's View Only, 4. Resource-Bounded — Cannot Starve the System, 5. Multi-Tenant Safe — No Cross-Tenant Data Exposure.
+See `permissions.md`, `agent-architecture.md`.
+
 ### 1. Ephemeral — No State, No Persistence
 
 Every query gets a fresh DuckDB instance. There is no shared state between queries. The instance is created at the start of query execution and destroyed (garbage collected) at the end. This eliminates cache invalidation problems, stale data risks, and multi-tenant data leakage.
@@ -133,6 +138,9 @@ DuckDB runs in-process. Each query execution creates an isolated instance scoped
 ---
 
 ## Data Flow: Step by Step
+
+Covers Step 1: Receive QueryPlan, Step 2: Validate QueryPlan, Step 3: Fetch Records from Postgres, Step 4: Load Into DuckDB, Step 5: Execute Analytical SQL, Step 6: Build and Return ContextResult.
+Touches `analytical_sql`, `read_csv`, `read_parquet`, `timeout_seconds`, `max_result_rows` tables. See `schema-descriptor-service.md`.
 
 ### Step 1: Receive QueryPlan
 
@@ -476,6 +484,9 @@ This lets the LLM know the data quality isn't perfect and it should caveat its a
 
 ## Performance Considerations
 
+Covers Postgres Query Optimization, DuckDB Performance, Concurrency.
+Touches `workspace_id`, `table_id`, `memory_limit` tables. See `database-scaling.md`.
+
 ### Postgres Query Optimization
 
 - **Use indexes:** The records table is partitioned by `workspace_id` and indexed by `table_id` (see `database-scaling.md` for partitioning strategy). The Postgres queries naturally benefit from this.
@@ -511,6 +522,9 @@ If the queue times out, return an error: "System is busy processing other querie
 ---
 
 ## Security Considerations
+
+Covers Data Isolation, SQL Injection, Permission Enforcement.
+Touches `analytical_sql`, `read_csv`, `read_parquet`, `read_json` tables.
 
 ### Data Isolation
 
@@ -569,6 +583,8 @@ The AI Query Planner can use these error messages to self-correct and regenerate
 ---
 
 ## Node.js Implementation Notes
+
+Covers DuckDB Client Library, Timeout Implementation, Memory Monitoring.
 
 ### DuckDB Client Library
 
@@ -662,6 +678,9 @@ class DuckDBPool {
 
 ## Testing Strategy
 
+Covers Unit Tests, Integration Tests, Performance Benchmarks.
+Touches `read_csv` tables.
+
 ### Unit Tests
 
 1. **Type coercion:** Test every EveryStack field type → DuckDB type mapping, including edge cases (nulls, malformed values, empty arrays, nested objects). **Critically: test option ID → label resolution for single_select, multi_select, and status fields (including stale/missing option IDs). Test user ID → display name resolution for people, created_by, and updated_by fields (including deleted users).**
@@ -692,6 +711,9 @@ Establish baselines for:
 ---
 
 ## Claude Code Prompt Roadmap
+
+Covers Prompt 1: Core Types and Interfaces, Prompt 2: SQL Safety Scanner, Prompt 3: Type Coercion Module, Prompt 4: QueryPlan Validator, Prompt 5: Postgres Hydration Module, Prompt 6: DuckDB Instance Manager (Pool).
+See `ai-data-contract.md`, `data-model.md`.
 
 ### Prompt 1: Core Types and Interfaces
 

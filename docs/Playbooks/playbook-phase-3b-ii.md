@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Subdivision Summary.
+Touches `cross_links`, `cross_link_index`, `schema_version_hash` tables.
+
 ### What Has Been Built
 
 | Phase | Key Deliverables |
@@ -77,26 +80,26 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
-|--------|------|-------------|------------|--------------|
-| 1 | 1 | SDS descriptor types & LinkEdge | None | ~120 |
-| 2 | 1 | Field-to-descriptor mapper | 1 | ~200 |
-| 3 | 1 | Table descriptor builder | 2 | ~180 |
-| 4 | 1 | Workspace descriptor builder with link graph | 3 | ~220 |
-| VP-1 | — | VERIFY — Completes Unit 1 | 1–4 | — |
-| 5 | 2 | Permission filter for descriptors | Unit 1 complete | ~200 |
-| 6 | 2 | Schema version hash & 2-tier cache | 5 | ~220 |
-| 7 | 2 | Token estimator & progressive condensation | Unit 1 complete | ~160 |
-| 8 | 2 | SchemaDescriptorService facade | 5, 6, 7 | ~200 |
-| VP-2 | — | VERIFY — Completes Unit 2 | 5–8 | — |
-| 9 | 3 | Command Bar types & record search data layer | None | ~220 |
-| 10 | 3 | Table/view navigation & command registry data layer | 9 | ~200 |
-| 11 | 3 | Recent items tracking | 9 | ~140 |
-| VP-3 | — | VERIFY — Completes Unit 3 | 9–11 | — |
-| 12 | 4 | CommandBar shell, provider & keyboard shortcuts | Units 2 + 3 complete | ~250 |
-| 13 | 4 | Search results, navigation & slash command channels | 12 | ~250 |
-| 14 | 4 | AI search channel & server actions | 12, 13 | ~250 |
-| 15 | 4 | Recent items display, scoped mode & analytics | 12, 13 | ~180 |
+| Prompt | Unit | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|------|-------------|---------|------------|--------------|
+| 1 | 1 | SDS descriptor types & LinkEdge | WorkspaceDescriptor, BaseDescriptor, TableDescriptor, FieldDescriptor, LinkEdge types with LLM optimization | None | ~120 |
+| 2 | 1 | Field-to-descriptor mapper | mapFieldToDescriptor() mapping all MVP field types with searchable/aggregatable flags | 1 | ~200 |
+| 3 | 1 | Table descriptor builder | buildTableDescriptor() using pg_stat approximate row count, field assembly | 2 | ~180 |
+| 4 | 1 | Workspace descriptor builder with link graph | buildWorkspaceDescriptor() with batched queries per base, deduplicated link_graph edges | 3 | ~220 |
+| VP-1 | — | VERIFY — Completes Unit 1 | Contract verification for descriptor types and builder functions | 1–4 | — |
+| 5 | 2 | Permission filter for descriptors | filterDescriptorByPermissions() using 3A-iii 7-step resolution to strip hidden fields/tables | Unit 1 complete | ~200 |
+| 6 | 2 | Schema version hash & 2-tier cache | computeSchemaVersionHash(), SchemaDescriptorCache with Redis tier 1 + per-user tier 2 | 5 | ~220 |
+| 7 | 2 | Token estimator & progressive condensation | estimateTokens(), condenseDescriptor() with 4-level progressive detail reduction | Unit 1 complete | ~160 |
+| 8 | 2 | SchemaDescriptorService facade | Single entry-point class composing builders, permission filter, cache, and condensation | 5, 6, 7 | ~200 |
+| VP-2 | — | VERIFY — Completes Unit 2 | Permission filtering, caching, and condensation verification | 5–8 | — |
+| 9 | 3 | Command Bar types & record search data layer | SearchResult, NavigationResult types; searchRecords() via tsvector | None | ~220 |
+| 10 | 3 | Table/view navigation & command registry data layer | searchTablesAndViews(), getCommandRegistry() with system slash commands | 9 | ~200 |
+| 11 | 3 | Recent items tracking | trackRecentItem(), getRecentItems() with Redis sorted set per user | 9 | ~140 |
+| VP-3 | — | VERIFY — Completes Unit 3 | Search, navigation, and recent items data layer verification | 9–11 | — |
+| 12 | 4 | CommandBar shell, provider & keyboard shortcuts | CommandBar component, CommandBarProvider context, Cmd+K registration | Units 2 + 3 complete | ~250 |
+| 13 | 4 | Search results, navigation & slash command channels | Fuzzy record results, table/view nav, slash command menu rendering | 12 | ~250 |
+| 14 | 4 | AI search channel & server actions | AI natural language search via SDS + AIService fast tier, aiSearchQuery() action | 12, 13 | ~250 |
+| 15 | 4 | Recent items display, scoped mode & analytics | Recent items panel, table-scoped search mode, search analytics tracking | 12, 13 | ~180 |
 | VP-4 | — | VERIFY — Completes Unit 4 | 12–15 | — |
 
 ---

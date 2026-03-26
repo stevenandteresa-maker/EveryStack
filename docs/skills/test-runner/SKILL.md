@@ -30,6 +30,8 @@ whenever you need to run integration tests or troubleshoot test infrastructure.
 
 ## Test Infrastructure Architecture
 
+Covers Port Mapping, Environment Variables.
+
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
 │  PostgreSQL 16   │────▶│   PgBouncer       │────▶│  Test Suite  │
@@ -68,6 +70,8 @@ REDIS_URL=redis://localhost:6380
 ---
 
 ## Starting Test Services
+
+Covers Quick Start, Health Check, If Services Aren't Running.
 
 ### Quick Start
 ```bash
@@ -164,6 +168,8 @@ pnpm turbo test -- --coverage
 ---
 
 ## Troubleshooting
+
+Covers "ECONNREFUSED" on Port 5434, "ECONNREFUSED" on Port 6380, Tests Pass Locally, Fail in CI, Stale Database State, Factory-Related Failures.
 
 ### "ECONNREFUSED" on Port 5434
 PostgreSQL container is not running or not ready.

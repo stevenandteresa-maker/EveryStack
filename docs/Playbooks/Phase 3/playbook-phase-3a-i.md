@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Skills for This Phase.
+Touches `user_view_preferences`, `record_view_configs`, `tenant_id`, `workspace_memberships`, `effective_memberships` tables.
+
 ### What Has Been Built
 
 **Phase 1 (MVP — Foundation) is complete and merged to main.** Key outputs relevant to Phase 3A-i:
@@ -86,20 +89,20 @@ Load these skill files before executing any prompt in this phase:
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | Grid data layer — queries and Server Actions for records, fields, views | None | ~250 |
-| 2 | TanStack Table + Virtual grid shell with column model | 1 | ~300 |
-| 3 | Cell renderers — Text, Number, Date, Checkbox, Rating, Currency, Percent | 2 | ~350 |
-| 4 | Cell renderers — Select, Multi-Select, People, Linked Record, Attachment | 2 | ~350 |
-| CP-1 | Integration Checkpoint 1 | 1–4 | — |
-| 5 | Cell renderers — URL, Email, Phone, Smart Doc, Barcode, Checklist | 2 | ~250 |
-| 6 | Inline cell editing with auto-save and optimistic updates | 3, 4, 5 | ~300 |
-| 7 | Keyboard navigation and cell error state overlays | 6 | ~250 |
-| CP-2 | Integration Checkpoint 2 | 5–7 | — |
-| 8 | Column behavior — resize, reorder, freeze, context menu, coloring | 2 | ~250 |
-| 9 | Row behavior — density, reorder, context menu, new row, copy/paste, undo | 6, 8 | ~300 |
-| 10 | Table type system, tab colors, performance thresholds, loading/empty states | 9 | ~200 |
+| Prompt | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|-------------|---------|------------|--------------|
+| 1 | Grid data layer — queries and Server Actions for records, fields, views | getRecordsByTable(), getFieldsByTable(), getViewsByTable(), createRecord(), updateRecordField() | None | ~250 |
+| 2 | TanStack Table + Virtual grid shell with column model | DataGrid with TanStack Table + TanStack Virtual, windowed row/column virtualization | 1 | ~300 |
+| 3 | Cell renderers — Text, Number, Date, Checkbox, Rating, Currency, Percent | Display + edit mode components for 7 core field types via Cell Registry | 2 | ~350 |
+| 4 | Cell renderers — Select, Multi-Select, People, Linked Record, Attachment | Display + edit mode for 5 complex field types with pill-based renderers | 2 | ~350 |
+| CP-1 | Integration Checkpoint 1 | Grid shell rendering verification with all 12 cell renderer types | 1–4 | — |
+| 5 | Cell renderers — URL, Email, Phone, Smart Doc, Barcode, Checklist | Display + edit mode for 6 remaining field types | 2 | ~250 |
+| 6 | Inline cell editing with auto-save and optimistic updates | Single-click replace, double-click edit, auto-save on blur, TanStack Query optimistic mutations | 3, 4, 5 | ~300 |
+| 7 | Keyboard navigation and cell error state overlays | Spreadsheet-style navigation (arrows/tab/enter/escape/home/end), 5 cell error states | 6 | ~250 |
+| CP-2 | Integration Checkpoint 2 | All renderers, editing, and keyboard navigation verification | 5–7 | — |
+| 8 | Column behavior — resize, reorder, freeze, context menu, coloring | Resize (60-800px), drag reorder, freeze (40% max), 14-item context menu, column color | 2 | ~250 |
+| 9 | Row behavior — density, reorder, context menu, new row, copy/paste, undo | 3 density modes, drag reorder, 9-item context menu, NewRowInput, clipboard, undo/redo | 6, 8 | ~300 |
+| 10 | Table type system, tab colors, performance thresholds, loading/empty states | 5 table types with tab colors, PerformanceBanner, GridSkeleton, GridEmptyState | 9 | ~200 |
 | CP-3 | Integration Checkpoint 3 (Final) | 8–10 | — |
 
 ---

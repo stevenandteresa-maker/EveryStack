@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Skills for This Phase.
+Touches `user_view_preferences`, `record_view_configs`, `tenant_id`, `workspace_memberships`, `effective_memberships` tables. See `cell-registry.ts`, `use-grid-store.ts`, `use-cell-edit.ts`.
+
 ### What Has Been Built
 
 **Phase 1 (MVP — Foundation) is complete and merged to main.** Key outputs relevant to Phase 3A-ii:
@@ -98,26 +101,26 @@ Load these skill files before executing any prompt in this phase:
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | Selection & Bulk Actions toolbar | None | ~250 |
-| 2 | Multi-level sorting with sort panel UI | None | ~200 |
-| 3 | Filtering — quick filters + full filter builder | 2 | ~350 |
-| 4 | Multi-level grouping with collapsible groups | 2, 3 | ~300 |
-| CP-1 | Integration Checkpoint 1 | 1–4 | — |
-| 5 | Color coding (conditional row + cell) and summary footer | 4 | ~300 |
-| 6 | Grid toolbar and record count display | 2, 3, 4, 5 | ~200 |
-| 7 | My Views & Shared Views | 6 | ~250 |
-| CP-2 | Integration Checkpoint 2 | 5–7 | — |
-| 8 | Multi-user collaboration — field-level presence locking & real-time coalescing | None | ~300 |
-| 9 | Record View overlay — layout, field canvas, navigation, saved configs | None | ~350 |
-| 10 | Record View — inline editing, tabs, linked record display, responsive | 9 | ~250 |
-| CP-3 | Integration Checkpoint 3 | 8–10 | — |
-| 11 | Card View — layouts, RecordCard component, inline editing | 9 | ~250 |
-| 12 | Sections — universal list organizer | None | ~200 |
-| 13 | Inline Sub-Table display for Linked Record fields | 9, 10 | ~250 |
-| 14 | CSV import — 5-step guided flow | None | ~300 |
-| 15 | Record deletion, responsive grid polish, Grid + Record View combined layout | 9, 10, 11 | ~200 |
+| Prompt | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|-------------|---------|------------|--------------|
+| 1 | Selection & Bulk Actions toolbar | Row selection model, BulkActionsToolbar (delete/edit/duplicate/copy), bulk server actions | None | ~250 |
+| 2 | Multi-level sorting with sort panel UI | Multi-level sort with drag-to-reorder priority, persisted in views.config | None | ~200 |
+| 3 | Filtering — quick filters + full filter builder | Column header quick filters, full filter builder with AND/OR logic and nested groups | 2 | ~350 |
+| 4 | Multi-level grouping with collapsible groups | Up to 3 group levels, collapsible headers, record count, per-group aggregation | 2, 3 | ~300 |
+| CP-1 | Integration Checkpoint 1 | Selection, sort, filter, and grouping integration verification | 1–4 | — |
+| 5 | Color coding (conditional row + cell) and summary footer | Conditional row tint + cell coloring; per-column configurable aggregations by field type | 4 | ~300 |
+| 6 | Grid toolbar and record count display | View switcher, hide fields, filter, sort, group, color, density controls | 2, 3, 4, 5 | ~200 |
+| 7 | My Views & Shared Views | Personal vs shared views, locked views, promotion flow, default view fallback | 6 | ~250 |
+| CP-2 | Integration Checkpoint 2 | Color coding, toolbar, and view management verification | 5–7 | — |
+| 8 | Multi-user collaboration — field-level presence locking & real-time coalescing | Redis lock keys (60s TTL), WebSocket presence, 100ms/500ms event coalescing | None | ~300 |
+| 9 | Record View overlay — layout, field canvas, navigation, saved configs | 60% width overlay, 4-column desktop layout, drag-and-drop field canvas, saved configs | None | ~350 |
+| 10 | Record View — inline editing, tabs, linked record display, responsive | Field editing, multi-tab, linked record display, <768px responsive stacking | 9 | ~250 |
+| CP-3 | Integration Checkpoint 3 | Collaboration, Record View layout, and editing verification | 8–10 | — |
+| 11 | Card View — layouts, RecordCard component, inline editing | Single column, grid, compact list layouts; RecordCard unified component | 9 | ~250 |
+| 12 | Sections — universal list organizer | Personal + Manager sections, collapsible, drag-and-drop reorder | None | ~200 |
+| 13 | Inline Sub-Table display for Linked Record fields | Embedded mini-grid for Linked Record fields in Record View | 9, 10 | ~250 |
+| 14 | CSV import — 5-step guided flow | Upload, preview, field mapping, validation, batch execution with progress | None | ~300 |
+| 15 | Record deletion, responsive grid polish, Grid + Record View combined layout | Soft delete with 10s undo, bulk delete confirmation, combined 60/40 layout | 9, 10, 11 | ~200 |
 | CP-4 | Integration Checkpoint 4 (Final) | 11–15 | — |
 
 ---

@@ -19,6 +19,9 @@ This impact map identifies WHAT changed. The WHERE (new sub-phase vs. expansion 
 
 ## 1. Schema Changes (affects: phase-division-phase1.md → 1B)
 
+Covers CP-001 additions to existing tables, CP-002 additions, Implementation note.
+Touches `portal_access`, `tenant_relationships`, `effective_memberships` tables.
+
 ### CP-001 additions to existing tables
 
 | Table | Change | Type |
@@ -212,6 +215,8 @@ No change to 4A or 4B scope. `record.updated` already fires on portal write-back
 ---
 
 ## Summary: Files to Edit
+
+Consolidated edit list, decisions made (1J sub-phase creation, Agency Console deferral), the full 1J sub-phase definition, and updated project totals (35 sub-phases, 346 prompts). Relates to all five phase-division docs and `dependency-graph-and-appendices.md`.
 
 | File | Sub-phases affected | Severity |
 |------|-------------------|----------|

@@ -14,12 +14,12 @@
 
 | Section                          | Lines   | Covers                                                                                                                                                                             |
 | -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wiki Architecture                | 26–47   | Wiki table_type config, wiki rendering, URL routes, nesting via self-referential parent                                                                                            |
-| TipTap Editor Architecture       | 49–229  | Environment 2 (full-featured Smart Doc editor), React component structure, JSONB document schema, custom EveryStack node definitions, rendering pipelines (screen, PDF, portal)    |
-| Smart Doc as a Field Type        | 231–294 | Two sub-types (authored vs generated), field configuration, storage, data model (smart_doc_content, versions, snapshots, backlinks)                                                |
-| Smart Doc View (Table-Level)     | 296–329 | Wiki mode (two-panel page tree + editor), template mode, contextual access points                                                                                                  |
-| Document Generation — Two Prongs | 331–414 | Prong 1: TipTap merge-tag templates → Gotenberg → PDF (MVP), Prong 2: upload template generation (post-MVP), template mapper UI, backend requirements, generation flow, data model |
-| Post-MVP Smart Doc Features      | 416–421 | AI content blocks, chart embeds, knowledge base mode, export                                                                                                                       |
+| Wiki Architecture                | 26–48   | Wiki table_type config, wiki rendering, URL routes, nesting via self-referential parent                                                                                            |
+| TipTap Editor Architecture       | 50–233  | Environment 2 (full-featured Smart Doc editor), React component structure, JSONB document schema, custom EveryStack node definitions, rendering pipelines (screen, PDF, portal)    |
+| Smart Doc as a Field Type        | 235–299 | Two sub-types (authored vs generated), field configuration, storage, data model (smart_doc_content, versions, snapshots, backlinks)                                                |
+| Smart Doc View (Table-Level)     | 301–335 | Wiki mode (two-panel page tree + editor), template mode, contextual access points                                                                                                  |
+| Document Generation — Two Prongs | 337–427 | Prong 1: TipTap merge-tag templates → Gotenberg → PDF (MVP), Prong 2: upload template generation (post-MVP), template mapper UI, backend requirements, generation flow, data model |
+| Post-MVP Smart Doc Features      | 429–434 | AI content blocks, chart embeds, knowledge base mode, export                                                                                                                       |
 
 ---
 
@@ -335,6 +335,9 @@ Smart Doc field "Invoice" (record level, template_output, read-only)
 ---
 
 ## Document Generation — Two Prongs
+
+Covers Prong 1: TipTap — Smart Doc Templates, Prong 2: Upload Template Generation — ⚠️ Post-MVP, Template Mapper UI, Backend Requirements, Generation Flow, Three Doc Gen Paths.
+Touches `template_definitions`, `generated_documents` tables. See `document-designer.md`.
 
 ### Prong 1: TipTap — Smart Doc Templates
 

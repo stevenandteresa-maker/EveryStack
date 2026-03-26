@@ -50,6 +50,48 @@ After you review and approve the playbook from Pass A-1, paste this prompt to ge
 | top-to-bottom with zero technical judgment calls.                                   |
 +-------------------------------------------------------------------------------------+
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Phase 1A | Monorepo bootstrap: Turborepo + pnpm, Docker Compose, GitHub Actions CI, ESLint + Prettier |
+| Phase 1B | Database layer: 50-table Drizzle schema, PgBouncer, getDbForTenant(), RLS, UUIDv7 |
+| Phase 1C | Auth: Clerk integration, tenant middleware, 5 workspace roles, permission checks |
+| Phase 1D | Observability: Pino logging, traceId, Sentry, OpenTelemetry, security headers |
+| Phase 1E | Testing infra: Vitest monorepo, Playwright E2E, test factories, testTenantIsolation() |
+| Phase 1F | Design system: shadcn/ui, Tailwind 3-layer color, DM Sans/JetBrains Mono, shell layout |
+| Phase 1G | Runtime services: Socket.io + Redis, BullMQ worker, StorageClient + R2, file upload |
+| Phase 1H | AI service layer: AIService skeleton, Anthropic adapter, prompt registry, credit metering |
+| Phase 1I | Audit + API auth: writeAuditLog(), api_keys with SHA-256, API middleware, rate limiting |
+| Phase 1J | CP migrations, effective_memberships view, tenant switching, sidebar navigation |
+| Phase 2A | FieldTypeRegistry, canonical transform layer, Airtable adapter, sync wizard |
+| Phase 2B | JSONB expression indexes, outbound sync, three-way conflict detection + resolution |
+| Phase 2C | Notion adapter, smart polling, priority scheduling, error recovery, sync dashboard |
+| Phase 3A-i | Grid View: TanStack Table + Virtual, 16 cell renderers, inline editing, keyboard nav |
+| Phase 3A-ii | View features: sort/filter/group, Record View, Card View, sections, CSV import |
+| Phase 3A-iii | Field-level permissions: 3-state model, 7-step resolution, config UI |
+| Phase 3B-i | Cross-linking engine: definition CRUD, L0-L2 resolution, Link Picker, cascade |
+| Phase 3B-ii | Schema Descriptor Service + Command Bar: SDS descriptors, Cmd+K search, AI channel |
+| Phase 3C | Record threads (two-thread model), DMs, Chat Editor (TipTap env 1), notifications, email |
+| Phase 3D | Document templates, TipTap env 2 editor, merge-tag resolution, Gotenberg PDF pipeline |
+| Phase 3E-i | Quick Portals: auth, record scoping, client management, portal caching |
+| Phase 3E-ii | Quick Forms: builder, submission pipeline, Turnstile, embed snippet |
+| Phase 3F-i | Field groups, per-field emphasis, enhanced hide/show panel |
+| Phase 3F-ii | Bulk operations: selection model, 6 actions, batch server pattern, undo |
+| Phase 3F-iii | Record templates: CRUD, template picker, view-scoped templates |
+| Phase 3G-i | Settings page (9 role-gated sections), Record Activity tab, Workspace Audit Log |
+| Phase 3G-ii | My Office widget grid, Personal Notes (4 surfaces), Quick Panel expansion |
+| Phase 3H-i | Mobile feature adaptation: Card View primary, full-screen Record View, mobile inputs |
+| Phase 3H-ii | Mobile infrastructure: bottom nav, offline/IndexedDB, PWA, notification routing |
+| Phase 4A | Automation trigger system, execution engine, template resolution, builder UI |
+| Phase 4B | 7 action types, webhooks, dry run testing, status field governance |
+| Phase 5A | AI data contracts: canonicalToAIContext(), Context Builder, AI tool suite |
+| Phase 5B | User-facing AI: Smart Fill, Record Summarization, Document AI Draft, metering dashboards |
+| Phase 6A | Data API: record CRUD endpoints, filter/sort syntax, cursor pagination |
+| Phase 6B | Schema API, File Upload API, SDS endpoint |
+
+---
+
 ━━━ **PHASE 1** ━━━
 
 ## Phase 1A --- Monorepo, CI Pipeline, Dev Environment

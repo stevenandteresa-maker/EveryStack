@@ -21,6 +21,8 @@
 
 ## Logging Architecture
 
+Covers Logger Setup, Correlation via traceId, Log Levels, PII Redaction.
+
 ### Logger Setup
 
 Pino logger instance created per service in `packages/shared/logging/`. Child loggers created per request/job with bound `traceId` and `tenantId`.
@@ -109,6 +111,8 @@ This makes `ai_usage_log` both a billing ledger and a diagnostic tool. Queries l
 ---
 
 ## Monitoring Dashboards
+
+Covers Dashboard 1: Platform Health, Dashboard 2: Sync Engine, Dashboard 3: AI Economics, Dashboard 4: Real-Time.
 
 ### Dashboard 1: Platform Health
 

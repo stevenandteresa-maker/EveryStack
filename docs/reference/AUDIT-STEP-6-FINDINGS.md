@@ -37,6 +37,9 @@
 
 ## Findings
 
+Covers Finding 1 — Kanban View: 6 docs say MVP, GLOSSARY says Post-MVP, Finding 2 — Calendar View: 3 docs say MVP, GLOSSARY says Post-MVP, Finding 3 — Vector Embeddings: doc says MVP, GLOSSARY says Post-MVP, Finding 4 — meetings.md: Post-MVP banner contradicts MVP roadmap labels, Finding 5 — chart-blocks.md NumberCard depends on post-MVP Kanban.
+See `chart-blocks.md`, `mobile.md`, `booking-scheduling.md`.
+
 ### Finding 1 — Kanban View: 6 docs say MVP, GLOSSARY says Post-MVP
 
 **GLOSSARY.md:678:** `Kanban, Gantt, Calendar, List, Gallery views | Post-MVP (Kanban soon after MVP)`

@@ -14,22 +14,22 @@
 
 | Section                       | Lines     | Covers                                                                                          |
 | ----------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| Overview                      | 36–55     | API philosophy, audience, base URL, versioning strategy                                         |
-| Authentication                | 56–169    | API keys, SHA-256 hashing, key prefixes (esk*live*/esk*test*/esk*platform*), scopes, management |
-| Rate Limiting                 | 170–196   | 4 tiers, Redis token bucket, rate limit headers                                                 |
-| API Versioning                | 197–213   | URL-based versioning (/api/v1/), deprecation policy                                             |
-| Error Format                  | 214–256   | Structured JSON errors, error codes, validation errors                                          |
-| Audit Integration             | 257–272   | actor_type: api_key, actor_label, audit log attribution                                         |
-| Data API                      | 273–459   | Record CRUD, table queries, filter syntax, batch create, cursor pagination                      |
-| Schema API                    | 460–603   | Workspace/Table/Field/Cross-Link structure, SDS endpoint                                        |
-| Provisioning API              | 604–840   | Create workspaces, tables, fields, cross-links, automations, portals, forms, templates          |
-| Automation API                | 841–907   | Trigger automations via API, run status, manual trigger endpoint                                |
-| AI API                        | 908–993   | AIService consumption via capability tiers, prompt templates, credit metering                   |
-| Webhook Management API        | 994–1049  | Endpoint registration, event types, delivery log, signature verification                        |
-| File Upload API               | 1050–1089 | Presigned URL flow, file metadata, content-type validation                                      |
-| Tenant Management API         | 1090–1133 | Tenant creation with platform-level keys, tenant listing                                        |
-| Phase Implementation          | 1134–1148 | Phased API surface delivery (MVP — Foundation through Post-MVP — Automations)                   |
-| SDK Considerations (Post-MVP) | 1149–1170 | Future SDK design notes                                                                         |
+| Overview                      | 36–54     | API philosophy, audience, base URL, versioning strategy                                         |
+| Authentication                | 56–170    | API keys, SHA-256 hashing, key prefixes (esk*live*/esk*test*/esk*platform*), scopes, management |
+| Rate Limiting                 | 172–197   | 4 tiers, Redis token bucket, rate limit headers                                                 |
+| API Versioning                | 199–215   | URL-based versioning (/api/v1/), deprecation policy                                             |
+| Error Format                  | 217–258   | Structured JSON errors, error codes, validation errors                                          |
+| Audit Integration             | 260–274   | actor_type: api_key, actor_label, audit log attribution                                         |
+| Data API                      | 276–464   | Record CRUD, table queries, filter syntax, batch create, cursor pagination                      |
+| Schema API                    | 466–608   | Workspace/Table/Field/Cross-Link structure, SDS endpoint                                        |
+| Provisioning API              | 610–845   | Create workspaces, tables, fields, cross-links, automations, portals, forms, templates          |
+| Automation API                | 847–912   | Trigger automations via API, run status, manual trigger endpoint                                |
+| AI API                        | 914–999   | AIService consumption via capability tiers, prompt templates, credit metering                   |
+| Webhook Management API        | 1001–1055  | Endpoint registration, event types, delivery log, signature verification                        |
+| File Upload API               | 1057–1095 | Presigned URL flow, file metadata, content-type validation                                      |
+| Tenant Management API         | 1097–1139 | Tenant creation with platform-level keys, tenant listing                                        |
+| Phase Implementation          | 1141–1154 | Phased API surface delivery (MVP — Foundation through Post-MVP — Automations)                   |
+| SDK Considerations (Post-MVP) | 1156–1177 | Future SDK design notes                                                                         |
 
 ---
 
@@ -54,6 +54,8 @@ There are no vertical-specific endpoints. The API is the same for all consumers.
 ---
 
 ## Authentication
+
+Covers API Keys, Key Scoping, Key Management, Database Schema.
 
 ### API Keys
 

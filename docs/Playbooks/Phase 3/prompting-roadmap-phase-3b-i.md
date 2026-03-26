@@ -9,6 +9,15 @@
 - **Estimated duration:** 5–7 sessions across all 6 lifecycle steps
 - **Prior sub-phase:** Phase 3A-iii (Field-Level Permissions) — merged to main
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, 5 units, 5-7 session estimate, parallel opportunities after Unit 2 |
+| Step 3 — Build Execution | 12 prompts in 5 units: types/schemas, CRUD/linking, L0-L2 resolution, cascade processor, Link Picker UI |
+| Step 4 — Review | Reviewer Agent verification with per-unit contract checks |
+| Step 5 — Docs Sync | MODIFICATIONS.md template for all created/modified files |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
@@ -1554,6 +1563,8 @@ If something is wrong:
 
 ## STEP 4 — REVIEW (Reviewer Agent)
 
+Covers What This Step Does, 4.1 — Generate the build diff, 4.2 — Run the Reviewer Agent.
+
 ### What This Step Does
 
 An independent Claude session reviews the build against acceptance criteria and verifies that every unit's interface contract was fulfilled.
@@ -1616,6 +1627,8 @@ If FAIL:
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the fix branch, 5.2 — Run the Docs Agent, 5.3 — Review and merge, 5.4 — Tag if milestone.
 
 ### What This Step Does
 

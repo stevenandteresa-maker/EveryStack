@@ -16,6 +16,21 @@ description: >
 
 # EveryStack Playbook Generation Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 25–31 | Trigger: Step 1 playbook generation sessions only |
+| Authority Chain | 32–41 | Resolution order: GLOSSARY > CLAUDE.md > this skill > strategy doc |
+| Mandatory Context | 42–62 | Required inputs: subdivision doc, phase division, strategy doc sections |
+| Subdivision-Aware Decomposition | 63–118 | Rules for decomposing within units from subdivision doc, not from scratch |
+| The 10 Quality Characteristics | 119–266 | Per-prompt quality checklist: context, schema, acceptance criteria, RSA, etc. |
+| VERIFY Session Boundary Templates | 267–326 | Templates for unit-completing and mid-unit VERIFY boundaries |
+| Playbook Document Template | 327–461 | Full markdown template: preamble, PJ decision gate, units, prompts, VERIFY |
+| Context Management Rules | 462–496 | Token budget, context-per-prompt rules, progressive disclosure |
+| Quality-First Mandate | 497–538 | Strictness-over-speed principle, common mistakes |
+| Quality Checklist | 539–560 | Final verification checklist before delivering a playbook |
+
 This skill encodes the repeatable process for producing playbook documents —
 the technical build roadmaps that Claude Code executes to build EveryStack.
 It is the source of truth for playbook structure, prompt quality, and
@@ -460,6 +475,9 @@ For SH: "Validate [constraint] from [doc § section]." For PJ:
 ---
 
 ## Context Management Rules
+
+Covers The ~800-Line Rule, Section Index Usage, Docs Under ~200 Lines, Cross-Phase Context.
+See `sync-engine.md`, `forms.md`, `observability.md`.
 
 ### The ~800-Line Rule
 

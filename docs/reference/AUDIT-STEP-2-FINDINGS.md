@@ -34,6 +34,9 @@ MANIFEST.md is structurally sound. File existence, scope map accuracy, dependenc
 
 ## Check-by-Check Results
 
+Covers Check 1 — File Existence ✅, Check 2 — Scope Map Accuracy ✅ (after fixes), Check 3 — Description Accuracy ✅ (after fix), Check 4 — Line Counts ✅ (after fix), Check 5 — Dependency Claims ✅, Manifest Statistics ✅.
+See `claude.md`, `interface-designer.md`, `session-log.md`.
+
 ### Check 1 — File Existence ✅
 
 Every file listed in the MANIFEST document tables exists in the tarball. Every file in the tarball appears in MANIFEST. The three "ghost" names found in the raw text (`claude.md`, `interface-designer.md`, `gaps/tables-interface-boundaries.md`) are all properly contextualized:

@@ -168,6 +168,9 @@ These are enforced in CI and must be met locally:
 
 ## Common Failure Modes and Fixes
 
+Covers "Cannot connect to database" / Connection Refused, Tenant Isolation Test Failures, "Migration file not found" / Schema Mismatch, Coverage Below Threshold, Hardcoded English Strings (i18n), Console.log in Production Code.
+Touches `tenant_id` tables.
+
 ### "Cannot connect to database" / Connection Refused
 **Cause:** Docker containers not running or wrong port.
 **Fix:** Run `docker compose -f docker-compose.test.yml up -d` and wait for health checks. See test-runner skill for details.

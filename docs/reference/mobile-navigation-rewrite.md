@@ -19,24 +19,24 @@
 
 | Section                                               | Lines   | Covers                                                                |
 | ----------------------------------------------------- | ------- | --------------------------------------------------------------------- |
-| Core Principle (Unchanged)                            | 44–51   | Desktop = Build, Tablet = Build & Operate, Mobile = Operate & Consume |
-| Two-Layer Bottom Bar                                  | 52–139  | Primary nav + contextual tabs, swapping behavior                      |
-| FAB Removal                                           | 140–152 | Why FAB was removed, replacement patterns                             |
-| Record Templates on Mobile                            | 153–163 | Template picker as bottom sheet, split button adaptation              |
+| Core Principle (Unchanged)                            | 43–49   | Desktop = Build, Tablet = Build & Operate, Mobile = Operate & Consume |
+| Two-Layer Bottom Bar                                  | 51–138  | Primary nav + contextual tabs, swapping behavior                      |
+| FAB Removal                                           | 140–151 | Why FAB was removed, replacement patterns                             |
+| Record Templates on Mobile                            | 153–162 | Template picker as bottom sheet, split button adaptation              |
 | Active Field Input Behavior                           | 164–224 | Keyboard handling, field focus, input mode switching                  |
-| Field-Level Presence on Mobile                        | 225–236 | Real-time presence indicators in Record View                          |
-| Navigation Patterns                                   | 237–267 | Stack navigation, swipe gestures, back behavior                       |
-| Mobile Card/Record View (Finding #5 Reconciliation)   | 268–288 | Card tap → Record View transition on mobile                           |
-| Record View: Inline Sub-Table on Mobile (Finding #13) | 289–306 | Linked record inline display on small screens                         |
-| Offline Interaction with Cross-Links (Finding #8)     | 307–340 | Cross-link behavior when offline                                      |
-| Display Value Staleness Signal (Finding #6)           | 341–346 | Visual indicator for stale linked record values                       |
-| Process State Color Language (Design System Addition) | 347–360 | Red/amber/green state colors on mobile                                |
-| Cell Error States on Mobile (Finding #7)              | 361–374 | Error display in mobile grid/card views                               |
-| Tasks Tab Scope (Finding #10 — Revised)               | 375–392 | Personal tasks vs record tasks tab behavior                           |
-| Capability Gating (Finding #11 Revised)               | 393–417 | Feature availability by device tier — revised rules                   |
-| View Switcher on Mobile (Finding #12)                 | 418–448 | Table View switching UI on mobile                                     |
-| Command Bar: Unified Search with Context Scoping      | 449–526 | Mobile Command Bar behavior, scoped search                            |
-| Cross-References                                      | 527–550 | Links to related docs                                                 |
+| Field-Level Presence on Mobile                        | 226–236 | Real-time presence indicators in Record View                          |
+| Navigation Patterns                                   | 238–270 | Stack navigation, swipe gestures, back behavior                       |
+| Mobile Card/Record View (Finding #5 Reconciliation)   | 272–291 | Card tap → Record View transition on mobile                           |
+| Record View: Inline Sub-Table on Mobile (Finding #13) | 293–309 | Linked record inline display on small screens                         |
+| Offline Interaction with Cross-Links (Finding #8)     | 311–344 | Cross-link behavior when offline                                      |
+| Display Value Staleness Signal (Finding #6)           | 346–350 | Visual indicator for stale linked record values                       |
+| Process State Color Language (Design System Addition) | 352–364 | Red/amber/green state colors on mobile                                |
+| Cell Error States on Mobile (Finding #7)              | 366–378 | Error display in mobile grid/card views                               |
+| Tasks Tab Scope (Finding #10 — Revised)               | 380–397 | Personal tasks vs record tasks tab behavior                           |
+| Capability Gating (Finding #11 Revised)               | 399–422 | Feature availability by device tier — revised rules                   |
+| View Switcher on Mobile (Finding #12)                 | 424–453 | Table View switching UI on mobile                                     |
+| Command Bar: Unified Search with Context Scoping      | 455–536 | Mobile Command Bar behavior, scoped search                            |
+| Cross-References                                      | 538–561 | Links to related docs                                                 |
 
 ---
 
@@ -236,6 +236,8 @@ This is the same field-level locking model as desktop/tablet, just rendered in t
 ---
 
 ## Navigation Patterns
+
+Covers Back Navigation, Deep Linking, Swipe Gestures.
 
 ### Back Navigation
 

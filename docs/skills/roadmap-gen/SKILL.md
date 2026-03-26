@@ -15,6 +15,21 @@ description: >
 
 # EveryStack Prompting Roadmap Generation Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 23–29 | Trigger: Step 2 roadmap generation sessions only |
+| Session Inputs | 30–43 | Required inputs: playbook + this skill only (no reference docs) |
+| Label System | 44–58 | 5 label types: PASTE INTO CLAUDE CODE, GIT COMMAND, CHECKPOINT, DECISION POINT, STATE UPDATE |
+| Document Structure | 59–397 | 6-step template: Steps 0--2 (already complete), Step 3 (build/verify sessions), Steps 4--5 (review/docs) |
+| BUILD/VERIFY Session Grouping Rules | 398–447 | Rules for splitting prompts into sessions, VERIFY boundaries, push cadence |
+| Unit Headers | 448–480 | Big-picture anchor and interface contract formatting for each unit |
+| State File Updates | 481–511 | When and how to update TASK-STATUS, MODIFICATIONS, DECISIONS |
+| Plain-English Explanations | 512–525 | "What This Builds"/"What You'll See"/"How Long" format rules |
+| What the Prompting Roadmap is NOT | 526–534 | Anti-patterns: not a playbook, not a spec, not optional |
+| Quality Standard | 535–537 | Operator should execute top-to-bottom without judgment calls |
+
 This skill encodes the repeatable process for producing Prompting Roadmaps —
 the lifecycle-spanning runbooks that Steven (a non-technical founder) uses to
 operate the entire build lifecycle. Load this skill in any Claude.ai session
@@ -74,6 +89,8 @@ The Prompting Roadmap follows the six-step lifecycle. Every step has paste-ready
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
+
+Covers What This Step Does, 0.1 — Create the docs branch, 0.2 — Run the Architect Agent, 0.3 — Review and merge.
 
 ### What This Step Does
 [2–3 sentences: why doc changes are needed before the build]
@@ -339,6 +356,8 @@ If FAIL: → Paste fix instructions into Claude Code. Re-run review.
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the fix branch, 5.2 — Run the Docs Agent, 5.3 — Review and merge, 5.4 — Tag if milestone.
 
 ### What This Step Does
 "Bring docs back into alignment after the build. The Docs Agent reads

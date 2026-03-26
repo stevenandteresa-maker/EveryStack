@@ -17,29 +17,29 @@
 
 | Section                                                                      | Lines     | Covers                                                                           |
 | ---------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------- |
-| Design Philosophy                                                            | 46–57     | Tables-as-calendars, availability as computation, progressive complexity         |
-| Calendar View Architecture                                                   | 58–172    | Day/week/month views, event rendering, drag-and-drop, mobile calendar            |
-| Bookable Tables — The Core Model                                             | 173–278   | 4 bookable types (appointments, resources, services, events), table_type overlay |
-| Computed Availability Engine                                                 | 279–393   | Availability computation, business hours, buffer times, conflict detection       |
-| Scheduler Block (App Designer)                                               | 394–466   | Embeddable scheduling UI block, slot picker, booking form                        |
-| Public Booking Pages & Shareable Links                                       | 467–551   | Public booking URLs, embed options, Turnstile protection                         |
-| Booking Lifecycle & Record Creation                                          | 552–617   | 8-step booking flow, confirmation, reminders                                     |
-| Self-Service Rescheduling & Cancellation                                     | 618–656   | Client-initiated changes, cancellation policies                                  |
-| Routing & Pre-Booking Qualification                                          | 657–700   | Routing forms, conditional assignment, qualification questions                   |
-| No-Show Detection & Workflows                                                | 701–730   | No-show detection, automated follow-up, penalty tracking                         |
-| Video Conferencing Integration                                               | 731–758   | Zoom integration, meeting link generation                                        |
-| Meeting Polls                                                                | 759–812   | Poll creation, voting, auto-scheduling                                           |
-| Single-Use Booking Links                                                     | 813–861   | One-time use links, expiration                                                   |
-| Managed Booking Templates                                                    | 862–897   | Pre-configured booking types, template library                                   |
-| Scheduling Analytics                                                         | 898–922   | Booking metrics, utilization, no-show rates                                      |
-| Quick Setup Wizard                                                           | 923–977   | 3-step booking setup wizard                                                      |
-| Automation Integration                                                       | 978–1014  | 6 triggers, 3 actions, 5 recipes for booking automations                         |
-| External Calendar Sync (Post-MVP — Comms & Polish Dependency — Designed Now) | 1015–1040 | Google/Outlook calendar sync architecture                                        |
-| Data Model Additions Summary                                                 | 1041–1069 | New tables and columns for booking system                                        |
-| Permissions                                                                  | 1070–1085 | Booking-specific permission rules                                                |
-| Phase Implementation Summary                                                 | 1086–1111 | Post-MVP — Portals & Apps (Fast-Follow) delivery scope                           |
-| Reconciliation with Existing Docs                                            | 1112–1132 | Cross-reference alignment notes                                                  |
-| Key Architectural Decisions                                                  | 1133–1153 | ADR-style decisions with rationale                                               |
+| Design Philosophy                                                            | 46–56     | Tables-as-calendars, availability as computation, progressive complexity         |
+| Calendar View Architecture                                                   | 58–181    | Day/week/month views, event rendering, drag-and-drop, mobile calendar            |
+| Bookable Tables — The Core Model                                             | 183–288   | 4 bookable types (appointments, resources, services, events), table_type overlay |
+| Computed Availability Engine                                                 | 290–405   | Availability computation, business hours, buffer times, conflict detection       |
+| Scheduler Block (App Designer)                                               | 407–483   | Embeddable scheduling UI block, slot picker, booking form                        |
+| Public Booking Pages & Shareable Links                                       | 485–571   | Public booking URLs, embed options, Turnstile protection                         |
+| Booking Lifecycle & Record Creation                                          | 573–637   | 8-step booking flow, confirmation, reminders                                     |
+| Self-Service Rescheduling & Cancellation                                     | 639–676   | Client-initiated changes, cancellation policies                                  |
+| Routing & Pre-Booking Qualification                                          | 678–720   | Routing forms, conditional assignment, qualification questions                   |
+| No-Show Detection & Workflows                                                | 722–750   | No-show detection, automated follow-up, penalty tracking                         |
+| Video Conferencing Integration                                               | 752–778   | Zoom integration, meeting link generation                                        |
+| Meeting Polls                                                                | 780–832   | Poll creation, voting, auto-scheduling                                           |
+| Single-Use Booking Links                                                     | 834–881   | One-time use links, expiration                                                   |
+| Managed Booking Templates                                                    | 883–917   | Pre-configured booking types, template library                                   |
+| Scheduling Analytics                                                         | 919–942   | Booking metrics, utilization, no-show rates                                      |
+| Quick Setup Wizard                                                           | 944–1002   | 3-step booking setup wizard                                                      |
+| Automation Integration                                                       | 1004–1041  | 6 triggers, 3 actions, 5 recipes for booking automations                         |
+| External Calendar Sync (Post-MVP — Comms & Polish Dependency — Designed Now) | 1043–1067 | Google/Outlook calendar sync architecture                                        |
+| Data Model Additions Summary                                                 | 1069–1096 | New tables and columns for booking system                                        |
+| Permissions                                                                  | 1098–1112 | Booking-specific permission rules                                                |
+| Phase Implementation Summary                                                 | 1114–1140 | Post-MVP — Portals & Apps (Fast-Follow) delivery scope                           |
+| Reconciliation with Existing Docs                                            | 1142–1161 | Cross-reference alignment notes                                                  |
+| Key Architectural Decisions                                                  | 1163–1183 | ADR-style decisions with rationale                                               |
 
 ---
 
@@ -56,6 +56,9 @@ A small business owner should go from zero to shareable booking link in under fi
 ---
 
 ## Calendar View Architecture
+
+Covers View Switcher, Time Axis & Grid, Event Rendering, Interactions, Date Field Binding, Calendar View Toolbar.
+Touches `calendar_table_config`, `workspace_calendars`, `interface_tabs`, `view_config` tables. See `tables-and-views.md`.
 
 > **This section fills the specification gap in `tables-and-views.md`.** Calendar View is referenced as an available view type but has no dedicated behavioral spec. This is the canonical spec.
 
@@ -999,6 +1002,8 @@ The user can customize everything after creation. The wizard just gets them to "
 ---
 
 ## Automation Integration
+
+Covers New Triggers, New Actions, Pre-Built Booking Recipes.
 
 ### New Triggers
 

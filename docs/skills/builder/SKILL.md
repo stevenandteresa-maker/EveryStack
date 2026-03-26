@@ -16,6 +16,22 @@ description: >
 
 # EveryStack Builder Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 41–45 | Trigger: Step 3 build execution only |
+| Mandate | 47–61 | BUILD context scope: code generation + static checks, no tests |
+| Context Loading at Session Start | 63–83 | 4-tier loading: CLAUDE.md, this skill, phase-context, domain skills; context budget |
+| Per-Prompt Execution Process | 85–163 | 7-step loop: read prompt, load context, build, static checks, acceptance criteria, commit, track changes |
+| Session Logging -- MODIFICATIONS.md | 165–176 | Session block format, file/schema/term tracking rules |
+| Failure Handling | 220–255 | TypeScript error, lint error, and repeated failure recovery procedures |
+| Commit Cadence | 257–276 | One commit per prompt, conventional message format |
+| Push Cadence | 278–289 | Push at end of VERIFY session, not per BUILD commit |
+| BUILD/VERIFY Session Boundary | 291–307 | Separation of concerns between BUILD (code) and VERIFY (tests) contexts |
+| Branch Rules | 309–323 | build/ branch naming, forbidden operations |
+| Handling Unit Boundaries | 333–343 | Unit transition awareness and CONTRACT acceptance criteria |
+
 This skill encodes the build execution process for Claude Code sessions.
 It is the source of truth for how build prompts are executed, verified, and
 committed. Load this skill at the start of every Step 3 (Build Execution)
@@ -202,6 +218,8 @@ DECISIONS.md. Optional.]
 ---
 
 ## Failure Handling
+
+Covers TypeScript Errors, Lint Errors, Repeated Failures, Test Failures (VERIFY context only).
 
 ### TypeScript Errors
 

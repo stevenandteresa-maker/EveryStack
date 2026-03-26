@@ -35,6 +35,9 @@ All six changes are pre-build — none require migrating existing data. Phases 1
 
 ## 3. Changes
 
+Covers CP-001-A — Portal Slug Uniqueness (Tenant-Scoped), CP-001-B — Record Deletion Cascade for Portal Access, CP-001-C — Portal Edit Automation: `record.updated` is Sufficient, CP-001-D — Two Distinct Thread Types Per Record, CP-001-E — Multi-Record List View, CP-001-F — Portal Client Identity Link for Post-MVP Conversion.
+Touches `portal_access`, `revoked_at`, `thread_type`, `linked_record_id` tables.
+
 ### CP-001-A — Portal Slug Uniqueness (Tenant-Scoped)
 
 **What:** Portal slugs move from platform-global uniqueness to tenant-scoped uniqueness.

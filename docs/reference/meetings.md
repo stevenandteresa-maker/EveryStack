@@ -16,29 +16,29 @@
 
 | Section                                  | Lines   | Covers                                                               |
 | ---------------------------------------- | ------- | -------------------------------------------------------------------- |
-| Overview                                 | 45–57   | Meeting management as table_type config overlay                      |
-| Architecture: Config Overlay Pattern     | 58–118  | meeting_table_config overlay, required fields, Smart Doc integration |
-| Meeting Smart Doc Templates              | 119–125 | Template structure for meeting notes                                 |
-| Attendees                                | 126–128 | Attendee field, people picker, external attendees                    |
-| Agenda                                   | 129–131 | Agenda items, ordering, time allocation                              |
-| Carried Forward from Last Meeting        | 132–134 | Auto-carry forward logic for recurring meetings                      |
-| Discussion Notes                         | 135–137 | Collaborative note-taking during meetings                            |
-| Decisions Made                           | 138–140 | Decision log, attribution, linking to records                        |
-| Action Items                             | 141–143 | Action item extraction, task creation, assignment                    |
-| Next Steps                               | 144–146 | Follow-up tracking, deadline assignment                              |
-| Next Meeting                             | 147–153 | Recurring meeting scheduling, next occurrence                        |
-| {meeting_date} — Team Standup            | 154–171 | Standup meeting template example                                     |
-| 1:1: {attendees}                         | 172–205 | 1:1 meeting template example                                         |
-| Scheduling Flows                         | 206–269 | Meeting creation, calendar integration, availability check           |
-| Meeting Views Layout                     | 270–331 | Meeting list, calendar, agenda views                                 |
-| Action Item Lifecycle                    | 332–374 | Creation → assignment → tracking → completion flow                   |
-| Recurring Meetings                       | 375–428 | Recurrence rules, series management, exception handling              |
-| Audio Recording                          | 429–468 | Meeting recording, transcription, AI summary                         |
-| Video Integration Roadmap                | 469–539 | Zoom/Meet/Teams integration plan                                     |
-| Portal Integration for External Meetings | 540–564 | External attendee access via portals                                 |
-| Notification & Reminder System           | 565–595 | Meeting reminders, notification timing                               |
-| Phase Integration                        | 596–619 | Post-MVP delivery timeline                                           |
-| Data Model Impact                        | 620–641 | meeting_table_config, new columns and tables                         |
+| Overview                                 | 45–56   | Meeting management as table_type config overlay                      |
+| Architecture: Config Overlay Pattern     | 58–117  | meeting_table_config overlay, required fields, Smart Doc integration |
+| Meeting Smart Doc Templates              | 119–124 | Template structure for meeting notes                                 |
+| Attendees                                | 126–127 | Attendee field, people picker, external attendees                    |
+| Agenda                                   | 129–130 | Agenda items, ordering, time allocation                              |
+| Carried Forward from Last Meeting        | 132–133 | Auto-carry forward logic for recurring meetings                      |
+| Discussion Notes                         | 135–136 | Collaborative note-taking during meetings                            |
+| Decisions Made                           | 138–139 | Decision log, attribution, linking to records                        |
+| Action Items                             | 141–142 | Action item extraction, task creation, assignment                    |
+| Next Steps                               | 144–145 | Follow-up tracking, deadline assignment                              |
+| Next Meeting                             | 147–152 | Recurring meeting scheduling, next occurrence                        |
+| {meeting_date} — Team Standup            | 154–170 | Standup meeting template example                                     |
+| 1:1: {attendees}                         | 172–207 | 1:1 meeting template example                                         |
+| Scheduling Flows                         | 209–275 | Meeting creation, calendar integration, availability check           |
+| Meeting Views Layout                     | 277–337 | Meeting list, calendar, agenda views                                 |
+| Action Item Lifecycle                    | 339–382 | Creation → assignment → tracking → completion flow                   |
+| Recurring Meetings                       | 384–439 | Recurrence rules, series management, exception handling              |
+| Audio Recording                          | 441–483 | Meeting recording, transcription, AI summary                         |
+| Video Integration Roadmap                | 485–559 | Zoom/Meet/Teams integration plan                                     |
+| Portal Integration for External Meetings | 561–584 | External attendee access via portals                                 |
+| Notification & Reminder System           | 586–616 | Meeting reminders, notification timing                               |
+| Phase Integration                        | 618–640 | Post-MVP delivery timeline                                           |
+| Data Model Impact                        | 642–662 | meeting_table_config, new columns and tables                         |
 
 ---
 
@@ -171,6 +171,9 @@ Each meeting type can have an associated Smart Doc template that auto-populates 
 ```
 ## 1:1: {attendees}
 
+Covers Carried Forward, Discussion Topics, Feedback, Action Items, Personal Notes (Private).
+Touches `previous_meeting_field_id` tables. See `record-templates.md`.
+
 ### Carried Forward
 {previous_unresolved_items}
 
@@ -204,6 +207,9 @@ Templates applied automatically on meeting creation based on meeting type. On ph
 ---
 
 ## Scheduling Flows
+
+Covers Internal Scheduling: Chat-Initiated (Primary), External Scheduling: Portal + Notifications.
+Touches `calendar_table_config` tables. See `booking-scheduling.md`, `embeddable-extensions.md`.
 
 ### Internal Scheduling: Chat-Initiated (Primary)
 
@@ -377,6 +383,9 @@ This is a convenience layer on top of the manual inline creation. The MVP — Co
 
 ## Recurring Meetings
 
+Covers Series Model, Meeting Chain via Self-Referential Link, Auto-Creation of Next Occurrence.
+Touches `recurrence_field`, `previous_meeting_field_id` tables. See `booking-scheduling.md`.
+
 ### Series Model
 
 A recurring meeting series is defined by a `recurrence_field` on the meeting record (same recurrence model as calendar events in `booking-scheduling.md`):
@@ -431,6 +440,9 @@ Auto-creation happens on meeting completion, not on a schedule. This prevents or
 
 ## Audio Recording
 
+Covers MVP — Core UX: Manual Recording (No Video), Post-MVP — Documents+: Integrated Recording via Video SDK, Post-MVP — Comms & Polish: Transcription + AI Summary.
+Touches `recording_field_id`, `transcript_field_id`, `summary_field_id` tables.
+
 ### MVP — Core UX: Manual Recording (No Video)
 
 Before embedded video (Post-MVP — Documents+), audio recording is available as a standalone feature for in-person meetings or meetings held on external video platforms.
@@ -471,6 +483,9 @@ Recording webhook → download → store as Attachment → same playback UX.
 ---
 
 ## Video Integration Roadmap
+
+Covers MVP — Core UX: External Video Links (No Integration), Post-MVP — Documents: Embedded Video via SDK, Post-MVP — Comms & Polish: AI-Enhanced Video.
+Touches `call_link_field_id` tables.
 
 ### MVP — Core UX: External Video Links (No Integration)
 

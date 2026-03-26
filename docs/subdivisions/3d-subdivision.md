@@ -13,6 +13,21 @@ traversal). When complete, users can generate professional PDFs from any
 record — unlocking document generation for Portals, Forms, and
 Automations in Phase 3's second half.
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Big-Picture Anchor | Document generation system: TipTap templates, merge tags, Gotenberg PDF pipeline |
+| Seam Analysis | Data/service/UI layers; editor vs generation pipeline seam via merge-tag resolution |
+| Dependency Graph | Unit 1 -> Units 2, 3 parallel -> Unit 4 -> Unit 5 |
+| Unit 1: Document Template Data Layer | Template/generated-doc CRUD, Zod schemas, test factories |
+| Unit 2: TipTap Env 2 Editor Core | SmartDocEditor (superset of Env 1), MergeTag/RecordRef/Callout nodes, SlashCommand |
+| Unit 3: Merge-Tag Resolution & Field Inserter | resolveMergeTags() by field ID, cross-link traversal, MergeTagInserter sidebar, PreviewToggle |
+| Unit 4: PDF Generation Pipeline | PDFRenderer (TipTap JSON to print HTML), GotenbergClient, BullMQ async job |
+| Unit 5: Template Management & Document Generation UI | Template list/editor pages, GenerateDocumentDialog, Record View integration |
+| Cross-Unit Integration Points | TipTap JSON schema, template content storage, merge-tag resolution, Record View, BullMQ |
+| Context Budget Verification | Token estimates per unit confirming all within 40% context budget |
+
 ## Seam Analysis
 
 This sub-phase touches all three stack layers (data, service, UI) and
@@ -39,6 +54,9 @@ pipeline (backend-heavy, async).
 - Schema already exists in 1B — no migration unit needed.
 
 ## Dependency Graph
+
+Covers Unit 1: Document Template Data Layer, Unit 2: TipTap Environment 2 Editor Core, Unit 3: Merge-Tag Resolution & Field Inserter, Unit 4: PDF Generation Pipeline, Unit 5: Template Management & Document Generation UI.
+Touches `document_templates`, `generated_documents`, `file_url`, `file_type`, `template_id` tables. See `smart-docs.md`, `data-model.md`.
 
 ```
 Unit 1: Document Template Data Layer

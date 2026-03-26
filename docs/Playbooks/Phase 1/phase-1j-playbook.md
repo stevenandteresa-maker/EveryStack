@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts.
+Touches `workspace_memberships`, `ai_usage_log`, `ai_credit_ledger`, `api_keys`, `tenant_relationships` tables. See `vertical-architecture.md`.
+
 ### What Has Been Built
 
 **Phase 1A (Monorepo, CI Pipeline, Dev Environment):** Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` scaffolds. Docker Compose with PostgreSQL 16, PgBouncer, Redis. GitHub Actions CI (lint → typecheck → test). ESLint + Prettier config. tsconfig strict mode. `.env.example`.
@@ -70,25 +73,27 @@ When Phase 1J is complete:
 
 ## Section Index
 
-| Prompt | Deliverable | Depends On | Lines (est.) |
-|--------|-------------|------------|--------------|
-| 1 | CP-001 Schema Migration (portals, portal_access, threads) | None | ~180 |
-| 2 | CP-002 Schema Migration (users, workspaces, tenant_relationships) | None | ~200 |
-| 3 | effective_memberships Database View | 1, 2 | ~150 |
-| CP-1 | Integration Checkpoint 1 | 1–3 | — |
-| 4 | Auth Middleware Update — effective_memberships Resolution | 3 | ~180 |
-| 5 | Personal Tenant Auto-Provisioning | 2, 4 | ~160 |
-| 6 | Tenant Switching — Clerk + Redis Hybrid | 4, 5 | ~180 |
-| CP-2 | Integration Checkpoint 2 | 4–6 | — |
-| 7 | Shell Accent Tokens & Repainting | 6 | ~150 |
-| 8 | Sidebar Navigation Tree — Data Layer & Layout | 4, 7 | ~200 |
-| 9 | Sidebar Navigation Tree — Tenant Switching UX & Portal Display | 6, 8 | ~180 |
-| 10 | Contextual Clarity Signals & Final Polish | 7, 9 | ~140 |
-| CP-3 | Integration Checkpoint 3 (Final) | 7–10 | — |
+| Prompt | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|-------------|---------|------------|--------------|
+| 1 | CP-001 Schema Migration (portals, portal_access, threads) | Tenant-scoped portal slug, portal_access revocation/record_slug/linked_record columns, threads.thread_type replacing visibility | None | ~180 |
+| 2 | CP-002 Schema Migration (users, workspaces, tenant_relationships) | users.personal_tenant_id, workspace transfer stubs, tenant_relationships table (~14 columns) with RLS | None | ~200 |
+| 3 | effective_memberships Database View | Database view unioning direct + agency-delegated memberships for auth resolution | 1, 2 | ~150 |
+| CP-1 | Integration Checkpoint 1 | Schema migration verification, view creation, factory updates | 1–3 | — |
+| 4 | Auth Middleware Update — effective_memberships Resolution | Auth middleware queries effective_memberships view instead of tenant_memberships directly | 3 | ~180 |
+| 5 | Personal Tenant Auto-Provisioning | Clerk user.created webhook creates personal tenant and sets users.personal_tenant_id | 2, 4 | ~160 |
+| 6 | Tenant Switching — Clerk + Redis Hybrid | Clerk setActive() + Redis session cache for fast tenant switching with optimistic UI | 4, 5 | ~180 |
+| CP-2 | Integration Checkpoint 2 | Auth flow, provisioning, and tenant switching end-to-end verification | 4–6 | — |
+| 7 | Shell Accent Tokens & Repainting | --shell-accent CSS custom property per tenant with smooth transition on tenant switch | 6 | ~150 |
+| 8 | Sidebar Navigation Tree — Data Layer & Layout | Multi-tenant collapsible tree with per-tenant workspace nesting, My Office entries, portal section | 4, 7 | ~200 |
+| 9 | Sidebar Navigation Tree — Tenant Switching UX & Portal Display | TenantSwitcher component, WorkspaceTree, portal section rendering with platform badges | 6, 8 | ~180 |
+| 10 | Contextual Clarity Signals & Final Polish | Three mandatory visual signals ensuring users always know their current tenant/workspace context | 7, 9 | ~140 |
+| CP-3 | Integration Checkpoint 3 (Final) | Full navigation + accent + context signals end-to-end verification | 7–10 | — |
 
 ---
 
 ## Prompt 1: CP-001 Schema Migration — Portal Refinements & Thread Type
+
+Creates a Drizzle migration modifying portals (tenant-scoped slug uniqueness), portal_access (revoked_at, revoked_reason, record_slug, linked_record_id), and threads (thread_type VARCHAR replacing visibility). Updates Drizzle schema types and test factories. Relates to `data-model.md` Portals & Forms and Communications sections.
 
 **Depends on:** None
 **Load context:** `data-model.md` lines 94–103 (Portals & Forms — portal_access, portals), `data-model.md` lines 113–121 (Communications — threads)

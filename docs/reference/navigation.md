@@ -14,12 +14,12 @@
 
 | Section                       | Lines   | Covers                                                                      |
 | ----------------------------- | ------- | --------------------------------------------------------------------------- |
-| Sidebar Navigation Tree       | 25–65   | Collapsible tree structure, tenant sections, workspace nesting              |
-| Tenant Switcher               | 67–95   | Clerk+Redis hybrid model, optimistic UI, shell repainting                   |
-| My Office — Per-Tenant        | 97–115  | Tenant-qualified headings, personal vs org context                          |
-| Contextual Clarity            | 117–145 | Three mandatory signals, one-second rule                                    |
-| Portal Display in Sidebar     | 147–175 | Authenticated portal entries, visual distinction, data boundary enforcement |
-| Agency Console                | 177–215 | /agency route, portfolio view, agency-in-client banner                      |
+| Sidebar Navigation Tree       | 26–75   | Collapsible tree structure, tenant sections, workspace nesting              |
+| Tenant Switcher               | 77–103   | Clerk+Redis hybrid model, optimistic UI, shell repainting                   |
+| My Office — Per-Tenant        | 105–125  | Tenant-qualified headings, personal vs org context                          |
+| Contextual Clarity            | 127–145 | Three mandatory signals, one-second rule                                    |
+| Portal Display in Sidebar     | 147–169 | Authenticated portal entries, visual distinction, data boundary enforcement |
+| Agency Console                | 171–206 | /agency route, portfolio view, agency-in-client banner                      |
 
 ---
 

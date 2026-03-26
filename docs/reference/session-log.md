@@ -96,6 +96,9 @@ _Items to revisit as development progresses:_
 
 ## Session Notes
 
+Covers 2026-02-10 — Infrastructure Decisions Resolved, Documentation Modularization & Reconciliation, Email Architecture (New Spec — 2026-02-10 15:15 UTC), 2026-02-10 — Sections UI Primitive, Platform Gap Analysis, Five-Role Permission Model, Table View / App Scope Tiers [post-MVP for base/workspace scope], 2026-02-09 — Table (Grid) View Architecture, 2026-02-09 — Field System Architecture, Boards, Sync & Linking, 2026-02-09 — My Calendar Architecture & Calendar Table Type.
+Touches `portal_domains`, `parent_record_id`, `board_members`, `email_events`, `source_table_id` tables. See `email.md`, `claude.md`, `communications.md`.
+
 ### 2026-02-10 — Infrastructure Decisions Resolved, Documentation Modularization & Reconciliation
 
 **Infrastructure Decisions (7 resolved + 1 PM visual decision):**

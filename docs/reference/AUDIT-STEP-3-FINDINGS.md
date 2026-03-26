@@ -35,6 +35,8 @@
 
 ## Detailed Findings
 
+Covers Finding 1 — `ai-metering.md:42` — "comms hub", Findings 2–3 — `GLOSSARY.md:299, 690` — "interface type", Findings 4–5 — `booking-scheduling.md:509, 515` — Non-canonical plan names, Finding 6 — `testing.md:600, 612` — "/bases/" in URL paths.
+
 ### Finding 1 — `ai-metering.md:42` — "comms hub"
 
 **Before:**
@@ -135,6 +137,9 @@ await page.goto('/w/test-workspace/tables/test-table');
 ---
 
 ## Checks with Zero Findings
+
+Covers Check 2 — Role Name Confusion, Check 3 — Phase Number References, Check 4 — Plan Name References (partial), Check 5 — Informal Synonyms (partial).
+Touches `base_connections` tables. See `session-log.md`.
 
 ### Check 2 — Role Name Confusion
 

@@ -17,7 +17,23 @@ permission resolution), 3B-ii (permission-filtered Command Bar), 3C
 (thread visibility), 3D (document merge tag filtering), and the entire
 portal/forms layer in Phase 3's second half.
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Big-Picture Anchor | Phase position, upstream/downstream dependencies, what field-level permissions unlock |
+| Dependency Graph | Unit dependency flow: 1 (types) -> 2 (data) -> 3+4 (parallel: enforcement, real-time) -> 5 (rendering) -> 6 (config UI) |
+| Unit 1: Permission Types & Resolution Engine | Pure types, Zod schemas, and resolveFieldPermission() 7-step cascade with no I/O |
+| Unit 2: Data Layer | getFieldPermissions() I/O wrapper with Redis caching, invalidatePermissionCache() |
+| Unit 3: Action Layer Enforcement | checkFieldPermission(), filterHiddenFields(), audit logging with dedup |
+| Unit 4: Real-Time Invalidation | PERMISSION_UPDATED event, publishPermissionUpdate(), client-side handler |
+| Unit 5: Grid/View Permission-Aware Rendering | useFieldPermissions() hook, PermissionProvider, updated grid/record/card view components |
+| Unit 6: Permission Configuration UI | RoleLevelPermissionGrid, IndividualOverrideView, PermissionConfigPanel, server actions |
+
 ## Dependency Graph
+
+Covers Unit 1: Permission Types & Resolution Engine, Unit 2: Data Layer — resolveFieldPermissions() + Redis Cache, Unit 3: Action Layer — Permission Enforcement + Audit Logging, Unit 4: Real-Time Invalidation, Unit 5: Grid/View Permission-Aware Rendering, Unit 6: Permission Configuration UI.
+Touches `read_write`, `field_overrides`, `audit_log`, `canonical_data` tables. See `permissions.md`, `realtime.md`, `design-system.md`.
 
 ```
 Unit 1: Permission Types & Resolution Engine (pure logic)

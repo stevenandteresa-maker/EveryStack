@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Skills for This Phase.
+Touches `ai_usage_log`, `ai_credit_ledger`, `agent_sessions` tables.
+
 ### What Has Been Built
 See `docs/skills/phase-context/SKILL.md` for the current build state. Key outputs from prior phases that this phase directly depends on:
 - Turborepo + pnpm monorepo with `apps/web`, `apps/worker`, `apps/realtime`, `packages/shared` (Phase 1A)
@@ -60,7 +63,7 @@ Load these skill files before executing any prompt in this phase:
 | 6 | AIFeature enum, rate card, and cost calculator | 1 | ~120 |
 | 7 | AI usage logging and credit ledger write paths | 6 | ~200 |
 | CP-2 | Integration Checkpoint 2 | 5–7 | — |
-| 8 | AIService singleton with metering flow | 1–7 | ~250 |
+| 8 | AIService singleton with metering flow | 827–940 | ~250 |
 | 9 | Streaming support with Vercel AI SDK | 3, 8 | ~180 |
 | 10 | AI data contract — canonicalToAIContext() and aiToCanonical() for Foundation field types | None (within phase) | ~200 |
 | CP-3 | Final Integration Checkpoint | 8–10 | — |

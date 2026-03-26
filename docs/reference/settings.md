@@ -70,6 +70,9 @@ Help & Support is personal — each user's submitted requests are scoped to them
 
 ## Functional Specification
 
+Covers API & Persistence, Validation & Constraints, Concurrent Edit Handling, Plan Enforcement, Audit Logging.
+Touches `user_notification_preferences`, `ai_usage_log`, `workspace_memberships`, `support_requests`, `support_request_messages` tables. See `files.md`.
+
 ### API & Persistence
 
 Settings are stored in two locations:
@@ -111,6 +114,9 @@ All settings changes write to `audit_log`: `action: 'settings.updated'`, `metada
 ---
 
 ## Help & Support
+
+Covers Submit a Request, My Requests, Status Page Link, Behavior Notes.
+Touches `support_requests`, `tenant_id`, `user_id`, `current_url`, `user_agent` tables. See `support-system.md`, `platform-owner-console.md`.
 
 > **Note:** The in-app Help Panel (accessible via the Help button in the sidebar) is the primary support entry point — it is always accessible and does not require navigating to Settings. The Help & Support section in Settings provides access to the same request submission form and request history, but the sidebar Help button is the canonical location. See `support-system.md` for the full Help Panel specification.
 

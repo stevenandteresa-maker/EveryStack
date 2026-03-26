@@ -15,6 +15,21 @@ description: >
 
 # EveryStack UX/UI Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 22–32 | Trigger: any React component, view, layout, or user-facing interface work |
+| Design System Foundation | 33–192 | Three-layer color architecture, typography, spacing, shadcn/ui primitives, application shell layout |
+| Progressive Disclosure Philosophy | 193–231 | 3-level disclosure model (80/15/5 split), creation flow patterns, mode switching |
+| View Rendering Patterns | 232–276 | Grid View (TanStack Table + Virtual), Card View, Record View overlay conventions |
+| Responsive / Mobile-Safe Patterns | 277–301 | Breakpoints, touch targets, mobile stacking, horizontal scroll rules |
+| Component File Organization | 302–328 | Directory structure, naming, co-location rules for components/hooks/types |
+| TipTap Editor Environments | 329–351 | Env 1 (chat) and Env 2 (Smart Doc) configuration and scope boundaries |
+| E2E Testing (Playwright) | 352–375 | Feature-area spec files, viewport configs, accessibility testing |
+| Accessibility Baseline | 376–386 | WCAG 2.1 AA targets, focus management, screen reader rules |
+| Checklist Before Every UI Commit | 387–396 | 10-item verification checklist for frontend code |
+
 This skill encodes the frontend engineering and design system conventions
 for EveryStack. It ensures visual consistency, accessibility, and the
 progressive disclosure philosophy across all user-facing features.
@@ -31,6 +46,9 @@ progressive disclosure philosophy across all user-facing features.
 ---
 
 ## Design System Foundation
+
+Covers Typography, Three-Layer Color Architecture, Spacing Scale, Responsive Breakpoints, shadcn/ui Components (16 installed), Application Shell Layout.
+See `app-shell.tsx`, `sidebar.tsx`, `header.tsx`.
 
 ### Typography
 
@@ -227,6 +245,8 @@ default to Power mode. It's easier to promote a control than to demote one.
 ---
 
 ## View Rendering Patterns
+
+Covers Grid View (Table), Card View, Record View (Overlay).
 
 ### Grid View (Table)
 

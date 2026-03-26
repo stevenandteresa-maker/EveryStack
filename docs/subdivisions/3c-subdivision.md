@@ -4,6 +4,20 @@
 
 Phase 3C delivers the MVP communications backbone: contextual Record Threads (two-thread model with internal "Team Notes" and client "Client Messages"), DMs and group DMs, a lightweight TipTap Chat Editor, real-time presence, an in-app notification pipeline with system email delivery via Resend, and the Chat Quick Panel as a unified feed. When complete, users can converse contextually on any record, message teammates directly, and receive aggregated notifications across their workspace — the missing conversational layer that turns EveryStack from a data browser into a collaborative workspace. This sub-phase depends on the Record View from 3A-ii (where threads attach), the thread_type schema migration from 1J, and the real-time + worker infrastructure from 1G. It unlocks portal client messaging in 3E-i, the My Office Chat widget in 3G-ii, and the notification pipeline consumed by automations in Phase 4+.
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Big-Picture Anchor | MVP communications backbone: threads, DMs, notifications, presence, email |
+| Seam Analysis | Primary data/service/UI layering; secondary thread vs notification vs editor seams |
+| Dependency Graph | Unit 1 -> Units 2, 3 parallel -> Unit 5 -> Unit 6; Unit 4 fully parallel |
+| Unit 1: Schema Migration & Thread/Message Data Layer | source_note_id migration, thread/message/participant CRUD, DM helpers, test factories |
+| Unit 2: Notification Pipeline & System Email | NotificationService, BullMQ notification queue, Resend email, React Email templates |
+| Unit 3: Presence & Real-Time Chat Infrastructure | PresenceService Redis heartbeat, ChatHandler/NotificationHandler, Redis pub/sub |
+| Unit 4: Chat Editor (TipTap Env 1) | Lightweight TipTap config, ChatEditor with 3 states, MentionDropdown, EmojiPicker |
+| Unit 5: Record Thread & DM UI | RecordThreadPanel (two-thread tabs), ThreadMessageList, DM views, Record View integration |
+| Unit 6: Notification UI & Chat Quick Panel | NotificationBell/Tray, ChatQuickPanel, PresenceIndicator, CustomStatusEditor |
+
 ### Seam Analysis
 
 **Primary seam: Data → Service/Infrastructure → UI layers.** The sub-phase touches all three layers with distinct concerns at each.
@@ -21,6 +35,9 @@ Phase 3C delivers the MVP communications backbone: contextual Record Threads (tw
 **Result: 6 units** — 1 data layer, 2 service/infrastructure, 1 standalone UI component, 2 feature UI surfaces.
 
 ## Dependency Graph
+
+Covers Unit 1: Schema Migration & Thread/Message Data Layer, Unit 2: Notification Pipeline & System Email, Unit 3: Presence & Real-Time Chat Infrastructure, Unit 4: Chat Editor (TipTap Environment 1), Unit 5: Record Thread & DM UI, Unit 6: Notification UI & Chat Quick Panel.
+Touches `source_note_id`, `thread_messages`, `thread_participants`, `user_saved_messages`, `scope_id` tables. See `communications.md`, `data-model.md`, `phase-division-phase3-part1.md`.
 
 ```
 Unit 4: Chat Editor (TipTap Env 1) ─────────────────────────────┐

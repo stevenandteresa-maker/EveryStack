@@ -7,6 +7,27 @@
 
 ---
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Setup | Branch creation and pre-flight checks for Phase 1J |
+| Prompt 1 | CP-001 migration: portal slug scoping, portal_access revocation columns, threads.thread_type |
+| Prompt 2 | CP-002 migration: users.personal_tenant_id, workspace transfer stubs, tenant_relationships table |
+| Prompt 3 | effective_memberships database view unioning direct + agency-delegated access |
+| Checkpoint 1 | Schema migration, view creation, and factory verification |
+| Prompt 4 | Auth middleware update to query effective_memberships instead of tenant_memberships |
+| Prompt 5 | Personal tenant auto-provisioning via Clerk user.created webhook |
+| Prompt 6 | Tenant switching with Clerk setActive() + Redis session cache hybrid |
+| Checkpoint 2 | Auth, provisioning, and tenant switching end-to-end verification |
+| Prompt 7 | Shell accent CSS tokens (--shell-accent) with transition on tenant switch |
+| Prompt 8 | Sidebar navigation tree data layer and multi-tenant collapsible layout |
+| Prompt 9 | TenantSwitcher UX, portal section display, and optimistic switching |
+| Prompt 10 | Contextual clarity signals: sidebar header, breadcrumb, My Office heading |
+| Checkpoint 3 | Final integration verification for navigation + accent + context signals |
+
+---
+
 ## SETUP
 
 > ⬜ **CONTEXT**
@@ -34,6 +55,8 @@
 ---
 
 ## PROMPT 1: Portal & Thread Database Updates (CP-001)
+
+Defines `packages/shared/db/migrations/`, `packages/shared/db/schema/portals.ts`, `packages/shared/db/schema/threads.ts`.
 
 > ⬜ **CONTEXT — What This Builds**
 >
@@ -118,6 +141,8 @@
 ---
 
 ## PROMPT 2: Users, Workspaces & Tenant Relationships (CP-002)
+
+Defines `packages/shared/db/schema/tenant-relationships.ts`, `users.ts`, `workspaces.ts`, `createTestTenantRelationship()`. See `users.ts`, `workspaces.ts`.
 
 > ⬜ **CONTEXT — What This Builds**
 >
@@ -223,6 +248,8 @@
 ---
 
 ## PROMPT 3: Effective Memberships Database View
+
+Defines `packages/shared/db/schema/effective-memberships.ts`, `getEffectiveMemberships()`, `getEffectiveMembershipForTenant()`.
 
 > ⬜ **CONTEXT — What This Builds**
 >
@@ -353,6 +380,8 @@
 ---
 
 ## PROMPT 4: Update Auth to Use New Memberships View
+
+Defines `apps/web/src/lib/auth/effective-membership.ts`, `tenant-resolver.ts`, `middleware.ts`. See `tenant-resolver.ts`, `middleware.ts`.
 
 > ⬜ **CONTEXT — What This Builds**
 >
@@ -672,6 +701,8 @@
 
 ## PROMPT 7: Color System for Tenant Switching
 
+Defines `globals.css`, `shell-accent.ts`, `ShellAccentProvider.tsx`, `var(--shell-accent)`. See `shell-accent.ts`.
+
 > ⬜ **CONTEXT — What This Builds**
 >
 > This is the first visual prompt. It sets up the color system that makes each organization visually distinct. When you switch between organizations, the header bar smoothly transitions to that organization's brand color. Personal workspaces always use a warm gray. There are 8 curated accent colors for organizations (teal, ocean blue, indigo, etc.) and a fixed system color for portals. Think of it like each company having their own colored badge — you always know which company's workspace you're looking at.
@@ -768,6 +799,8 @@
 ---
 
 ## PROMPT 8: Sidebar Navigation Tree
+
+Defines `apps/web/src/data/sidebar-navigation.ts`, `TenantSection.tsx`, `WorkspaceTree.tsx`, `SidebarNav.tsx`.
 
 > ⬜ **CONTEXT — What This Builds**
 >

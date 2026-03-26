@@ -13,17 +13,17 @@
 
 | Section | Lines | Covers |
 |---------|-------|--------|
-| Architecture Decision | 38–60 | Two-layer design rationale, /admin vs Platform Workspace |
-| Schema Additions | 61–120 | tenants table additions, users.is_platform_admin, support_requests table |
-| /admin Route — Auth & Access | 121–145 | How platform admin auth works, middleware, Clerk metadata |
-| /admin Route — Tenant List | 146–195 | Tenant index, search/filter, health signals, churn indicators |
-| /admin Route — Tenant Detail | 196–270 | Per-tenant view: profile, usage, billing actions, impersonation, feature flags |
-| /admin Route — Revenue Dashboard | 271–315 | MRR, trial conversion, churn, Stripe data aggregation |
-| /admin Route — Sync Health | 316–345 | Cross-tenant sync failure visibility |
-| /admin Route — Support Queue | 346–390 | References `support-system.md` — key points for /admin implementation |
-| /admin Route — Broadcast Messaging | 391–420 | In-app and email broadcasts to tenant segments |
-| /admin Route — Feature Flags | 421–455 | Per-tenant feature flag overrides |
-| Platform Workspace | 456–530 | EveryStack-as-a-business: tables, views, automations, use cases |
+| Architecture Decision | 31–48 | Two-layer design rationale, /admin vs Platform Workspace |
+| Schema Additions | 50–132 | tenants table additions, users.is_platform_admin, support_requests table |
+| /admin Route — Auth & Access | 134–176 | How platform admin auth works, middleware, Clerk metadata |
+| /admin Route — Tenant List | 134–176 | Tenant index, search/filter, health signals, churn indicators |
+| /admin Route — Tenant Detail | 134–176 | Per-tenant view: profile, usage, billing actions, impersonation, feature flags |
+| /admin Route — Revenue Dashboard | 134–176 | MRR, trial conversion, churn, Stripe data aggregation |
+| /admin Route — Sync Health | 134–176 | Cross-tenant sync failure visibility |
+| /admin Route — Support Queue | 134–176 | References `support-system.md` — key points for /admin implementation |
+| /admin Route — Broadcast Messaging | 134–176 | In-app and email broadcasts to tenant segments |
+| /admin Route — Feature Flags | 134–176 | Per-tenant feature flag overrides |
+| Platform Workspace | 464–490 | EveryStack-as-a-business: tables, views, automations, use cases |
 | Phase Implementation | 531–560 | What gets built when, relative to main build sequence |
 
 ---
@@ -132,6 +132,8 @@ CREATE INDEX idx_srm_request_id ON support_request_messages (support_request_id,
 ---
 
 ## `/admin` Route — Auth & Access
+
+Defines `/admin`, `users.is_platform_admin = true`, `tenant_id`, `DATABASE_URL_DIRECT`, `audit_log`, `actor_type: 'platform_admin'`.
 
 ### Authentication Model
 
@@ -488,6 +490,9 @@ Steven's EveryStack account is a real tenant (`tenants.is_internal = true`) used
 ---
 
 ## Build Sequencing
+
+Covers Schema — MVP — Foundation, The `/admin` Route — Post-MVP — Platform Operations, Platform Workspace — Setup, Settings Update Required, `data-model.md` Update Required.
+Touches `subscription_status`, `support_requests`, `stripe_customer_id`, `trial_ends_at` tables. See `settings.md`, `data-model.md`.
 
 ### Schema — MVP — Foundation
 

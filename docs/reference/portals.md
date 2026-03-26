@@ -15,25 +15,25 @@
 
 | Section                                                     | Lines   | Covers                                                                                                                                         |
 | ----------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Portal Overview                                             | 45–58   | Quick Portal concept — externally-shared Record View with auth, MVP scoping, what it is/isn't                                                  |
-| Data Model — MVP                                            | 62–142  | `portals`, `portal_access`, `portal_sessions` table schemas, Settings JSONB shape, indexes                                                     |
-| Record Scoping — MVP                                        | 146–161 | `portal_access.record_id` direct scoping, 5-step flow, linked record lookups, security invariant                                               |
-| Client Authentication — MVP                                 | 165–271 | Password (bcrypt) + magic link auth, session management, route architecture, rate limiting, token security, auth failure paths, password reset |
-| Client Management — MVP                                     | 275–294 | Clients Tab CRUD, invite flow, bulk invite, Access Tab config                                                                                  |
-| Portal Write-Back Flow — MVP                                | 298–328 | Editable field validation via Server Action, security invariant, no-delete policy, file uploads via portal                                     |
-| Caching Infrastructure (Three-Tier) — MVP                   | 332–357 | CDN edge cache, Redis record cache (TTL 60s/300s), Postgres fallback, event-driven invalidation                                                |
-| Audit Trail for Portal Actions — MVP                        | 361–381 | `portal_client` actor type, `writeAuditLog` call shape, Activity tab display format                                                            |
-| Session Cleanup — MVP                                       | 385–409 | Daily BullMQ job: expired session deletion, stale magic link token cleanup — full code                                                         |
-| GDPR for Portal Clients — MVP                               | 413–424 | Access/erasure/rectification/portability rights implementation, PII registry                                                                   |
-| Portal Client Limits — MVP                                  | 428–440 | Per-plan portal counts (1–unlimited), unlimited clients, page view quotas with Redis tracking, throttle at 120%                                |
-| Rendering Modes — MVP                                       | 444–447 | Preview Mode (client picker, draft banner) vs Live Mode, draft-to-live publishing                                                              |
-| MVP Feature Summary                                         | 451–461 | Quick reference checklist — all MVP Quick Portal capabilities in one block                                                                     |
-| Post-MVP Overview                                           | 465–479 | Quick Portal vs App Portal comparison table (layout, records, pages, customization, data binding, design tool)                                 |
-| Post-MVP Database Tables                                    | 483–495 | `apps`, `app_pages`, `app_blocks` tables — separate from MVP `portals`, naming notes                                                           |
-| Post-MVP Capabilities (See `app-designer.md` for Full Spec) | 499–515 | App Designer, block model, themes, data binding, identity scoping, analytics, Stripe, PWA, custom domains, SEO, embeds, i18n                   |
-| Quick Portal → App Portal Conversion (Post-MVP)             | 519–539 | 6-step conversion flow, identity table matching, session migration, constraints (one-way only)                                                 |
-| Post-MVP Phase Summary                                      | 543–551 | Phased delivery table — Portals & Apps Initial, Fast-Follow, Automations                                                                       |
-| Booking/Scheduling System (Post-MVP)                        | 555–559 | Pointer to `booking-scheduling.md`, Scheduler block summary                                                                                    |
+| Portal Overview                                             | 46–63   | Quick Portal concept — externally-shared Record View with auth, MVP scoping, what it is/isn't                                                  |
+| Data Model — MVP                                            | 65–181  | `portals`, `portal_access`, `portal_sessions` table schemas, Settings JSONB shape, indexes                                                     |
+| Record Scoping — MVP                                        | 183–201 | `portal_access.record_id` direct scoping, 5-step flow, linked record lookups, security invariant                                               |
+| Client Authentication — MVP                                 | 203–311 | Password (bcrypt) + magic link auth, session management, route architecture, rate limiting, token security, auth failure paths, password reset |
+| Client Management — MVP                                     | 313–355 | Clients Tab CRUD, invite flow, bulk invite, Access Tab config                                                                                  |
+| Portal Write-Back Flow — MVP                                | 357–389 | Editable field validation via Server Action, security invariant, no-delete policy, file uploads via portal                                     |
+| Caching Infrastructure (Three-Tier) — MVP                   | 391–419 | CDN edge cache, Redis record cache (TTL 60s/300s), Postgres fallback, event-driven invalidation                                                |
+| Audit Trail for Portal Actions — MVP                        | 421–443 | `portal_client` actor type, `writeAuditLog` call shape, Activity tab display format                                                            |
+| Session Cleanup — MVP                                       | 445–477 | Daily BullMQ job: expired session deletion, stale magic link token cleanup — full code                                                         |
+| GDPR for Portal Clients — MVP                               | 479–492 | Access/erasure/rectification/portability rights implementation, PII registry                                                                   |
+| Portal Client Limits — MVP                                  | 494–508 | Per-plan portal counts (1–unlimited), unlimited clients, page view quotas with Redis tracking, throttle at 120%                                |
+| Rendering Modes — MVP                                       | 510–515 | Preview Mode (client picker, draft banner) vs Live Mode, draft-to-live publishing                                                              |
+| MVP Feature Summary                                         | 517–529 | Quick reference checklist — all MVP Quick Portal capabilities in one block                                                                     |
+| Post-MVP Overview                                           | 531–547 | Quick Portal vs App Portal comparison table (layout, records, pages, customization, data binding, design tool)                                 |
+| Post-MVP Database Tables                                    | 549–563 | `apps`, `app_pages`, `app_blocks` tables — separate from MVP `portals`, naming notes                                                           |
+| Post-MVP Capabilities (See `app-designer.md` for Full Spec) | 565–583 | App Designer, block model, themes, data binding, identity scoping, analytics, Stripe, PWA, custom domains, SEO, embeds, i18n                   |
+| Quick Portal → App Portal Conversion (Post-MVP)             | 585–609 | 6-step conversion flow, identity table matching, session migration, constraints (one-way only)                                                 |
+| Post-MVP Phase Summary                                      | 611–621 | Phased delivery table — Portals & Apps Initial, Fast-Follow, Automations                                                                       |
+| Booking/Scheduling System (Post-MVP)                        | 623–627 | Pointer to `booking-scheduling.md`, Scheduler block summary                                                                                    |
 
 ---
 
@@ -63,6 +63,9 @@ Quick Portals are the MVP portal implementation. A Quick Portal is an **external
 ---
 
 ## Data Model — MVP
+
+Covers `portals` Table, `portal_access` Table, `portal_sessions` Table.
+Touches `tenant_id`, `table_id`, `record_view_config_id`, `record_view_configs`, `auth_type` tables. See `data-model.md`, `app-designer.md`.
 
 > **Source of truth:** `data-model.md` > Portals & Forms section. If this section contradicts data-model.md, data-model.md wins.
 
@@ -308,6 +311,9 @@ Every failure returns a generic, client-safe error message. Internal details are
 ---
 
 ## Client Management — MVP
+
+Covers Clients Tab (Portal Admin Panel), Access Tab, Client Messaging (CP-001-D), Client Identity Linking (CP-001-F).
+Touches `portal_access`, `record_id`, `last_accessed_at` tables. See `communications.md`.
 
 ### Clients Tab (Portal Admin Panel)
 

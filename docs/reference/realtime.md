@@ -58,6 +58,9 @@ interface PresenceState {
 
 ## Connection Lifecycle
 
+Covers Authentication & Authorization, Reconnection Strategy, Stale Data Indicator.
+See `permissions.md`.
+
 ```
 Client connects → Socket.io handshake with Clerk session token
   → Real-Time Service validates token with Clerk

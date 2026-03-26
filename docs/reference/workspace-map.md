@@ -18,30 +18,32 @@
 
 | Section                                                  | Lines     | Covers                                                                 |
 | -------------------------------------------------------- | --------- | ---------------------------------------------------------------------- |
-| Strategic Rationale                                      | 44–80     | Why a topology visualization, competitive gap, target users            |
-| Core Design Principles                                   | 81–94     | Read-only, schema-derived, progressive complexity, performance ceiling |
-| Access & Responsive Behavior                             | 95–129    | Desktop full-screen, tablet, mobile list fallback, Command Bar entry   |
-| Topology Graph Model                                     | 130–485   | 14 node types, 28 edge types, 5 cluster types, node/edge schemas       |
-| Layout Engine                                            | 486–545   | Dagre + d3-force hybrid, layered force-directed, cluster containment   |
-| Node Rendering                                           | 546–620   | React Flow custom nodes, 3 semantic zoom levels, visual encoding       |
-| Interaction Model                                        | 621–737   | Selection, multi-select, context menu, search, minimap, keyboard nav   |
-| Impact Analysis Overlay                                  | 738–817   | BFS traversal, 3-tier severity, impact cascade visualization           |
-| Toolbar and Controls                                     | 818–883   | Zoom, filter, layout toggle, legend, export                            |
-| Workspace Map Route                                      | 884–926   | Route architecture, data loading, URL state                            |
-| Data Sources & Graph Generation                          | 927–1052  | Schema queries, graph builder, SDS integration                         |
-| Performance Strategy                                     | 1053–1096 | 500-node soft cap, virtualization, incremental updates, Web Workers    |
-| Responsive Behavior                                      | 1097–1148 | Breakpoint adaptations, touch gestures, mobile list view               |
-| Permissions                                              | 1149–1166 | Role-based visibility, filtered graph per user role                    |
-| Empty States & Onboarding                                | 1167–1202 | Progressive empty states, guided first experience                      |
-| Real-Time Updates                                        | 1203–1223 | Incremental graph updates via Socket.io events                         |
-| Phase Integration                                        | 1224–1239 | Post-MVP — Workspace Map delivery scope                                |
-| Claude Code Prompt Roadmap                               | 1240–1592 | 10-prompt implementation roadmap                                       |
-| Key Architectural Decisions                              | 1593–1612 | ADR-style decisions with rationale                                     |
-| Future Extensions (Post-Post-MVP — Verticals & Advanced) | 1613–1625 | Deferred features                                                      |
+| Strategic Rationale                                      | 44–81     | Why a topology visualization, competitive gap, target users            |
+| Core Design Principles                                   | 83–95     | Read-only, schema-derived, progressive complexity, performance ceiling |
+| Access & Responsive Behavior                             | 97–132    | Desktop full-screen, tablet, mobile list fallback, Command Bar entry   |
+| Topology Graph Model                                     | 134–501   | 14 node types, 28 edge types, 5 cluster types, node/edge schemas       |
+| Layout Engine                                            | 503–564   | Dagre + d3-force hybrid, layered force-directed, cluster containment   |
+| Node Rendering                                           | 566–645   | React Flow custom nodes, 3 semantic zoom levels, visual encoding       |
+| Interaction Model                                        | 647–766   | Selection, multi-select, context menu, search, minimap, keyboard nav   |
+| Impact Analysis Overlay                                  | 768–849   | BFS traversal, 3-tier severity, impact cascade visualization           |
+| Toolbar and Controls                                     | 851–917   | Zoom, filter, layout toggle, legend, export                            |
+| Workspace Map Route                                      | 919–963   | Route architecture, data loading, URL state                            |
+| Data Sources & Graph Generation                          | 965–1127  | Schema queries, graph builder, SDS integration                         |
+| Performance Strategy                                     | 1129–1174 | 500-node soft cap, virtualization, incremental updates, Web Workers    |
+| Responsive Behavior                                      | 1176–1229 | Breakpoint adaptations, touch gestures, mobile list view               |
+| Permissions                                              | 1231–1247 | Role-based visibility, filtered graph per user role                    |
+| Empty States & Onboarding                                | 1249–1285 | Progressive empty states, guided first experience                      |
+| Real-Time Updates                                        | 1287–1306 | Incremental graph updates via Socket.io events                         |
+| Phase Integration                                        | 1308–1322 | Post-MVP — Workspace Map delivery scope                                |
+| Claude Code Prompt Roadmap                               | 1324–1680 | 10-prompt implementation roadmap                                       |
+| Key Architectural Decisions                              | 1682–1700 | ADR-style decisions with rationale                                     |
+| Future Extensions (Post-Post-MVP — Verticals & Advanced) | 1702–1714 | Deferred features                                                      |
 
 ---
 
 ## Strategic Rationale
+
+Covers The Problem, The Opportunity, Competitive Positioning, Sales & Retention Value.
 
 ### The Problem
 
@@ -93,6 +95,8 @@ The Workspace Map serves three strategic purposes:
 ---
 
 ## Access & Responsive Behavior
+
+Covers Role-Scoped Map Views, Phone Fallback (<768px).
 
 ### Role-Scoped Map Views
 
@@ -498,6 +502,9 @@ interface TopologyCluster {
 
 ## Layout Engine
 
+Covers Layout Strategy, Layout Algorithm, Zoom Levels.
+Touches `schema_version_hash` tables.
+
 ### Layout Strategy
 
 The map uses a **layered force-directed layout** computed server-side and cached. The layout algorithm arranges nodes in conceptual layers with force simulation for edge optimization.
@@ -557,6 +564,8 @@ The map supports continuous zoom via scroll/pinch with three conceptual detail l
 ---
 
 ## Node Rendering
+
+Covers Node Visual Design, Node Icons and Colors, Node Status Indicators.
 
 ### Node Visual Design
 
@@ -636,6 +645,8 @@ Each node type has status-relevant visual indicators:
 ---
 
 ## Interaction Model
+
+Covers Canvas Interactions, Node Click Behavior, Double-Click Navigation, Context Menu.
 
 ### Canvas Interactions
 
@@ -756,6 +767,9 @@ Right-click (desktop) or long-press (tablet) on a node opens a context menu:
 
 ## Impact Analysis Overlay
 
+Covers How It Works, Impact Severity Tiers, Impact Computation, Impact Summary Card.
+Touches `sync_feeds`, `cross_link`, `automation_triggers_from`, `portal_displays`, `doc_merges_from` tables. See `cross-linking.md`.
+
 ### How It Works
 
 Impact analysis answers: **"If I change or remove this entity, what else would be affected?"**
@@ -836,6 +850,8 @@ Displayed above the canvas when impact analysis is active:
 
 ## Toolbar and Controls
 
+Covers Map Toolbar (Top Bar), Filter System, Minimap.
+
 ### Map Toolbar (Top Bar)
 
 The Workspace Map is a full-screen route (`/workspace/{workspaceId}/map`) with a 48px top toolbar. The toolbar follows the same pattern as the automation builder toolbar.
@@ -902,6 +918,9 @@ The minimap is collapsible via a chevron toggle. Hidden by default on tablet vie
 
 ## Workspace Map Route
 
+Covers Route Architecture, Workspace Navigation Integration, Command Bar Integration.
+See `command-bar.md`.
+
 ### Route Architecture
 
 ```
@@ -944,6 +963,9 @@ The Workspace Map is accessible via the Command Bar (`command-bar.md`):
 ---
 
 ## Data Sources & Graph Generation
+
+Covers Source Data, Graph Generation Pipeline, Edge Extraction from Config, Caching Strategy.
+Touches `sync_connections`, `sync_configs`, `sync_table_configs`, `automation_runs`, `record_view_config_id` tables. See `portals.md`, `formula-engine.md`.
 
 ### Source Data
 
@@ -1106,6 +1128,8 @@ The map client maintains a WebSocket subscription to `tenant:{tenantId}` channel
 
 ## Performance Strategy
 
+Covers Rendering Technology, Performance Targets, Large Workspace Handling.
+
 ### Rendering Technology
 
 **Canvas-based rendering via React + HTML5 Canvas** (not SVG DOM). At 100+ nodes with edges, SVG DOM performance degrades due to the sheer number of DOM elements. Canvas rendering keeps the element count at 1 (the canvas element) with all drawing handled programmatically.
@@ -1150,6 +1174,8 @@ For workspaces exceeding 500 nodes:
 ---
 
 ## Responsive Behavior
+
+Covers Desktop (≥ 1280px), Tablet (768px – 1279px), Phone (< 768px).
 
 ### Desktop (≥ 1280px)
 
@@ -1221,6 +1247,8 @@ Tapping an entity on the phone list view navigates directly to that entity's bui
 ---
 
 ## Empty States & Onboarding
+
+Covers New Workspace (< 3 tables), First-Time Map Tutorial.
 
 ### New Workspace (< 3 tables)
 
@@ -1294,6 +1322,9 @@ The full Workspace Map ships in Post-MVP — Verticals & Advanced because it req
 ---
 
 ## Claude Code Prompt Roadmap
+
+Covers Prompt 1: Topology Graph Types and Generator Foundation, Prompt 2: Graph Generator — Node Builder, Prompt 3: Graph Generator — Edge Builder, Prompt 4: Graph Generator — Layout Engine and Caching, Prompt 5: React Flow Canvas — Core Map Component, Prompt 6: Custom Node Components.
+See `workspace-map.md`, `schema-descriptor-service.md`, `data-model.md`.
 
 > **⚠️ BUILD SEQUENCE NOTE:** The prompts below are a suggested decomposition of this feature into buildable units. They are **not a build plan**. The active phase build doc controls what to build and in what order. When creating a phase build doc, cherry-pick from these prompts and reorder as needed for the sprint's scope.
 

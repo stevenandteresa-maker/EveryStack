@@ -99,6 +99,9 @@ Result: AI skips all orientation, goes straight to execution with correct parame
 
 ## 4. Internal Platform Skills
 
+Covers New Module: Feature Skill Registry, Context Builder Enhancement, Token Budget Allocator, Skill-Aware Intent Classification, The 7 Internal Platform Skills.
+Touches `generate_automation`, `generate_app`, `draft_content`, `smart_fill`, `search_records` tables. See `automation-builder.md`, `portal-builder.md`, `document-templates.md`.
+
 ### New Module: Feature Skill Registry
 
 **Location:** `packages/shared/ai/skills/`
@@ -216,6 +219,8 @@ The `involvedIntegrations` field lets the intent classifier signal that external
 
 ## 5. MCP Integration Skills
 
+Covers The Token Problem with MCP, Skill Structure for Integrations, Version Awareness for External Skills, Adding a New Integration.
+
 ### The Token Problem with MCP
 
 When the AI connects to an external service via MCP, it must discover available tools, read their schemas, understand parameter semantics, learn response shapes, and figure out common query patterns — all before doing productive work. This discovery repeats every session because MCP is stateless.
@@ -291,6 +296,8 @@ This means a user who hasn't connected the HubSpot MCP server still gets value f
 ---
 
 ## 7. Workspace Usage Descriptor (Tier 2 Generator)
+
+Covers Purpose, What It Produces, Architecture, Phase Placement.
 
 ### Purpose
 
@@ -376,6 +383,9 @@ The Workspace Usage Descriptor is a Phase 5 or early post-MVP deliverable. It de
 
 ## 8. Monitoring & Observability
 
+Covers Where You Monitor: Platform Owner Console, Data Requirements.
+Touches `ai_usage_log` tables.
+
 ### Where You Monitor: Platform Owner Console
 
 Skill performance monitoring lives in Settings → AI → Skill Performance within the Platform Owner Console. Three panels:
@@ -444,6 +454,9 @@ This is a JSONB column, not separate tables — keeps the logging path fast and 
 
 ## 9. Skill Improvement Pipeline
 
+Covers The Five-Step Cycle, Automation Level by Step.
+Touches `ai_usage_log`, `skill_context` tables.
+
 ### The Five-Step Cycle
 
 ```
@@ -492,6 +505,9 @@ For integration skills, an additional trigger: integration eval drift. The weekl
 ---
 
 ## 10. Skill Maintenance Agent
+
+Covers Agent Type, Scope, Trigger & Cadence, Execution Flow, Approval Model, Presentation in Platform Owner Console.
+Touches `ai_usage_log` tables. See `agent-architecture.md`.
 
 ### Agent Type
 
@@ -577,6 +593,9 @@ This is the same 30-minute weekly review surface described in §9. Most weeks, y
 ---
 
 ## 11. What This Changes in the Build Plan
+
+Covers New Work Items, No Changes Required To.
+Touches `skill_context`, `ai_usage_log` tables.
 
 ### New Work Items
 

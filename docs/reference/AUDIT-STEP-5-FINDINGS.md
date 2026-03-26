@@ -37,6 +37,9 @@
 
 ## Check 1 — Table Name Accuracy
 
+Covers Ghost Tables (defined in data-model.md, never referenced elsewhere), Phantom Tables (referenced as tables in domain docs, not in data-model.md Post-MVP section).
+Touches `automation_waiting`, `feature_suggestions`, `feature_votes`, `user_notification_preferences`, `user_recent_items` tables. See `approval-workflows.md`, `communications.md`, `command-bar.md`.
+
 ### Ghost Tables (defined in data-model.md, never referenced elsewhere)
 
 | Table                           | data-model.md Line | Notes                                                                                                                   |

@@ -15,17 +15,17 @@
 | ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | Core Principle                              | 32–36   | Design for compliance now, enforce progressively                                                                    |
 | GDPR & CCPA/CPRA                            | 38–62   | Data subject rights table, right to delete, portability, CCPA categories                                            |
-| PII Handling                                | 64–100  | PII registry (table/column map), anonymization cascade, logging redaction                                           |
-| Encryption                                  | 102–125 | At rest (AES-256 per data store), in transit (TLS 1.3, mTLS)                                                        |
-| Security Headers                            | 127–196 | Platform CSP (/w/_, /api/_), portal CSP (custom domains), portal cookie security                                    |
-| Row-Level Security                          | 198–217 | RLS policy specs, tenant isolation defense-in-depth                                                                 |
+| PII Handling                                | 64–103  | PII registry (table/column map), anonymization cascade, logging redaction                                           |
+| Encryption                                  | 105–128 | At rest (AES-256 per data store), in transit (TLS 1.3, mTLS)                                                        |
+| Security Headers                            | 130–184 | Platform CSP (/w/_, /api/_), portal CSP (custom domains), portal cookie security                                    |
+| Row-Level Security                          | 201–220 | RLS policy specs, tenant isolation defense-in-depth                                                                 |
 | Webhook Signatures & Gotenberg              | 219–243 | Inbound webhook HMAC verification, Gotenberg sandbox config (network disabled, resource limits)                     |
-| WAF & Session Management                    | 245–268 | WAF rules per environment, session controls, enterprise idle timeout, device management                             |
-| SSO, API Security & Vulnerability Mgmt      | 270–306 | SAML SSO, SCIM provisioning, API key model (prefix, scopes, rotation), CVE response SLAs                            |
-| Subprocessor Registry & Breach Notification | 308–334 | Subprocessor table with DPA status, 72-hour breach notification procedure                                           |
-| AI Compliance & Self-Hosted AI              | 336–401 | EU AI Act classification, data processing guarantees, air-gapped AI, 3 deployment modes, open-weight model security |
-| Data Residency Strategy                     | 403–421 | MVP foundation, built-from-day-one patterns, multi-region post-MVP                                                  |
-| SOC 2 & Certification Roadmap               | 423–432 | Type I timeline (Post-MVP — Comms & Polish), certification path                                                     |
+| WAF & Session Management                    | 248–257 | WAF rules per environment, session controls, enterprise idle timeout, device management                             |
+| SSO, API Security & Vulnerability Mgmt      | 282–295 | SAML SSO, SCIM provisioning, API key model (prefix, scopes, rotation), CVE response SLAs                            |
+| Subprocessor Registry & Breach Notification | 311–325 | Subprocessor table with DPA status, 72-hour breach notification procedure                                           |
+| AI Compliance & Self-Hosted AI              | 339–355 | EU AI Act classification, data processing guarantees, air-gapped AI, 3 deployment modes, open-weight model security |
+| Data Residency Strategy                     | 409–427 | MVP foundation, built-from-day-one patterns, multi-region post-MVP                                                  |
+| SOC 2 & Certification Roadmap               | 429–438 | Type I timeline (Post-MVP — Comms & Polish), certification path                                                     |
 
 ---
 
@@ -62,6 +62,9 @@
 ---
 
 ## PII Handling
+
+Covers PII Registry, Anonymization Cascade, Logging PII Redaction.
+Touches `workspace_memberships`, `thread_messages`, `ai_usage_log`, `command_bar_sessions`, `audit_log` tables.
 
 ### PII Registry
 
@@ -352,6 +355,9 @@ Enterprise: 30 days notice before changes. Public page: `everystack.com/legal/su
 ---
 
 ## Self-Hosted AI & Data Sovereignty
+
+Covers The Problem, Solution: Air-Gapped AI, Three Deployment Modes, Security for Open-Weight Models, Compliance Implications.
+See `self-hosted.ts`.
 
 ### The Problem
 

@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Subdivision Summary.
+Touches `thread_messages`, `thread_participants`, `user_saved_messages`, `user_notification_preferences`, `cross_links` tables. See `queues.ts`, `job-wrapper.ts`.
+
 ### What Has Been Built
 
 | Phase | Key Deliverables |
@@ -79,32 +82,32 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
-|--------|------|-------------|------------|--------------|
-| 1 | 1 | source_note_id migration + thread/message Drizzle schema verification | None | ~150 |
-| 2 | 1 | Thread CRUD data functions (create, get, list, DM helpers) | 1 | ~300 |
-| 3 | 1 | Message CRUD data functions (create, get, edit, delete, pin, search) | 1 | ~300 |
-| 4 | 1 | Participant, bookmark/saved, and test factories + server actions | 2, 3 | ~350 |
-| VP-1 | — | VERIFY — Completes Unit 1 | 1–4 | — |
-| 5 | 2 | NotificationService core + notification data functions | Unit 1 complete | ~300 |
-| 6 | 2 | BullMQ notification queue, email send processor + Resend service | 5 | ~300 |
-| 7 | 2 | React Email templates + notification preferences + server actions | 5, 6 | ~250 |
-| VP-2 | — | VERIFY — Completes Unit 2 | 5–7 | — |
-| 8 | 3 | PresenceService (Redis heartbeat + custom status) | Unit 1 complete | ~250 |
-| 9 | 3 | ChatHandler + NotificationHandler (Socket.IO event handlers) | 8 | ~300 |
-| 10 | 3 | Redis pub/sub chat event publisher + subscriber | 9 | ~200 |
-| VP-3 | — | VERIFY — Completes Unit 3 | 8–10 | — |
-| 11 | 4 | TipTap extension config + useChatEditor hook | None | ~200 |
-| 12 | 4 | ChatEditor component (3 input states + toolbar + mentions) | 11 | ~350 |
-| 13 | 4 | MessageRenderer, MessageItem, EmojiReactions + EmojiPicker | 11 | ~300 |
-| VP-4 | — | VERIFY — Completes Unit 4 | 11–13 | — |
-| 14 | 5 | RecordThreadPanel shell + ThreadTabBar + ThreadLensBar + useThread hook | Units 1, 3, 4 complete | ~350 |
-| 15 | 5 | ThreadMessageList + ThreadReplyPanel + ThreadSearchBar | 14 | ~300 |
-| 16 | 5 | DMConversation + GroupDMHeader + thread nav + Record View integration | 14, 15 | ~350 |
-| VP-5 | — | VERIFY — Completes Unit 5 | 14–16 | — |
-| 17 | 6 | NotificationBell + NotificationTray + useNotifications hook | Units 2, 3, 5 complete | ~300 |
-| 18 | 6 | ChatQuickPanel + ChatQuickPanelItem | 17 | ~250 |
-| 19 | 6 | PresenceIndicator + CustomStatusEditor + usePresence hook | 17 | ~200 |
+| Prompt | Unit | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|------|-------------|---------|------------|--------------|
+| 1 | 1 | source_note_id migration + thread/message Drizzle schema verification | ALTER TABLE thread_messages ADD source_note_id with partial index; schema type verification | None | ~150 |
+| 2 | 1 | Thread CRUD data functions (create, get, list, DM helpers) | createThread(), getThread(), getOrCreateDMThread(), createGroupDM() with deterministic scope_id | 1 | ~300 |
+| 3 | 1 | Message CRUD data functions (create, get, edit, delete, pin, search) | createMessage(), editMessage(), deleteMessage(), pinMessage(), searchThreadMessages() | 1 | ~300 |
+| 4 | 1 | Participant, bookmark/saved, and test factories + server actions | addParticipant(), updateLastRead(), getUnreadCounts(), saveMessage(); thread test factories | 2, 3 | ~350 |
+| VP-1 | — | VERIFY — Completes Unit 1 | Thread/message CRUD, DM creation, participant management, and tenant isolation | 1–4 | — |
+| 5 | 2 | NotificationService core + notification data functions | NotificationService class, notification CRUD, preference-aware delivery routing | Unit 1 complete | ~300 |
+| 6 | 2 | BullMQ notification queue, email send processor + Resend service | notification queue + processor, Resend email delivery, template selection | 5 | ~300 |
+| 7 | 2 | React Email templates + notification preferences + server actions | React Email components, per-user notification preferences CRUD, preference server actions | 5, 6 | ~250 |
+| VP-2 | — | VERIFY — Completes Unit 2 | Notification pipeline end-to-end from trigger through email delivery | 5–7 | — |
+| 8 | 3 | PresenceService (Redis heartbeat + custom status) | Redis heartbeat with TTL, custom status CRUD, online/away/offline state machine | Unit 1 complete | ~250 |
+| 9 | 3 | ChatHandler + NotificationHandler (Socket.IO event handlers) | Socket.IO event handlers for message delivery, typing indicators, notification push | 8 | ~300 |
+| 10 | 3 | Redis pub/sub chat event publisher + subscriber | Redis pub/sub for cross-server message delivery, subscriber auto-reconnect | 9 | ~200 |
+| VP-3 | — | VERIFY — Completes Unit 3 | Presence, Socket.IO handlers, and Redis pub/sub verification | 8–10 | — |
+| 11 | 4 | TipTap extension config + useChatEditor hook | TipTap extension set for chat (no headings/tables), useChatEditor() hook with progressive disclosure | None | ~200 |
+| 12 | 4 | ChatEditor component (3 input states + toolbar + mentions) | ChatEditor with collapsed/expanded/full states, ChatEditorToolbar, MentionDropdown | 11 | ~350 |
+| 13 | 4 | MessageRenderer, MessageItem, EmojiReactions + EmojiPicker | MessageRenderer for rich text, MessageItem with actions menu, emoji reactions + picker | 11 | ~300 |
+| VP-4 | — | VERIFY — Completes Unit 4 | Chat editor, message rendering, and emoji components verification | 11–13 | — |
+| 14 | 5 | RecordThreadPanel shell + ThreadTabBar + ThreadLensBar + useThread hook | Two-thread panel (Team Notes / Client Messages tabs), lens filtering, useThread() data hook | Units 1, 3, 4 complete | ~350 |
+| 15 | 5 | ThreadMessageList + ThreadReplyPanel + ThreadSearchBar | Virtualized message list, reply composer, in-thread search with highlight | 14 | ~300 |
+| 16 | 5 | DMConversation + GroupDMHeader + thread nav + Record View integration | DM views, group DM header, thread sidebar navigation, Record View tab integration | 14, 15 | ~350 |
+| VP-5 | — | VERIFY — Completes Unit 5 | Record threads, DMs, and Record View integration verification | 14–16 | — |
+| 17 | 6 | NotificationBell + NotificationTray + useNotifications hook | Bell icon with unread badge, tray dropdown with grouped notifications, real-time updates | Units 2, 3, 5 complete | ~300 |
+| 18 | 6 | ChatQuickPanel + ChatQuickPanelItem | Sidebar quick panel with unified conversation feed, conversation preview cards | 17 | ~250 |
+| 19 | 6 | PresenceIndicator + CustomStatusEditor + usePresence hook | Avatar presence dots, custom status modal, usePresence() hook with heartbeat | 17 | ~200 |
 | VP-6 | — | VERIFY — Completes Unit 6 | 17–19 | — |
 
 ---

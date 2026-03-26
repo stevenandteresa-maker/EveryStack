@@ -28,42 +28,42 @@
 
 | Section                                                                              | Lines     | Covers                                                           |
 | ------------------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------- |
-| Progressive Disclosure Mapping                                                       | 69–80     | 3-level disclosure for app creation                              |
-| Portal Overview (App Designer — Post-MVP)                                            | 81–92     | App Portal concept and relationship to Quick Portals             |
-| Portal Architecture (App Designer — Post-MVP)                                        | 93–104    | Apps/app_pages/app_blocks table architecture                     |
-| App Navigation in Workspace (Post-MVP)                                               | 105–116   | How apps appear in sidebar and workspace                         |
-| App Creation — Type Selection (Progressive Disclosure) — Post-MVP                    | 117–149   | 7 app types, creation wizard entry                               |
-| Portal Creation Flow (App Designer — Post-MVP)                                       | 150–173   | Step-by-step App Portal creation                                 |
-| Designer Architecture (Post-MVP)                                                     | 174–208   | 12-column grid canvas, recursive block tree, drag-and-drop       |
-| Block Model                                                                          | 209–245   | Block types, block tree structure, nesting rules                 |
-| Canvas Behavior (Post-MVP)                                                           | 246–260   | Grid snapping, responsive preview, undo/redo                     |
-| Property Panel (Three Tabs) — Post-MVP                                               | 261–283   | Content, Style, Logic tabs for block configuration               |
-| Data Binding Modes (Post-MVP)                                                        | 284–331   | Record context, list binding, aggregation binding                |
-| Theme System (Post-MVP)                                                              | 332–368   | App-level theming, color tokens, font overrides                  |
-| Client Interaction Capabilities (Post-MVP)                                           | 369–382   | Form submissions, file uploads, chat from portals                |
-| Record Scoping (Identity-Based)                                                      | 383–434   | portal_clients, linked_record_id scoping, per-table scope config |
-| Client Authentication                                                                | 435–517   | Magic link + password auth, portal_sessions, session lifecycle   |
-| Portal Client Data Model                                                             | 518–649   | portal_clients table, identity resolution, CRM linking           |
-| Client Management                                                                    | 650–683   | Client list, access management, bulk operations                  |
-| Portal Write-Back Flow (Form Submissions)                                            | 684–737   | Data submission pipeline, validation, record creation            |
-| Portal Analytics (Post-MVP)                                                          | 738–757   | Page views, session tracking, engagement metrics                 |
-| Stripe Payment Integration (Post-MVP)                                                | 758–765   | Stripe Elements, payment blocks, invoice integration             |
-| Rendering Modes (Post-MVP — App Designer)                                            | 766–773   | SSR, client-side, hybrid rendering strategies                    |
-| Preview and Publish Flow (Post-MVP — App Designer)                                   | 774–798   | Draft/live workflow, preview URLs, versioning                    |
-| Caching Infrastructure (Three-Tier)                                                  | 799–834   | CDN, Redis, in-memory caching for portal pages                   |
-| Portal Client Limits                                                                 | 835–850   | Plan-based limits on portal clients and pages                    |
-| Automation Integration                                                               | 851–864   | Portal event triggers, automation actions for portals            |
-| Audit Trail for Portal Actions                                                       | 865–888   | Portal client audit logging, actor_type: portal_client           |
-| Session Cleanup                                                                      | 889–911   | Expired session pruning, revocation                              |
-| Custom Domain Architecture (Specced — Build Post-MVP — Portals & Apps (Fast-Follow)) | 912–934   | CNAME setup, SSL provisioning, routing                           |
-| Mobile Portal Experience — PWA with Offline (Post-MVP)                               | 935–963   | Mobile PWA portal, offline support                               |
-| Portal SEO — Basic Meta Tags (Post-MVP)                                              | 964–977   | Meta tags, Open Graph, sitemap                                   |
-| Embeddable External Forms                                                            | 978–1004  | Script tag / iframe embedding for forms                          |
-| GDPR for Portal Clients                                                              | 1005–1019 | Data rights, deletion, export for portal users                   |
-| Booking/Scheduling System (Post-MVP)                                                 | 1020–1027 | Booking integration with App Designer                            |
-| Multi-Language Portal Content (Designed — Build Deferred)                            | 1028–1042 | i18n for portal content                                          |
-| MVP Feature Split                                                                    | 1043–1052 | What ships as Quick Portal vs App Designer                       |
-| Phase Implementation Summary (App Designer — Post-MVP)                               | 1053–1061 | Post-MVP — Portals & Apps+ delivery scope                        |
+| Progressive Disclosure Mapping                                                       | 70–80     | 3-level disclosure for app creation                              |
+| Portal Overview (App Designer — Post-MVP)                                            | 82–92     | App Portal concept and relationship to Quick Portals             |
+| Portal Architecture (App Designer — Post-MVP)                                        | 94–104    | Apps/app_pages/app_blocks table architecture                     |
+| App Navigation in Workspace (Post-MVP)                                               | 106–116   | How apps appear in sidebar and workspace                         |
+| App Creation — Type Selection (Progressive Disclosure) — Post-MVP                    | 118–152   | 7 app types, creation wizard entry                               |
+| Portal Creation Flow (App Designer — Post-MVP)                                       | 154–176   | Step-by-step App Portal creation                                 |
+| Designer Architecture (Post-MVP)                                                     | 178–213   | 12-column grid canvas, recursive block tree, drag-and-drop       |
+| Block Model                                                                          | 215–253   | Block types, block tree structure, nesting rules                 |
+| Canvas Behavior (Post-MVP)                                                           | 255–268   | Grid snapping, responsive preview, undo/redo                     |
+| Property Panel (Three Tabs) — Post-MVP                                               | 270–291   | Content, Style, Logic tabs for block configuration               |
+| Data Binding Modes (Post-MVP)                                                        | 293–341   | Record context, list binding, aggregation binding                |
+| Theme System (Post-MVP)                                                              | 343–380   | App-level theming, color tokens, font overrides                  |
+| Client Interaction Capabilities (Post-MVP)                                           | 382–394   | Form submissions, file uploads, chat from portals                |
+| Record Scoping (Identity-Based)                                                      | 396–449   | portal_clients, linked_record_id scoping, per-table scope config |
+| Client Authentication                                                                | 451–535   | Magic link + password auth, portal_sessions, session lifecycle   |
+| Portal Client Data Model                                                             | 537–670   | portal_clients table, identity resolution, CRM linking           |
+| Client Management                                                                    | 672–708   | Client list, access management, bulk operations                  |
+| Portal Write-Back Flow (Form Submissions)                                            | 710–762   | Data submission pipeline, validation, record creation            |
+| Portal Analytics (Post-MVP)                                                          | 764–782   | Page views, session tracking, engagement metrics                 |
+| Stripe Payment Integration (Post-MVP)                                                | 784–790   | Stripe Elements, payment blocks, invoice integration             |
+| Rendering Modes (Post-MVP — App Designer)                                            | 792–798   | SSR, client-side, hybrid rendering strategies                    |
+| Preview and Publish Flow (Post-MVP — App Designer)                                   | 800–824   | Draft/live workflow, preview URLs, versioning                    |
+| Caching Infrastructure (Three-Tier)                                                  | 826–861   | CDN, Redis, in-memory caching for portal pages                   |
+| Portal Client Limits                                                                 | 863–877   | Plan-based limits on portal clients and pages                    |
+| Automation Integration                                                               | 879–893   | Portal event triggers, automation actions for portals            |
+| Audit Trail for Portal Actions                                                       | 895–917   | Portal client audit logging, actor_type: portal_client           |
+| Session Cleanup                                                                      | 919–944   | Expired session pruning, revocation                              |
+| Custom Domain Architecture (Specced — Build Post-MVP — Portals & Apps (Fast-Follow)) | 946–969   | CNAME setup, SSL provisioning, routing                           |
+| Mobile Portal Experience — PWA with Offline (Post-MVP)                               | 971–1004   | Mobile PWA portal, offline support                               |
+| Portal SEO — Basic Meta Tags (Post-MVP)                                              | 1006–1019   | Meta tags, Open Graph, sitemap                                   |
+| Embeddable External Forms                                                            | 1021–1046  | Script tag / iframe embedding for forms                          |
+| GDPR for Portal Clients                                                              | 1048–1061 | Data rights, deletion, export for portal users                   |
+| Booking/Scheduling System (Post-MVP)                                                 | 1063–1069 | Booking integration with App Designer                            |
+| Multi-Language Portal Content (Designed — Build Deferred)                            | 1071–1085 | i18n for portal content                                          |
+| MVP Feature Split                                                                    | 1087–1095 | What ships as Quick Portal vs App Designer                       |
+| Phase Implementation Summary (App Designer — Post-MVP)                               | 1097–1105 | Post-MVP — Portals & Apps+ delivery scope                        |
 
 ---
 
@@ -116,6 +116,9 @@ Client portals built in the App Designer let EveryStack users create branded, cl
 ---
 
 ## App Creation — Type Selection (Progressive Disclosure) — Post-MVP
+
+Covers Level 1 — Intent-Based Selection (Default), Level 2 — Direct Type Selection (Power User), After Type Selection.
+See `portals.md`, `tables-and-views.md`, `custom-apps.md`.
 
 > **⚠️ POST-MVP.** The App Designer creation flow is post-MVP. MVP portal and form creation uses simpler flows described in `portals.md`.
 
@@ -174,6 +177,8 @@ Portal name, URL slug (auto-generated from name, editable), theme gallery (20 cu
 
 ## Designer Architecture (Post-MVP)
 
+Covers Designer Layout (Four-Zone), Designer Sidebar (Three Modes).
+
 > **⚠️ POST-MVP.** The App Designer (visual page builder) is post-MVP per `GLOSSARY.md`.
 
 The App Designer is a full-screen visual page builder using a sidebar-panel paradigm (similar to Squarespace or Webflow). The workspace sidebar collapses to ~48px icon rail mode.
@@ -208,6 +213,9 @@ The App Designer is a full-screen visual page builder using a sidebar-panel para
 ---
 
 ## Block Model
+
+Covers Block Categories, Container Rules & Nesting.
+Touches `parent_block_id` tables. See `chart-blocks.md`.
 
 > **⚠️ POST-MVP.** The block model is part of the App Designer's canvas system. MVP portals and forms use the Record View field canvas, not blocks.
 
@@ -284,6 +292,8 @@ Visibility rules: Show if `[field] [operator] [value]`, multiple conditions with
 
 ## Data Binding Modes (Post-MVP)
 
+Defines `record_scope`, `data_binding`, `config`.
+
 > **⚠️ POST-MVP.** Data binding modes are part of the App Designer's block system. MVP portals show a single record via Record View.
 
 All data binding is configured on the block in the App Designer. Three modes, presented progressively from simplest to most powerful:
@@ -331,6 +341,8 @@ All binding modes are augmented by the block's Content tab settings (visible fie
 ---
 
 ## Theme System (Post-MVP)
+
+Covers Theme Tokens, Gallery Tab (default, ~80% of builders), Custom Tab (power users), Override Model (3 Tiers).
 
 > **⚠️ POST-MVP.** The full theme system with 20 gallery themes is part of the App Designer. MVP portals may have basic branding (logo, primary color) but not the full token-based theme system described here.
 
@@ -383,6 +395,9 @@ Theme switch prompts: "Keep overrides or reset?"
 
 ## Record Scoping (Identity-Based)
 
+Covers How It Works, Example, Multi-Table Scoping, Scoping Resolution Chain, Portal Scoping Configuration (Stored on Portal).
+Touches `linked_record_id`, `portal_clients` tables.
+
 > **MVP/Post-MVP note:** The basic concept of identity-based record scoping applies to MVP Quick Portals (one portal link = one record, scoped to a single client). The multi-table scoping, scoping configuration, and query-time filtering described in detail below are the post-MVP App Designer implementation for multi-record portals.
 
 Record scoping determines which records a portal client can see. It is identity-based — derived from data relationships, not manually configured per client.
@@ -434,6 +449,9 @@ This is set during portal setup and editable in Portal Settings > Data tab.
 ---
 
 ## Client Authentication
+
+Covers Two Authentication Methods, Three Portal Access Modes, Session Management, Portal Route Architecture, Rate Limiting, Token Security.
+Touches `portal_clients`, `auth_hash`, `portal_magic_links`, `used_at`, `record_scope` tables.
 
 > **MVP/Post-MVP note:** Basic portal auth (magic link or email+password, Manager's choice) is MVP — see `GLOSSARY.md` Portal definition. The three access modes (Public, Link-Protected, Authenticated) and the full session management infrastructure described below apply to both MVP Quick Portals and post-MVP App Designer portals.
 
@@ -517,6 +535,9 @@ Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:
 ---
 
 ## Portal Client Data Model
+
+Covers `portals` Table (Pre-Glossary Unified Schema — See Note Above), `app_pages` Table (Post-MVP — per GLOSSARY.md DB Entity Reference), `app_blocks` Table (Post-MVP — per GLOSSARY.md DB Entity Reference), `portal_clients` Table, `portal_sessions` Table, `portal_magic_links` Table.
+Touches `record_view_config_id`, `auth_type`, `target_table_id`, `app_pages`, `app_blocks` tables. See `portals.md`, `data-model.md`, `document-designer.md`.
 
 > **⚠️ DB MODEL NOTE (per GLOSSARY.md):** The `portals` table schema below uses the pre-glossary unified schema with a `type` column. Per `GLOSSARY.md`, MVP uses separate tables: `portals` (with `record_view_config_id`, `auth_type`, `status`) for Quick Portals, `forms` (with `record_view_config_id`, `target_table_id`, `status`) for Quick Forms, and post-MVP `apps` / `app_pages` / `app_blocks` for App Portals. **Portal auth by type:** Quick Portals use `portal_access` (per-record explicit grants — see `portals.md`). App Portals use `portal_clients` (identity-based scoping via `linked_record_id`). Both use `portal_sessions` with polymorphic auth (see `data-model.md`). Both portal types coexist permanently — Quick Portals are not replaced by App Portals. Optional conversion: Manager can upgrade a Quick Portal to an App Portal, migrating `portal_access` rows to `portal_clients` rows.
 
@@ -649,6 +670,9 @@ Rate limiters use Redis: `rl:portal:magic:{email}:{portalId}`, `rl:portal:login:
 ---
 
 ## Client Management
+
+Covers Clients Tab (Portal Admin Panel), Access Tab, Domain Tab, Notifications Tab.
+Touches `portal_clients`, `linked_record_id` tables.
 
 ### Clients Tab (Portal Admin Panel)
 
@@ -945,6 +969,8 @@ Portals default to `portal.everystack.app/{portalSlug}`. Custom domains let clie
 ---
 
 ## Mobile Portal Experience — PWA with Offline (Post-MVP)
+
+Covers Tiered Offline Strategy, Home Screen Install.
 
 > **⚠️ POST-MVP.** PWA with offline capability is post-MVP App Designer functionality. MVP portals are responsive web pages without PWA features.
 

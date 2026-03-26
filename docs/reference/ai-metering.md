@@ -26,18 +26,18 @@
 
 | Section                                 | Lines   | Covers                                                                                     |
 | --------------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| AI Independence Guarantee               | 43–82   | Zero-AI core workflows (14 categories), AI feature degradation behavior                    |
-| Anthropic API Pricing Reference         | 84–115  | Model cost table, 5 cost reduction mechanisms (caching, Haiku routing, batching)           |
-| AI Usage Logging Infrastructure         | 117–165 | `ai_usage_log` schema, cost calculation formula                                            |
-| Credit Budget & Metering System         | 167–212 | Credit definition ($0.01 = 1 credit), tier budgets, `ai_credit_ledger`, metering flow      |
-| Workspace Admin AI Dashboard            | 214–242 | Settings → AI Usage, overview panel, per-user/feature breakdowns, admin controls           |
-| User-Facing AI Usage View               | 244–256 | Personal usage view, daily cap indicator                                                   |
-| Pre-Launch Usage Testing Framework      | 258–281 | 13-feature test matrix (small/medium/large context), test procedure                        |
-| Internal Cost Monitoring                | 283–302 | Per-tenant margin dashboard, platform-wide economics, anomaly alerts                       |
-| AIService Wrapper Implementation        | 304–337 | Interface contract, 6-step execution flow, single entry point for all AI calls             |
-| Reconciliation & Integrity              | 339–357 | Daily reconciliation job, Anthropic invoice reconciliation, data retention policy          |
-| Agent Session Metering                  | 359–421 | Credit integration, session cost estimates, plan limits, self-hosted cost model, dashboard |
-| Implementation Phasing & AIFeature Enum | 423–438 | MVP/post-MVP phase table, 13 AIFeature enum values                                         |
+| AI Independence Guarantee               | 44–83   | Zero-AI core workflows (14 categories), AI feature degradation behavior                    |
+| Anthropic API Pricing Reference         | 85–116  | Model cost table, 5 cost reduction mechanisms (caching, Haiku routing, batching)           |
+| AI Usage Logging Infrastructure         | 118–169 | `ai_usage_log` schema, cost calculation formula                                            |
+| Credit Budget & Metering System         | 171–219 | Credit definition ($0.01 = 1 credit), tier budgets, `ai_credit_ledger`, metering flow      |
+| Workspace Admin AI Dashboard            | 221–249 | Settings → AI Usage, overview panel, per-user/feature breakdowns, admin controls           |
+| User-Facing AI Usage View               | 251–259 | Personal usage view, daily cap indicator                                                   |
+| Pre-Launch Usage Testing Framework      | 261–288 | 13-feature test matrix (small/medium/large context), test procedure                        |
+| Internal Cost Monitoring                | 290–309 | Per-tenant margin dashboard, platform-wide economics, anomaly alerts                       |
+| AIService Wrapper Implementation        | 311–344 | Interface contract, 6-step execution flow, single entry point for all AI calls             |
+| Reconciliation & Integrity              | 346–364 | Daily reconciliation job, Anthropic invoice reconciliation, data retention policy          |
+| Agent Session Metering                  | 366–431 | Credit integration, session cost estimates, plan limits, self-hosted cost model, dashboard |
+| Implementation Phasing & AIFeature Enum | 433–442 | MVP/post-MVP phase table, 13 AIFeature enum values                                         |
 
 ---
 
@@ -117,6 +117,9 @@ Expected model mix: approximately 50–60% Haiku, 35–45% Sonnet, and 2–5% Op
 
 ## 3. AI Usage Logging Infrastructure
 
+Covers 3.1 Database Schema — `ai_usage_log`, 3.3 Cost Calculation Formula.
+Touches `ai_usage_log` tables.
+
 ### 3.1 Database Schema — `ai_usage_log`
 
 Every AI API call is logged to a dedicated table immediately after the Anthropic API response is received. This is the single source of truth for all metering, billing, and admin reporting.
@@ -166,6 +169,9 @@ const credits = Math.ceil(costUsd * 100);
 ---
 
 ## 4. Credit Budget & Metering System
+
+Covers 4.1 Credit Definition, 4.2 Monthly Credit Budgets by Tier, 4.3 Credit Tracking Table — `ai_credit_ledger`, 4.4 Metering Flow.
+Touches `ai_credit_ledger` tables.
 
 ### 4.1 Credit Definition
 
@@ -358,6 +364,9 @@ Monthly. Compare total `cost_usd` in `ai_usage_log` against the Anthropic API in
 ---
 
 ## 11. Agent Session Metering
+
+Covers 11.1 Credit Integration, 11.2 Agent Session Cost Estimates, 11.3 Plan Limits for Agents, 11.4 Self-Hosted Cost Model, 11.5 Agent Dashboard Integration.
+Touches `agent_sessions`, `budget_credits` tables. See `agent-architecture.md`, `self-hosted-ai.md`, `self-hosted.ts`.
 
 > **Post-MVP.** AI Agents (autonomous multi-step) are explicitly post-MVP per glossary. Agent session metering ships with the agent runtime.
 >

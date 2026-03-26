@@ -25,20 +25,20 @@
 
 | Section                             | Lines   | Covers                                                                                                                                                                                                      |
 | ----------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core Principles                     | 43–55   | 5 axioms: Table View as boundary, field-level granularity, default-open internal, default-closed portal, permissions follow the table                                                                       |
-| Workspace Roles                     | 59–86   | 5-role hierarchy (Owner/Admin at tenant level, Manager/Team Member/Viewer at workspace level), resolution flow, key constraints                                                                             |
-| Table View–Based Access             | 90–117  | Shared Views as access boundary, 3-step granting, access rules (multi-view, switching, revocation), sidebar contents per role                                                                               |
-| Field-Level Permissions             | 121–179 | 3 states (read-write/read-only/hidden), defaults per role, two-layer restriction model (role + individual overrides), resolution order, field_overrides relationship, no-access-table hiding                |
-| Permission Configuration UI         | 183–199 | Role-level field grid (click to cycle states), individual override view with effective permissions, UX principle: always show actual result                                                                 |
-| Permission Storage (JSONB)          | 203–274 | Two-layer model: `fields.permissions` (global ceiling) + `views.permissions` (contextual overrides), `ViewPermissions`/`ViewFieldPermissions` TypeScript interfaces, query filtering approach, sandbox/live |
-| Permission Resolution at Runtime    | 278–339 | Internal user 7-step resolution cascade, portal client resolution, cross-link permission resolution (intersect card_fields + permissions)                                                                   |
-| Permission Caching Strategy         | 343–350 | Redis cache key pattern, 300s TTL, invalidation triggers, `permission.updated` real-time push                                                                                                               |
-| Permission Management Hierarchy     | 354–369 | Who-can-do-what table: board memberships, field restrictions, view creation/granting, portal config, cross-link creation authority                                                                          |
-| Portal Client Permissions (Summary) | 373–384 | Internal vs portal client comparison table (default, direction, config location, scope, filtering, edit capability)                                                                                         |
-| Key Decisions Summary               | 388–405 | 13 architectural decisions with resolutions (boundary, granularity, defaults, states, overrides, storage, cross-links, UI principle)                                                                        |
-| Permission Denial Behavior          | 409–448 | `PermissionDeniedError` interface, HTTP 403, per-context UI behavior (navigation, hidden fields, read-only, disabled buttons, bulk actions, API, real-time), audit logging with deduplication               |
-| Tenant Isolation                    | 452–464 | RLS-enforced boundary, cross-tenant returns 404 not 403 (prevents enumeration), portal tenant isolation                                                                                                     |
-| Phase Implementation                | 468–475 | Permission work by phase — Foundation (roles only) → Core UX (full model) → Portals → App Designer                                                                                                          |
+| Core Principles                     | 45–59   | 5 axioms: Table View as boundary, field-level granularity, default-open internal, default-closed portal, permissions follow the table                                                                       |
+| Workspace Roles                     | 61–91   | 5-role hierarchy (Owner/Admin at tenant level, Manager/Team Member/Viewer at workspace level), resolution flow, key constraints                                                                             |
+| Table View–Based Access             | 93–125  | Shared Views as access boundary, 3-step granting, access rules (multi-view, switching, revocation), sidebar contents per role                                                                               |
+| Field-Level Permissions             | 127–192 | 3 states (read-write/read-only/hidden), defaults per role, two-layer restriction model (role + individual overrides), resolution order, field_overrides relationship, no-access-table hiding                |
+| Permission Configuration UI         | 194–212 | Role-level field grid (click to cycle states), individual override view with effective permissions, UX principle: always show actual result                                                                 |
+| Permission Storage (JSONB)          | 214–289 | Two-layer model: `fields.permissions` (global ceiling) + `views.permissions` (contextual overrides), `ViewPermissions`/`ViewFieldPermissions` TypeScript interfaces, query filtering approach, sandbox/live |
+| Permission Resolution at Runtime    | 291–358 | Internal user 7-step resolution cascade, portal client resolution, cross-link permission resolution (intersect card_fields + permissions)                                                                   |
+| Permission Caching Strategy         | 360–369 | Redis cache key pattern, 300s TTL, invalidation triggers, `permission.updated` real-time push                                                                                                               |
+| Permission Management Hierarchy     | 371–388 | Who-can-do-what table: board memberships, field restrictions, view creation/granting, portal config, cross-link creation authority                                                                          |
+| Portal Client Permissions (Summary) | 390–403 | Internal vs portal client comparison table (default, direction, config location, scope, filtering, edit capability)                                                                                         |
+| Key Decisions Summary               | 405–424 | 13 architectural decisions with resolutions (boundary, granularity, defaults, states, overrides, storage, cross-links, UI principle)                                                                        |
+| Permission Denial Behavior          | 426–467 | `PermissionDeniedError` interface, HTTP 403, per-context UI behavior (navigation, hidden fields, read-only, disabled buttons, bulk actions, API, real-time), audit logging with deduplication               |
+| Tenant Isolation                    | 469–483 | RLS-enforced boundary, cross-tenant returns 404 not 403 (prevents enumeration), portal tenant isolation                                                                                                     |
+| Phase Implementation                | 485–494 | Permission work by phase — Foundation (roles only) → Core UX (full model) → Portals → App Designer                                                                                                          |
 
 ---
 
@@ -92,6 +92,8 @@ Every user has a tenant-level role (stored on `tenant_memberships`) and optional
 
 ## Table View–Based Access
 
+Covers How Table Views Control Access, Granting Access to Table Views, Sidebar Experience.
+
 ### How Table Views Control Access
 
 A Shared View is a Table View created by a Manager or Admin — a curated lens on table data that surfaces specific fields, filters, sorts, and groupings. It is the primary way Team Members and Viewers interact with data.
@@ -123,6 +125,9 @@ Created by Admins or Managers. Each Shared View has a defined set of workspace m
 ---
 
 ## Field-Level Permissions
+
+Covers Three States, Default by Role, Two-Layer Restriction Model, Relationship to Table View Field Overrides, Handling "No Access to Any Field".
+Touches `field_overrides` tables.
 
 ### Three States
 
@@ -284,6 +289,9 @@ Fields stored as keys in `canonical_data` JSONB (not physical columns), so field
 ---
 
 ## Permission Resolution at Runtime
+
+Covers Internal Users, Portal Clients, Cross-Link Permission Resolution.
+See `cross-linking.md`.
 
 ### Internal Users
 

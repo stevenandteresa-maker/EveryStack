@@ -17,6 +17,9 @@ Per `sync-engine.md` Phase Implementation (line 1079): "MVP — Core UX: SmartSu
 
 ## Sub-Phases
 
+Covers 2A — FieldTypeRegistry, Canonical Transform Layer, Airtable Adapter, 2B — Synced Data Performance, Outbound Sync, Conflict Resolution, 2C — Notion Adapter, Error Recovery, Sync Dashboard.
+Touches `source_refs`, `base_connections`, `filtered_out`, `synced_field_mappings`, `canonical_data` tables.
+
 ### 2A — FieldTypeRegistry, Canonical Transform Layer, Airtable Adapter
 
 **One-sentence scope:** Builds the FieldTypeRegistry with canonical JSONB shapes for all MVP field types, the Airtable adapter pair, the sync setup wizard, progressive initial sync via BullMQ, and the rate limit infrastructure.

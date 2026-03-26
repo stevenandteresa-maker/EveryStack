@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Subdivision Summary.
+Touches `card_fields`, `linked_record` tables.
+
 ### What Has Been Built
 
 **Phase 1 (Foundation):** Monorepo (Turborepo + pnpm), 52-table Drizzle schema with RLS, Clerk auth with tenant resolution, `EffectiveRole` type (`owner|admin|manager|team_member|viewer`), `roleAtLeast()`, `resolveEffectiveRole()`, `checkRole()`, `requireRole()`, `PermissionDeniedError`, `getDbForTenant()`, `testTenantIsolation()`, 20+ test factories, design system (shadcn/ui, Tailwind tokens, DM Sans), Socket.io real-time with `EventPublisher` + Redis pub/sub, BullMQ worker with `BaseProcessor` + `jobWrapper`, `writeAuditLog()`, Pino logging, i18n (next-intl), `QUEUE_NAMES` constants, `QueueJobDataMap` type system.
@@ -88,24 +91,24 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
-|--------|------|-------------|------------|--------------|
-| 1 | 1 | Cross-link types, constants & canonical field value utilities | None | ~200 |
-| 2 | 1 | Zod validation schemas & FieldTypeRegistry registration | 1 | ~200 |
-| VP-1 | — | VERIFY — Completes Unit 1 | 1–2 | — |
-| 3 | 2 | Cross-link data functions (read) + permission checks | Unit 1 complete | ~300 |
-| 4 | 2 | Cross-link definition CRUD server actions | 3 | ~350 |
-| 5 | 2 | Record link/unlink actions + index maintenance | 4 | ~350 |
-| 6 | 2 | Test factory extension + integration tests | 5 | ~250 |
-| VP-2 | — | VERIFY — Completes Unit 2 | 3–6 | — |
-| 7 | 3 | L0/L1 resolution + permission intersection | Unit 2 complete | ~300 |
-| 8 | 3 | L2 bounded traversal + circuit breaker | 7 | ~250 |
-| VP-3 | — | VERIFY — Completes Unit 3 | 7–8 | — |
-| 9 | 4 | Queue registration + cascade processor | Unit 2 complete | ~350 |
-| 10 | 4 | Backpressure, dedup, integrity check & bulk deletion | 9 | ~300 |
-| VP-4 | — | VERIFY — Completes Unit 4 | 9–10 | — |
-| 11 | 5 | Link Picker core: search, recent, selection modes | Units 2, 3 complete | ~350 |
-| 12 | 5 | Inline create, LinkedRecordChip, grid/RecordView integration | 11 | ~300 |
+| Prompt | Unit | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|------|-------------|---------|------------|--------------|
+| 1 | 1 | Cross-link types, constants & canonical field value utilities | RelationshipType, CrossLinkFieldValue, LinkedRecordEntry, CROSS_LINK_LIMITS, extract/set utilities | None | ~200 |
+| 2 | 1 | Zod validation schemas & FieldTypeRegistry registration | createCrossLinkSchema, linkRecordsSchema, linked_record FieldTypeRegistry entry | 1 | ~200 |
+| VP-1 | — | VERIFY — Completes Unit 1 | Contract verification for types, schemas, and registry entry | 1–2 | — |
+| 3 | 2 | Cross-link data functions (read) + permission checks | getCrossLinkDefinition(), listCrossLinkDefinitions(), checkCrossLinkPermission() | Unit 1 complete | ~300 |
+| 4 | 2 | Cross-link definition CRUD server actions | createCrossLinkDefinition(), updateCrossLinkDefinition(), deleteCrossLinkDefinition() | 3 | ~350 |
+| 5 | 2 | Record link/unlink actions + index maintenance | linkRecords(), unlinkRecords() with bidirectional index updates and display value denormalization | 4 | ~350 |
+| 6 | 2 | Test factory extension + integration tests | createTestCrossLinkWithIndex() factory; CRUD, linking, tenant isolation, and constraint tests | 5 | ~250 |
+| VP-2 | — | VERIFY — Completes Unit 2 | Contract verification for all CRUD and link/unlink exports | 3–6 | — |
+| 7 | 3 | L0/L1 resolution + permission intersection | resolveLinkedRecordsL0() (JSONB read), L1 (IN query), card_fields x permission intersection | Unit 2 complete | ~300 |
+| 8 | 3 | L2 bounded traversal + circuit breaker | resolveLinkedRecordsL2() with cycle-safe visited set, depth limit, circuit breaker threshold | 7 | ~250 |
+| VP-3 | — | VERIFY — Completes Unit 3 | L0/L1/L2 resolution and permission filtering verification | 7–8 | — |
+| 9 | 4 | Queue registration + cascade processor | cross-link queue, processCrossLinkCascade() with content hash skip, single-hop rule, batched 500/10ms | Unit 2 complete | ~350 |
+| 10 | 4 | Backpressure, dedup, integrity check & bulk deletion | checkCascadeBackpressure(), job dedup, scheduleIntegrityCheck(), bulk cleanup on record delete | 9 | ~300 |
+| VP-4 | — | VERIFY — Completes Unit 4 | Cascade processing, backpressure, and integrity verification | 9–10 | — |
+| 11 | 5 | Link Picker core: search, recent, selection modes | LinkPicker with search, recent links, multi/single selection, workspace scope filtering | Units 2, 3 complete | ~350 |
+| 12 | 5 | Inline create, LinkedRecordChip, grid/RecordView integration | LinkPickerInlineCreate, LinkedRecordChip pill, grid cell and Record View integration | 11 | ~300 |
 | VP-5 | — | VERIFY — Completes Unit 5 (phase complete) | 11–12 | — |
 
 ---

@@ -14,13 +14,13 @@
 
 | Section                                         | Lines   | Covers                                                                                                                              |
 | ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Purpose                                         | 27–34   | Why this doc exists, active constraints on data layer code today                                                                    |
-| Compatibility Audit                             | 35–233  | CockroachDB-ready features, migration-required: tsvector, pgvector, advisory locks, LISTEN/NOTIFY, partitioning, expression indexes |
-| getDbForTenant() — CockroachDB Regional Routing | 234–262 | Regional routing via CockroachDB localities, connection pool per region                                                             |
-| Enterprise Deployment Architecture              | 263–290 | Multi-region topology, 3-region minimum, locality tiers, data residency                                                             |
-| Development Safeguards                          | 291–331 | Active MVP rules: no raw SQL, UUIDs only, no new extensions, tsvector isolation, serializable txns                                  |
-| Migration Playbook                              | 332–350 | 8-step migration sequence from Postgres to CockroachDB                                                                              |
-| Enterprise Sales Positioning                    | 351–355 | Enterprise pricing anchor, compliance differentiator                                                                                |
+| Purpose                                         | 27–33   | Why this doc exists, active constraints on data layer code today                                                                    |
+| Compatibility Audit                             | 35–238  | CockroachDB-ready features, migration-required: tsvector, pgvector, advisory locks, LISTEN/NOTIFY, partitioning, expression indexes |
+| getDbForTenant() — CockroachDB Regional Routing | 240–267 | Regional routing via CockroachDB localities, connection pool per region                                                             |
+| Enterprise Deployment Architecture              | 269–296 | Multi-region topology, 3-region minimum, locality tiers, data residency                                                             |
+| Development Safeguards                          | 298–339 | Active MVP rules: no raw SQL, UUIDs only, no new extensions, tsvector isolation, serializable txns                                  |
+| Migration Playbook                              | 341–358 | 8-step migration sequence from Postgres to CockroachDB                                                                              |
+| Enterprise Sales Positioning                    | 360–364 | Enterprise pricing anchor, compliance differentiator                                                                                |
 
 ---
 
@@ -33,6 +33,9 @@ This document tracks EveryStack's readiness to deploy on CockroachDB as an enter
 ---
 
 ## Compatibility Audit
+
+Covers ✅ CockroachDB-Ready (No Changes Needed), ⚠️ Requires Migration Work (Contained).
+Touches `tenant_id`, `jsonb_set`, `data_region`, `record_embeddings`, `to_tsquery` tables. See `data-model.md`, `database-scaling.md`, `compliance.md`.
 
 ### ✅ CockroachDB-Ready (No Changes Needed)
 

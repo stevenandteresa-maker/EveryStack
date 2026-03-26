@@ -12,14 +12,14 @@
 
 | Section                              | Lines   | Covers                                                                                               |
 | ------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
-| What Gets Audited                    | 26–48   | Event categories: records, schema, membership, portals; audit coverage table                         |
+| What Gets Audited                    | 26–47   | Event categories: records, schema, membership, portals; audit coverage table                         |
 | The Seven-Source Attribution Problem | 49–75   | 7 actor types: user, sync, automation, portal_client, system, agent, api_key                         |
-| Schema                               | 76–137  | audit_log table DDL, details JSONB by action type, index strategy                                    |
-| Retention Policy                     | 138–151 | 90-day hot, 1-year cold, 7-year compliance; tier-based retention                                     |
-| UI Surfaces                          | 152–180 | Record Activity tab, Workspace Audit Log, Automation History tab                                     |
-| Audit Write Mechanism                | 181–330 | Code emission pattern, AuditService API, bulk condensation, 7 actor types, cascades, scale estimates |
-| Implementation Rules                 | 331–341 | Hard rules for audit write discipline                                                                |
-| Phase Implementation                 | 342–351 | Phase breakdown: MVP — Foundation through Post-MVP                                                   |
+| Schema                               | 77–143  | audit_log table DDL, details JSONB by action type, index strategy                                    |
+| Retention Policy                     | 145–157 | 90-day hot, 1-year cold, 7-year compliance; tier-based retention                                     |
+| UI Surfaces                          | 159–186 | Record Activity tab, Workspace Audit Log, Automation History tab                                     |
+| Audit Write Mechanism                | 188–339 | Code emission pattern, AuditService API, bulk condensation, 7 actor types, cascades, scale estimates |
+| Implementation Rules                 | 341–350 | Hard rules for audit write discipline                                                                |
+| Phase Implementation                 | 352–361 | Phase breakdown: MVP — Foundation through Post-MVP                                                   |
 
 ---
 
@@ -75,6 +75,9 @@ A record can be modified by seven different sources, and the audit log must corr
 ---
 
 ## Schema
+
+Covers `audit_log` Table, `details` JSONB Structure by Action Type.
+Touches `audit_log`, `tenant_id`, `actor_type`, `actor_id`, `actor_label` tables.
 
 ### `audit_log` Table
 
@@ -183,6 +186,9 @@ When viewing an automation, the History tab shows all executions — sourced fro
 ---
 
 ## Audit Write Mechanism
+
+Covers How Code Emits Audit Entries, Bulk Operation Condensation, Seven Actor Types, Background Cascades Are NOT Audited, Scale Estimates.
+Touches `actor_type`, `actor_id`, `portal_client`, `api_key`, `agent_sessions` tables. See `agent-architecture.md`.
 
 ### How Code Emits Audit Entries
 

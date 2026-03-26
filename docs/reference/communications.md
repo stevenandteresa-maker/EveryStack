@@ -14,16 +14,16 @@
 
 | Section                             | Lines   | Covers                                                                                                                                                                            |
 | ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MVP Scope                           | 29–55   | Record Thread, DMs, group DMs; what's post-MVP                                                                                                                                    |
-| Thread Scopes (MVP)                 | 57–113  | Record Thread, DMs, thread data model (threads, thread_messages, thread_participants)                                                                                             |
-| Threaded Replies                    | 115–128 | Reply-to-parent pattern, participant auto-add, unread markers                                                                                                                     |
-| Chat Navigation                     | 130–146 | Hierarchical sidebar for self-referential records, tree dropdown in Record Thread                                                                                                 |
+| MVP Scope                           | 30–58   | Record Thread, DMs, group DMs; what's post-MVP                                                                                                                                    |
+| Thread Scopes (MVP)                 | 60–134  | Record Thread, DMs, thread data model (threads, thread_messages, thread_participants)                                                                                             |
+| Threaded Replies                    | 136–151 | Reply-to-parent pattern, participant auto-add, unread markers                                                                                                                     |
+| Chat Navigation                     | 153–171 | Hierarchical sidebar for self-referential records, tree dropdown in Record Thread                                                                                                 |
 | Pinned, Bookmarks & Presence        | 148–182 | Pinned messages, saved/bookmarked messages, presence indicators, DND/status                                                                                                       |
-| Notification Aggregation & Delivery | 184–292 | Data model (notifications table), 8 notification types, delivery pipeline (in-app + push + email digest), API, error handling                                                     |
-| Chat Editor (TipTap Env 1)          | 294–415 | Input states, progressive disclosure, keyboard shortcuts, @mentions, markdown shortcuts, bubble toolbar, link handling, attachments, message display/edit/delete, emoji reactions |
-| Messaging Error Handling            | 417–432 | Optimistic send, retry logic, failed message UX                                                                                                                                   |
-| Emoji Picker                        | 434–440 | emoji-mart, colon autocomplete, skin tone, search                                                                                                                                 |
-| Post-MVP Expansion                  | 442–458 | Activity feed, slash commands, base/table threads, omnichannel                                                                                                                    |
+| Notification Aggregation & Delivery | 209–320 | Data model (notifications table), 8 notification types, delivery pipeline (in-app + push + email digest), API, error handling                                                     |
+| Chat Editor (TipTap Env 1)          | 322–446 | Input states, progressive disclosure, keyboard shortcuts, @mentions, markdown shortcuts, bubble toolbar, link handling, attachments, message display/edit/delete, emoji reactions |
+| Messaging Error Handling            | 448–463 | Optimistic send, retry logic, failed message UX                                                                                                                                   |
+| Emoji Picker                        | 465–471 | emoji-mart, colon autocomplete, skin tone, search                                                                                                                                 |
+| Post-MVP Expansion                  | 473–491 | Activity feed, slash commands, base/table threads, omnichannel                                                                                                                    |
 
 ---
 
@@ -58,6 +58,9 @@
 ---
 
 ## Thread Scopes (MVP)
+
+Covers Record Thread, DMs, Data Model.
+Touches `group_dm`, `thread_type`, `scope_id`, `scope_type`, `tenant_id` tables. See `tables-and-views.md`, `mobile.md`.
 
 | scope_type | Participants                                                                                                  | Use Case                                 |
 | ---------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
@@ -204,6 +207,9 @@ Real-time presence via WebSocket heartbeat + Redis.
 ---
 
 ## Notification Aggregation & Delivery
+
+Covers Data Model, Notification Types, Delivery Pipeline, Notification API, Error Handling.
+Touches `user_id`, `tenant_id`, `source_type`, `source_thread_id`, `source_message_id` tables. See `data-model.md`, `email.md`.
 
 ### Data Model
 

@@ -2,6 +2,9 @@
 
 ## Phase Context
 
+Covers What Has Been Built, What This Phase Delivers, What This Phase Does NOT Build, Architecture Patterns for This Phase, Mandatory Context for All Prompts, Subdivision Summary.
+Touches `document_templates`, `generated_documents`, `cross_links`, `cross_link_index`, `table_type` tables. See `queues.ts`, `job-wrapper.ts`.
+
 ### What Has Been Built
 
 | Phase | Key Deliverables |
@@ -84,24 +87,24 @@ Load these skill files before executing any prompt:
 
 ## Section Index
 
-| Prompt | Unit | Deliverable | Depends On | Lines (est.) |
-|--------|------|-------------|------------|--------------|
-| 1 | 1 | Document template data functions (CRUD + queries) | None | ~250 |
-| 2 | 1 | Generated document data functions + Zod schemas + test factories + server actions | 1 | ~350 |
-| VP-1 | — | VERIFY — Completes Unit 1 | 1–2 | — |
-| 3 | 2 | TipTap extension config + custom nodes (MergeTag, RecordRef, Callout) | None | ~350 |
-| 4 | 2 | SmartDocEditor shell + useSmartDocEditor hook + SlashCommand extension | 3 | ~300 |
-| 5 | 2 | EditorToolbar + BubbleToolbar + BlockHandle | 4 | ~250 |
-| VP-2 | — | VERIFY — Completes Unit 2 | 3–5 | — |
-| 6 | 3 | Merge-tag resolution service (resolveMergeTags + resolveAndRenderHTML) | Unit 1 complete | ~300 |
-| 7 | 3 | MergeTagInserter sidebar + useMergeTagFields hook + PreviewToggle | 6 | ~300 |
-| VP-3 | — | VERIFY — Completes Unit 3 | 6–7 | — |
-| 8 | 4 | PDFRenderer (TipTap JSON → print-optimized HTML) + GotenbergClient | Units 1, 3 complete | ~300 |
-| 9 | 4 | BullMQ document-generation queue + processor + generateDocument server action + status polling | 8 | ~350 |
-| VP-4 | — | VERIFY — Completes Unit 4 | 8–9 | — |
-| 10 | 5 | Template list page + TemplateCard + template editor page with SmartDocEditor integration | Units 1, 2, 3 complete | ~350 |
-| 11 | 5 | GenerateDocumentDialog + GenerateDocumentButton + GeneratedDocumentList + Record View integration | 10, Unit 4 complete | ~300 |
-| VP-5 | — | VERIFY — Completes Unit 5 | 10–11 | — |
+| Prompt | Unit | Deliverable | Summary | Depends On | Lines (est.) |
+|--------|------|-------------|---------|------------|--------------|
+| 1 | 1 | Document template data functions (CRUD + queries) | getDocumentTemplate(), listDocumentTemplates() with tenant isolation | None | ~250 |
+| 2 | 1 | Generated document data functions + Zod schemas + test factories + server actions | Generated doc queries, Zod schemas, test factories, template CRUD server actions | 1 | ~350 |
+| VP-1 | — | VERIFY — Completes Unit 1 | Template/generated doc CRUD, validation, and tenant isolation verification | 1–2 | — |
+| 3 | 2 | TipTap extension config + custom nodes (MergeTag, RecordRef, Callout) | MergeTag node (tableId, fieldId, fallback), RecordRef, Callout for TipTap Env 2 | None | ~350 |
+| 4 | 2 | SmartDocEditor shell + useSmartDocEditor hook + SlashCommand extension | SmartDocEditor (Env 2 superset of Env 1), useSmartDocEditor(), slash command menu | 3 | ~300 |
+| 5 | 2 | EditorToolbar + BubbleToolbar + BlockHandle | Fixed toolbar, floating bubble toolbar, block drag handles | 4 | ~250 |
+| VP-2 | — | VERIFY — Completes Unit 2 | Editor, custom nodes, slash commands, and toolbar verification | 3–5 | — |
+| 6 | 3 | Merge-tag resolution service (resolveMergeTags + resolveAndRenderHTML) | Field ID resolution from canonical_data, cross-link traversal via L0/L1, HTML rendering | Unit 1 complete | ~300 |
+| 7 | 3 | MergeTagInserter sidebar + useMergeTagFields hook + PreviewToggle | Sidebar field picker for merge tag insertion, live preview toggle | 6 | ~300 |
+| VP-3 | — | VERIFY — Completes Unit 3 | Merge-tag resolution, inserter, and preview verification | 6–7 | — |
+| 8 | 4 | PDFRenderer (TipTap JSON → print-optimized HTML) + GotenbergClient | TipTap JSON to print-CSS HTML, GotenbergClient Chromium HTML-to-PDF | Units 1, 3 complete | ~300 |
+| 9 | 4 | BullMQ document-generation queue + processor + generateDocument server action + status polling | Async pipeline: template load, tag resolution, HTML render, Gotenberg PDF, R2 upload | 8 | ~350 |
+| VP-4 | — | VERIFY — Completes Unit 4 | PDF generation pipeline from template to R2-stored PDF | 8–9 | — |
+| 10 | 5 | Template list page + TemplateCard + template editor page with SmartDocEditor integration | Template CRUD pages, TemplateCard grid, SmartDocEditor integration | Units 1, 2, 3 complete | ~350 |
+| 11 | 5 | GenerateDocumentDialog + GenerateDocumentButton + GeneratedDocumentList + Record View integration | Generate button in Record View header, dialog, generated docs list with download links | 10, Unit 4 complete | ~300 |
+| VP-5 | — | VERIFY — Completes Unit 5 | Template management and document generation UI end-to-end | 10–11 | — |
 
 ---
 

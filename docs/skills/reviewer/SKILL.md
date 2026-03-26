@@ -17,6 +17,20 @@ description: >
 
 # EveryStack Reviewer Agent Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 27–36 | Trigger: Step 4 review, acceptance criteria verification, pass/fail verdicts |
+| Mandate | 37–52 | Read-only evaluation: never modify files, only read diffs and produce verdicts |
+| Context Loading Rules | 53–93 | Always-load, per-session categories; MODIFICATIONS.md as primary diff source |
+| Review Procedure | 94–311 | 8-step review: load context, read diff, verify acceptance criteria, check naming, check contracts, RSA-calibrated depth, verdict |
+| Severity Classification | 312–360 | BLOCKER/MAJOR/MINOR/NOTE severity levels with examples |
+| Output Format | 361–477 | Verdict template: summary, per-prompt results, contract verification, severity counts |
+| Forbidden Actions | 478–507 | Actions the Reviewer must never take (never modify, never build, never auto-pass) |
+| Common Failure Patterns | 508–574 | Frequent review failures with detection guidance |
+| Checklist -- Run Before Issuing Verdict | 575–587 | 10-item pre-verdict verification checklist |
+
 This skill encodes the conventions and procedures for the Reviewer Agent —
 the Step 4 operator in EveryStack's six-step build lifecycle. The Reviewer
 Agent evaluates build output against the playbook's acceptance criteria,
@@ -51,6 +65,8 @@ or merge any branches.
 ---
 
 ## Context Loading Rules
+
+Covers Required Inputs (uploaded to Claude.ai session), Do NOT Load.
 
 ### Required Inputs (uploaded to Claude.ai session)
 
@@ -363,6 +379,9 @@ mandatory — the Prompting Roadmap's decision logic depends on it.
 
 ```markdown
 ## Verdict: [PASS / FAIL]
+
+Covers Prompt 1: [Prompt Name from Playbook], Prompt 2: [Prompt Name from Playbook], Prompt N: [Prompt Name from Playbook], Convention Compliance, Interface Contract Verification, MODIFICATIONS.md Cross-Check.
+See `grid-toolbar.tsx`.
 
 ### Prompt 1: [Prompt Name from Playbook]
 

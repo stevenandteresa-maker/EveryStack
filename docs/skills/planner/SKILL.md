@@ -18,6 +18,20 @@ description: >
 
 # EveryStack Planner Agent Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 46–57 | Trigger: Gate 1 subdivision, Gate 3 replanning, Gate 4 completion summary |
+| Mandate | 59–72 | Decompose sub-phases into units with interface contracts and context manifests |
+| Authority Chain | 74–87 | Resolution order: GLOSSARY > CLAUDE.md > SUBDIVISION-STRATEGY > this skill |
+| Context Loading Rules | 89–136 | Always-load, per-session, never-load categories for Planner sessions |
+| Procedure -- Step by Step | 138–436 | Gate 1 (subdivision), Gate 3 (replanning), Gate 4 (completion summary) procedures |
+| Output Formats | 438–447 | Templates for subdivision doc, replanning report, and completion summary |
+| Forbidden Actions | 529–566 | Actions the Planner must never take |
+| Decision Patterns | 568–610 | When to escalate vs. resolve, how to handle PJ classifications |
+| Checklist Before Every Merge | 612–652 | Pre-merge verification for plan/ branches |
+
 This skill encodes the conventions and procedures for the Planner Agent —
 the planning gate operator in EveryStack's build lifecycle. The Planner
 Agent sits between Doc Prep (Step 0) and Playbook Generation (Step 1),
@@ -73,6 +87,8 @@ When conventions conflict, resolve in this order:
 ---
 
 ## Context Loading Rules
+
+Covers Always Load (Tier 0), Load per Session (Tier 1), Never Load.
 
 ### Always Load (Tier 0)
 
@@ -551,6 +567,8 @@ hard failure — stop and reassess.
 
 ## Decision Patterns
 
+Covers How Many Units?, Shared Types: Separate Unit or Not?, When to Replan vs. Retry.
+
 ### How Many Units?
 
 ```
@@ -592,6 +610,8 @@ Did the review fail because the spec is incomplete?
 ---
 
 ## Checklist Before Every Merge
+
+Covers Gate 1 (Subdivision Doc), Gate 3 (Replanning), Gate 4 (Phase Boundary).
 
 ### Gate 1 (Subdivision Doc)
 

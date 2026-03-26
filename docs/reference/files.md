@@ -11,18 +11,18 @@
 
 | Section                        | Lines   | Covers                                                                                           |
 | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------ |
-| File Types Across the Platform | 29–43   | Context types: record_attachment, smart_doc, doc_gen_output, portal_asset, email/chat attachment |
-| Data Model                     | 44–69   | files table DDL, columns, indexes, tenant isolation                                              |
-| Storage Client                 | 70–125  | Provider abstraction (S3/GCS/R2), storage key hierarchy, signed URL generation                   |
-| Upload Flow                    | 126–165 | Standard upload (≤100MB), multipart upload (>100MB, Business+), presigned URL pattern            |
-| Content-Type Security          | 166–212 | MIME validation, extension allowlist, magic byte verification, executable blocking               |
-| Image Processing Pipeline      | 213–240 | Thumbnail generation, resize variants, Sharp integration, format conversion                      |
-| Virus Scanning                 | 241–259 | ClamAV integration, quarantine flow, async scan pattern                                          |
-| Serving Strategy               | 260–292 | Public files (CDN), authenticated files (signed URLs), thumbnail serving                         |
-| File Size Limits               | 293–306 | Per-plan limits: Free/Starter/Business/Enterprise tiers                                          |
-| Orphan Cleanup                 | 307–318 | Scheduled job to remove unreferenced files, grace period                                         |
-| Audit & Access Logging         | 319–331 | File access audit trail, download tracking                                                       |
-| Phase Implementation           | 332–340 | Phase breakdown: MVP — Foundation through Post-MVP                                               |
+| File Types Across the Platform | 29–42   | Context types: record_attachment, smart_doc, doc_gen_output, portal_asset, email/chat attachment |
+| Data Model                     | 44–68   | files table DDL, columns, indexes, tenant isolation                                              |
+| Storage Client                 | 70–129  | Provider abstraction (S3/GCS/R2), storage key hierarchy, signed URL generation                   |
+| Upload Flow                    | 131–171 | Standard upload (≤100MB), multipart upload (>100MB, Business+), presigned URL pattern            |
+| Content-Type Security          | 173–218 | MIME validation, extension allowlist, magic byte verification, executable blocking               |
+| Image Processing Pipeline      | 220–247 | Thumbnail generation, resize variants, Sharp integration, format conversion                      |
+| Virus Scanning                 | 249–266 | ClamAV integration, quarantine flow, async scan pattern                                          |
+| Serving Strategy               | 268–302 | Public files (CDN), authenticated files (signed URLs), thumbnail serving                         |
+| File Size Limits               | 304–316 | Per-plan limits: Free/Starter/Business/Enterprise tiers                                          |
+| Orphan Cleanup                 | 318–329 | Scheduled job to remove unreferenced files, grace period                                         |
+| Audit & Access Logging         | 331–342 | File access audit trail, download tracking                                                       |
+| Phase Implementation           | 344–352 | Phase breakdown: MVP — Foundation through Post-MVP                                               |
 
 ---
 
@@ -68,6 +68,8 @@
 ---
 
 ## Storage Client
+
+Covers Provider Abstraction, Storage Key Hierarchy.
 
 ### Provider Abstraction
 
@@ -127,6 +129,8 @@ t/{tenantId}/
 ---
 
 ## Upload Flow
+
+Covers Standard Upload (≤ 100MB), Multipart Upload (> 100MB, Business+).
 
 ### Standard Upload (≤ 100MB)
 
@@ -262,6 +266,8 @@ All user-uploaded files scanned before serving.
 ---
 
 ## Serving Strategy
+
+Covers Public Files (Portal Assets, Public Doc Gen), Authenticated Files (Attachments, Smart Doc Images, Chat), Thumbnails.
 
 ### Public Files (Portal Assets, Public Doc Gen)
 

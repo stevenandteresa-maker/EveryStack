@@ -15,20 +15,20 @@
 
 | Section | Lines | Covers |
 |---------|-------|--------|
-| 1. The Problem | 34–42 | Why platform maintenance can't stay manual as tenant count grows |
-| 2. User-Facing vs Platform Agents | 44–82 | Fundamental split, execution model differences, scope differences |
-| 3. The 14-Agent Catalog | 84–270 | Three categories, all agents defined with scope, signals, and cadence |
-| 4. Shared Agent Runtime | 272–386 | Execution loop, tool registry, observability — shared across both agent types |
-| 5. Platform Agent Extensions | 388–481 | PlatformAgentSession, PlatformAgentScope, approval model, scheduling |
-| 6. Skill Strategy for Platform Agents | 483–621 | Three-tier skill model applied to maintenance, skill catalog, cost implications |
-| 7. Inter-Agent Communication | 623–669 | Shared operational context, findings table, indirect coordination |
-| 8. Cost Model | 671–749 | Prompt caching, tier routing, Batch API, per-cycle cost estimates |
-| 9. Prioritized Build Order | 751–833 | Five tiers, sequenced by survival risk and data availability |
-| 10. Data Model Additions | 835–900 | New tables, schema changes, Redis patterns |
-| 11. Key Architectural Decisions | 902–958 | Decisions to settle before implementation begins |
-| 12. The Standalone Test | 960–994 | Formal skill quality gate: every skill must work without tool access |
-| 13. MCP Schema Suppression | 996–1052 | Skill-aware context loading that avoids redundant MCP tool schema bloat |
-| 14. Pre-Agent Operator Skills | 1054–1105 | Near-term value: platform operator playbooks usable with Claude Code before agent runtime ships |
+| 1. The Problem | 35–43 | Why platform maintenance can't stay manual as tenant count grows |
+| 2. User-Facing vs Platform Agents | 45–86 | Fundamental split, execution model differences, scope differences |
+| 3. The 14-Agent Catalog | 88–277 | Three categories, all agents defined with scope, signals, and cadence |
+| 4. Shared Agent Runtime | 279–396 | Execution loop, tool registry, observability — shared across both agent types |
+| 5. Platform Agent Extensions | 398–494 | PlatformAgentSession, PlatformAgentScope, approval model, scheduling |
+| 6. Skill Strategy for Platform Agents | 496–637 | Three-tier skill model applied to maintenance, skill catalog, cost implications |
+| 7. Inter-Agent Communication | 639–688 | Shared operational context, findings table, indirect coordination |
+| 8. Cost Model | 690–771 | Prompt caching, tier routing, Batch API, per-cycle cost estimates |
+| 9. Prioritized Build Order | 773–858 | Five tiers, sequenced by survival risk and data availability |
+| 10. Data Model Additions | 860–928 | New tables, schema changes, Redis patterns |
+| 11. Key Architectural Decisions | 930–989 | Decisions to settle before implementation begins |
+| 12. The Standalone Test | 991–1028 | Formal skill quality gate: every skill must work without tool access |
+| 13. MCP Schema Suppression | 1030–1089 | Skill-aware context loading that avoids redundant MCP tool schema bloat |
+| 14. Pre-Agent Operator Skills | 1091–1145 | Near-term value: platform operator playbooks usable with Claude Code before agent runtime ships |
 
 ---
 
@@ -43,6 +43,9 @@ User-facing agents (specced in `agent-architecture.md`) solve a different proble
 ---
 
 ## 2. User-Facing vs Platform Agents
+
+Covers The Fundamental Split, Why This Distinction Matters, Shared Infrastructure (identical for both types).
+Touches `tenant_id`, `delegating_user_id`, `portal_sessions`, `allowed_tables`, `agent_sessions` tables. See `agent-architecture.md`.
 
 ### The Fundamental Split
 
@@ -83,6 +86,9 @@ The runtime infrastructure — execution loop, BullMQ queue, checkpointing, circ
 ---
 
 ## 3. The 14-Agent Catalog
+
+Covers Category A — Platform Maintenance (keeping the lights on), Category B — Platform Security (protecting the platform), Category C — Business Operations (running the business).
+Touches `ai_usage_log`, `base_connections`, `sync_failures`, `sync_conflicts`, `sync_schema_changes` tables. See `ai-skills-architecture.md`.
 
 ### Category A — Platform Maintenance (keeping the lights on)
 
@@ -272,6 +278,9 @@ Cadence: Weekly cost analysis. Monthly trend report.
 
 ## 4. Shared Agent Runtime
 
+Covers Execution Loop (identical for all agents), Tool Registry (shared pattern, different catalogs), Observability (identical for both types), Circuit Breakers (identical for both types), Dynamic Tier Escalation (identical for both types).
+Touches `query_aggregate`, `query_tenant_detail`, `generate_report`, `create_platform_notice`, `create_pending_action` tables. See `agent-architecture.md`.
+
 ### Execution Loop (identical for all agents)
 
 Every agent — user-facing and platform — runs the same core loop:
@@ -388,6 +397,9 @@ For platform maintenance agents, this typically means:
 
 ## 5. Platform Agent Extensions
 
+Covers PlatformAgentSession, PlatformAgentScope, Approval Model for Platform Agents, Scheduling.
+Touches `platform_agent_configs` tables. See `agent-architecture.md`.
+
 ### PlatformAgentSession
 
 Extends `AgentSession` from `agent-architecture.md` §2.1 with platform-specific fields:
@@ -482,6 +494,9 @@ Event triggers use the existing BullMQ event system — a deploy completion or a
 ---
 
 ## 6. Skill Strategy for Platform Agents
+
+Covers Applying the Three-Tier Model, Tier 1 — Platform Maintenance Skills (static, human-written), Tier 2 — Platform Operational Context (dynamic, generated per-cycle), Tier 3 — Historical Patterns (learned over time), How the Three Tiers Compose (Platform Agent Example).
+Touches `ai_usage_log`, `audit_log`, `automation_runs`, `base_connections`, `agent_episodes` tables. See `ai-skills-architecture.md`, `sync-health-patterns.md`, `sync-engine.md`.
 
 ### Applying the Three-Tier Model
 
@@ -623,6 +638,9 @@ Without skills, the same agent would spend 3,000–5,000 tokens re-learning what
 
 ## 7. Inter-Agent Communication
 
+Covers Indirect Coordination via Shared Context, Coordination Examples, platform_agent_findings Table.
+Touches `platform_agent_findings`, `open_findings`, `pending_action` tables.
+
 ### Indirect Coordination via Shared Context
 
 Agents do not communicate directly. They communicate through the shared Tier 2 operational context via a `platform_agent_findings` table. When an agent produces a finding, it writes to this table. The next cycle's Tier 2 generation picks up all open findings and includes them in the `open_findings` array of `PlatformOperationalContext`.
@@ -670,6 +688,9 @@ interface PlatformAgentFinding {
 ---
 
 ## 8. Cost Model
+
+Covers Why Platform Agents Are Cheap, Prompt Caching (Primary Lever), Capability Tier Routing (Second Lever), Batch API (Third Lever), Shared Tier 2 Context (Fourth Lever), Estimated Weekly Cost (100-Tenant Platform).
+See `ai-metering.md`.
 
 ### Why Platform Agents Are Cheap
 
@@ -750,6 +771,9 @@ At 1,000 tenants, estimated weekly cost is $15–30, not 10× the 100-tenant cos
 ---
 
 ## 9. Prioritized Build Order
+
+Covers Prioritization Criteria, Tier 1 — Build First (immediately when agent runtime ships), Tier 2 — Build within 4–6 weeks of agent runtime, Tier 3 — Build within 2–3 months of agent runtime, Tier 4 — Build within 6 months, Tier 5 — Build when it hurts not to have it.
+Touches `ai_usage_log` tables. See `ai-skills-architecture.md`.
 
 ### Prioritization Criteria
 
@@ -835,6 +859,9 @@ Agents 1–4 all share the same core pattern: read from existing tables, compute
 
 ## 10. Data Model Additions
 
+Covers New Tables, platform_agent_configs Schema, platform_agent_findings Schema, Changes to Existing Tables, Redis Key Patterns.
+Touches `platform_agent_configs`, `platform_agent_findings`, `platform_operational_snapshots`, `agent_type`, `schedule_cron` tables. See `agent-architecture.md`.
+
 ### New Tables
 
 | Table | Purpose |
@@ -902,6 +929,9 @@ No `tenant_id` column. No RLS policy.
 
 ## 11. Key Architectural Decisions
 
+Covers Decision 1: Combined Security + Abuse or separate agents?, Decision 2: Platform agents in same worker or separate service?, Decision 3: How do platform agents access cross-tenant data?, Decision 4: Should platform agents share Tier 3 memory with user-facing agents?, Decision 5: Can platform agents trigger user-facing agents?, Decision 6: Where do platform agent results appear?.
+Touches `audit_log`, `portal_sessions`, `api_request_log`, `agent_category`, `agent_episodes` tables. See `agent-architecture.md`.
+
 ### Decision 1: Combined Security + Abuse or separate agents?
 
 **Recommendation: Combined initially, split when scope warrants.**
@@ -960,6 +990,9 @@ This is the single surface where the platform owner spends their 30–60 minutes
 
 ## 12. The Standalone Test
 
+Covers Principle, Why This Matters for EveryStack, Applying the Test, Relationship to Integration Skills.
+Touches `query_aggregate` tables. See `ai-skills-architecture.md`, `sync-health-patterns.md`, `security-monitoring.md`.
+
 ### Principle
 
 Every Tier 1 skill — whether user-facing or platform maintenance — must produce useful output when given representative data as plain text input, with zero tool calls available. If disconnecting all MCP servers and disabling all tools makes a skill non-functional, the skill has conflated knowledge with execution and needs to be restructured.
@@ -995,6 +1028,9 @@ For user-facing integration skills (`ai-skills-architecture.md` §5–6), the st
 ---
 
 ## 13. MCP Schema Suppression
+
+Covers The Token Cost Problem, The Suppression Strategy, Context Builder Change, Impact, Relationship to Token Budget Allocator.
+See `ai-skills-architecture.md`.
 
 ### The Token Cost Problem
 
@@ -1053,6 +1089,9 @@ The token budget allocator (`ai-skills-architecture.md` §4) already prioritizes
 ---
 
 ## 14. Pre-Agent Operator Skills
+
+Covers The Near-Term Opportunity, The Operator Skill Catalog, How They're Used (Pre-Agent), Evolution Path, Storage and Conventions.
+Touches `workspace_memberships`, `ai_usage_log`, `automation_runs`, `ai_credit_ledger` tables. See `incident-response.md`, `tenant-intervention.md`, `pricing-review.md`.
 
 ### The Near-Term Opportunity
 

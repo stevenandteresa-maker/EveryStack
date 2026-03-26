@@ -13,6 +13,15 @@
 
 **Critical path:** Unit 1 → Unit 3 → Unit 5 → Unit 6 (depth: 4).
 
+## Section Index
+
+| Section | Summary |
+|---------|---------|
+| Overview | Sub-phase metadata, 6 units, 10-14 sessions, parallel opportunities for Units 2/3/4 |
+| Step 3 — Build Execution | 19 prompts in 6 units: thread data layer, notifications, presence/real-time, Chat Editor, Record Thread/DM UI, notification/panel UI |
+| Step 4 — Review | Reviewer Agent verification with real-time message delivery focus |
+| Step 5 — Docs Sync | MODIFICATIONS.md template for all communications files |
+
 ---
 
 ## STEP 0 — DOC PREP (Architect Agent)
@@ -2186,6 +2195,8 @@ If something wrong: → Do NOT merge. Paste fix instructions into Claude Code.
 
 ## STEP 4 — REVIEW (Reviewer Agent)
 
+Covers What This Step Does, 4.1 — Generate the build diff, 4.2 — Run the Reviewer Agent.
+
 ### What This Step Does
 
 "An independent Claude session reviews the build against acceptance criteria and verifies that every unit's interface contract was fulfilled."
@@ -2238,6 +2249,8 @@ If FAIL: → Paste fix instructions into Claude Code. Re-run review after fixes.
 ---
 
 ## STEP 5 — POST-BUILD DOCS SYNC (Docs Agent)
+
+Covers What This Step Does, 5.1 — Create the fix branch, 5.2 — Run the Docs Agent, 5.3 — Review and merge, 5.4 — Tag if milestone.
 
 ### What This Step Does
 

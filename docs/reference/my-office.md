@@ -13,13 +13,13 @@
 
 | Section                       | Lines   | Covers                                                                                        |
 | ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| My Office                     | 24–80   | Personal hub, widget grid, widget chrome, grid system, cross-workspace scope                  |
-| Quick Panels                  | 81–159  | Sidebar icon rail, push-style panels, workspace vs My Office context, content mapping         |
-| Tasks Widget / Quick Panel    | 160–193 | Assigned tasks tab, My To-Dos tab, data model for personal tasks                              |
-| Calendar Widget / Quick Panel | 194–266 | Aggregated calendar sources, view modes, event management, personal events schema, feed API   |
-| Chat Widget / Quick Panel     | 267–278 | DM-only panel, quick-access to recent conversations                                           |
-| Mobile My Office              | 279–327 | Workspace tiles, bottom tab bar, contextual tab swap, default panel, header, hamburger drawer |
-| Responsive Summary            | 328–360 | Desktop/tablet/phone layout specs, breakpoint behavior table                                  |
+| My Office                     | 26–85   | Personal hub, widget grid, widget chrome, grid system, cross-workspace scope                  |
+| Quick Panels                  | 87–165  | Sidebar icon rail, push-style panels, workspace vs My Office context, content mapping         |
+| Tasks Widget / Quick Panel    | 167–204 | Assigned tasks tab, My To-Dos tab, data model for personal tasks                              |
+| Calendar Widget / Quick Panel | 206–281 | Aggregated calendar sources, view modes, event management, personal events schema, feed API   |
+| Chat Widget / Quick Panel     | 283–293 | DM-only panel, quick-access to recent conversations                                           |
+| Mobile My Office              | 295–342 | Workspace tiles, bottom tab bar, contextual tab swap, default panel, header, hamburger drawer |
+| Responsive Summary            | 344–380 | Desktop/tablet/phone layout specs, breakpoint behavior table                                  |
 
 ---
 
@@ -165,6 +165,9 @@ Each Quick Panel renders the same component as its My Office widget, but at a la
 ---
 
 ## Tasks Widget / Quick Panel
+
+Covers Assigned Tab, My To-Dos Tab, Data Model.
+Touches `user_tasks`, `parent_task_id`, `linked_record_id`, `linked_tenant_id` tables. See `data-model.md`.
 
 Two sub-tabs:
 

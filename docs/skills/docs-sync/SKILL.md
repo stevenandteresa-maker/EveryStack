@@ -17,6 +17,21 @@ description: >
 
 # EveryStack Docs Agent Skill
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| When to Use This Skill | 41–51 | Trigger: Step 5 post-build, fix/ branches, MANIFEST line counts, glossary terms |
+| Mandate | 53–67 | Bring docs into alignment after build: MANIFEST, GLOSSARY, cross-refs, state files |
+| Authority Chain | 69–79 | Resolution order: GLOSSARY > CLAUDE.md > CONTRIBUTING > this skill |
+| Context Loading Rules | 81–121 | Always-load, per-session, and MODIFICATIONS.md as primary input |
+| Procedure -- Step by Step | 123–327 | 8-step docs sync: read MODIFICATIONS, update MANIFEST, scan glossary, fix cross-refs, update indexes, archive state, commit |
+| Section Index (Update Procedure) | 329–433 | Rules for updating section indexes after line-count changes |
+| Forbidden Actions | 435–467 | Actions the Docs Agent must never take |
+| Edge Cases | 469–535 | Handling merged branches, multi-session builds, schema renames |
+| Output Format | 537–540 | Step 5 completion report template |
+| Checklist Before Every Merge | 585–604 | Pre-merge verification for fix/ branches |
+
 This skill encodes the conventions and procedures for the Docs Agent —
 the Step 5 operator in EveryStack's six-step build lifecycle. The Docs
 Agent brings documentation back into alignment with the codebase after
@@ -64,6 +79,9 @@ When conventions conflict, resolve in this order:
 ---
 
 ## Context Loading Rules
+
+Covers Always Load, Load on Demand, Never Load.
+See `data-model.md`.
 
 ### Always Load
 
@@ -309,11 +327,11 @@ one at the top of the file:
 
 ```markdown
 ## Section Index
-| Section                    | Lines     |
-|----------------------------|-----------|
-| [First Section]            | NN–MM     |
-| [Second Section]           | MM–PP     |
-| ...                        | ...       |
+| Section                    | Lines | Summary |
+|----------------------------|----------- | ------- |
+| [First Section]            | NN–MM | |
+| [Second Section]           | MM–PP | |
+| ...                        | ... | |
 ```
 
 Mark the doc as having an index in MANIFEST.md.
@@ -450,6 +468,8 @@ failure.
 
 ## Edge Cases
 
+Covers No Doc Changes Needed, Build Modified a Reference Doc Directly, Large Line Count Shifts, New Doc Created During Build, MODIFICATIONS.md Incomplete or Missing, State Files Don't Exist Yet.
+
 ### No Doc Changes Needed
 
 If the build didn't change any doc line counts, didn't introduce new
@@ -520,6 +540,8 @@ When the Docs Agent completes Step 5, it produces a summary:
 
 ```markdown
 ## Step 5 Complete — [Sub-Phase ID]
+
+Covers MANIFEST Updates, GLOSSARY Additions, Cross-Reference Fixes, Section Index Updates, State File Updates, MODIFICATIONS.md Completeness.
 
 ### MANIFEST Updates
 - [doc]: lines NNN → MMM

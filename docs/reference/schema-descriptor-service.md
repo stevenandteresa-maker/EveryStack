@@ -29,17 +29,17 @@
 
 | Section                                            | Lines   | Covers                                                                     |
 | -------------------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| Overview                                           | 45–52   | SDS purpose, relationship to AI features                                   |
-| Architecture Position                              | 53–78   | Where SDS sits in the stack, dependencies                                  |
-| Output Schema                                      | 79–193  | WorkspaceDescriptor JSON structure, field descriptions, cross-link mapping |
-| Permissions Integration                            | 194–208 | Per-user filtered schema output based on role                              |
-| API Surface                                        | 209–223 | 3 endpoints, request/response formats                                      |
-| Caching Strategy                                   | 224–237 | 2-tier cache, schema_version_hash invalidation                             |
-| DuckDB Context Layer — Companion Module (Post-MVP) | 238–272 | How SDS feeds DuckDB for analytical queries                                |
-| Claude Code Prompt Roadmap                         | 273–499 | 8-prompt implementation roadmap                                            |
-| Implementation Order                               | 500–516 | Dependency-ordered build sequence                                          |
-| What This Unlocks (Next Modules)                   | 517–530 | Features that depend on SDS being complete                                 |
-| Notes                                              | 531–536 | Implementation notes and caveats                                           |
+| Overview                                           | 46–52   | SDS purpose, relationship to AI features                                   |
+| Architecture Position                              | 54–78   | Where SDS sits in the stack, dependencies                                  |
+| Output Schema                                      | 80–193  | WorkspaceDescriptor JSON structure, field descriptions, cross-link mapping |
+| Permissions Integration                            | 195–208 | Per-user filtered schema output based on role                              |
+| API Surface                                        | 210–226 | 3 endpoints, request/response formats                                      |
+| Caching Strategy                                   | 228–240 | 2-tier cache, schema_version_hash invalidation                             |
+| DuckDB Context Layer — Companion Module (Post-MVP) | 242–277 | How SDS feeds DuckDB for analytical queries                                |
+| Claude Code Prompt Roadmap                         | 279–506 | 8-prompt implementation roadmap                                            |
+| Implementation Order                               | 508–523 | Dependency-ordered build sequence                                          |
+| What This Unlocks (Next Modules)                   | 525–537 | Features that depend on SDS being complete                                 |
+| Notes                                              | 539–544 | Implementation notes and caveats                                           |
 
 ---
 
@@ -240,6 +240,8 @@ The `schema_version_hash` is a hash of all schema-relevant metadata (field defin
 ---
 
 ## DuckDB Context Layer — Companion Module (Post-MVP)
+
+Defines `ai-data-contract.md`, `aiToCanonical()`, `duckdb-context-layer-ref.md`. See `ai-data-contract.md`, `duckdb-context-layer-ref.md`.
 
 > **Post-MVP per glossary:** The DuckDB analytical layer is explicitly excluded from MVP scope.
 

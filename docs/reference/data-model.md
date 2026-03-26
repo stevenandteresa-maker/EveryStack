@@ -15,16 +15,19 @@
 
 | Section                         | Lines   | Covers                                                                                                                  |
 | ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Database Schema — MVP Entities  | 24–129  | All MVP tables: users, tenants, workspaces, tables, fields, records, views, portals, forms, sync, comms, AI, API, audit |
-| Post-MVP Entities (Parked)      | 130–190 | Apps, app_pages, app_blocks, portal_clients, formula_graph, vector tables                                               |
-| Field System Architecture       | 191–488 | FieldTypeRegistry, 40 field types, canonical JSONB shapes, MVP field categories                                         |
-| Cross-Linking Architecture      | 489–508 | Cross-link data model, index table, query patterns                                                                      |
-| Platform Owner Console Tables   | 135–150 | support_requests, support_request_messages, admin_impersonation_sessions, tenant_feature_flags, platform_notices, user_dismissed_notices, ai_support_sessions, feature_requests, tenant_enterprise_config |
-| Bidirectional Sync Architecture | 509–574 | Platform type mapping, sync direction, field eligibility, outbound sync flow                                            |
+| Database Schema — MVP Entities  | 27–170  | All MVP tables: users, tenants, workspaces, tables, fields, records, views, portals, forms, sync, comms, AI, API, audit |
+| Post-MVP Entities (Parked)      | 190–271 | Apps, app_pages, app_blocks, portal_clients, formula_graph, vector tables                                               |
+| Field System Architecture       | 273–571 | FieldTypeRegistry, 40 field types, canonical JSONB shapes, MVP field categories                                         |
+| Cross-Linking Architecture      | 573–593 | Cross-link data model, index table, query patterns                                                                      |
+| Platform Owner Console Tables   | 172–188 | support_requests, support_request_messages, admin_impersonation_sessions, tenant_feature_flags, platform_notices, user_dismissed_notices, ai_support_sessions, feature_requests, tenant_enterprise_config |
+| Bidirectional Sync Architecture | 595–663 | Platform type mapping, sync direction, field eligibility, outbound sync flow                                            |
 
 ---
 
 ## Database Schema — MVP Entities
+
+Covers User, Tenant & Workspace, effective_memberships (Database View), Cross-Tenant Linking — Permanently Forbidden, Data Layer (Tables, Fields, Records), Views, Portals & Forms.
+Touches `is_platform_admin`, `is_support_agent`, `tenant_memberships`, `workspace_memberships`, `board_memberships` tables. See `platform-owner-console.md`, `communications.md`, `smart-docs.md`.
 
 ### User, Tenant & Workspace
 

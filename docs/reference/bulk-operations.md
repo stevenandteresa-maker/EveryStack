@@ -24,27 +24,27 @@
 
 | Section                                                                                                    | Lines   | Covers                                                            |
 | ---------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
-| Strategic Rationale                                                                                        | 50–57   | Why bulk operations, user scenarios                               |
-| Core Design Principles                                                                                     | 58–71   | Binary gating, no partial success, undo-friendly                  |
-| Selection Model                                                                                            | 72–87   | Checkbox column, shift-click range, 5K cap, select-all            |
-| Bulk Actions Toolbar                                                                                       | 88–109  | 7 actions, toolbar UX, permission gating                          |
-| Bulk Edit                                                                                                  | 110–158 | Multi-field edit dialog, preview, confirmation                    |
-| Bulk Delete                                                                                                | 159–193 | Soft delete, confirmation dialog, undo window                     |
-| Bulk Duplicate                                                                                             | 194–206 | Duplicate with/without links, naming convention                   |
-| Bulk Assign                                                                                                | 207–214 | Assign people/status field to selected records                    |
-| Bulk Export Selection                                                                                      | 215–228 | Export selected records to CSV/Excel                              |
-| Bulk Trigger Automation                                                                                    | 229–254 | Run automation on selected records                                |
-| Bulk Checklist Item Update **[Post-MVP — depends on approval workflows, which are post-MVP per glossary]** | 255–269 | Batch update checklist fields                                     |
-| Batch Server Action Pattern                                                                                | 270–386 | Server-side bulk processing, transaction handling, error rollback |
-| Audit Log Extension                                                                                        | 387–422 | Condensed audit entries, record_ids_affected[], truncation flag   |
-| Real-Time Event Batching                                                                                   | 423–466 | Batch Socket.io events, condensation matching sync pattern        |
-| Formula Cascade Handling **[Post-MVP — formula engine is post-MVP per glossary]**                          | 467–485 | Throttled formula recalculation after bulk edits                  |
-| Automation Trigger Batching                                                                                | 486–501 | Deduplication for automation triggers from bulk operations        |
-| Undo Behavior                                                                                              | 502–518 | Undo for ≤50 records, undo window, limitations                    |
-| Mobile Behavior                                                                                            | 519–532 | Mobile bulk selection, action sheet, touch gestures               |
-| Phase Implementation                                                                                       | 533–541 | MVP — Core UX delivery scope                                      |
-| Key Architectural Decisions                                                                                | 542–560 | ADR-style decisions with rationale                                |
-| Future Extensions                                                                                          | 561–571 | Deferred bulk operation features                                  |
+| Strategic Rationale                                                                                        | 51–57   | Why bulk operations, user scenarios                               |
+| Core Design Principles                                                                                     | 59–71   | Binary gating, no partial success, undo-friendly                  |
+| Selection Model                                                                                            | 73–87   | Checkbox column, shift-click range, 5K cap, select-all            |
+| Bulk Actions Toolbar                                                                                       | 89–109  | 7 actions, toolbar UX, permission gating                          |
+| Bulk Edit                                                                                                  | 111–159 | Multi-field edit dialog, preview, confirmation                    |
+| Bulk Delete                                                                                                | 161–197 | Soft delete, confirmation dialog, undo window                     |
+| Bulk Duplicate                                                                                             | 199–210 | Duplicate with/without links, naming convention                   |
+| Bulk Assign                                                                                                | 212–218 | Assign people/status field to selected records                    |
+| Bulk Export Selection                                                                                      | 220–232 | Export selected records to CSV/Excel                              |
+| Bulk Trigger Automation                                                                                    | 234–258 | Run automation on selected records                                |
+| Bulk Checklist Item Update **[Post-MVP — depends on approval workflows, which are post-MVP per glossary]** | 260–273 | Batch update checklist fields                                     |
+| Batch Server Action Pattern                                                                                | 275–388 | Server-side bulk processing, transaction handling, error rollback |
+| Audit Log Extension                                                                                        | 390–424 | Condensed audit entries, record_ids_affected[], truncation flag   |
+| Real-Time Event Batching                                                                                   | 426–468 | Batch Socket.io events, condensation matching sync pattern        |
+| Formula Cascade Handling **[Post-MVP — formula engine is post-MVP per glossary]**                          | 470–487 | Throttled formula recalculation after bulk edits                  |
+| Automation Trigger Batching                                                                                | 489–503 | Deduplication for automation triggers from bulk operations        |
+| Undo Behavior                                                                                              | 505–520 | Undo for ≤50 records, undo window, limitations                    |
+| Mobile Behavior                                                                                            | 522–534 | Mobile bulk selection, action sheet, touch gestures               |
+| Phase Implementation                                                                                       | 536–543 | MVP — Core UX delivery scope                                      |
+| Key Architectural Decisions                                                                                | 545–562 | ADR-style decisions with rationale                                |
+| Future Extensions                                                                                          | 564–574 | Deferred bulk operation features                                  |
 
 ---
 
@@ -159,6 +159,9 @@ After selecting field, mode, and value, the user clicks "Apply to N records." Fo
 ---
 
 ## Bulk Delete
+
+Covers Permission Gate, Impact Preview, Execution.
+Touches `allow_delete`, `cross_link_entries`, `approval_requests`, `deleted_at` tables.
 
 ### Permission Gate
 

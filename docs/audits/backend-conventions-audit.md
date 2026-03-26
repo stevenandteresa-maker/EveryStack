@@ -26,6 +26,9 @@
 
 ## Deviations Found
 
+Covers 1. Soft delete uses `deletedAt` instead of `archived_at`, 2. Zod validation not used anywhere, 3. `testTenantIsolation()` helper does not exist, 4. Hardcoded UUIDs in test files, 5. `board_memberships` table missing `tenant_id`, 6. Raw `new Error()` throws in startup code.
+Touches `archived_at`, `deleted_at`, `thread_messages`, `board_memberships`, `tenant_id` tables. See `rls.ts`.
+
 ### 1. Soft delete uses `deletedAt` instead of `archived_at`
 
 - **What the skill says:** Use `archived_at` for soft deletes, not `deleted_at`.

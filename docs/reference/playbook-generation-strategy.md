@@ -1,5 +1,27 @@
 # EveryStack — Playbook Generation Strategy
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| What You Are Building | 31–43 | Playbook + Prompting Roadmap output definitions per sub-phase |
+| Six-Step Lifecycle | 45–167 | Steps 0--5 with agent assignments, inputs/outputs, and session boundaries |
+| Agent Definitions | 169–217 | 5 agents: Architect, Playbook Author, Builder, Reviewer, Docs Agent -- roles and rules |
+| The Authority Hierarchy | 219–229 | Resolution order: GLOSSARY > CLAUDE.md > reference docs > playbook > this strategy |
+| Phase Definitions and Build Order | 231–292 | Phases 1--6 and post-MVP scope definitions with per-phase sub-phase lists |
+| How to Produce a Playbook | 294–300 | Step-by-step playbook generation procedure |
+| The 10 Quality Characteristics | 302–321 | Canonical quality checklist for every playbook prompt |
+| Playbook Document Template | 323–329 | Markdown structure template for playbook files |
+| Context Management Rules | 331–342 | Token budget constraints, context-per-prompt rules |
+| Phase-Specific Guidance | 344–460 | Per-phase notes: Foundation, Sync, Core UX, Automations, AI, API |
+| Handling Cross-Cutting Concerns | 462–490 | Tenant isolation, FieldTypeRegistry, error handling, i18n, real-time events |
+| Quality-First Mandate | 492–500 | Strictness over speed principle |
+| Git Workflow | 502–646 | Branch naming, commit format, merge sequence, state file updates |
+| Prompting Roadmap Specification | 648–661 | Label system, document structure, operator-facing format |
+| Workflow -- Putting It All Together | 663–737 | End-to-end worked example of the full lifecycle |
+| Quality Checklist for Each Sub-Phase | 739–758 | Final verification checklist before delivering a playbook |
+| Glossary of Strategy-Specific Terms | 778–811 | Definitions of strategy-doc-only terminology |
+
 > **Purpose:** This document is a meta-instruction set. Give it to Claude alongside the EveryStack reference docs. Claude will use it to produce one phase playbook at a time — the build roadmap for each phase of EveryStack's development.
 >
 > **This document does NOT build EveryStack.** It tells Claude how to produce the documents that will — and defines the full lifecycle those documents move through, from doc prep to post-build sync.
@@ -21,6 +43,8 @@ Your job is to **transform** these reference specs into **actionable build instr
 ---
 
 ## Six-Step Lifecycle — Know Which Step You're In
+
+Defines all 6 steps (Doc Prep, Playbook Gen, Roadmap Gen, Build, Review, Docs Sync) with their agent assignments, session types, branch prefixes, inputs, and outputs. Steps 0 and 3--5 run in Claude Code; Steps 1--2 run in Claude.ai.
 
 Every sub-phase moves through six steps. Each step has a dedicated agent, a specific context load, defined inputs and outputs, and clear boundaries. Never conflate steps. The six steps are:
 
@@ -208,6 +232,8 @@ Whenever information conflicts, resolve it in this order:
 
 ## Phase Definitions and Build Order
 
+Defines Phases 1--6 (Foundation, Sync, Core UX, Automations, AI, API) and post-MVP phases with their sub-phase inventories. Establishes the build sequence and inter-phase dependencies. See phase-division docs for per-sub-phase detail.
+
 The MANIFEST's "Reference Doc Scope Map" (bottom of MANIFEST.md) defines the canonical phase groupings. The MVP phases must be built in order. Post-MVP phases can be sequenced more flexibly but have some dependency constraints.
 
 ### MVP Phases (build in this order)
@@ -320,6 +346,11 @@ The 10 characteristics (summary):
 ---
 
 ## Phase-Specific Guidance
+
+Per-phase playbook generation notes: Foundation (infrastructure sequencing), Sync (adapter pattern, FieldTypeRegistry), Core UX (view hierarchy, cross-cutting permissions), Automations (trigger registry, action integrations), AI (data contract, credit metering), API (filter syntax, scope enforcement).
+
+Covers Phase 1: MVP — Foundation (10 sub-phases, ~86 prompts), Phase 2: MVP — Sync (3 sub-phases, ~36 prompts), Phase 3: MVP — Core UX (16 sub-phases, ~168 prompts), Phase 4: MVP — Automations (2 sub-phases, ~22 prompts), Phase 5: MVP — AI (3 sub-phases, ~31 prompts), Phase 6: MVP — API (2 sub-phases, ~15 prompts).
+Touches `tenant_relationships`, `effective_memberships`, `workspace_memberships`, `api_keys`, `skill_context` tables. See `phase-division-phase1.md`, `permissions.md`, `compliance.md`.
 
 ### Phase 1: MVP — Foundation (10 sub-phases, ~86 prompts)
 
@@ -637,6 +668,8 @@ Every playbook prompt must include a `Git:` field. Examples:
 
 ## Workflow — Putting It All Together
 
+Covers Before Your First Sub-Phase, The Six-Step Cycle (repeat for every sub-phase).
+
 ### Before Your First Sub-Phase
 
 1. Confirm the reference doc tarball is current and all docs have section indexes.
@@ -749,6 +782,8 @@ Under the six-step lifecycle, this content is handled as follows:
 ---
 
 ## Glossary of Strategy-Specific Terms
+
+Defines `docs/`, `build/`, `fix/`, `<area>: <what changed> [Phase X, Prompt N]`.
 
 | Term | Meaning |
 |------|---------|

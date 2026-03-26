@@ -5,9 +5,23 @@
 > Total sub-phases: **35**
 > Total estimated prompts: **346**
 
+## Section Index
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| Master Dependency Graph | 22–197 | Per-phase DAG of all 35 sub-phases with unlock and dependency edges |
+| Critical Path | 199–265 | Earliest-start computation, project-wide and Phase 6 critical path chains |
+| Parallel Tracks | 267–352 | Ten named execution tracks (A--J) with maximum parallelism windows |
+| Appendix A: Reference Doc Loading Summary | 354–438 | Per-doc line-range assignments to sub-phases and unreferenced doc inventory |
+| Appendix B: Post-MVP Exclusion Checklist | 440–477 | Enumerated post-MVP features that must not appear in any sub-phase Includes |
+| Appendix C: Cross-Cutting Concerns Registry | 479–500 | Eleven cross-cutting concerns with establishment points and inheritance chains |
+| Validation Summary | 502–514 | Verification that all sub-phases, critical paths, and exclusions are accounted for |
+
 ---
 
 ## Master Dependency Graph
+
+Directed acyclic graph of all 35 MVP sub-phases across Phases 1--6 with dependency and unlock edges. Covers Foundation, Sync, Core UX, Automations, AI, and API. Source: five phase-division files plus CP-001/CP-002 impact map.
 
 ### Phase 1: Foundation (10 sub-phases, ~86 prompts)
 
@@ -184,6 +198,8 @@
 
 ## Critical Path
 
+Longest dependency chains through the sub-phase DAG, determining overall project duration and Phase 6 availability. Relates to the parallel tracks enumerated in the next section.
+
 The critical path is the longest dependency chain through the DAG. Each sub-phase's earliest start is determined by the longest path to it through its dependencies.
 
 **Earliest-start computation (sub-phase count from 1A):**
@@ -249,6 +265,8 @@ This is the sequence that determines overall project duration. Delay in any of t
 ---
 
 ## Parallel Tracks
+
+Ten named execution tracks identifying sub-phases that can run concurrently with the critical path. Used for scheduling and resource allocation across build sessions. Relates to the critical path analysis above and the dependency graph at the top of this document.
 
 These sub-phases can proceed independently of the critical path, given their dependencies are met:
 
@@ -335,6 +353,8 @@ Both feed into 3H-i but are shorter than the critical path through 3F-i.
 
 ## Appendix A: Reference Doc Loading Summary
 
+Per-document inventory of line-range assignments to MVP sub-phases, plus a list of documents not referenced by any sub-phase (post-MVP, operational, or meta-documents). Used by the Planner Agent for context manifest curation.
+
 | Document | Total Lines | Sub-phases | Sections Used | Lines Referenced |
 |----------|-------------|------------|---------------|-----------------|
 | CLAUDE.md | 461 | 1A, 1C | Full doc (context) | ~461 |
@@ -419,6 +439,8 @@ These documents exist in `docMetadata` but are not assigned to any MVP sub-phase
 
 ## Appendix B: Post-MVP Exclusion Checklist
 
+Enumerated list of features permanently excluded from all MVP sub-phases with common-trap flags. Sourced from `dependency-map.md` section 5.2 and phase-division Excludes lists.
+
 These features must NOT appear in any sub-phase's "Includes" section. Sourced from `dependency-map.md` §5.2.
 
 - [ ] **Kanban view** — Post-MVP (soon after). Common trap: frequently assumed MVP.
@@ -455,6 +477,8 @@ These features must NOT appear in any sub-phase's "Includes" section. Sourced fr
 ---
 
 ## Appendix C: Cross-Cutting Concerns Registry
+
+Eleven cross-cutting concerns (tenant isolation, FieldTypeRegistry, canonical JSONB, etc.) with their establishment sub-phase and full inheritance chain. Relates to `CLAUDE.md` Architecture Fundamentals and the phase-division docs.
 
 These concerns are established once and inherited by all downstream sub-phases. Sourced from `dependency-map.md` §3.
 
