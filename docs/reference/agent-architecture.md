@@ -16,9 +16,9 @@
 
 | Section                                                       | Lines   | Covers                                                                                                        |
 | ------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| Part 1: What You Already Have (And Why It Matters for Agents) | 25–132  | Existing infrastructure (AIService, SDS, BullMQ, permissions) that agents build on                            |
-| Part 2: What Needs to Change or Be Added                      | 133–623 | AgentSession, AgentScope, execution runtime, 3-layer memory, 5-tier approval, safety framework, 8 agent types |
-| Summary: The 30-Second Version                                | 624–636 | Quick reference for the full agent architecture                                                               |
+| Part 1: What You Already Have (And Why It Matters for Agents) | 25–131  | Existing infrastructure (AIService, SDS, BullMQ, permissions) that agents build on                            |
+| Part 2: What Needs to Change or Be Added                      | 133–636 | AgentSession, AgentScope, execution runtime, 3-layer memory, 5-tier approval, safety framework, 8 agent types |
+| Summary: The 30-Second Version                                | 638–650 | Quick reference for the full agent architecture                                                               |
 
 ---
 

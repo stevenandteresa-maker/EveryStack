@@ -28,15 +28,15 @@
 | Section                            | Lines     | Covers                                                                                               |
 | ---------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
 | Foundations                        | 47–59     | Dimensions: sidebar, main content, Quick Panel, Record View overlay, mobile breakpoints              |
-| Color Model — Hybrid Layout        | 61–170    | Three-layer architecture: surface (fixed), workspace accent (admin-chosen), data palette (13 colors) |
-| Process State Color Language       | 173–184   | Semantic state colors: failed/red, processing/amber, succeeded/green                                 |
-| Text Contrast for Colored Surfaces | 187–195   | WCAG AA contrast rules, dark/light text selection algorithm                                          |
-| Typography Scale                   | 198–213   | Font sizes (9-step scale), weights, line heights, font family (DM Sans / JetBrains Mono)             |
-| Spacing                            | 216–221   | 4px base unit, card padding, section gaps, mobile bottom nav                                         |
-| Component Specifications           | 224–237   | Button variants, cards, badges, inputs, sidebar nav, Command Bar                                     |
+| Color Model — Hybrid Layout        | 61–171    | Three-layer architecture: surface (fixed), workspace accent (admin-chosen), data palette (13 colors) |
+| Process State Color Language       | 173–185   | Semantic state colors: failed/red, processing/amber, succeeded/green                                 |
+| Text Contrast for Colored Surfaces | 187–196   | WCAG AA contrast rules, dark/light text selection algorithm                                          |
+| Typography Scale                   | 198–214   | Font sizes (9-step scale), weights, line heights, font family (DM Sans / JetBrains Mono)             |
+| Spacing                            | 216–222   | 4px base unit, card padding, section gaps, mobile bottom nav                                         |
+| Component Specifications           | 224–238   | Button variants, cards, badges, inputs, sidebar nav, Command Bar                                     |
 | Application Shell (Responsive)     | 240–265   | Desktop/tablet/phone shell layout, sidebar icon rail, sidebar collapse behavior                      |
-| Responsive Architecture            | 267–307   | Grid view column priority, Record View stacking, breakpoint transitions, progressive disclosure      |
-| Progressive Disclosure             | 296–307   | Complexity levels (3 tiers), smart defaults, mobile Level 1 completeness                             |
+| Responsive Architecture            | 267–294   | Grid view column priority, Record View stacking, breakpoint transitions, progressive disclosure      |
+| Progressive Disclosure             | 296–308   | Complexity levels (3 tiers), smart defaults, mobile Level 1 completeness                             |
 | Shared Responsive Patterns         | 310–321   | Collapsible sidebar, bottom sheets, swipe gestures                                                   |
 | Ergonomic Design Constraints       | 323–343   | Thumb zone mapping, one-handed use rules, touch targets                                              |
 | AI Credit Display Pattern          | 345–360   | Credit badge, usage meter, cost preview, upgrade prompts                                             |

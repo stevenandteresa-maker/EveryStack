@@ -13,15 +13,15 @@
 
 | Section                                     | Lines     | Covers                                                                                      |
 | ------------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| Table Type System                           | 27–119    | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior    |
-| Table (Grid) View Architecture              | 121–565   | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
-| Record View                                 | 568–628   | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs                |
-| Card View                                   | 631–668   | Card layout, card fields, grouping, mobile card list                                        |
-| Sections — Universal List Organizer         | 672–701   | Universal list sections, drag-to-reorder, section-scoped operations                         |
-| Inline Sub-Table Display for Linked Records | 705–811   | Linked record expansion, inline sub-table rendering in Record View                          |
-| CSV/Data Import — MVP                       | 814–841   | CSV import flow (5 steps), field mapping, validation preview, permissions                   |
-| Kanban View — Post-MVP                      | 844–853   | Kanban columns, drag-and-drop, WIP limits                                                   |
-| Quick Entry — Post-MVP                      | 856–862   | Rapid record creation mode, barcode scanning                                                |
+| Table Type System                           | 28–120    | 5 table types (table, projects, calendar, documents, wiki), default views, type behavior    |
+| Table (Grid) View Architecture              | 122–567   | Grid layout, columns, cell rendering, inline editing, toolbar, filtering, sorting, grouping |
+| Record View                                 | 569–630   | Overlay architecture, field canvas, columns, tabs, dimensions, saved configs                |
+| Card View                                   | 632–671   | Card layout, card fields, grouping, mobile card list                                        |
+| Sections — Universal List Organizer         | 673–704   | Universal list sections, drag-to-reorder, section-scoped operations                         |
+| Inline Sub-Table Display for Linked Records | 706–813   | Linked record expansion, inline sub-table rendering in Record View                          |
+| CSV/Data Import — MVP                       | 815–843   | CSV import flow (5 steps), field mapping, validation preview, permissions                   |
+| Kanban View — Post-MVP                      | 845–855   | Kanban columns, drag-and-drop, WIP limits                                                   |
+| Quick Entry — Post-MVP                      | 857–863   | Rapid record creation mode, barcode scanning                                                |
 
 ---
 
