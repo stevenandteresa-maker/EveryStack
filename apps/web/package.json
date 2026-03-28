@@ -102,7 +102,7 @@
     "drizzle-orm": "^0.45.1",
     "eslint-config-next": "^16.1.6",
     "ioredis": "^5.10.0",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4",
     "tsx": "^4.19.4",
